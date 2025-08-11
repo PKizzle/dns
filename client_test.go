@@ -11,6 +11,9 @@ func TestClient(t *testing.T) {
 	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
 	m.Question = []RR{mx}
 
+	nsid := &NSID{}
+	m.Pseudo = []RR{nsid}
+
 	m.Pack()
 	c := &Client{}
 
