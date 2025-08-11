@@ -38,6 +38,65 @@ changes wherever reasonable.
   This will be extended (later/TODO) to allow reading from a text presentation format.
 
 - `New` will return an RR, `NewRR` will be gone.
+- `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
+
+### Setting EDNS0
+
+Both `SetQuestion` and `SetEdns0` are extra helper methods, build on top of the core library, here
+I'm still contemplating if that is even necessary.
+
+```
+OLD                                           | NEW
+                                              |
+m := new(dns.Msg)                             | m := &dns.Msg{MsgHeader: MsgHeader{ID: dns.ID(), RecursionDesired: true}}
+m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | key := &DNSKEY{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+                                              | m.Question = []RR{key}
+m.SetEdns0(4096, true)                        | m.UDPSize = 4096
+                                              | m.Security = true
+```
+
+For `IsEdns0` (again helper function) the following is done to just get the UDPSize or the DO-bit, you then need to retrieve the bits
+from the `OPT` RR.
+
+```
+OLD                                                      | NEW
+                                                         |
+bufsize := 0                                             | bufsize := m.UDPSize
+for i := len(m.Extra) - 1; i >= 0; i-- {                 |
+    if m.Extra[i].Header().Rrtype == dns.TypeOPT {       |
+		bufsize = m.Extra[i].(*dns.OPT).UDPSize()        |
+    }                                                    |
+}                                                        |
+```
+
+Accessing ENDS0 options, again requires getting the `OPT` and getting the options from there.
+
+```
+OLD                                                      | NEW
+                                                         |
+opt := 0                                                 | for i, options := range m.Pseudo {
+for i := len(m.Extra) - 1; i >= 0; i-- {                 |     // ...
+	if m.Extra[i].Header().Rrtype == dns.TypeOPT {       | }
+	opt = m.Extra[i].(*dns.OPT)|                         |
+    }                                                    |
+}                                                        |
+for i, options := range opt.Options {                    |
+    // ...                                               |
+}                                                        |
+```
+
+Adding an EDNS0 option is just as easy, assign to the pseudo section:
+
+```
+OLD                                                               |
+                                                                  |
+o := &dns.OPT{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeOPT}} |
+o.SetDo()                                                         | m.Security = true
+o.SetUDPSize(dns.DefaultMsgSize)                                  | m.UDPSize = dns.DefaultMsgSize
+e := &dns.EDNS0_NSID{Code: dns.EDNS0NSID}                         | m.Pseudo = append(m.Pseudo, &dns.NSID{})
+o.Option = append(o.Option, e)                                    |
+m.Extra = append(m.Extra, o)                                      |
+```
 
 # Users
 
