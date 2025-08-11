@@ -11,7 +11,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/miekg/dnsv2/internal/generate"
+	"codeberg.org/miekg/dns/internal/generate"
 )
 
 var skipLen = []string{"NSEC", "NSEC3", "OPT", "CSYNC", "APLPrefix"}

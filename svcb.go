@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/miekg/dnsv2/internal/ddd"
+	"codeberg.org/miekg/dns/internal/ddd"
 	"golang.org/x/crypto/cryptobyte"
 )
 

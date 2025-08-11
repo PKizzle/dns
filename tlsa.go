@@ -5,7 +5,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/miekg/dnsv2/dnsutil"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // Sign creates a TLSA record from an SSL certificate.

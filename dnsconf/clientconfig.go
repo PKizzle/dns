@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/miekg/dnsv2/dnsutil"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // Config wraps the contents of the /etc/resolv.conf file.

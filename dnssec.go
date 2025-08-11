@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miekg/dnsv2/dnsutil"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // DNSSEC encryption algorithm codes.

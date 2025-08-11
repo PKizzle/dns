@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miekg/dnsv2/internal/ddd"
+	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 func sprintName(s string) string {

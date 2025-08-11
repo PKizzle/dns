@@ -3,7 +3,7 @@ package dnsutil
 import (
 	"strings"
 
-	"github.com/miekg/dnsv2/internal/ddd"
+	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 // Fqdn return the fully qualified domain name from s. If s is already fully qualified, it behaves as the identity function.

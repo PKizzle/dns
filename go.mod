@@ -1,4 +1,4 @@
-module github.com/miekg/dnsv2
+module codeberg.org/miekg/dns
 
 go 1.24
 

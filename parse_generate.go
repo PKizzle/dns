@@ -10,7 +10,7 @@ import (
 	"html/template"
 	"log"
 
-	"github.com/miekg/dnsv2/internal/generate"
+	"codeberg.org/miekg/dns/internal/generate"
 )
 
 var hdr = `

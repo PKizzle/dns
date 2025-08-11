@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/miekg/dnsv2/dnsutil"
+	"codeberg.org/miekg/dns/dnsutil"
 	"golang.org/x/crypto/cryptobyte"
 )
 

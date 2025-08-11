@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/miekg/dnsv2/dnsutil"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 const maxTok = 512 // Token buffer start size, and growth size amount.
