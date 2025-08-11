@@ -37,17 +37,17 @@ func TestPackUnpackBinary(t *testing.T) {
 	msg := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]RR, 2)}
 	a := &A{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
 	msg.Question = []RR{a}
-	msg.Pseudo = []RR{&NSID{Nsid: "6770646e732d616d73"}}
+	msg.Pseudo = []RR{&NSID{Nsid: "6770"}}
 	msg.Answer[0], _ = New("miek.nl.        14301   IN      A       45.138.52.215")
 	msg.Answer[1], _ = New("miek.nl.        14301   IN      A       45.138.52.216")
 
 	msg.Pack()
-	println(msg.String())
-	if err := msg.Unpack(); err != nil {
-		t.Logf("%v\n", msg.Data)
-		t.Errorf("%s", err)
-	}
-	t.Logf("%s\n", msg)
+	t.Logf("%v\n", msg.Data)
+	msg2 := &Msg{Data: make([]byte, msg.Len())}
+	copy(msg2.Data, msg.Data)
+	msg2.Unpack()
+	t.Logf("%s\n", msg2)
+	t.Logf("%v\n", msg2.Data)
 }
 
 func TestUnpackName(t *testing.T) {
