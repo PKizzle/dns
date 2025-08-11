@@ -91,21 +91,17 @@ var RcodeToString = map[uint16]string{
 
 // Domain names are a sequence of counted strings split at the dots. They end with a zero-length string.
 
+// packName packs a domain name. Why should this be exported?
 func packName(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in IsDomainName and
 	// should be kept in sync with this function.
-
-	ls := len(s)
-	if ls == 0 { // Ok, for instance when dealing with update RR without any rdata.
-		// TODO(tmthrgd): This can produce corrupt messages and records. See
-		// the comment in unpackQuestion.
-		return off, nil
-	}
 
 	// If not fully qualified, error out.
 	if !dnsutil.IsFqdn(s) {
 		return len(msg), ErrFqdn
 	}
+
+	ls := len(s)
 
 	// Each dot ends a segment of the name.
 	// We trade each dot byte for a length byte.
@@ -247,7 +243,7 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 	return end-off == 1 && bs[off] == '.'
 }
 
-// Unpack a domain name.
+// Unpack a domain name. WHY exported??
 // In addition to the simple sequences of counted strings above, domain names are allowed to refer to strings elsewhere in the
 // packet, to avoid repeating common suffixes when returning many entries in a single domain. The pointers are marked
 // by a length byte with the top two bits set. Ignoring those two bits, that byte and the next give a 14 bit offset from into msg
@@ -358,7 +354,7 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 }
 
 // PackRR packs a resource record rr into msg[off:].
-// See PackDomainName for documentation about the compression.
+// See PackName for documentation about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	_, off1, err = packRR(rr, msg, off, compression)
 	return off1, err

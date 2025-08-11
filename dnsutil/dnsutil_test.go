@@ -21,7 +21,25 @@ func TestTrimZone(t *testing.T) {
 		got := Trim(Fqdn(tc.qname), Fqdn(tc.zone))
 		if got != tc.expected {
 			t.Errorf("Test %d, expected %s, got %s", i, tc.expected, got)
-			continue
+		}
+	}
+}
+
+func TestIsFqdn(t *testing.T) {
+	tests := []struct {
+		in       string
+		expected bool
+	}{
+		{"miek.nl", false},
+		{"miek.nl.", true},
+		{"miek.nl\\.", false},
+		{"miek.nl\\\\.", true},
+		{"miek.n\\..", true},
+	}
+	for i, tc := range tests {
+		got := IsFqdn(tc.in)
+		if got != tc.expected {
+			t.Errorf("Test %d, %s, expected %t, got %t", i, tc.in, tc.expected, got)
 		}
 	}
 }

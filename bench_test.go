@@ -14,3 +14,11 @@ func BenchmarkMakeMsgQuestionMX(b *testing.B) {
 		msg.Pack()
 	}
 }
+
+func BenchmarkPackName(b *testing.B) {
+	name := "my.testserver.l.miek.nl."
+	buf := make([]byte, 30)
+	for b.Loop() {
+		packName(name, buf, 0, nil, false)
+	}
+}

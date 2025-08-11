@@ -17,24 +17,27 @@ func Fqdn(s string) string {
 // IsFqdn checks if a domain name is fully qualified. Note that due the escapes in the names this is not
 // completely trivial to establish.
 func IsFqdn(s string) bool {
-	// Check for (and remove) a trailing dot, returning if there isn't one.
-	if s == "" || s[len(s)-1] != '.' {
+	if s == "." {
+		return true
+	}
+	l := len(s)
+	if l < 2 {
 		return false
 	}
-	s = s[:len(s)-1]
-
-	// If we don't have an escape sequence before the final dot, we know it's
-	// fully qualified and can return here.
-	if s == "" || s[len(s)-1] != '\\' {
+	if s[l-1] != '.' { // no dot in final elements
+		return false
+	}
+	// If we don't have an escape sequence before the final dot, we know it's fully qualified and can return here.
+	if s[l-2] != '\\' {
 		return true
 	}
 
-	// Otherwise we have to check if the dot is escaped or not by checking if
-	// there are an odd or even number of escape sequences before the dot.
-	i := strings.LastIndexFunc(s, func(r rune) bool {
+	// Otherwise we have to check if the dot is escaped or not by checking if there are an odd or even number of escape sequences before the dot.
+	i := strings.LastIndexFunc(s[:l-2], func(r rune) bool {
 		return r != '\\'
 	})
-	return (len(s)-i)%2 != 0
+	// TODO: revist!
+	return ((l-2)-i)%2 == 0
 }
 
 // Canonical returns the domain name in canonical form. A name in canonical form is lowercase and fully qualified.
@@ -56,7 +59,8 @@ func Canonical(s string) string {
 // label fits in 63 characters and that the entire name will fit into the 255
 // octet wire format limit.
 func IsName(s string) (labels int, ok bool) {
-	// XXX: The logic in this function was copied from packDomainName and
+	// remove labels here.
+	// XXX: The logic in this function was copied from packName and
 	// should be kept in sync with that function.
 
 	const lenmsg = 256
