@@ -18,7 +18,7 @@ func Fuzz(data []byte) int {
 	return 1
 }
 
-func FuzzNewRR(data []byte) int {
+func FuzzNew(data []byte) int {
 	str := string(data)
 	// Do not fuzz lines that include the $INCLUDE keyword and hint the fuzzer
 	// at avoiding them.
@@ -26,7 +26,7 @@ func FuzzNewRR(data []byte) int {
 	if strings.Contains(strings.ToUpper(str), "$INCLUDE") {
 		return -1
 	}
-	if _, err := NewRR(str); err != nil {
+	if _, err := New(str); err != nil {
 		return 0
 	}
 	return 1

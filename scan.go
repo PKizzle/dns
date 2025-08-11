@@ -96,7 +96,7 @@ type ttlState struct {
 }
 
 // New reads the RR contained in the string s. Only the first RR is returned.
-// If s contains no records, NewRR will return nil with no error.
+// If s contains no records, New will return nil with no error.
 //
 // The class defaults to IN and TTL defaults to 3600. The full zone file syntax
 // like $TTL, $ORIGIN, etc. is supported.
@@ -115,12 +115,6 @@ func New(s string) (RR, error) {
 	return readRR(strings.NewReader(s), "")
 }
 
-// readRR reads the RR contained in r.
-//
-// The string file is used in error reporting and to resolve relative
-// $INCLUDE directives.
-//
-// See NewRR for more documentation.
 func readRR(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTTL)

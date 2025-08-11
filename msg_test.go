@@ -8,10 +8,9 @@ import (
 
 // TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0.
 func ExampleMsg_Question() {
-	msg := &Msg{MsgHeader: MsgHeader{ID: ID(), RecursionDesired: true}}
+	msg := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
 	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
 	msg.Question = []RR{mx}
-	msg.ID = 3
 
 	msg.Pack()
 	fmt.Printf("%v\n", msg.Data)
@@ -35,6 +34,20 @@ func TestReadMsgBinary(t *testing.T) {
 }
 
 func TestPackUnpackBinary(t *testing.T) {
+	msg := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]RR, 2)}
+	a := &A{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
+	msg.Question = []RR{a}
+	msg.Pseudo = []RR{&NSID{Nsid: "6770646e732d616d73"}}
+	msg.Answer[0], _ = New("miek.nl.        14301   IN      A       45.138.52.215")
+	msg.Answer[1], _ = New("miek.nl.        14301   IN      A       45.138.52.216")
+
+	msg.Pack()
+	println(msg.String())
+	if err := msg.Unpack(); err != nil {
+		t.Logf("%v\n", msg.Data)
+		t.Errorf("%s", err)
+	}
+	t.Logf("%s\n", msg)
 }
 
 func TestUnpackName(t *testing.T) {

@@ -14,15 +14,15 @@ usage pattern for creating a new resource record:
 
 Or directly from a string (which is slower):
 
-	mx, err := dns.NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")
+	mx, err := dns.New("miek.nl. 3600 IN MX 10 mx.miek.nl.")
 
 Or when the default origin (.) and TTL (3600) and class (IN) suit you:
 
-	mx, err := dns.NewRR("miek.nl MX 10 mx.miek.nl")
+	mx, err := dns.New("miek.nl MX 10 mx.miek.nl")
 
 Or even:
 
-	mx, err := dns.NewRR("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
+	mx, err := dns.New("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 
 In the DNS messages are exchanged, these messages contain resource records
 (sets). Use pattern for creating a message:
