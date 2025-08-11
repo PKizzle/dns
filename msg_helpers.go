@@ -14,11 +14,11 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// offset reports the offset of data into buf, that is reports off such that
+// off reports the offset of data into buf, that is reports off such that
 // &data[0] == &buf[off]. It panics if data is not buf[off:].
 func offset(data, buf []byte) int {
 	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
-		panic("dns: internal error: cannot compute offset")
+		panic("dns: internal error: cannot compute off")
 	}
 	return len(buf) - len(data)
 }
@@ -90,7 +90,7 @@ func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength u
 	return h, rdlength, nil
 }
 
-// packHeader packs an RR header, returning the offset to the end of the header.
+// packHeader packs an RR header, returning the off to the end of the header.
 // See PackName for documentation about the compression.
 func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[string]uint16) (int, error) {
 	if off == len(msg) {
@@ -105,12 +105,7 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	if err != nil {
 		return len(msg), err
 	}
-
-	class := uint16(0)
-	if h.Class == 0 {
-		class = ClassINET
-	}
-	off, err = packUint16(class, msg, off)
+	off, err = packUint16(h.Class, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
@@ -363,6 +358,16 @@ func unpackOpt(s *cryptobyte.String) ([]EDNS0, error) {
 }
 
 func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
+	for _, option := range options {
+		l := option.Len()
+		if off+l >= len(msg) {
+			return off, ErrBuf
+		}
+		code := RRToCode(option) // TODO(miek): unknown codes, caught later
+		packUint16(code, msg, off)
+		packUint16(uint16(l), msg, off)
+		off, _ = packOptionCode(option, msg, off+4)
+	}
 	return 0, nil
 }
 
@@ -425,7 +430,7 @@ func typeBitMapLen(bitmap []uint16) int {
 	for _, t := range bitmap {
 		window := t / 256
 		length := (t-window*256)/8 + 1
-		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
+		if window > lastwindow && lastlength != 0 { // New window, jump to the new off
 			l += int(lastlength) + 2
 			lastlength = 0
 		}
@@ -458,7 +463,7 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	for _, t := range bitmap {
 		window := t / 256
 		length := (t-window*256)/8 + 1
-		if window > lastwindow && lastlength != 0 { // New window, jump to the new offset
+		if window > lastwindow && lastlength != 0 { // New window, jump to the new off
 			off += int(lastlength) + 2
 			lastlength = 0
 		}
@@ -711,33 +716,33 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 	return off, err
 }
 
-func packTxt(txt []string, msg []byte, offset int) (int, error) {
+func packTxt(txt []string, msg []byte, off int) (int, error) {
 	if len(txt) == 0 {
-		if offset >= len(msg) {
-			return offset, ErrBuf
+		if off >= len(msg) {
+			return off, ErrBuf
 		}
-		msg[offset] = 0
-		return offset, nil
+		msg[off] = 0
+		return off, nil
 	}
 	var err error
 	for _, s := range txt {
-		offset, err = packTxtString(s, msg, offset)
+		off, err = packTxtString(s, msg, off)
 		if err != nil {
-			return offset, err
+			return off, err
 		}
 	}
-	return offset, nil
+	return off, nil
 }
 
-func packTxtString(s string, msg []byte, offset int) (int, error) {
-	lenByteOffset := offset
-	if offset >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
-		return offset, ErrBuf
+func packTxtString(s string, msg []byte, off int) (int, error) {
+	lenByteoff := off
+	if off >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
+		return off, ErrBuf
 	}
-	offset++
+	off++
 	for i := 0; i < len(s); i++ {
-		if len(msg) <= offset {
-			return offset, ErrBuf
+		if len(msg) <= off {
+			return off, ErrBuf
 		}
 		if s[i] == '\\' {
 			i++
@@ -746,31 +751,31 @@ func packTxtString(s string, msg []byte, offset int) (int, error) {
 			}
 			// check for \DDD
 			if ddd.Is(s[i:]) {
-				msg[offset] = ddd.ToByte(s[i:])
+				msg[off] = ddd.ToByte(s[i:])
 				i += 2
 			} else {
-				msg[offset] = s[i]
+				msg[off] = s[i]
 			}
 		} else {
-			msg[offset] = s[i]
+			msg[off] = s[i]
 		}
-		offset++
+		off++
 	}
-	l := offset - lenByteOffset - 1
+	l := off - lenByteoff - 1
 	if l > 255 {
-		return offset, &Error{err: "string exceeded 255 bytes in txt"}
+		return off, &Error{err: "string exceeded 255 bytes in txt"}
 	}
-	msg[lenByteOffset] = byte(l)
-	return offset, nil
+	msg[lenByteoff] = byte(l)
+	return off, nil
 }
 
-func packOctetString(s string, msg []byte, offset int) (int, error) {
-	if offset >= len(msg) || len(s) > 256*4+1 {
-		return offset, ErrBuf
+func packOctetString(s string, msg []byte, off int) (int, error) {
+	if off >= len(msg) || len(s) > 256*4+1 {
+		return off, ErrBuf
 	}
 	for i := 0; i < len(s); i++ {
-		if len(msg) <= offset {
-			return offset, ErrBuf
+		if len(msg) <= off {
+			return off, ErrBuf
 		}
 		if s[i] == '\\' {
 			i++
@@ -779,17 +784,17 @@ func packOctetString(s string, msg []byte, offset int) (int, error) {
 			}
 			// check for \DDD
 			if ddd.Is(s[i:]) {
-				msg[offset] = ddd.ToByte(s[i:])
+				msg[off] = ddd.ToByte(s[i:])
 				i += 2
 			} else {
-				msg[offset] = s[i]
+				msg[off] = s[i]
 			}
 		} else {
-			msg[offset] = s[i]
+			msg[off] = s[i]
 		}
-		offset++
+		off++
 	}
-	return offset, nil
+	return off, nil
 }
 
 func unpackTxt(s *cryptobyte.String) ([]string, error) {

@@ -99,6 +99,17 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	return fmt.Errorf("no option unpack defined")
 }
 
+func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
+	switch x := option.(type) {
+	case *NSID:
+		return x.pack(msg, off)
+	case *PADDING:
+		return x.pack(msg, off)
+	}
+	// Coder() check, abuse Type()?
+	return 0, fmt.Errorf("no option pack defined")
+}
+
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
 // The identifier is an opaque string encoded as hex.
 type NSID struct {
@@ -118,9 +129,15 @@ func (o *NSID) String() string {
 	return sb.String()
 }
 
+// TODO: generate these too
+
 func (o *NSID) unpack(s *cryptobyte.String) error {
 	o.Nsid = hex.EncodeToString(*s)
 	return nil
+}
+
+func (o *NSID) pack(msg []byte, off int) (int, error) {
+	return hex.Decode(msg[off:], []byte(o.Nsid))
 }
 
 // PADDING option is used to add padding to a request/response. The default value of padding SHOULD be 0x0 but
@@ -130,6 +147,13 @@ type PADDING struct {
 	Padding string `dns:"octet"`
 }
 
-func (o *PADDING) Len() int                          { return 0 }
-func (o *PADDING) String() string                    { return "" }
-func (o *PADDING) unpack(s *cryptobyte.String) error { return nil }
+func (o *PADDING) Len() int       { return 0 }
+func (o *PADDING) String() string { return "" }
+
+func (o *PADDING) unpack(s *cryptobyte.String) error {
+	return nil
+}
+
+func (o *PADDING) pack(msg []byte, off int) (int, error) {
+	return 0, nil
+}

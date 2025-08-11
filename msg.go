@@ -509,45 +509,54 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
-	off, err = dh.pack(m.Data, off)
-	if err != nil {
+	if off, err = dh.pack(m.Data, off); err != nil {
 		return err
 	}
 	for _, r := range m.Question {
-		off, err = packQuestion(r, m.Data, off)
-		if err != nil {
+		if off, err = packQuestion(r, m.Data, off); err != nil {
 			return err
 		}
 		break
 	}
 	for _, r := range m.Answer {
-		_, off, err = packRR(r, m.Data, off, compression)
-		if err != nil {
+		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
 		}
 	}
 	for _, r := range m.Ns {
-		_, off, err = packRR(r, m.Data, off, compression)
-		if err != nil {
+		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
 		}
 	}
-	for _, r := range m.Extra {
-		_, off, err = packRR(r, m.Data, off, compression)
-		if err != nil {
-			return err
+
+	// Extended Rcode
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers {
+		opt := new(OPT)
+		if m.UDPSize > MinMsgSize {
+			opt.SetUDPSize(m.UDPSize)
 		}
-	}
-	// TODO pseudo
-	/*
-		for _, r := range m.Pseudo {
-			// not tsig and sig0 - added OPT RR and unpack things in there.
-			_, off, err = packRR(r, m.Data, off, compression)
-			if err != nil {
-				return err
+		if m.Security {
+			opt.SetSecurity(true)
+		}
+		if m.CompactAnswers {
+			opt.SetCompactAnswers(true)
+		}
+		for _, option := range m.Pseudo {
+			if edns0, ok := option.(EDNS0); ok {
+				opt.Options = append(opt.Options, edns0)
 			}
 		}
-	*/
+
+		if _, off, err = packRR(opt, m.Data, off, compression); err != nil {
+			return err
+		}
+	}
+
+	for _, r := range m.Extra {
+		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+			return err
+		}
+	}
 	m.Data = m.Data[:off]
 	return nil
 }
@@ -649,7 +658,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 		if opt, ok := rr.(*OPT); ok {
 			// move to end, so it can be removed latter and unpack the opt for the settings.
 			m.Security = opt.Security()
-			m.CompatAnswers = opt.CompactAnswers()
+			m.CompactAnswers = opt.CompactAnswers()
 			// m.Rcode == something someting, TODO
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
@@ -694,7 +703,7 @@ func (m *Msg) String() string {
 
 	sb.WriteString(m.MsgHeader.String())
 	// if core EDNS flags are set, we print this (flags are already handles in MsgHeader
-	if m.UDPSize > 0 || m.Security || m.CompatAnswers {
+	if m.UDPSize > 0 || m.Security || m.CompactAnswers {
 		sb.WriteString(";; EDNS, version: ")
 		sb.WriteString(strconv.Itoa(int(m.Version)))
 		sb.WriteString(", udp: ")

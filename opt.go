@@ -54,8 +54,7 @@ func (rr *OPT) ExtendedRcode() int {
 func (rr *OPT) SetExtendedRcode(v uint16) {
 	rr.Hdr.TTL = rr.Hdr.Ttl&0x00FFFFFF | uint32(v>>4)<<24
 }
-
-
+*/
 
 // Z returns the Z part of the OPT RR as a uint16 with only the 15 least significant bits used.
 func (rr *OPT) Z() uint16 {
@@ -64,6 +63,5 @@ func (rr *OPT) Z() uint16 {
 
 // SetZ sets the Z part of the OPT RR, note only the 15 least significant bits of z are used.
 func (rr *OPT) SetZ(z uint16) {
-	rr.Hdr.TTL = rr.Hdr.Ttl&^0x7FFF | uint32(z&0x7FFF)
+	rr.Hdr.TTL = rr.Hdr.TTL&^0x7FFF | uint32(z&0x7FFF)
 }
-*/
