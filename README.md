@@ -98,6 +98,23 @@ o.Option = append(o.Option, e)                                    |
 m.Extra = append(m.Extra, o)                                      |
 ```
 
+### Text Output
+
+```
+OLD                                                                  | NEW
+                                                                     |
+;; opcode: QUERY, status: NOERROR, id: 62167                         | ;; QUERY, status: NOERROR, id: 3, flags: rd do
+;; flags: qr rd ra; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0 | ;; EDNS, version: 0, udp: 1024
+                                                                     | ;; QUESTION: 1, PSEUDO: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+;; OPT PSEUDOSECTION:                                                |
+; EDNS: version 0; flags:; udp: 512                                  | ;; PSEUDO SECTION:
+; NSID: 6770646e732d616d73  (g)(p)(d)(n)(s)(-)(a)(m)(s)              | .               CLASS0  NSID    6770 ; ("gp")
+                                                                     |
+;; QUESTION SECTION:                                                 |
+;miek.nl.       IN       MX                                          | ;; QUESTION SECTION:
+                                                                     | miek.nl.                IN      A
+```
+
 # Users
 
 A not-so-up-to-date-list-that-may-be-actually-current:
