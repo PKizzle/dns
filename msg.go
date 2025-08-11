@@ -3,6 +3,7 @@ package dns
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"io"
 	"strconv"
 	"strings"
 
@@ -884,6 +885,11 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 	}
 	copy(m.Data, p)
 	return len(p), nil
+}
+
+func (m *Msg) WriterTo(w io.Writer) (int64, error) {
+	n, err := w.Write(m.Data)
+	return int64(n), err
 }
 
 // Read read the data from m.Data into p.
