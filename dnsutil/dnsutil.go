@@ -138,3 +138,12 @@ func Trim(q string, z string) string {
 	// This includes the '.', remove on return
 	return q[:i-1]
 }
+
+/*
+// IsSubDomain checks if child is indeed a child of the parent. If child and parent
+// are the same domain true is returned as well.
+func IsSubDomain(parent, child string) bool {
+	// Entire child is contained in parent
+	return CompareDomainName(parent, child) == CountLabel(parent)
+}
+*/

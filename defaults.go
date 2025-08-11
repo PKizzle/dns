@@ -179,51 +179,13 @@ func IsRRset(rrset []RR) bool {
 		return false
 	}
 
-	baseH := rrset[0].Header()
+	base := rrset[0].Header()
 	for _, rr := range rrset[1:] {
-		curH := rr.Header()
-		if curH.t != baseH.t || curH.Class != baseH.Class || curH.Name != baseH.Name {
-			// Mismatch between the records, so this is not a valid rrset for
-			// signing/verifying
+		h := rr.Header()
+		if h.t != base.t || h.Class != base.Class || h.Name != base.Name {
 			return false
 		}
 	}
 
 	return true
 }
-
-/*
-
-// Copied from the official Go code.
-
-// ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP
-// address suitable for reverse DNS (PTR) record lookups or an error if it fails
-// to parse the IP address.
-func ReverseAddr(addr string) (arpa string, err error) {
-	ip := net.ParseIP(addr)
-	if ip == nil {
-		return "", &Error{err: "unrecognized address: " + addr}
-	}
-	if v4 := ip.To4(); v4 != nil {
-		buf := make([]byte, 0, net.IPv4len*4+len("in-addr.arpa."))
-		// Add it, in reverse, to the buffer
-		for i := len(v4) - 1; i >= 0; i-- {
-			buf = strconv.AppendInt(buf, int64(v4[i]), 10)
-			buf = append(buf, '.')
-		}
-		// Append "in-addr.arpa." and return (buf already has the final .)
-		buf = append(buf, "in-addr.arpa."...)
-		return string(buf), nil
-	}
-	// Must be IPv6
-	buf := make([]byte, 0, net.IPv6len*4+len("ip6.arpa."))
-	// Add it, in reverse, to the buffer
-	for i := len(ip) - 1; i >= 0; i-- {
-		v := ip[i]
-		buf = append(buf, hexDigit[v&0xF], '.', hexDigit[v>>4], '.')
-	}
-	// Append "ip6.arpa." and return (buf already has the final .)
-	buf = append(buf, "ip6.arpa."...)
-	return string(buf), nil
-}
-*/
