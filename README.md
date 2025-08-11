@@ -1,3 +1,7 @@
+# WORK IN PROGRESS
+
+Things compile, the few tests work, but expect breakage, or large things to change.
+
 [![](https://godoc.org/codeberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
 
 # Alternative (more granular) approach to a DNS library (version 2)
@@ -5,8 +9,7 @@
 > Less is more.
 
 Complete and usable DNS library. All Resource Records are supported, including the DNSSEC types. It follows a
-lean and mean philosophy. If there is stuff you should know as a DNS programmer there isn't a convenience
-function for it. Server side and client side programming is supported, i.e. you can build servers and
+lean and mean philosophy. Server side and client side programming is supported, i.e. you can build servers and
 resolvers with it.
 
 We try to keep the "main" branch as sane as possible and at the bleeding edge of standards, avoiding breaking
