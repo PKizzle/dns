@@ -20,7 +20,7 @@ const (
 	MinMsgSize = 512
 	// MaxMsgSize is the largest possible DNS message.
 	MaxMsgSize = 65535
-	// MsgHeaderLen is the length of the header in the DNS message.
+	// MsgHeaderSize is the length of the header in the DNS message.
 	MsgHeaderSize = 12
 
 	year68     = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
@@ -35,8 +35,7 @@ type RR interface {
 	String() string
 	// Data returns all the rdata fields of the resource record.
 	Data() []Field
-	// SetData sets the rdata fields of the resource record.
-	//	SetData([]Field) error
+	// SetData sets the rdata fields of the resource record. SetData([]Field) error??
 	// Len is the length if the RR when encoded in wire format, this is not a perfect metric and returning
 	// a slightly too large value is OK.
 	Len() int
@@ -144,10 +143,10 @@ type MsgHeader struct {
 
 	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
 	// putting the bits in the right places.
-	UDPSize       uint16 // UDPSize is the OPT's RR advertised UDP size.
-	Version       uint8  // Version is the EDNS version, always zero.
-	Security      bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
-	CompatAnswers bool   // Compact Answers OK
+	UDPSize        uint16 // UDPSize is the OPT's RR advertised UDP size.
+	Version        uint8  // Version is the EDNS version, always zero.
+	Security       bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
+	CompactAnswers bool   // Compact Answers OK
 }
 
 // Msg is a DNS message.
@@ -228,7 +227,7 @@ func (h *MsgHeader) String() string {
 	if h.Security {
 		sb.WriteString(" do")
 	}
-	if h.CompatAnswers {
+	if h.CompactAnswers {
 		sb.WriteString(" co")
 	}
 	sb.WriteByte('\n')
