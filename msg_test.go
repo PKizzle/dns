@@ -34,6 +34,9 @@ func TestReadMsgBinary(t *testing.T) {
 	}
 }
 
+func TestPackUnpackBinary(t *testing.T) {
+}
+
 func TestUnpackName(t *testing.T) {
 	tcs := []struct {
 		buf   []byte

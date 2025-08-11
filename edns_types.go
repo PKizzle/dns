@@ -113,7 +113,7 @@ func (o *NSID) String() string {
 	if x, err := hex.DecodeString(o.Nsid); err == nil { // == nil
 		sb.WriteString(" ; (\"")
 		sb.Write(x)
-		sb.WriteByte(')')
+		sb.WriteString("\")")
 	}
 	return sb.String()
 }
