@@ -6,18 +6,20 @@ import (
 	"testing"
 )
 
-// TestMakeMsgQuestionMX tests the creation of a small Msg with a question section only.
-func TestMakeMsgQuestionMX(t *testing.T) {
+// TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0.
+func ExampleMsg_Question() {
 	msg := &Msg{MsgHeader: MsgHeader{ID: ID(), RecursionDesired: true}}
 	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
 	msg.Question = []RR{mx}
+	msg.ID = 3
 
 	msg.Pack()
 	fmt.Printf("%v\n", msg.Data)
-	fmt.Printf("%s\n", msg)
+	// Output: [0 3 1 0 0 1 0 0 0 0 0 0 4 109 105 101 107 2 110 108 0 0 15 0 1]
 }
 
 func TestReadMsgBinary(t *testing.T) {
+	// TODO: turn into test
 	binary := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
 	for i, bin := range binary {
 		t.Run(fmt.Sprintf("test %d: %s", i, bin), func(t *testing.T) {

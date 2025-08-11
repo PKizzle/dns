@@ -32,7 +32,7 @@ const (
 // This being a variable the function can be reassigned to a custom function.
 // For instance, to make it return a static value for testing:
 //
-//	dns.Id = func() uint16 { return 3 }
+//	dns.ID = func() uint16 { return 3 }
 var ID = id
 
 // id returns a 16 bits random number to be used as a

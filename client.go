@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// A Client is a DNS client. If it currently empty.
+// A Client is a DNS client. It is safe to use a client from multiple goroutines.
 type Client struct {
 	// 	Transport RoundTripper Do the RoundTripper interface?
 	*Transport
