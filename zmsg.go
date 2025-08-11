@@ -37,7 +37,7 @@ func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *CNAME) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Target, msg, off, compression, true)
+	off, err = packName(rr.Target, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -85,7 +85,7 @@ func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MB) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Mb, msg, off, compression, true)
+	off, err = packName(rr.Mb, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -105,7 +105,7 @@ func (rr *MB) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Mg, msg, off, compression, true)
+	off, err = packName(rr.Mg, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -125,11 +125,11 @@ func (rr *MG) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Rmail, msg, off, compression, true)
+	off, err = packName(rr.Rmail, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Email, msg, off, compression, true)
+	off, err = packName(rr.Email, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -153,7 +153,7 @@ func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MR) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Mr, msg, off, compression, true)
+	off, err = packName(rr.Mr, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -173,7 +173,7 @@ func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MF) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Mf, msg, off, compression, true)
+	off, err = packName(rr.Mf, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -193,7 +193,7 @@ func (rr *MF) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MD) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Md, msg, off, compression, true)
+	off, err = packName(rr.Md, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -217,7 +217,7 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Mx, msg, off, compression, true)
+	off, err = packName(rr.Mx, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -244,7 +244,7 @@ func (rr *AFSDB) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Hostname, msg, off, compression, false)
+	off, err = packName(rr.Hostname, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -291,7 +291,7 @@ func (rr *RT) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Host, msg, off, compression, false)
+	off, err = packName(rr.Host, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -314,7 +314,7 @@ func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Ns, msg, off, compression, true)
+	off, err = packName(rr.Ns, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -334,7 +334,7 @@ func (rr *NS) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *PTR) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Ptr, msg, off, compression, true)
+	off, err = packName(rr.Ptr, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -354,11 +354,11 @@ func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *RP) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Mbox, msg, off, compression, false)
+	off, err = packName(rr.Mbox, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Txt, msg, off, compression, false)
+	off, err = packName(rr.Txt, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -382,11 +382,11 @@ func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SOA) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Ns, msg, off, compression, true)
+	off, err = packName(rr.Ns, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Mbox, msg, off, compression, true)
+	off, err = packName(rr.Mbox, msg, off, compression, true)
 	if err != nil {
 		return off, err
 	}
@@ -517,7 +517,7 @@ func (rr *SRV) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Target, msg, off, compression, false)
+	off, err = packName(rr.Target, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -566,7 +566,7 @@ func (rr *NAPTR) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Replacement, msg, off, compression, false)
+	off, err = packName(rr.Replacement, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -645,7 +645,7 @@ func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DNAME) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Target, msg, off, compression, false)
+	off, err = packName(rr.Target, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -709,11 +709,11 @@ func (rr *PX) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Map822, msg, off, compression, false)
+	off, err = packName(rr.Map822, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Mapx400, msg, off, compression, false)
+	off, err = packName(rr.Mapx400, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -877,7 +877,7 @@ func (rr *RRSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.SignerName, msg, off, compression, false)
+	off, err = packName(rr.SignerName, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -926,7 +926,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NSEC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.NextDomain, msg, off, compression, false)
+	off, err = packName(rr.NextDomain, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -1023,7 +1023,7 @@ func (rr *KX) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Exchanger, msg, off, compression, false)
+	off, err = packName(rr.Exchanger, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -1087,11 +1087,11 @@ func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *TALINK) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.PreviousName, msg, off, compression, false)
+	off, err = packName(rr.PreviousName, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.NextName, msg, off, compression, false)
+	off, err = packName(rr.NextName, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -1338,7 +1338,7 @@ func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NSAPPTR) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Ptr, msg, off, compression, false)
+	off, err = packName(rr.Ptr, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -1483,7 +1483,7 @@ func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *TKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packDomainName(rr.Algorithm, msg, off, compression, false)
+	off, err = packName(rr.Algorithm, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}
@@ -1737,7 +1737,7 @@ func (rr *HIP) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainNames(rr.RendezvousServers, msg, off, compression)
+	off, err = packNames(rr.RendezvousServers, msg, off, compression)
 	if err != nil {
 		return off, err
 	}
@@ -1877,7 +1877,7 @@ func (rr *LP) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packDomainName(rr.Fqdn, msg, off, compression, false)
+	off, err = packName(rr.Fqdn, msg, off, compression, false)
 	if err != nil {
 		return off, err
 	}

@@ -91,7 +91,7 @@ var RcodeToString = map[uint16]string{
 
 // Domain names are a sequence of counted strings split at the dots. They end with a zero-length string.
 
-func packDomainName(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
+func packName(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in IsDomainName and
 	// should be kept in sync with this function.
 
@@ -340,7 +340,7 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	off, err = packDomainName(rr.Header().Name, msg, off, nil, true)
+	off, err = packName(rr.Header().Name, msg, off, nil, true)
 	if err != nil {
 		return len(msg), err
 	}
@@ -422,7 +422,7 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	}
 
 	// Restrict msgBuf to the end of the RR (the current position of msg) so
-	// that we compute the correct offset in unpackDomainName.
+	// that we compute the correct offset in unpackName.
 	msgBuf = msgBuf[:offset(*msg, msgBuf)]
 
 	var rr RR
@@ -506,9 +506,9 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	dh.Arcount = uint16(len(m.Extra))
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
-	uncompressedLen := m.Len()
-	if packLen := uncompressedLen + 1; len(m.Data) < packLen {
-		m.Data = make([]byte, packLen)
+	l := m.Len()
+	if len(m.Data) < l {
+		m.Data = append(m.Data, make([]byte, l-len(m.Data))...)
 	}
 
 	// Pack it in: header and then the pieces.
@@ -542,13 +542,16 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 			return err
 		}
 	}
-	for _, r := range m.Pseudo {
-		// not tsig and sig0 - added OPT RR and unpack things in there.
-		_, off, err = packRR(r, m.Data, off, compression)
-		if err != nil {
-			return err
+	// TODO pseudo
+	/*
+		for _, r := range m.Pseudo {
+			// not tsig and sig0 - added OPT RR and unpack things in there.
+			_, off, err = packRR(r, m.Data, off, compression)
+			if err != nil {
+				return err
+			}
 		}
-	}
+	*/
 	m.Data = m.Data[:off]
 	return nil
 }

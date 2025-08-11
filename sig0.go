@@ -100,7 +100,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 
 	for i := 0; i < int(dh.Qdcount) && !s.Empty(); i++ {
-		_, err = unpackDomainName(&s, buf)
+		_, err = unpackName(&s, buf)
 		if err != nil {
 			if errors.Is(err, errUnpackOverflow) {
 				return errTruncatedMessage
@@ -114,7 +114,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	}
 
 	for i, tot := 1, int(dh.Ancount)+int(dh.Nscount)+int(dh.Arcount); i < tot && !s.Empty(); i++ {
-		_, err = unpackDomainName(&s, buf)
+		_, err = unpackName(&s, buf)
 		if err != nil {
 			if errors.Is(err, errUnpackOverflow) {
 				return errTruncatedMessage
@@ -136,7 +136,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	// offset should be just prior to SIG
 	bodyend := offset(s, buf)
 	// owner name SHOULD be root
-	_, err = unpackDomainName(&s, buf)
+	_, err = unpackName(&s, buf)
 	if err != nil {
 		if errors.Is(err, errUnpackOverflow) {
 			return errTruncatedMessage
@@ -163,7 +163,7 @@ func (rr *SIG) Verify(k *KEY, buf []byte) error {
 	if !s.Skip(2) {
 		return errTruncatedMessage
 	}
-	signername, err := unpackDomainName(&s, buf)
+	signername, err := unpackName(&s, buf)
 	if err != nil {
 		return err
 	}

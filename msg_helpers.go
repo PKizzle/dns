@@ -91,13 +91,13 @@ func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength u
 }
 
 // packHeader packs an RR header, returning the offset to the end of the header.
-// See PackDomainName for documentation about the compression.
+// See PackName for documentation about the compression.
 func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[string]uint16) (int, error) {
 	if off == len(msg) {
 		return off, nil
 	}
 
-	off, err := packDomainName(h.Name, msg, off, compress, true)
+	off, err := packName(h.Name, msg, off, compress, true)
 	if err != nil {
 		return len(msg), err
 	}
@@ -547,10 +547,10 @@ func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	return names, nil
 }
 
-func packDomainNames(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
+func packNames(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
 	var err error
 	for _, name := range names {
-		off, err = packDomainName(name, msg, off, compress, false)
+		off, err = packName(name, msg, off, compress, false)
 		if err != nil {
 			return len(msg), err
 		}
@@ -705,7 +705,7 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 	case IPSECGatewayIPv6:
 		off, err = packAAAA(gatewayAddr, msg, off)
 	case IPSECGatewayHost:
-		off, err = packDomainName(gatewayString, msg, off, compression, compress)
+		off, err = packName(gatewayString, msg, off, compression, compress)
 	}
 
 	return off, err

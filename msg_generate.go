@@ -90,7 +90,7 @@ func main() {
 				case `dns:"pairs"`:
 					o("off, err = packSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
-					o("off, err = packDomainNames(rr.%s, msg, off, compression)\n")
+					o("off, err = packNames(rr.%s, msg, off, compression)\n")
 				case `dns:"apl"`:
 					o("off, err = packApl(rr.%s, msg, off)\n")
 				default:
@@ -104,9 +104,9 @@ func main() {
 			switch {
 			case tag == `dns:"-"`: // ignored
 			case tag == `dns:"cdomain-name"`:
-				o("off, err = packDomainName(rr.%s, msg, off, compression, true)\n")
+				o("off, err = packName(rr.%s, msg, off, compression, true)\n")
 			case tag == `dns:"domain-name"`:
-				o("off, err = packDomainName(rr.%s, msg, off, compression, false)\n")
+				o("off, err = packName(rr.%s, msg, off, compression, false)\n")
 			case tag == `dns:"a"`:
 				o("off, err = packA(rr.%s, msg, off)\n")
 			case tag == `dns:"aaaa"`:
