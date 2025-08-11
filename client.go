@@ -83,6 +83,7 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
 	if isPacketConn(conn) {
+
 		if _, err := conn.Write(m.Data); err != nil {
 			return nil, 0, err
 		}
