@@ -696,7 +696,9 @@ func (m *Msg) Unpack() error {
 	}
 	m.setMsgHeader(dh)
 	if m.Options&OptionUnpackHeader == OptionUnpackHeader {
-		return nil
+		if m.Options&OptionUnpackQuestion != OptionUnpackQuestion {
+			return nil
+		}
 	}
 	return m.unpack(dh, s, m.Data)
 }

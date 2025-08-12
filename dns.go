@@ -179,14 +179,15 @@ type Msg struct {
 	*Network
 }
 
-// Option is an option on how to handle a message. Options can be combined.
+// Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
+// you only want to unpack the Question section you must also set unpack header: OptionUnpackHeader |
+// OptionUnpackQuestion.
 type Option uint16
 
 const (
 	OptionUnpackAll Option = 0 // Unpack the entire message, mostly defined to serve as documentation.
 
-	OptionUnpackNone     Option = 1 << iota // Do not unpack anything, dump the message in Data and call it a day.
-	OptionUnpackHeader                      // Unpack only the header of the message.
+	OptionUnpackHeader   Option = 1 << iota // Unpack only the header of the message.
 	OptionUnpackQuestion                    // Unpack only the question section of the message
 	// OptionNoBufferUse // reuse buffers?
 )
