@@ -9,8 +9,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"golang.org/x/crypto/cryptobyte"
 )
 
 // Default maximum number of TCP queries before we close the socket.
@@ -130,7 +128,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		srv.Listener = l
-		return srv.serveTCP(l)
+		srv.serveTCP(l)
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
 		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
 			return errors.New("dns: neither Certificates nor GetCertificate set in Config")
@@ -141,7 +139,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		l = tls.NewListener(l, srv.TLSConfig)
-		return srv.serveTCP(l)
+		srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
 		if err != nil {
@@ -153,7 +151,7 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.PacketConn = l
-		return srv.serveUDP(u)
+		srv.serveUDP(u)
 	}
 	return &Error{err: "bad network"}
 }
@@ -192,7 +190,7 @@ func (srv *Server) getReadTimeout() time.Duration {
 }
 
 // serveTCP starts a TCP listener for the server.
-func (srv *Server) serveTCP(l net.Listener) {
+func (srv *Server) serveTCP(ln net.Listener) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -202,61 +200,61 @@ func (srv *Server) serveTCP(l net.Listener) {
 	for {
 		select {
 		case <-srv.shutdown:
-			l.Close()
+			ln.Close()
 			wg.Wait()
 			close(srv.exited)
 			return
 		default:
-			rw, err := l.Accept()
+			conn, err := ln.Accept()
 			if err != nil {
 				// skip (log, whatever)
 				continue
 			}
 			wg.Add(1)
-			go srv.serveTCPConn(&wg, rw)
+			go srv.serveTCPConn(&wg, conn)
 		}
 	}
 }
 
 // serveUDP starts a UDP listener for the server.
-func (srv *Server) serveUDP(l net.PacketConn) {
+func (srv *Server) serveUDP(pc net.PacketConn) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
 
 	var wg sync.WaitGroup
-	rtimeout := srv.getReadTimeout()
+
 	for {
 		select {
 		case <-srv.shutdown:
-			l.Close() // add more channels?
+			pc.Close() // add more channels?
 			wg.Wait()
 			close(srv.exited)
 			return
 		default:
-			req := &Msg{Data: make([]byte, srv.UDPSize)}
-			req.Options = OptionUnpackQuestion | OptionUnpackHeader
-			_, err := io.Copy(req, l)
-			m, sPC, err := readerPC.ReadPacketConn(l, rtimeout)
+			// see msg.go
+			r := &Msg{Data: make([]byte, srv.UDPSize)}
+			oob := make([]byte, oobSize)
+			n, oobn, _, raddr, err := pc.(*net.UDPConn).ReadMsgUDP(r.Data, oob)
 			if err != nil {
-				// ignore
+				// nothing
 				continue
 			}
+			oob = oob[:oobn]
+			r.Network = &Network{raddr, oob}
+			r.Data = r.Data[:n]
 			wg.Add(1)
-			go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
+			go srv.serveUDPConn(&wg, pc.(*net.UDPConn), r)
 		}
 	}
 }
 
 // Serve a new TCP connection.
-func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
-	w := &response{writer: rw}
+func (srv *Server) serveTCPConn(wg *sync.WaitGroup, conn net.Conn) {
+	defer wg.Done()
 
-	idleTimeout := tcpIdleTimeout
-	if srv.IdleTimeout != nil {
-		idleTimeout = srv.IdleTimeout()
-	}
-
+	w := &response{Writer: conn}
+	idleTimeout := srv.IdleTimeout()
 	timeout := srv.getReadTimeout()
 
 	limit := srv.MaxTCPQueries
@@ -264,52 +262,50 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 		limit = maxTCPQueries
 	}
 
-	for q := 0; (q < limit || limit == -1) && srv.isStarted(); q++ {
-		m, err := reader.ReadTCP(w.tcp, timeout)
-		if err != nil {
-			// TODO(tmthrgd): handle error
-			break
+	for q := 0; q < limit || limit == -1; q++ {
+		conn.SetReadDeadline(time.Now().Add(timeout))
+
+		r := &Msg{Data: make([]byte, srv.UDPSize)}
+		if _, err := r.ReadFrom(conn); err != nil {
+			// handle error, return turnong
+			continue
 		}
-		srv.serveDNS(m, w)
+
+		srv.serveDNS(w, r)
+
 		if w.closed {
 			break // Close() was called
 		}
-		if w.hijacked {
+		if w.hijacked { // TODO
 			break // client will call Close() themselves
 		}
-		// The first read uses the read timeout, the rest use the
-		// idle timeout.
+		// The first read uses the read timeout, the rest use the idle timeout.
 		timeout = idleTimeout
 	}
 
 	if !w.hijacked {
 		w.Close()
 	}
-
-	wg.Done()
 }
 
 // Serve a new UDP request.
-func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
-	w := &response{udp: u, udpSession: udpSession}
+func (srv *Server) serveUDPConn(wg *sync.WaitGroup, conn *net.UDPConn, r *Msg) {
+	defer wg.Done()
 
-	srv.serveDNS(m, w)
-	wg.Done()
+	w := &response{Writer: conn}
+
+	srv.serveDNS(w, r)
 }
 
-func (srv *Server) serveDNS(m []byte, w *response) {
-	s := cryptobyte.String(m)
+func (srv *Server) serveDNS(w *response, r *Msg) {
+	r.Options = OptionUnpackQuestion | OptionUnpackHeader
 
-	req := new(Msg)
-	req.Options = OptionUnpackQuestion | OptionUnpackHeader
-	req.Data = m
-
-	err := req.Unpack()
+	err := r.Unpack()
 	if err != nil {
 		// bogus, don't even reply
 		return
 	}
-	srv.Handler.ServeDNS(w, req)
+	srv.Handler.ServeDNS(w, r)
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
