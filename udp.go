@@ -10,6 +10,28 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
+// Network is a small strucures that keep track of where the (potential) UDP message came from.
+type Network struct {
+	raddr *net.UDPAddr // address from [net.ReadMsgUDP]
+	// oob data also returned, this is needed to route to the correct interface. As these are small fixed
+	// slices it makes sense to use a sync.Pool, to be able to override this behavior an
+	oobdata []byte
+}
+
+// Size return the size of the oob buffer that should be used.
+var oobSize = func() int {
+	// We can't know whether we'll get an IPv4 control message or an
+	// IPv6 control message ahead of time. To get around this, we size
+	// the buffer equal to the largest of the two.
+	oob4 := ipv4.NewControlMessage(ipv4.FlagDst | ipv4.FlagInterface)
+	oob6 := ipv6.NewControlMessage(ipv6.FlagDst | ipv6.FlagInterface)
+
+	if len(oob4) > len(oob6) {
+		return len(oob4)
+	}
+	return len(oob6)
+}()
+
 // This is the required size of the OOB buffer to pass to ReadMsgUDP.
 var udpOOBSize = func() int {
 	// We can't know whether we'll get an IPv4 control message or an
@@ -26,35 +48,6 @@ var udpOOBSize = func() int {
 	return len(oob6)
 }()
 
-// SessionUDP holds the remote address and the associated
-// out-of-band data.
-type SessionUDP struct {
-	raddr   *net.UDPAddr
-	context []byte
-}
-
-// RemoteAddr returns the remote network address.
-func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
-
-// ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
-// net.UDPAddr.
-func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
-	// sync.Pool for these fixes bytes!!
-	oob := make([]byte, udpOOBSize)
-	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
-	if err != nil {
-		return n, nil, err
-	}
-	return n, &SessionUDP{raddr, oob[:oobn]}, err
-}
-
-// WriteToSessionUDP acts just like net.UDPConn.WriteTo(), but uses a *SessionUDP instead of a net.Addr.
-func WriteToSessionUDP(conn *net.UDPConn, b []byte, session *SessionUDP) (int, error) {
-	oob := correctSource(session.context)
-	n, _, err := conn.WriteMsgUDP(b, oob, session.raddr)
-	return n, err
-}
-
 func setUDPSocketOptions(conn *net.UDPConn) error {
 	// Try setting the flags for both families and ignore the errors unless they
 	// both error.
@@ -66,8 +59,8 @@ func setUDPSocketOptions(conn *net.UDPConn) error {
 	return nil
 }
 
-// parseDstFromOOB takes oob data and returns the destination IP.
-func parseDstFromOOB(oob []byte) net.IP {
+// parseFromOOB takes oob data and returns the destination IP.
+func parseFromOOB(oob []byte) net.IP {
 	// Start with IPv6 and then fallback to IPv4
 	// TODO(fastest963): Figure out a way to prefer one or the other. Looking at
 	// the lvl of the header for a 0 or 41 isn't cross-platform.
@@ -82,9 +75,9 @@ func parseDstFromOOB(oob []byte) net.IP {
 	return nil
 }
 
-// correctSource takes oob data and returns new oob data with the Src equal to the Dst
-func correctSource(oob []byte) []byte {
-	dst := parseDstFromOOB(oob)
+// sourceFromOOB takes oob data and returns new oob data with the Src equal to the Dst
+func sourceFromOOB(oob []byte) []byte {
+	dst := parseFromOOB(oob)
 	if dst == nil {
 		return nil
 	}

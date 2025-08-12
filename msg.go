@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"io"
+	"net"
 	"strconv"
 	"strings"
 
@@ -892,26 +893,79 @@ func (m *Msg) setMsgHeader(dh header) {
 
 // io.Reader and io.Writer interfaces implementation.
 
-// Write writes the buffer p to the m.Data. If m.Data is less then the size of p an error is returned.
-func (m *Msg) Write(p []byte) (n int, err error) {
-	if len(p) > len(m.Data) {
-		return 0, ErrBuf
-	}
-	copy(m.Data, p)
-	return len(p), nil
-}
+// Msg needs to carry the interface it was read from ??
 
-func (m *Msg) WriterTo(w io.Writer) (int64, error) {
-	// should we try and detect a tcp conn here??
-	n, err := w.Write(m.Data)
-	return int64(n), err
+// Write writes the buffer p to the m.Data.
+func (m *Msg) Write(p []byte) (n int, err error) {
+	n = copy(m.Data, p)
+	return n, nil
 }
 
 // Read read the data from m.Data into p.
 func (m *Msg) Read(p []byte) (n int, err error) {
-	if len(p) < len(m.Data) {
-		return 0, ErrBuf
+	n = copy(p, m.Data)
+	return n, nil
+}
+
+// WriteTo writes the message to w. When w is a *net.TCPConn, the write is prefixed with an uint16 with the
+// length of the buffer, otherwise the m.Data is written as-is.
+func (m *Msg) WriteTo(w io.Writer) (int64, error) {
+	if tcp, ok := w.(*net.TCPConn); ok {
+		l := make([]byte, 2, 2)
+		binary.BigEndian.PutUint16(l[0:], uint16(len(m.Data)))
+		l = append(l, m.Data...)
+		n, err := tcp.Write(l)
+		return int64(n), err
 	}
-	copy(p, m.Data)
-	return len(p), nil
+
+	if sock, ok := w.(*net.UDPConn); ok && m.Network != nil {
+		oob := sourceFromOOB(m.Network.oobdata)
+		n, _, err := sock.WriteMsgUDP(m.Data, oob, m.Network.raddr)
+		return int64(n), err
+	}
+
+	n, err := w.Write(m.Data)
+	return int64(n), err
+}
+
+// ReadFrom reads from r. When r is a *net.TCPConn, first 2 bytes of length are read, then m.Data is *resized*
+// to this length and the data is read. Otherwise the data is read into m.Data.
+func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
+	if sock, ok := r.(*net.TCPConn); ok {
+		l := uint16(0)
+		if err := binary.Read(sock, binary.BigEndian, &l); err != nil {
+			return 0, err
+		}
+		li := int(l)
+		if len(m.Data) < li {
+			m.Data = append(m.Data, make([]byte, li-len(m.Data))...)
+		} else {
+			m.Data = m.Data[:li]
+		}
+		n, err := io.ReadFull(sock, m.Data)
+		return int64(n), err
+	}
+
+	if sock, ok := r.(*net.UDPConn); ok {
+		oob := make([]byte, oobSize)
+		n, oobn, _, raddr, err := sock.ReadMsgUDP(m.Data, oob)
+		if err != nil {
+			return 0, err
+		}
+		oob = oob[:oobn]
+		m.Network = &Network{raddr, oob}
+		m.Data = m.Data[:n]
+		return int64(n), nil
+	}
+
+	n, err := r.Read(m.Data)
+	return int64(n), err
+}
+
+// is packetConn for non UdP wiretes Kan weg.
+func isPacketConn(c net.Conn) bool {
+	if ua, ok := c.LocalAddr().(*net.UnixAddr); ok {
+		return ua.Net == "unixgram" || ua.Net == "unixpacket"
+	}
+	return true
 }

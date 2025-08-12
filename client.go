@@ -5,7 +5,6 @@ package dns
 import (
 	"context"
 	"crypto/tls"
-	"encoding/binary"
 	"io"
 	"net"
 	"time"
@@ -82,62 +81,26 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 // ExchangeWithContext behaves like Exchange, but with a supplied connection.
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
-	// reuse buffer??
-	if isPacketConn(conn) {
 
-		if _, err := conn.Write(m.Data); err != nil {
-			return nil, 0, err
-		}
+	// buffer-reuse?
 
-		r = new(Msg)
-		if m.UDPSize > MinMsgSize {
-			r.Data = make([]byte, m.UDPSize)
-		} else {
-			r.Data = make([]byte, MinMsgSize)
-		}
-		n, err := conn.Read(r.Data)
-		if err != nil {
-			return nil, time.Since(t), err
-		}
-		r.Data = r.Data[:n]
+	_, err = io.Copy(conn, m) // n unused??
+	if err != nil {
+		return nil, time.Since(t), err
+	}
 
+	r = new(Msg)
+	if m.UDPSize > MinMsgSize {
+		r.Data = make([]byte, m.UDPSize)
 	} else {
+		r.Data = make([]byte, MinMsgSize)
+	}
 
-		msg := make([]byte, 2+len(m.Data))
-		binary.BigEndian.PutUint16(msg, uint16(len(m.Data)))
-		copy(msg[2:], m.Data)
-		if _, err := conn.Write(msg); err != nil {
-			return nil, 0, err
-		}
-
-		var length uint16
-		if err := binary.Read(conn, binary.BigEndian, &length); err != nil {
-			return nil, time.Since(t), err
-		}
-
-		r = new(Msg)
-		r.Data = make([]byte, length)
-		n, err := io.ReadFull(conn, r.Data)
-		if err != nil {
-			return r, time.Since(t), err
-		}
-		if int(length) > len(r.Data) {
-			return r, time.Since(t), io.ErrShortBuffer
-		}
-		r.Data = r.Data[:n]
+	_, err = io.Copy(r, conn)
+	if err != nil {
+		return nil, time.Since(t), err
 	}
 
 	err = r.Unpack()
 	return r, time.Since(t), err
-}
-
-func isPacketConn(c net.Conn) bool {
-	if _, ok := c.(net.PacketConn); !ok {
-		return false
-	}
-
-	if ua, ok := c.LocalAddr().(*net.UnixAddr); ok {
-		return ua.Net == "unixgram" || ua.Net == "unixpacket"
-	}
-	return true
 }

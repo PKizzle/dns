@@ -173,6 +173,10 @@ type Msg struct {
 	Data []byte
 
 	Options Option // Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
+
+	// For messages that are received via UDP the oob session data is stored in Network. This is uses to write
+	// the UDP packet on the correct interface. Setting this to nil, means routing it.
+	*Network
 }
 
 // Option is an option on how to handle a message. Options can be combined.
