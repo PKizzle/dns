@@ -79,6 +79,7 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 }
 
 // ExchangeWithContext behaves like Exchange, but with a supplied connection.
+// Reuses the connection.
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
 
@@ -90,10 +91,13 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	}
 
 	r = new(Msg)
-	if m.UDPSize > MinMsgSize {
-		r.Data = make([]byte, m.UDPSize)
-	} else {
-		r.Data = make([]byte, MinMsgSize)
+	// reuse m's byffer
+	r.Data = m.Data
+	if len(r.Data) < int(m.UDPSize) {
+		r.Data = append(r.Data, make([]byte, (int(m.UDPSize)-len(r.Data)))...)
+	}
+	if len(r.Data) < MinMsgSize {
+		r.Data = append(r.Data, make([]byte, MinMsgSize-len(r.Data))...)
 	}
 
 	_, err = io.Copy(r, conn)
