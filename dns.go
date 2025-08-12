@@ -183,6 +183,8 @@ type Msg struct {
 type Option uint16
 
 const (
+	OptionUnpackAll Option = 0 // Unpack the entire message, mostly defined to serve as documentation.
+
 	OptionUnpackNone     Option = 1 << iota // Do not unpack anything, dump the message in Data and call it a day.
 	OptionUnpackHeader                      // Unpack only the header of the message.
 	OptionUnpackQuestion                    // Unpack only the question section of the message
