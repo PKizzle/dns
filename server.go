@@ -1,3 +1,4 @@
+//go:build ignore
 package dns
 
 import (
@@ -270,11 +271,6 @@ func (srv *Server) serveUDP(l net.PacketConn) {
 func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 	w := &response{writer: rw}
 
-	reader := Reader(defaultReader{srv})
-	if srv.DecorateReader != nil {
-		reader = srv.DecorateReader(reader)
-	}
-
 	idleTimeout := tcpIdleTimeout
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
@@ -323,22 +319,18 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 func (srv *Server) serveDNS(m []byte, w *response) {
 	s := cryptobyte.String(m)
 
-	// Do unpack Options, header first. Then the rest
+	req := new(Msg)
+	req.Options = OptionUnpackQuestion | OptionUnpackHeader
+	req.Data = m
 
-	var dh Header
-	if !dh.unpack(&s) {
-		// Let client hang, they are sending crap; any reply can be used to amplify.
-		return
+	err := req.Unpack()
+	if err != nil {
+		req.Rcode = RcodeRefused
+		req.Pack()
+		io.Copy(w, req)
 	}
 
-	req := new(Msg)
-	req.setHdr(dh)
-
-	switch action := srv.MsgAcceptFunc(dh); action {
-	case MsgAccept:
-		if req.unpack(dh, s, m) == nil {
-			break
-		}
+	// acceptfunc maybe??
 
 		fallthrough
 	case MsgReject, MsgRejectNotImplemented:

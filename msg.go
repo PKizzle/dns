@@ -688,10 +688,6 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 
 // Unpack unpacks a binary message that sits in m.Data to a Msg structure.
 func (m *Msg) Unpack() error {
-	if m.Options&OptionUnpackNone == OptionUnpackNone {
-		return nil
-	}
-
 	s := cryptobyte.String(m.Data)
 	var dh header
 	if !dh.unpack(&s) {
@@ -906,6 +902,7 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 }
 
 func (m *Msg) WriterTo(w io.Writer) (int64, error) {
+	// should we try and detect a tcp conn here??
 	n, err := w.Write(m.Data)
 	return int64(n), err
 }

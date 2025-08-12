@@ -24,7 +24,14 @@ type ResponseWriter interface {
 	Hijack()
 }
 
-// Handler is implemented by any value that implements ServeDNS.
+// Handler is implemented by any value that implements ServeDNS. The message r is minimally decoded, only up
+// to the question section (mostly first 20 bytes) are decoded. The rest of the message is available in
+// r.Data, so if a message is deemed worthwhile a:
+//
+//	r.Options = OptionUnpackNone
+//	r.Unpack()
+//
+// Should be performed.
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 }

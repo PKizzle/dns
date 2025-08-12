@@ -51,11 +51,6 @@ querying the DNS at a server configured on 127.0.0.1 and port 53:
 	c := new(dns.Client)
 	in, rtt, err := c.Exchange(m1, "127.0.0.1:53")
 
-Suppressing multiple outstanding queries (with the same question, type and
-class) is as easy as setting:
-
-	c.SingleInflight = true
-
 More advanced options are available using a net.Dialer and the corresponding API.
 For example it is possible to set a timeout, or to specify a source IP address
 and port to use for the connection:
