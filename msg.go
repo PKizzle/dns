@@ -910,6 +910,8 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 // WriteTo writes the message to w. When w is a *net.TCPConn, the write is prefixed with an uint16 with the
 // length of the buffer, otherwise the m.Data is written as-is.
 func (m *Msg) WriteTo(w io.Writer) (int64, error) {
+	println("WRITE TO")
+	println(m.Network)
 	if tcp, ok := w.(*net.TCPConn); ok {
 		l := make([]byte, 2, 2)
 		binary.BigEndian.PutUint16(l[0:], uint16(len(m.Data)))
