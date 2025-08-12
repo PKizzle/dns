@@ -1,5 +1,3 @@
-//go:build ignore
-
 package dns
 
 import (
@@ -28,6 +26,8 @@ var aLongTimeAgo = time.Unix(1, 0)
 type ConnectionStater interface {
 	ConnectionState() *tls.ConnectionState
 }
+
+// export this? So writer can be overruled?
 
 type response struct {
 	closed     bool        // connection has been closed
@@ -74,61 +74,6 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	return server.ActivateAndServe()
 }
 
-// Writer writes raw DNS messages; each call to Write should send an entire message.
-type Writer interface {
-	io.Writer
-}
-
-// Reader reads raw DNS messages; each call to ReadTCP or ReadUDP should return an entire message.
-type Reader interface {
-	// ReadTCP reads a raw message from a TCP connection. Implementations may alter
-	// connection properties, for example the read-deadline.
-	ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error)
-	// ReadUDP reads a raw message from a UDP connection. Implementations may alter
-	// connection properties, for example the read-deadline.
-	ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error)
-}
-
-// PacketConnReader is an optional interface that Readers can implement to support using generic net.PacketConns.
-type PacketConnReader interface {
-	Reader
-
-	// ReadPacketConn reads a raw message from a generic net.PacketConn UDP connection. Implementations may
-	// alter connection properties, for example the read-deadline.
-	ReadPacketConn(conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, error)
-}
-
-// defaultReader is an adapter for the Server struct that implements the Reader and
-// PacketConnReader interfaces using the readTCP, readUDP and readPacketConn funcs
-// of the embedded Server.
-type defaultReader struct {
-	*Server
-}
-
-var _ PacketConnReader = defaultReader{}
-
-func (dr defaultReader) ReadTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
-	return dr.readTCP(conn, timeout)
-}
-
-func (dr defaultReader) ReadUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
-	return dr.readUDP(conn, timeout)
-}
-
-func (dr defaultReader) ReadPacketConn(conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, error) {
-	return dr.readPacketConn(conn, timeout)
-}
-
-// DecorateReader is a decorator hook for extending or supplanting the functionality of a Reader.
-// Implementations should never return a nil Reader.
-// Readers should also implement the optional PacketConnReader interface.
-// PacketConnReader is required to use a generic net.PacketConn.
-type DecorateReader func(Reader) Reader
-
-// DecorateWriter is a decorator hook for extending or supplanting the functionality of a Writer.
-// Implementations should never return a nil Writer.
-type DecorateWriter func(Writer) Writer
-
 // A Server defines parameters for running an DNS server.
 type Server struct {
 	// Address to listen on, ":dns" if empty.
@@ -160,21 +105,11 @@ type Server struct {
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReusePort bool
 
-	// Shutdown handling
-	lock     sync.RWMutex
-	started  bool
-	shutdown chan struct{}
-	conns    map[net.Conn]struct{}
+	exited   chan struct{}
+	shutdown chan bool
 
 	// A pool for UDP message buffers.
 	udpPool sync.Pool
-}
-
-func (srv *Server) isStarted() bool {
-	srv.lock.RLock()
-	started := srv.started
-	srv.lock.RUnlock()
-	return started
 }
 
 func makeUDPBuffer(size int) func() interface{} {
@@ -184,16 +119,12 @@ func makeUDPBuffer(size int) func() interface{} {
 }
 
 func (srv *Server) init() {
-	srv.shutdown = make(chan struct{})
-	srv.conns = make(map[net.Conn]struct{})
-
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
 	}
-
 	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
 }
 
@@ -204,14 +135,6 @@ func unlockOnce(l sync.Locker) func() {
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
 func (srv *Server) ListenAndServe() error {
-	unlock := unlockOnce(&srv.lock)
-	srv.lock.Lock()
-	defer unlock()
-
-	if srv.started {
-		return &Error{err: "server already started"}
-	}
-
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":domain"
@@ -226,8 +149,6 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		srv.Listener = l
-		srv.started = true
-		unlock()
 		return srv.serveTCP(l)
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
 		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
@@ -239,9 +160,6 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		l = tls.NewListener(l, srv.TLSConfig)
-		srv.Listener = l
-		srv.started = true
-		unlock()
 		return srv.serveTCP(l)
 	case "udp", "udp4", "udp6":
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
@@ -254,8 +172,6 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.PacketConn = l
-		srv.started = true
-		unlock()
 		return srv.serveUDP(u)
 	}
 	return &Error{err: "bad network"}
@@ -264,184 +180,90 @@ func (srv *Server) ListenAndServe() error {
 // ActivateAndServe starts a nameserver with the PacketConn or Listener
 // configured in *Server. Its main use is to start a server from systemd.
 func (srv *Server) ActivateAndServe() error {
-	unlock := unlockOnce(&srv.lock)
-	srv.lock.Lock()
-	defer unlock()
-
-	if srv.started {
-		return &Error{err: "server already started"}
-	}
-
-	srv.init()
-
 	if srv.PacketConn != nil {
-		// Check PacketConn interface's type is valid and value
-		// is not nil
+		// Check PacketConn interface's type is valid and value is not nil
 		if t, ok := srv.PacketConn.(*net.UDPConn); ok && t != nil {
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
 			}
 		}
-		srv.started = true
-		unlock()
-		return srv.serveUDP(srv.PacketConn)
+		srv.serveUDP(srv.PacketConn)
 	}
 	if srv.Listener != nil {
-		srv.started = true
-		unlock()
-		return srv.serveTCP(srv.Listener)
+		srv.serveTCP(srv.Listener)
 	}
 	return &Error{err: "bad listeners"}
 }
 
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
 // ActivateAndServe will return.
-func (srv *Server) Shutdown() error {
-	return srv.ShutdownContext(context.Background())
-}
-
-// ShutdownContext shuts down a server. After a call to ShutdownContext,
-// ListenAndServe and ActivateAndServe will return.
-//
 // A context.Context may be passed to limit how long to wait for connections
 // to terminate.
-func (srv *Server) ShutdownContext(ctx context.Context) error {
-	srv.lock.Lock()
-	if !srv.started {
-		srv.lock.Unlock()
-		return &Error{err: "server not started"}
-	}
-
-	srv.started = false
-
-	if srv.PacketConn != nil {
-		srv.PacketConn.SetReadDeadline(aLongTimeAgo) // Unblock reads
-	}
-
-	if srv.Listener != nil {
-		srv.Listener.Close()
-	}
-
-	for rw := range srv.conns {
-		rw.SetReadDeadline(aLongTimeAgo) // Unblock reads
-	}
-
-	srv.lock.Unlock()
-
-	if testShutdownNotify != nil {
-		testShutdownNotify.Broadcast()
-	}
-
-	var ctxErr error
-	select {
-	case <-srv.shutdown:
-	case <-ctx.Done():
-		ctxErr = ctx.Err()
-	}
-
-	if srv.PacketConn != nil {
-		srv.PacketConn.Close()
-	}
-
-	return ctxErr
+func (srv *Server) Shutdown(ctx context.Context) {
+	close(srv.shutdown)
+	<-srv.exited
 }
-
-var testShutdownNotify *sync.Cond
 
 // getReadTimeout is a helper func to use system timeout if server did not intend to change it.
 func (srv *Server) getReadTimeout() time.Duration {
 	if srv.ReadTimeout != 0 {
 		return srv.ReadTimeout
 	}
-	return dnsTimeout
+	return 2 * time.Second
 }
 
 // serveTCP starts a TCP listener for the server.
-func (srv *Server) serveTCP(l net.Listener) error {
-	defer l.Close()
-
+func (srv *Server) serveTCP(l net.Listener) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
 
 	var wg sync.WaitGroup
-	defer func() {
-		wg.Wait()
-		close(srv.shutdown)
-	}()
 
-	for srv.isStarted() {
-		rw, err := l.Accept()
-		if err != nil {
-			if !srv.isStarted() {
-				return nil
-			}
-			if neterr, ok := err.(net.Error); ok && neterr.Temporary() {
+	for {
+		select {
+		case <-srv.shutdown:
+			l.Close()
+			wg.Wait()
+			close(srv.exited)
+			return
+		default:
+			rw, err := l.Accept()
+			if err != nil {
+				// skip (log, whatever)
 				continue
 			}
-			return err
+			wg.Add(1)
+			go srv.serveTCPConn(&wg, rw)
 		}
-		srv.lock.Lock()
-		// Track the connection to allow unblocking reads on shutdown.
-		srv.conns[rw] = struct{}{}
-		srv.lock.Unlock()
-		wg.Add(1)
-		go srv.serveTCPConn(&wg, rw)
 	}
-
-	return nil
 }
 
 // serveUDP starts a UDP listener for the server.
-func (srv *Server) serveUDP(l net.PacketConn) error {
-	defer l.Close()
-
-	reader := Reader(defaultReader{srv})
-	lUDP, isUDP := l.(*net.UDPConn)
-	readerPC, canPacketConn := reader.(PacketConnReader)
-	if !isUDP && !canPacketConn {
-		return &Error{err: "PacketConnReader was not implemented on Reader returned from DecorateReader but is required for net.PacketConn"}
-	}
-
+func (srv *Server) serveUDP(l net.PacketConn) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
 
 	var wg sync.WaitGroup
-	defer func() {
-		wg.Wait()
-		close(srv.shutdown)
-	}()
-
 	rtimeout := srv.getReadTimeout()
-	// deadline is not used here
-	for srv.isStarted() {
-		var (
-			m    []byte
-			sPC  net.Addr
-			sUDP *SessionUDP
-			err  error
-		)
-		if isUDP {
-			m, sUDP, err = reader.ReadUDP(lUDP, rtimeout)
-		} else {
-			m, sPC, err = readerPC.ReadPacketConn(l, rtimeout)
-		}
-		if err != nil {
-			// ignore
-			continue
-		}
-		if len(m) < headerSize {
-			if cap(m) == srv.UDPSize {
-				srv.udpPool.Put(m[:srv.UDPSize])
+	for {
+		select {
+		case <-srv.shudown:
+			l.Close() // add more channels?
+			wg.Wait()
+			close(srv.exited)
+			return
+		default:
+			m, sPC, err := readerPC.ReadPacketConn(l, rtimeout)
+			if err != nil {
+				// ignore
+				continue
 			}
-			continue
+			wg.Add(1)
+			go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
 		}
-		wg.Add(1)
-		go srv.serveUDPPacket(&wg, m, l, sUDP, sPC)
 	}
-
-	return nil
 }
 
 // Serve a new TCP connection.
@@ -486,10 +308,6 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 	if !w.hijacked {
 		w.Close()
 	}
-
-	srv.lock.Lock()
-	delete(srv.conns, w.tcp)
-	srv.lock.Unlock()
 
 	wg.Done()
 }
