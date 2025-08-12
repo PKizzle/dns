@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"io"
 	"net"
 	"strings"
 	"sync"
@@ -13,22 +12,6 @@ import (
 
 // Default maximum number of TCP queries before we close the socket.
 const maxTCPQueries = 128
-
-// aLongTimeAgo is a non-zero time, far in the past, used for
-// immediate cancellation of network operations.
-var aLongTimeAgo = time.Unix(1, 0)
-
-// A ConnectionStater interface is used by a DNS Handler to access TLS connection state
-// when available.
-type ConnectionStater interface {
-	ConnectionState() *tls.ConnectionState
-}
-
-type response struct {
-	closed   bool // connection has been closed
-	hijacked bool // connection has been hijacked by handler, TODO, flesh this out
-	io.Writer
-}
 
 // ListenAndServe Starts a server on address and network specified Invoke handler
 // for incoming queries.
@@ -309,46 +292,6 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 		return
 	}
 	srv.Handler.ServeDNS(w, r)
-}
-
-// LocalAddr implements the ResponseWriter.LocalAddr method.
-func (w *response) LocalAddr() net.Addr {
-	switch sock := w.Writer.(type) {
-	case *net.UDPConn:
-		return sock.LocalAddr()
-	case *net.TCPConn:
-		return sock.LocalAddr()
-	default:
-		panic("dns: internal error: no sock in response")
-	}
-}
-
-// RemoteAddr implements the ResponseWriter.RemoteAddr method.
-func (w *response) RemoteAddr() net.Addr {
-	switch sock := w.Writer.(type) {
-	case *net.UDPConn:
-		// session stuff, also in here??
-		return sock.RemoteAddr()
-	case *net.TCPConn:
-		return sock.RemoteAddr()
-	default:
-		panic("dns: internal error: no sock in response")
-	}
-}
-
-// Hijack implements the ResponseWriter.Hijack method.
-func (w *response) Hijack() { w.hijacked = true }
-
-// Close implements the ResponseWriter.Close method
-func (w *response) Close() error {
-	if w.closed {
-		return &Error{err: "connection already closed"}
-	}
-	if sock, ok := w.Writer.(io.Closer); ok {
-		w.closed = true
-		return sock.Close()
-	}
-	return nil
 }
 
 /*

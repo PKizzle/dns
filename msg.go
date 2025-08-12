@@ -895,8 +895,6 @@ func (m *Msg) setMsgHeader(dh header) {
 
 // io.Reader and io.Writer interfaces implementation.
 
-// Msg needs to carry the interface it was read from ??
-
 // Write writes the buffer p to the m.Data.
 func (m *Msg) Write(p []byte) (n int, err error) {
 	n = copy(m.Data, p)
