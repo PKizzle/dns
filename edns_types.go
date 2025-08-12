@@ -128,17 +128,6 @@ func (o *NSID) String() string {
 	return sb.String()
 }
 
-// TODO: generate these too
-
-func (o *NSID) unpack(s *cryptobyte.String) error {
-	o.Nsid = hex.EncodeToString(*s)
-	return nil
-}
-
-func (o *NSID) pack(msg []byte, off int) (int, error) {
-	return hex.Decode(msg[off:], []byte(o.Nsid))
-}
-
 // PADDING option is used to add padding to a request/response. The default value of padding SHOULD be 0x0 but
 // other values MAY be used.
 type PADDING struct {
@@ -147,11 +136,3 @@ type PADDING struct {
 
 func (o *PADDING) Len() int       { return 0 }
 func (o *PADDING) String() string { return "" }
-
-func (o *PADDING) unpack(s *cryptobyte.String) error {
-	return nil
-}
-
-func (o *PADDING) pack(msg []byte, off int) (int, error) {
-	return 0, nil
-}

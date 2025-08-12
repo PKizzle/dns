@@ -1,10 +1,42 @@
-//go:build ignore
-
 package dns
 
 import (
+	"io"
+	"net"
 	"sync"
+
+	"codeberg.org/miekg/dns/dnsutil"
 )
+
+// A ResponseWriter interface is used by an DNS handler to
+// construct an DNS response.
+type ResponseWriter interface {
+	// LocalAddr returns the net.Addr of the server.
+	LocalAddr() net.Addr
+	// RemoteAddr returns the net.Addr of the client that sent the current request.
+	RemoteAddr() net.Addr
+	// Writer writes the message back to the client.
+	io.Writer
+	// Closer closes the connection.
+	io.Closer
+	// Hijack lets the caller take over the connection.
+	// TODO: make this actually work.
+	Hijack()
+}
+
+// Handler is implemented by any value that implements ServeDNS.
+type Handler interface {
+	ServeDNS(w ResponseWriter, r *Msg)
+}
+
+// The HandlerFunc type is an adapter to allow the use of
+// ordinary functions as DNS handlers.  If f is a function
+// with the appropriate signature, HandlerFunc(f) is a
+// Handler object that calls f.
+type HandlerFunc func(ResponseWriter, *Msg)
+
+// ServeDNS calls f(w, r).
+func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) { f(w, r) }
 
 // ServeMux is an DNS request multiplexer. It matches the zone name of
 // each incoming request against a list of registered patterns add calls
@@ -37,10 +69,8 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		return nil
 	}
 
-	q = CanonicalName(q)
-
 	var handler Handler
-	for off, end := 0, false; !end; off, end = NextLabel(q, off) {
+	for off, end := 0, false; !end; off, end = dnsutil.Next(q, off) {
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				return h
@@ -60,14 +90,14 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 
 // Handle adds a handler to the ServeMux for pattern.
 func (mux *ServeMux) Handle(pattern string, handler Handler) {
-	if pattern == "" {
-		panic("dns: invalid pattern " + pattern)
+	if dnsutil.Canonical(pattern) != pattern || pattern == "" {
+		panic("dns: pattern should be in canonical form: " + pattern)
 	}
 	mux.m.Lock()
 	if mux.z == nil {
 		mux.z = make(map[string]Handler)
 	}
-	mux.z[CanonicalName(pattern)] = handler
+	mux.z[pattern] = handler
 	mux.m.Unlock()
 }
 
@@ -82,24 +112,27 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 		panic("dns: invalid pattern " + pattern)
 	}
 	mux.m.Lock()
-	delete(mux.z, CanonicalName(pattern))
+	delete(mux.z, pattern)
 	mux.m.Unlock()
 }
 
-// ServeDNS dispatches the request to the handler whose pattern most
-// closely matches the request message.
+// ServeDNS dispatches the request to the handler whose pattern most closely matches the request message.
 //
-// ServeDNS is DNSSEC aware, meaning that queries for the DS record
-// are redirected to the parent zone (if that is also registered),
-// otherwise the child gets the query.
+// ServeDNS is DNSSEC aware, meaning that queries for the DS record are redirected to the parent zone (if
+// that is also registered), otherwise the child gets the query.
 //
-// If no handler is found, or there is no question, a standard REFUSED
-// message is returned
+// If no handler is found, or there is no question, a standard REFUSED message is returned.
 func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 	var h Handler
-	if len(req.Question) >= 1 { // allow more than one question
-		h = mux.match(req.Question[0].Name, req.Question[0].Qtype)
+	if len(req.Question) == 0 {
+		handleRefused(w, req)
+		return
 	}
+	// TODO: add class as optional argument, otherwise ClassINET
+
+	//	name :=
+	qtype := RRToType(req.Question[0])
+	h = mux.match(req.Question[0].Header().Name, qtype)
 
 	if h != nil {
 		h.ServeDNS(w, req)
@@ -121,4 +154,15 @@ func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 // in the DefaultServeMux.
 func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
+}
+
+// handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
+func handleRefused(w ResponseWriter, r *Msg) {
+	m := new(Msg)
+	m.Data = r.Data
+
+	m.SetReply(r)
+	m.Rcode = RcodeRefused
+	m.Pack()
+	w.Write(m.Data)
 }

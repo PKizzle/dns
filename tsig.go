@@ -97,8 +97,7 @@ func (ts tsigSecretProvider) Verify(msg []byte, t *TSIG) error {
 	return tsigHMACProvider(key).Verify(msg, t)
 }
 
-// TSIG is the RR the holds the transaction signature of a message.
-// See RFC 2845 and RFC 4635.
+// TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
 type TSIG struct {
 	Hdr        Header
 	Algorithm  string `dns:"domain-name"`

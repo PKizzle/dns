@@ -19,3 +19,18 @@ func IsRRset(rrset []RR) bool {
 
 	return true
 }
+
+// SetReply creates a reply message from a request message.
+func (m *Msg) SetReply(r *Msg) *Msg {
+	m.ID = r.ID
+	m.Response = true
+	m.Opcode = m.Opcode
+	if m.Opcode == OpcodeQuery {
+		// more??
+		m.RecursionDesired = r.RecursionDesired
+		m.CheckingDisabled = r.CheckingDisabled
+	}
+	m.Rcode = RcodeSuccess
+	m.Question = r.Question
+	return m
+}

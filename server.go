@@ -23,44 +23,6 @@ const maxTCPQueries = 128
 // immediate cancellation of network operations.
 var aLongTimeAgo = time.Unix(1, 0)
 
-// Handler is implemented by any value that implements ServeDNS.
-type Handler interface {
-	ServeDNS(w ResponseWriter, r *Msg)
-}
-
-// The HandlerFunc type is an adapter to allow the use of
-// ordinary functions as DNS handlers.  If f is a function
-// with the appropriate signature, HandlerFunc(f) is a
-// Handler object that calls f.
-type HandlerFunc func(ResponseWriter, *Msg)
-
-// ServeDNS calls f(w, r).
-func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) {
-	f(w, r)
-}
-
-// A ResponseWriter interface is used by an DNS handler to
-// construct an DNS response.
-type ResponseWriter interface {
-	// LocalAddr returns the net.Addr of the server
-	LocalAddr() net.Addr
-	// RemoteAddr returns the net.Addr of the client that sent the current request.
-	RemoteAddr() net.Addr
-	// WriteMsg writes a reply back to the client.
-	WriteMsg(*Msg) error
-	// Write writes a raw buffer back to the client.
-	Write([]byte) (int, error)
-	// Close closes the connection.
-	Close() error
-	// TsigStatus returns the status of the Tsig.
-	TsigStatus() error
-	// TsigTimersOnly sets the tsig timers only boolean.
-	TsigTimersOnly(bool)
-	// Hijack lets the caller take over the connection.
-	// After a call to Hijack(), the DNS package will not do anything with the connection.
-	Hijack()
-}
-
 // A ConnectionStater interface is used by a DNS Handler to access TLS connection state
 // when available.
 type ConnectionStater interface {
@@ -68,33 +30,10 @@ type ConnectionStater interface {
 }
 
 type response struct {
-	closed         bool // connection has been closed
-	hijacked       bool // connection has been hijacked by handler
-	tsigTimersOnly bool
-	tsigStatus     error
-	tsigRequestMAC string
-	tsigProvider   TsigProvider
-	udp            net.PacketConn // i/o connection if UDP was used
-	tcp            net.Conn       // i/o connection if TCP was used
-	udpSession     *SessionUDP    // oob data to get egress interface right
-	pcSession      net.Addr       // address to use when writing to a generic net.PacketConn
-	writer         Writer         // writer to output the raw DNS bits
-}
-
-// handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
-func handleRefused(w ResponseWriter, r *Msg) {
-	m := new(Msg)
-	m.SetRcode(r, RcodeRefused)
-	w.WriteMsg(m)
-}
-
-// HandleFailed returns a HandlerFunc that returns SERVFAIL for every request it gets.
-// Deprecated: This function is going away.
-func HandleFailed(w ResponseWriter, r *Msg) {
-	m := new(Msg)
-	m.SetRcode(r, RcodeServerFailure)
-	// does not matter if this write fails
-	w.WriteMsg(m)
+	closed     bool        // connection has been closed
+	hijacked   bool        // connection has been hijacked by handler
+	udpSession *SessionUDP // oob data to get egress interface right for udp
+	writer     io.Writer   // writer to output the raw DNS bits
 }
 
 // ListenAndServe Starts a server on address and network specified Invoke handler
@@ -213,24 +152,13 @@ type Server struct {
 	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
-	// An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
-	TsigProvider TsigProvider
-	// Secret(s) for Tsig map[<zonename>]<base64 secret>. The zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2).
-	TsigSecret map[string]string
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
-	// DecorateReader is optional, allows customization of the process that reads raw DNS messages.
-	DecorateReader DecorateReader
-	// DecorateWriter is optional, allows customization of the process that writes raw DNS messages.
-	DecorateWriter DecorateWriter
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (unlimited if -1).
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReusePort bool
-	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
-	// By default DefaultMsgAcceptFunc will be used.
-	MsgAcceptFunc MsgAcceptFunc
 
 	// Shutdown handling
 	lock     sync.RWMutex
@@ -240,16 +168,6 @@ type Server struct {
 
 	// A pool for UDP message buffers.
 	udpPool sync.Pool
-}
-
-func (srv *Server) tsigProvider() TsigProvider {
-	if srv.TsigProvider != nil {
-		return srv.TsigProvider
-	}
-	if srv.TsigSecret != nil {
-		return tsigSecretProvider(srv.TsigSecret)
-	}
-	return nil
 }
 
 func (srv *Server) isStarted() bool {
@@ -271,9 +189,6 @@ func (srv *Server) init() {
 
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
-	}
-	if srv.MsgAcceptFunc == nil {
-		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
@@ -482,10 +397,6 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 	defer l.Close()
 
 	reader := Reader(defaultReader{srv})
-	if srv.DecorateReader != nil {
-		reader = srv.DecorateReader(reader)
-	}
-
 	lUDP, isUDP := l.(*net.UDPConn)
 	readerPC, canPacketConn := reader.(PacketConnReader)
 	if !isUDP && !canPacketConn {
@@ -517,13 +428,8 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 			m, sPC, err = readerPC.ReadPacketConn(l, rtimeout)
 		}
 		if err != nil {
-			if !srv.isStarted() {
-				return nil
-			}
-			if netErr, ok := err.(net.Error); ok && netErr.Temporary() {
-				continue
-			}
-			return err
+			// ignore
+			continue
 		}
 		if len(m) < headerSize {
 			if cap(m) == srv.UDPSize {
@@ -540,12 +446,7 @@ func (srv *Server) serveUDP(l net.PacketConn) error {
 
 // Serve a new TCP connection.
 func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
-	w := &response{tsigProvider: srv.tsigProvider(), tcp: rw}
-	if srv.DecorateWriter != nil {
-		w.writer = srv.DecorateWriter(w)
-	} else {
-		w.writer = w
-	}
+	w := &response{writer: rw}
 
 	reader := Reader(defaultReader{srv})
 	if srv.DecorateReader != nil {
@@ -595,12 +496,7 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, rw net.Conn) {
 
 // Serve a new UDP request.
 func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn, udpSession *SessionUDP, pcSession net.Addr) {
-	w := &response{tsigProvider: srv.tsigProvider(), udp: u, udpSession: udpSession, pcSession: pcSession}
-	if srv.DecorateWriter != nil {
-		w.writer = srv.DecorateWriter(w)
-	} else {
-		w.writer = w
-	}
+	w := &response{udp: u, udpSession: udpSession}
 
 	srv.serveDNS(m, w)
 	wg.Done()
@@ -608,6 +504,8 @@ func (srv *Server) serveUDPPacket(wg *sync.WaitGroup, m []byte, u net.PacketConn
 
 func (srv *Server) serveDNS(m []byte, w *response) {
 	s := cryptobyte.String(m)
+
+	// Do unpack Options, header first. Then the rest
 
 	var dh Header
 	if !dh.unpack(&s) {
@@ -645,15 +543,6 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 		}
 
 		return
-	}
-
-	w.tsigStatus = nil
-	if w.tsigProvider != nil {
-		if t := req.IsTsig(); t != nil {
-			w.tsigStatus = TsigVerifyWithProvider(m, w.tsigProvider, "", false)
-			w.tsigTimersOnly = false
-			w.tsigRequestMAC = t.MAC
-		}
 	}
 
 	if w.udp != nil && cap(m) == srv.UDPSize {

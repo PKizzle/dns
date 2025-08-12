@@ -144,6 +144,7 @@ func Trim(q string, z string) string {
 }
 
 /*
+// IsBelow?
 // IsSubDomain checks if child is indeed a child of the parent. If child and parent
 // are the same domain true is returned as well.
 func IsSubDomain(parent, child string) bool {
