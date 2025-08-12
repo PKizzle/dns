@@ -39,6 +39,7 @@ func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
 // ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
 // net.UDPAddr.
 func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
+	// sync.Pool for these fixes bytes!!
 	oob := make([]byte, udpOOBSize)
 	n, oobn, _, raddr, err := conn.ReadMsgUDP(b, oob)
 	if err != nil {

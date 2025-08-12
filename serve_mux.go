@@ -164,5 +164,5 @@ func handleRefused(w ResponseWriter, r *Msg) {
 	m.SetReply(r)
 	m.Rcode = RcodeRefused
 	m.Pack()
-	w.Write(m.Data)
+	io.Copy(w, m)
 }
