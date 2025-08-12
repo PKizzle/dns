@@ -51,7 +51,7 @@ var CodeToString = map[uint16]string{
 `))
 
 var interfaceFunc = template.Must(template.New("interfaceFunc").Parse(`
-{{range .}}  func (rr *{{.}}) Header() *Header { return &rr.Hdr }
+	{{range .}}  func (rr *{{.}}) Header() *Header { return &Header{Name:"."} }
 func (rr *{{.}}) Pseudo() bool { return true }
 {{end}}
 

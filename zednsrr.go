@@ -2,9 +2,9 @@
 
 package dns
 
-func (rr *NSID) Header() *Header    { return &rr.Hdr }
+func (rr *NSID) Header() *Header    { return &Header{Name: "."} }
 func (rr *NSID) Pseudo() bool       { return true }
-func (rr *PADDING) Header() *Header { return &rr.Hdr }
+func (rr *PADDING) Header() *Header { return &Header{Name: "."} }
 func (rr *PADDING) Pseudo() bool    { return true }
 
 // CodeToRR is a map of constructors for each EDNS0 RR type.

@@ -92,7 +92,7 @@ type Header struct {
 	Class uint16 // Class is the class of the RR, this is almost always [ClassINET], if left zero, ClassINET is assumed when sending a message.
 	TTL   uint32 // TTL is the time-to-live of the RR.
 
-	t uint16 // type is inferred from the Go type, and not exported
+	t uint16 // type is inferred from the Go type, and not exported, it is mostly used in RFC3597, as the type does not carry its actual type
 	// rdlength has no use for user of RRs in this library.
 }
 

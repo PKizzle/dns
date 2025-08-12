@@ -113,7 +113,6 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
 // The identifier is an opaque string encoded as hex.
 type NSID struct {
-	Hdr  Header
 	Nsid string `dns:"hex"`
 }
 
@@ -143,7 +142,6 @@ func (o *NSID) pack(msg []byte, off int) (int, error) {
 // PADDING option is used to add padding to a request/response. The default value of padding SHOULD be 0x0 but
 // other values MAY be used.
 type PADDING struct {
-	Hdr     Header
 	Padding string `dns:"octet"`
 }
 
