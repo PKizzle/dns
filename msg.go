@@ -633,6 +633,9 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	if err != nil {
 		return err
 	}
+	if m.Options&OptionUnpackQuestion == OptionUnpackQuestion {
+		return nil
+	}
 
 	m.Answer, err = unpackRRs(dh.Ancount, &s, msgBuf)
 	if err != nil {
@@ -685,12 +688,19 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 
 // Unpack unpacks a binary message that sits in m.Data to a Msg structure.
 func (m *Msg) Unpack() error {
+	if m.Options&OptionUnpackNone == OptionUnpackNone {
+		return nil
+	}
+
 	s := cryptobyte.String(m.Data)
 	var dh header
 	if !dh.unpack(&s) {
 		return ErrTruncatedMessage
 	}
 	m.setMsgHeader(dh)
+	if m.Options&OptionUnpackHeader == OptionUnpackHeader {
+		return nil
+	}
 	return m.unpack(dh, s, m.Data)
 }
 
