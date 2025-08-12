@@ -1,10 +1,8 @@
-//go:build ignore
 package dns
 
 import (
 	"context"
 	"crypto/tls"
-	"encoding/binary"
 	"errors"
 	"io"
 	"net"
@@ -28,13 +26,10 @@ type ConnectionStater interface {
 	ConnectionState() *tls.ConnectionState
 }
 
-// export this? So writer can be overruled?
-
 type response struct {
-	closed     bool        // connection has been closed
-	hijacked   bool        // connection has been hijacked by handler, TODO
-	udpSession *SessionUDP // oob data to get egress interface right for udp
-	writer     io.Writer   // writer to output the raw DNS bits
+	closed   bool // connection has been closed
+	hijacked bool // connection has been hijacked by handler, TODO, flesh this out
+	io.Writer
 }
 
 // ListenAndServe Starts a server on address and network specified Invoke handler
@@ -100,7 +95,7 @@ type Server struct {
 	IdleTimeout func() time.Duration
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
-	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (unlimited if -1).
+	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
@@ -108,15 +103,6 @@ type Server struct {
 
 	exited   chan struct{}
 	shutdown chan bool
-
-	// A pool for UDP message buffers.
-	udpPool sync.Pool
-}
-
-func makeUDPBuffer(size int) func() interface{} {
-	return func() interface{} {
-		return make([]byte, size)
-	}
 }
 
 func (srv *Server) init() {
@@ -126,12 +112,6 @@ func (srv *Server) init() {
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
 	}
-	srv.udpPool.New = makeUDPBuffer(srv.UDPSize)
-}
-
-func unlockOnce(l sync.Locker) func() {
-	var once sync.Once
-	return func() { once.Do(l.Unlock) }
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
@@ -196,10 +176,8 @@ func (srv *Server) ActivateAndServe() error {
 	return &Error{err: "bad listeners"}
 }
 
-// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and
-// ActivateAndServe will return.
-// A context.Context may be passed to limit how long to wait for connections
-// to terminate.
+// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and ActivateAndServe will return.
+// A context.Context may be passed to limit how long to wait for connections to terminate. Not used at the moment.
 func (srv *Server) Shutdown(ctx context.Context) {
 	close(srv.shutdown)
 	<-srv.exited
@@ -250,12 +228,15 @@ func (srv *Server) serveUDP(l net.PacketConn) {
 	rtimeout := srv.getReadTimeout()
 	for {
 		select {
-		case <-srv.shudown:
+		case <-srv.shutdown:
 			l.Close() // add more channels?
 			wg.Wait()
 			close(srv.exited)
 			return
 		default:
+			req := &Msg{Data: make([]byte, srv.UDPSize)}
+			req.Options = OptionUnpackQuestion | OptionUnpackHeader
+			_, err := io.Copy(req, l)
 			m, sPC, err := readerPC.ReadPacketConn(l, rtimeout)
 			if err != nil {
 				// ignore
@@ -325,185 +306,36 @@ func (srv *Server) serveDNS(m []byte, w *response) {
 
 	err := req.Unpack()
 	if err != nil {
-		req.Rcode = RcodeRefused
-		req.Pack()
-		io.Copy(w, req)
-	}
-
-	// acceptfunc maybe??
-
-		fallthrough
-	case MsgReject, MsgRejectNotImplemented:
-		opcode := req.Opcode
-		req.SetRcodeFormatError(req)
-		req.Zero = false
-		if action == MsgRejectNotImplemented {
-			req.Opcode = opcode
-			req.Rcode = RcodeNotImplemented
-		}
-
-		// Are we allowed to delete any OPT records here?
-		req.Ns, req.Answer, req.Extra = nil, nil, nil
-
-		w.WriteMsg(req)
-		fallthrough
-	case MsgIgnore:
-		if w.udp != nil && cap(m) == srv.UDPSize {
-			srv.udpPool.Put(m[:srv.UDPSize])
-		}
-
+		// bogus, don't even reply
 		return
 	}
-
-	if w.udp != nil && cap(m) == srv.UDPSize {
-		srv.udpPool.Put(m[:srv.UDPSize])
-	}
-
-	srv.Handler.ServeDNS(w, req) // Writes back to the client
-}
-
-func (srv *Server) readTCP(conn net.Conn, timeout time.Duration) ([]byte, error) {
-	// If we race with ShutdownContext, the read deadline may
-	// have been set in the distant past to unblock the read
-	// below. We must not override it, otherwise we may block
-	// ShutdownContext.
-	srv.lock.RLock()
-	if srv.started {
-		conn.SetReadDeadline(time.Now().Add(timeout))
-	}
-	srv.lock.RUnlock()
-
-	var length uint16
-	if err := binary.Read(conn, binary.BigEndian, &length); err != nil {
-		return nil, err
-	}
-
-	m := make([]byte, length)
-	if _, err := io.ReadFull(conn, m); err != nil {
-		return nil, err
-	}
-
-	return m, nil
-}
-
-func (srv *Server) readUDP(conn *net.UDPConn, timeout time.Duration) ([]byte, *SessionUDP, error) {
-	srv.lock.RLock()
-	if srv.started {
-		// See the comment in readTCP above.
-		conn.SetReadDeadline(time.Now().Add(timeout))
-	}
-	srv.lock.RUnlock()
-
-	m := srv.udpPool.Get().([]byte)
-	n, s, err := ReadFromSessionUDP(conn, m)
-	if err != nil {
-		srv.udpPool.Put(m)
-		return nil, nil, err
-	}
-	m = m[:n]
-	return m, s, nil
-}
-
-func (srv *Server) readPacketConn(conn net.PacketConn, timeout time.Duration) ([]byte, net.Addr, error) {
-	srv.lock.RLock()
-	if srv.started {
-		// See the comment in readTCP above.
-		conn.SetReadDeadline(time.Now().Add(timeout))
-	}
-	srv.lock.RUnlock()
-
-	m := srv.udpPool.Get().([]byte)
-	n, addr, err := conn.ReadFrom(m)
-	if err != nil {
-		srv.udpPool.Put(m)
-		return nil, nil, err
-	}
-	m = m[:n]
-	return m, addr, nil
-}
-
-// WriteMsg implements the ResponseWriter.WriteMsg method.
-func (w *response) WriteMsg(m *Msg) (err error) {
-	if w.closed {
-		return &Error{err: "WriteMsg called after Close"}
-	}
-
-	var data []byte
-	if w.tsigProvider != nil { // if no provider, dont check for the tsig (which is a longer check)
-		if t := m.IsTsig(); t != nil {
-			data, w.tsigRequestMAC, err = TsigGenerateWithProvider(m, w.tsigProvider, w.tsigRequestMAC, w.tsigTimersOnly)
-			if err != nil {
-				return err
-			}
-			_, err = w.writer.Write(data)
-			return err
-		}
-	}
-	data, err = m.Pack()
-	if err != nil {
-		return err
-	}
-	_, err = w.writer.Write(data)
-	return err
-}
-
-// Write implements the ResponseWriter.Write method.
-func (w *response) Write(m []byte) (int, error) {
-	if w.closed {
-		return 0, &Error{err: "Write called after Close"}
-	}
-
-	switch {
-	case w.udp != nil:
-		if u, ok := w.udp.(*net.UDPConn); ok {
-			return WriteToSessionUDP(u, m, w.udpSession)
-		}
-		return w.udp.WriteTo(m, w.pcSession)
-	case w.tcp != nil:
-		if len(m) > MaxMsgSize {
-			return 0, &Error{err: "message too large"}
-		}
-
-		msg := make([]byte, 2+len(m))
-		binary.BigEndian.PutUint16(msg, uint16(len(m)))
-		copy(msg[2:], m)
-		return w.tcp.Write(msg)
-	default:
-		panic("dns: internal error: udp and tcp both nil")
-	}
+	srv.Handler.ServeDNS(w, req)
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
 func (w *response) LocalAddr() net.Addr {
-	switch {
-	case w.udp != nil:
-		return w.udp.LocalAddr()
-	case w.tcp != nil:
-		return w.tcp.LocalAddr()
+	switch sock := w.Writer.(type) {
+	case *net.UDPConn:
+		return sock.LocalAddr()
+	case *net.TCPConn:
+		return sock.LocalAddr()
 	default:
-		panic("dns: internal error: udp and tcp both nil")
+		panic("dns: internal error: no sock in response")
 	}
 }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
 func (w *response) RemoteAddr() net.Addr {
-	switch {
-	case w.udpSession != nil:
-		return w.udpSession.RemoteAddr()
-	case w.pcSession != nil:
-		return w.pcSession
-	case w.tcp != nil:
-		return w.tcp.RemoteAddr()
+	switch sock := w.Writer.(type) {
+	case *net.UDPConn:
+		// session stuff, also in here??
+		return sock.RemoteAddr()
+	case *net.TCPConn:
+		return sock.RemoteAddr()
 	default:
-		panic("dns: internal error: udpSession, pcSession and tcp are all nil")
+		panic("dns: internal error: no sock in response")
 	}
 }
-
-// TsigStatus implements the ResponseWriter.TsigStatus method.
-func (w *response) TsigStatus() error { return w.tsigStatus }
-
-// TsigTimersOnly implements the ResponseWriter.TsigTimersOnly method.
-func (w *response) TsigTimersOnly(b bool) { w.tsigTimersOnly = b }
 
 // Hijack implements the ResponseWriter.Hijack method.
 func (w *response) Hijack() { w.hijacked = true }
@@ -513,19 +345,14 @@ func (w *response) Close() error {
 	if w.closed {
 		return &Error{err: "connection already closed"}
 	}
-	w.closed = true
-
-	switch {
-	case w.udp != nil:
-		// Can't close the udp conn, as that is actually the listener.
-		return nil
-	case w.tcp != nil:
-		return w.tcp.Close()
-	default:
-		panic("dns: internal error: udp and tcp both nil")
+	if sock, ok := w.Writer.(io.Closer); ok {
+		w.closed = true
+		return sock.Close()
 	}
+	return nil
 }
 
+/*
 // ConnectionState() implements the ConnectionStater.ConnectionState() interface.
 func (w *response) ConnectionState() *tls.ConnectionState {
 	type tlsConnectionStater interface {
@@ -537,3 +364,4 @@ func (w *response) ConnectionState() *tls.ConnectionState {
 	}
 	return nil
 }
+*/

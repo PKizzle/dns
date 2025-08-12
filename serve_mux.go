@@ -3,6 +3,7 @@ package dns
 import (
 	"io"
 	"net"
+	"strings"
 	"sync"
 
 	"codeberg.org/miekg/dns/dnsutil"
@@ -25,13 +26,13 @@ type ResponseWriter interface {
 }
 
 // Handler is implemented by any value that implements ServeDNS. The message r is minimally decoded, only up
-// to the question section (mostly first 20 bytes) are decoded. The rest of the message is available in
+// to the question section (mostly first 20-ish bytes) are decoded. The rest of the message is available in
 // r.Data, so if a message is deemed worthwhile a:
 //
 //	r.Options = OptionUnpackNone
 //	r.Unpack()
 //
-// Should be performed.
+// Should be performed, to get the entire message.
 type Handler interface {
 	ServeDNS(w ResponseWriter, r *Msg)
 }
@@ -76,9 +77,11 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 		return nil
 	}
 
+	// Handle forces the use of a caninical string, but we need to call strings.ToLower to make that match.
+
 	var handler Handler
 	for off, end := 0, false; !end; off, end = dnsutil.Next(q, off) {
-		if h, ok := mux.z[q[off:]]; ok {
+		if h, ok := mux.z[strings.ToLower(q[off:])]; ok {
 			if t != TypeDS {
 				return h
 			}
@@ -116,7 +119,7 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Ms
 // HandleRemove deregisters the handler specific for pattern from the ServeMux.
 func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
-		panic("dns: invalid pattern " + pattern)
+		panic("dns: pattern should be in canonical form: " + pattern)
 	}
 	mux.m.Lock()
 	delete(mux.z, pattern)
@@ -135,9 +138,6 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 		handleRefused(w, req)
 		return
 	}
-	// TODO: add class as optional argument, otherwise ClassINET
-
-	//	name :=
 	qtype := RRToType(req.Question[0])
 	h = mux.match(req.Question[0].Header().Name, qtype)
 
@@ -153,12 +153,10 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 // ServeMux explains how patterns are matched.
 func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, handler) }
 
-// HandleRemove deregisters the handle with the given pattern
-// in the DefaultServeMux.
+// HandleRemove deregisters the handle with the given pattern in the DefaultServeMux.
 func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
-// HandleFunc registers the handler function with the given pattern
-// in the DefaultServeMux.
+// HandleFunc registers the handler function with the given pattern in the DefaultServeMux.
 func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
