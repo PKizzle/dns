@@ -182,6 +182,7 @@ const (
 	OptionUnpackNone     Option = 1 << iota // Do not unpack anything, dump the message in Data and call it a day.
 	OptionUnpackHeader                      // Unpack only the header of the message.
 	OptionUnpackQuestion                    // Unpack only the question section of the message
+	// OptionNoBufferUse // reuse buffers?
 )
 
 // Convert a MsgHeader to a string, with dig-like headers:

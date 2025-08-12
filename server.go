@@ -31,7 +31,7 @@ type ConnectionStater interface {
 
 type response struct {
 	closed     bool        // connection has been closed
-	hijacked   bool        // connection has been hijacked by handler
+	hijacked   bool        // connection has been hijacked by handler, TODO
 	udpSession *SessionUDP // oob data to get egress interface right for udp
 	writer     io.Writer   // writer to output the raw DNS bits
 }
