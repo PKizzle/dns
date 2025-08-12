@@ -39,6 +39,11 @@ changes wherever reasonable.
 
 - `New` will return an RR, `NewRR` will be gone.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
+- More:
+  - msg is a io.Writer
+  - msg.Data is re-used between request and reply (otionally turn off)
+  - private RR is doable
+  - private EDNS0 is doable
 
 ### Setting EDNS0
 
