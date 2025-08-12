@@ -128,7 +128,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		srv.Listener = l
-		go srv.serveTCP(l)
+		srv.serveTCP(l)
 		return nil
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
 		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
@@ -140,7 +140,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		l = tls.NewListener(l, srv.TLSConfig)
-		go srv.serveTCP(l)
+		srv.serveTCP(l)
 		return nil
 	case "udp", "udp4", "udp6":
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
@@ -153,7 +153,7 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.PacketConn = l
-		go srv.serveUDP(u)
+		srv.serveUDP(u)
 		return nil
 	}
 	return &Error{err: "bad network"}
