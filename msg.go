@@ -81,13 +81,14 @@ var RcodeToString = map[uint16]string{
 	RcodeNotZone:        "NOTZONE",
 	RcodeBadSig:         "BADSIG", // Also known as RcodeBadVers, see RFC 6891
 	//	RcodeBadVers:        "BADVERS",
-	RcodeBadKey:    "BADKEY",
-	RcodeBadTime:   "BADTIME",
-	RcodeBadMode:   "BADMODE",
-	RcodeBadName:   "BADNAME",
-	RcodeBadAlg:    "BADALG",
-	RcodeBadTrunc:  "BADTRUNC",
-	RcodeBadCookie: "BADCOOKIE",
+	RcodeStatefulNotImplemented: "DSOTYPENI",
+	RcodeBadKey:                 "BADKEY",
+	RcodeBadTime:                "BADTIME",
+	RcodeBadMode:                "BADMODE",
+	RcodeBadName:                "BADNAME",
+	RcodeBadAlg:                 "BADALG",
+	RcodeBadTrunc:               "BADTRUNC",
+	RcodeBadCookie:              "BADCOOKIE",
 }
 
 // Domain names are a sequence of counted strings split at the dots. They end with a zero-length string.
