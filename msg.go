@@ -912,9 +912,7 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	r, ok := w.(ResponseWriter)
 	if !ok {
-		// panic?
-		println("FUCK OFF RESPOSN WRITER")
-		return 0, fmt.Errorf("no response writer")
+		return 0, fmt.Errorf("writer is not a ResponseWriter")
 	}
 	if tcp, ok := r.Conn().(*net.TCPConn); ok {
 		l := make([]byte, 2, 2)

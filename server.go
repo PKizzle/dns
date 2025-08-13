@@ -266,9 +266,6 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		wg.Add(1)
 		srv.serveDNS(wg, w, r)
 
-		if w.closed {
-			break // Close() was called
-		}
 		if w.hijacked { // TODO
 			break // client will call Close() themselves
 		}
@@ -291,6 +288,7 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		// bogus, don't even reply
 		return
 	}
+	// finally call the handler attached.
 	srv.Handler.ServeDNS(w, r)
 }
 

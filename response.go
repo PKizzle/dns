@@ -14,7 +14,7 @@ type ResponseWriter interface {
 	RemoteAddr() net.Addr
 	// Conn returns the underlaying connection.
 	Conn() net.Conn
-	// Hijack lets the caller take over the connection. TODO: make this actually work.
+	// Hijack lets the caller take over the TCP connection. For UDP this has no effect.
 	Hijack()
 	// ResponseWriter must also implement the io.Writer interface.
 	io.Writer
@@ -25,7 +25,6 @@ type ResponseWriter interface {
 // response implements response.Writer
 type response struct {
 	session  *Session // used for UDP reply routing, needs to be in the interface! If needed
-	closed   bool     // connection has been closed
 	hijacked bool     // connection has been hijacked by handler, TODO, flesh this out
 	conn     net.Conn
 }
@@ -70,13 +69,8 @@ func (w *response) RemoteAddr() net.Addr {
 // Hijack implements the ResponseWriter.Hijack method.
 func (w *response) Hijack() { w.hijacked = true }
 
-// Close implements the ResponseWriter.Close method
 func (w *response) Close() error {
-	if w.closed {
-		return &Error{err: "connection already closed"}
-	}
 	if sock, ok := w.conn.(io.Closer); ok {
-		w.closed = true
 		return sock.Close()
 	}
 	return nil
