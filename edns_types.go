@@ -3,6 +3,7 @@ package dns
 import (
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -88,6 +89,8 @@ var ExtendedErrorToString = map[uint16]string{
 // StringToExtendedError is a map from human readable descriptions to extended error info codes.
 var StringToExtendedError = reverseInt16(ExtendedErrorToString)
 
+const tlv = 4
+
 func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	switch x := option.(type) {
 	case *NSID:
@@ -110,13 +113,32 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	return 0, fmt.Errorf("dns: no option pack defined")
 }
 
+// LLQ stands for Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
+// Implemented for completeness, as the EDNS0 type code is assigned.
+type LLQ struct {
+	Version   uint16
+	Opcode    uint16
+	Error     uint16
+	ID        uint64
+	LeaseLife uint32
+}
+
+func (o *LLQ) Len() int { return tlv + 18 }
+func (o *LLQ) String() string {
+	sb := sprintOptionHeader(o)
+	sprintData(sb, strconv.FormatUint(uint64(o.Version), 10), strconv.FormatUint(uint64(o.Opcode), 10),
+		strconv.FormatUint(uint64(o.Error), 10), strconv.FormatUint(o.ID, 10),
+		strconv.FormatUint(uint64(o.LeaseLife), 10))
+	return sb.String()
+}
+
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
 // The identifier is an opaque string encoded as hex.
 type NSID struct {
 	Nsid string `dns:"hex"`
 }
 
-func (o *NSID) Len() int { return 4 + len(o.Nsid)/2 }
+func (o *NSID) Len() int { return tlv + len(o.Nsid)/2 }
 func (o *NSID) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Nsid)
@@ -134,5 +156,5 @@ type PADDING struct {
 	Padding string `dns:"octet"`
 }
 
-func (o *PADDING) Len() int       { return 0 }
+func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
 func (o *PADDING) String() string { return "" }

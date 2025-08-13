@@ -159,7 +159,7 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	if x, ok := rr.(Packer); ok {
 		return x.Pack(msg, off)
 	}
-	return 0, fmt.Errorf("no pack defined")
+	return 0, fmt.Errorf("dns: no pack defined")
 }
 
 func unpack(rr RR, data, msgBuf []byte) error {
@@ -315,5 +315,5 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	if x, ok := rr.(Packer); ok {
 		return x.Unpack(data)
 	}
-	return fmt.Errorf("no unpack defined")
+	return fmt.Errorf("dns: no unpack defined")
 }

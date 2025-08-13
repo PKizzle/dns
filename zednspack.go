@@ -6,7 +6,48 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// Should be generated it is not yet
+func (o *LLQ) pack(msg []byte, off int) (off1 int, err error) {
+	off, err = packUint16(o.Version, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(o.Opcode, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(o.Error, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint64(o.ID, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint32(o.LeaseLife, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (o *LLQ) unpack(s *cryptobyte.String) error {
+	if !s.ReadUint16(&o.Version) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint16(&o.Opcode) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint16(&o.Error) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint64(&o.ID) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint32(&o.LeaseLife) {
+		return ErrUnpackOverflow
+	}
+	return nil
+}
 
 func (o *NSID) unpack(s *cryptobyte.String) error {
 	o.Nsid = hex.EncodeToString(*s)
