@@ -31,6 +31,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -53,7 +54,7 @@ var (
 
 const dom = "whoami.miek.nl."
 
-func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
+func handleReflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	var (
 		v4  bool
 		rr  dns.RR
@@ -61,7 +62,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		a   net.IP
 	)
 	if err := r.Unpack(); err != nil {
-		println("erorr")
+		log.Printf("%s", err.Error())
 	}
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, r)

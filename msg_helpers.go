@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net"
 	"slices"
 	"sort"
@@ -348,7 +349,7 @@ func unpackOpt(s *cryptobyte.String) ([]EDNS0, error) {
 		if newFn, ok := CodeToRR[code]; ok {
 			option = newFn()
 		} else {
-			return nil, ErrOpt
+			return nil, fmt.Errorf("dns: unknown OPT code %d\n", code)
 		}
 		if err := unpackOptionCode(option, &data); err != nil {
 			return nil, err

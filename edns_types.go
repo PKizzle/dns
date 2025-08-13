@@ -96,7 +96,7 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	}
 	// Coder() check, abuse Type()?
-	return fmt.Errorf("no option unpack defined")
+	return fmt.Errorf("dns: no option unpack defined")
 }
 
 func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
@@ -107,7 +107,7 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?
-	return 0, fmt.Errorf("no option pack defined")
+	return 0, fmt.Errorf("dns: no option pack defined")
 }
 
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
