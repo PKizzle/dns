@@ -104,7 +104,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func serve(net string) {
-	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true}
+	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true, MaxTCPQueries: -1}
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 	}
@@ -122,7 +122,7 @@ func main() {
 	}
 
 	dns.HandleFunc("miek.nl.", handleReflect)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go serve("tcp")
 		go serve("udp")
 	}

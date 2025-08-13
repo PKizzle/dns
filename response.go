@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"fmt"
 	"io"
 	"net"
 )
@@ -55,7 +54,6 @@ func (w *response) RemoteAddr() net.Addr {
 	if w.conn == nil {
 		panic("dns: internal error, no writer in response")
 	}
-	fmt.Printf("REMOTE, %T", w.conn)
 	switch sock := w.conn.(type) {
 	case *net.UDPConn:
 		return w.Session().RemoteAddr()
