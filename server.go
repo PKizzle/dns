@@ -111,7 +111,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		srv.Listener = l
-		srv.serveTCP(l)
+		srv.listenTCP(l)
 		return nil
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
 		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
@@ -123,7 +123,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		l = tls.NewListener(l, srv.TLSConfig)
-		srv.serveTCP(l)
+		srv.listenTCP(l)
 		return nil
 	case "udp", "udp4", "udp6":
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort)
@@ -136,7 +136,7 @@ func (srv *Server) ListenAndServe() error {
 			return e
 		}
 		srv.PacketConn = l
-		srv.serveUDP(u)
+		srv.listenUDP(u)
 		return nil
 	}
 	return &Error{err: "bad network"}
@@ -152,10 +152,10 @@ func (srv *Server) ActivateAndServe() error {
 				return e
 			}
 		}
-		srv.serveUDP(srv.PacketConn)
+		srv.listenUDP(srv.PacketConn)
 	}
 	if srv.Listener != nil {
-		srv.serveTCP(srv.Listener)
+		srv.listenTCP(srv.Listener)
 	}
 	return &Error{err: "bad listeners"}
 }
@@ -175,8 +175,8 @@ func (srv *Server) getReadTimeout() time.Duration {
 	return 2 * time.Second
 }
 
-// serveTCP starts a TCP listener for the server.
-func (srv *Server) serveTCP(ln net.Listener) {
+// listenTCP starts a TCP listener for the server.
+func (srv *Server) listenTCP(ln net.Listener) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -196,14 +196,13 @@ func (srv *Server) serveTCP(ln net.Listener) {
 				// skip (log, whatever)
 				continue
 			}
-			wg.Add(1)
-			go srv.serveTCPConn(&wg, conn)
+			go srv.serveTCP(&wg, conn)
 		}
 	}
 }
 
-// serveUDP starts a UDP listener for the server.
-func (srv *Server) serveUDP(pc net.PacketConn) {
+// listenUDP starts a UDP listener for the server.
+func (srv *Server) listenUDP(pc net.PacketConn) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
@@ -218,28 +217,32 @@ func (srv *Server) serveUDP(pc net.PacketConn) {
 			close(srv.exited)
 			return
 		default:
-			// see msg.go
 			r := &Msg{Data: make([]byte, srv.UDPSize)}
+
 			oob := make([]byte, oobSize)
 			n, oobn, _, raddr, err := pc.(*net.UDPConn).ReadMsgUDP(r.Data, oob)
 			if err != nil {
-				// nothing
+				// nothing?? TODO
 				continue
 			}
+
 			oob = oob[:oobn]
-			r.Network = &Network{raddr, oob}
+			w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr, oob}}
 			r.Data = r.Data[:n]
-			wg.Add(1)
-			go srv.serveUDPConn(&wg, pc.(*net.UDPConn), r)
+			go srv.serveUDP(&wg, w, r)
 		}
 	}
 }
 
-// Serve a new TCP connection.
-func (srv *Server) serveTCPConn(wg *sync.WaitGroup, conn net.Conn) {
-	defer wg.Done()
+func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
+	wg.Add(1)
+	srv.serveDNS(wg, w, r)
+}
 
+// Serve a new TCP connection.
+func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	w := &response{conn: conn}
+
 	idleTimeout := 2 * time.Second
 	if srv.IdleTimeout != nil {
 		idleTimeout = srv.IdleTimeout()
@@ -260,7 +263,8 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
-		srv.serveDNS(w, r)
+		wg.Add(1)
+		srv.serveDNS(wg, w, r)
 
 		if w.closed {
 			break // Close() was called
@@ -277,16 +281,9 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, conn net.Conn) {
 	}
 }
 
-// Serve a new UDP request.
-func (srv *Server) serveUDPConn(wg *sync.WaitGroup, conn *net.UDPConn, r *Msg) {
+func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 	defer wg.Done()
 
-	w := &response{conn: conn}
-
-	srv.serveDNS(w, r)
-}
-
-func (srv *Server) serveDNS(w *response, r *Msg) {
 	r.Options = OptionUnpackQuestion | OptionUnpackHeader
 
 	err := r.Unpack()

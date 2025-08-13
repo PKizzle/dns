@@ -10,13 +10,15 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
-// Network is a small strucures that keep track of where the (potential) UDP message came from.
-type Network struct {
+// Session is a small strucures that keep track of where the (potential) UDP message came from.
+type Session struct {
 	raddr *net.UDPAddr // address from [net.ReadMsgUDP]
 	// oob data also returned, this is needed to route to the correct interface. As these are small fixed
 	// slices it makes sense to use a sync.Pool, to be able to override this behavior an
 	oobdata []byte
 }
+
+func (s *Session) RemoteAddr() net.Addr { return s.raddr }
 
 // Size return the size of the oob buffer that should be used.
 var oobSize = func() int {
@@ -29,22 +31,6 @@ var oobSize = func() int {
 	if len(oob4) > len(oob6) {
 		return len(oob4)
 	}
-	return len(oob6)
-}()
-
-// This is the required size of the OOB buffer to pass to ReadMsgUDP.
-var udpOOBSize = func() int {
-	// We can't know whether we'll get an IPv4 control message or an
-	// IPv6 control message ahead of time. To get around this, we size
-	// the buffer equal to the largest of the two.
-
-	oob4 := ipv4.NewControlMessage(ipv4.FlagDst | ipv4.FlagInterface)
-	oob6 := ipv6.NewControlMessage(ipv6.FlagDst | ipv6.FlagInterface)
-
-	if len(oob4) > len(oob6) {
-		return len(oob4)
-	}
-
 	return len(oob6)
 }()
 

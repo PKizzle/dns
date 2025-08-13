@@ -3,6 +3,7 @@ package dns
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 	"strconv"
@@ -913,6 +914,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	if !ok {
 		// panic?
 		println("FUCK OFF RESPOSN WRITER")
+		return 0, fmt.Errorf("no response writer")
 	}
 	if tcp, ok := r.Conn().(*net.TCPConn); ok {
 		l := make([]byte, 2, 2)
@@ -922,9 +924,10 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		return int64(n), err
 	}
 
-	if sock, ok := r.Conn().(*net.UDPConn); ok && m.Network != nil {
-		oob := sourceFromOOB(m.Network.oobdata)
-		n, _, err := sock.WriteMsgUDP(m.Data, oob, m.Network.raddr)
+	if sock, ok := r.Conn().(*net.UDPConn); ok {
+		sess := r.Session()
+		oob := sourceFromOOB(sess.oobdata)
+		n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
 		return int64(n), err
 	}
 	// error here?
@@ -951,19 +954,20 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	}
 
 	if sock, ok := r.(*net.UDPConn); ok {
-		oob := make([]byte, oobSize)
-		n, oobn, _, raddr, err := sock.ReadMsgUDP(m.Data, oob)
+		n, err := sock.Read(m.Data)
 		if err != nil {
 			return 0, err
 		}
-		oob = oob[:oobn]
-		m.Network = &Network{raddr, oob}
 		m.Data = m.Data[:n]
 		return int64(n), nil
 	}
 
 	n, err := r.Read(m.Data)
-	return int64(n), err
+	if err != nil {
+		return 0, err
+	}
+	m.Data = m.Data[:n]
+	return int64(n), nil
 }
 
 // is packetConn for non UdP wiretes Kan weg.

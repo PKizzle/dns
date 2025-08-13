@@ -64,7 +64,6 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		println("erorr")
 	}
 	m := new(dns.Msg)
-	m.Network = r.Network
 	dnsutil.SetReply(m, r)
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {

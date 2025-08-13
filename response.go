@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"fmt"
 	"io"
 	"net"
 )
@@ -15,19 +16,22 @@ type ResponseWriter interface {
 	Conn() net.Conn
 	// Hijack lets the caller take over the connection. TODO: make this actually work.
 	Hijack()
-	// ...
+	// ResponseWriter must also implement the io.Writer interface.
 	io.Writer
+	// Session returns the UDP oob session data
+	Session() *Session
 }
 
 // response implements response.Writer
 type response struct {
-	//	*Network      // see [msg.Network] used for UDP reply routing, needs to be in the interface! If needed
-	closed   bool // connection has been closed
-	hijacked bool // connection has been hijacked by handler, TODO, flesh this out
+	session  *Session // used for UDP reply routing, needs to be in the interface! If needed
+	closed   bool     // connection has been closed
+	hijacked bool     // connection has been hijacked by handler, TODO, flesh this out
 	conn     net.Conn
 }
 
-func (w *response) Conn() net.Conn { return w.conn }
+func (w *response) Conn() net.Conn    { return w.conn }
+func (w *response) Session() *Session { return w.session }
 
 // Write writes the buffer p to the m.Data.
 func (w *response) Write(p []byte) (n int, err error) { return w.conn.Write(p) }
@@ -52,10 +56,10 @@ func (w *response) RemoteAddr() net.Addr {
 	if w.conn == nil {
 		panic("dns: internal error, no writer in response")
 	}
+	fmt.Printf("REMOTE, %T", w.conn)
 	switch sock := w.conn.(type) {
 	case *net.UDPConn:
-		// session stuff, also in here??
-		return sock.RemoteAddr()
+		return w.Session().RemoteAddr()
 	case *net.TCPConn:
 		return sock.RemoteAddr()
 	default:
