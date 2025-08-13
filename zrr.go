@@ -2,7 +2,6 @@
 
 package dns
 
-func (rr *ANY) Header() *Header        { return &rr.Hdr }
 func (rr *NULL) Header() *Header       { return &rr.Hdr }
 func (rr *CNAME) Header() *Header      { return &rr.Hdr }
 func (rr *HINFO) Header() *Header      { return &rr.Hdr }
@@ -77,10 +76,12 @@ func (rr *CSYNC) Header() *Header      { return &rr.Hdr }
 func (rr *ZONEMD) Header() *Header     { return &rr.Hdr }
 func (rr *OPT) Header() *Header        { return &rr.Hdr }
 func (rr *APL) Header() *Header        { return &rr.Hdr }
+func (rr *ANY) Header() *Header        { return &rr.Hdr }
+func (rr *AXFR) Header() *Header       { return &rr.Hdr }
+func (rr *IXFR) Header() *Header       { return &rr.Hdr }
 
 // TypeToRR is a map of constructors for each RR type.
 var TypeToRR = map[uint16]func() RR{
-	TypeANY:        func() RR { return new(ANY) },
 	TypeNULL:       func() RR { return new(NULL) },
 	TypeCNAME:      func() RR { return new(CNAME) },
 	TypeHINFO:      func() RR { return new(HINFO) },
@@ -155,13 +156,14 @@ var TypeToRR = map[uint16]func() RR{
 	TypeZONEMD:     func() RR { return new(ZONEMD) },
 	TypeOPT:        func() RR { return new(OPT) },
 	TypeAPL:        func() RR { return new(APL) },
+	TypeANY:        func() RR { return new(ANY) },
+	TypeAXFR:       func() RR { return new(AXFR) },
+	TypeIXFR:       func() RR { return new(IXFR) },
 }
 
 // RRToType is the reverse of TypeToRR, implemented as a function.
 func RRToType(rr RR) uint16 {
 	switch rr.(type) {
-	case *ANY:
-		return TypeANY
 	case *NULL:
 		return TypeNULL
 	case *CNAME:
@@ -310,6 +312,12 @@ func RRToType(rr RR) uint16 {
 		return TypeOPT
 	case *APL:
 		return TypeAPL
+	case *ANY:
+		return TypeANY
+	case *AXFR:
+		return TypeAXFR
+	case *IXFR:
+		return TypeIXFR
 	}
 	// if here, we don't have the RR in our pkg, check if it does Typer.
 	if x, ok := rr.(Typer); ok {
@@ -320,7 +328,6 @@ func RRToType(rr RR) uint16 {
 
 // TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
-	TypeANY:        "ANY",
 	TypeNULL:       "NULL",
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
@@ -394,6 +401,9 @@ var TypeToString = map[uint16]string{
 	TypeZONEMD:     "ZONEMD",
 	TypeOPT:        "OPT",
 	TypeAPL:        "APL",
+	TypeANY:        "ANY",
+	TypeAXFR:       "AXFR",
+	TypeIXFR:       "IXFR",
 	TypeNSAPPTR:    "NSAP-PTR",
 }
 
@@ -407,6 +417,7 @@ func (rr *ANY) Data() []Field       { return []Field{} }
 func (rr *APL) Data() []Field       { return []Field{rr.Prefixes} }
 func (rr *APLPrefix) Data() []Field { return []Field{rr.Negation, rr.Network} }
 func (rr *AVC) Data() []Field       { return []Field{rr.Txt} }
+func (rr *AXFR) Data() []Field      { return []Field{} }
 func (rr *CAA) Data() []Field       { return []Field{rr.Flag, rr.Tag, rr.Value} }
 func (rr *CDNSKEY) Data() []Field   { return []Field{} }
 func (rr *CDS) Data() []Field       { return []Field{} }
@@ -431,6 +442,7 @@ func (rr *IPSECKEY) Data() []Field {
 	return []Field{rr.Precedence, rr.GatewayType, rr.Algorithm, rr.GatewayAddr, rr.GatewayHost, rr.PublicKey}
 }
 func (rr *ISDN) Data() []Field { return []Field{rr.Address, rr.SubAddress} }
+func (rr *IXFR) Data() []Field { return []Field{} }
 func (rr *KEY) Data() []Field  { return []Field{} }
 func (rr *KX) Data() []Field   { return []Field{rr.Preference, rr.Exchanger} }
 func (rr *L32) Data() []Field  { return []Field{rr.Preference, rr.Locator32} }

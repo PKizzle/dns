@@ -4,18 +4,6 @@ package dns
 
 import "golang.org/x/crypto/cryptobyte"
 
-func (rr *ANY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
-}
-
-func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return ErrTrailingRData
-	}
-	return nil
-}
-
 func (rr *NULL) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = packStringAny(rr.Null, msg, off)
 	if err != nil {
@@ -2239,6 +2227,42 @@ func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
+	if !s.Empty() {
+		return ErrTrailingRData
+	}
+	return nil
+}
+
+func (rr *ANY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.Empty() {
+		return ErrTrailingRData
+	}
+	return nil
+}
+
+func (rr *AXFR) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *AXFR) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.Empty() {
+		return ErrTrailingRData
+	}
+	return nil
+}
+
+func (rr *IXFR) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *IXFR) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
 	if !s.Empty() {
 		return ErrTrailingRData
 	}

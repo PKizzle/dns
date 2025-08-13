@@ -8,8 +8,6 @@ import (
 
 func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
 	switch x := rr.(type) {
-	case *ANY:
-		return x.pack(msg, off, compression)
 	case *NULL:
 		return x.pack(msg, off, compression)
 	case *CNAME:
@@ -157,6 +155,12 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	case *OPT:
 		return x.pack(msg, off, compression)
 	case *APL:
+		return x.pack(msg, off, compression)
+	case *ANY:
+		return x.pack(msg, off, compression)
+	case *AXFR:
+		return x.pack(msg, off, compression)
+	case *IXFR:
 		return x.pack(msg, off, compression)
 	}
 	// if here, we don't have the RR in our pkg, check if it does Packer.
@@ -168,8 +172,6 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 
 func unpack(rr RR, data, msgBuf []byte) error {
 	switch x := rr.(type) {
-	case *ANY:
-		return x.unpack(data, msgBuf)
 	case *NULL:
 		return x.unpack(data, msgBuf)
 	case *CNAME:
@@ -317,6 +319,12 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	case *OPT:
 		return x.unpack(data, msgBuf)
 	case *APL:
+		return x.unpack(data, msgBuf)
+	case *ANY:
+		return x.unpack(data, msgBuf)
+	case *AXFR:
+		return x.unpack(data, msgBuf)
+	case *IXFR:
 		return x.unpack(data, msgBuf)
 	}
 	// if here, we don't have the RR in our pkg, check if it does Packer.

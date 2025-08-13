@@ -7,11 +7,6 @@ import (
 	"net"
 )
 
-func (rr *ANY) Len() int {
-	l := rr.Hdr.Len()
-	return l
-}
-
 func (rr *NULL) Len() int {
 	l := rr.Hdr.Len()
 	l += len(rr.Null)
@@ -559,5 +554,20 @@ func (rr *APL) Len() int {
 	for _, x := range rr.Prefixes {
 		l += x.len()
 	}
+	return l
+}
+
+func (rr *ANY) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
+func (rr *AXFR) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
+func (rr *IXFR) Len() int {
+	l := rr.Hdr.Len()
 	return l
 }

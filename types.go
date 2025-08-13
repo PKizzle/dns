@@ -234,20 +234,6 @@ var CertTypeToString = map[uint16]string{
 // Prefix for IPv4 encoded as IPv6 address
 const ipv4InIPv6Prefix = "::ffff:"
 
-// ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY
-// is named "*" there.
-type ANY struct {
-	Hdr Header
-	// Does not have any rdata
-}
-
-func (rr *ANY) String() string { return rr.Hdr.String() }
-
-// REMOVE??
-func (*ANY) parse(c *zlexer, origin string) *ParseError {
-	return &ParseError{err: "ANY records do not have a presentation format"}
-}
-
 // NULL RR. See RFC 1035.
 type NULL struct {
 	Hdr  Header
@@ -1584,4 +1570,39 @@ func copyNet(n net.IPNet) net.IPNet {
 		IP:   slices.Clone(n.IP),
 		Mask: slices.Clone(n.Mask),
 	}
+}
+
+// Meta RRs
+
+// ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY is named "*" there.
+type ANY struct {
+	Hdr Header
+}
+
+func (rr *ANY) String() string { return rr.Hdr.String() }
+
+func (*ANY) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "ANY records do not have a presentation format"}
+}
+
+// AXFR is a meta record used (solely) in question sections to ask for a zone transfer.
+type AXFR struct {
+	Hdr Header
+}
+
+func (rr *AXFR) String() string { return rr.Hdr.String() }
+
+func (*AXFR) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "AXFR records do not have a presentation format"}
+}
+
+// IXFR is a meta record used (solely) in question sections to ask for an incremental zone transfer.
+type IXFR struct {
+	Hdr Header
+}
+
+func (rr *IXFR) String() string { return rr.Hdr.String() }
+
+func (*IXFR) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "IXFR records do not have a presentation format"}
 }

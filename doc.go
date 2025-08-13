@@ -95,11 +95,12 @@ Requesting DNSSEC information for a zone is done by adding the DO (DNSSEC OK)
 bit to a request.
 
 	m := new(dns.Msg)
-	m.SetEdns0(4096, true)
+	m.Security = true
+	m.UDPSize = 4096
 
 Signature generation, signature verification and key generation are all supported.
 
-# Transaction signaturE
+# Transaction signature
 
 An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
 The supported algorithms include: HmacSHA1, HmacSHA256 and HmacSHA512.
