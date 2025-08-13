@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -505,7 +506,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
 	if len(m.Data) < l {
-		m.Data = append(m.Data, make([]byte, l-len(m.Data))...)
+		m.Data = slices.Grow(m.Data, l-len(m.Data))
 	}
 
 	// Pack it in: header and then the pieces.
@@ -943,7 +944,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 		}
 		li := int(l)
 		if len(m.Data) < li {
-			m.Data = append(m.Data, make([]byte, li-len(m.Data))...)
+			m.Data = slices.Grow(m.Data, li-len(m.Data))
 		} else {
 			m.Data = m.Data[:li]
 		}

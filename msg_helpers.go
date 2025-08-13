@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net"
+	"slices"
 	"sort"
 	"strings"
 
@@ -512,7 +513,7 @@ func unpackSVCB(s *cryptobyte.String) ([]SVCBKeyValue, error) {
 }
 
 func packSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
-	pairs = cloneSlice(pairs)
+	pairs = slices.Clone(pairs)
 	sort.Slice(pairs, func(i, j int) bool {
 		return pairs[i].Key() < pairs[j].Key()
 	})

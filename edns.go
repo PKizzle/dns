@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"slices"
 	"strconv"
 
 	"golang.org/x/crypto/cryptobyte"
@@ -523,8 +524,8 @@ type EDNS0_DAU struct {
 
 // Option implements the EDNS0 interface.
 func (e *EDNS0_DAU) Option() uint16        { return EDNS0DAU }
-func (e *EDNS0_DAU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
-func (e *EDNS0_DAU) unpack(b []byte) error { e.AlgCode = cloneSlice(b); return nil }
+func (e *EDNS0_DAU) pack() ([]byte, error) { return slices.Clone(e.AlgCode), nil }
+func (e *EDNS0_DAU) unpack(b []byte) error { e.AlgCode = slices.Clone(b); return nil }
 
 func (e *EDNS0_DAU) String() string {
 	s := ""
@@ -547,8 +548,8 @@ type EDNS0_DHU struct {
 
 // Option implements the EDNS0 interface.
 func (e *EDNS0_DHU) Option() uint16        { return EDNS0DHU }
-func (e *EDNS0_DHU) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
-func (e *EDNS0_DHU) unpack(b []byte) error { e.AlgCode = cloneSlice(b); return nil }
+func (e *EDNS0_DHU) pack() ([]byte, error) { return slices.Clone(e.AlgCode), nil }
+func (e *EDNS0_DHU) unpack(b []byte) error { e.AlgCode = slices.Clone(b); return nil }
 
 func (e *EDNS0_DHU) String() string {
 	s := ""
@@ -571,8 +572,8 @@ type EDNS0_N3U struct {
 
 // Option implements the EDNS0 interface.
 func (e *EDNS0_N3U) Option() uint16        { return EDNS0N3U }
-func (e *EDNS0_N3U) pack() ([]byte, error) { return cloneSlice(e.AlgCode), nil }
-func (e *EDNS0_N3U) unpack(b []byte) error { e.AlgCode = cloneSlice(b); return nil }
+func (e *EDNS0_N3U) pack() ([]byte, error) { return slices.Clone(e.AlgCode), nil }
+func (e *EDNS0_N3U) unpack(b []byte) error { e.AlgCode = slices.Clone(b); return nil }
 
 func (e *EDNS0_N3U) String() string {
 	// Re-use the hash map
@@ -657,15 +658,15 @@ func (e *EDNS0_LOCAL) String() string {
 }
 
 func (e *EDNS0_LOCAL) copy() EDNS0 {
-	return &EDNS0_LOCAL{e.Code, cloneSlice(e.Data)}
+	return &EDNS0_LOCAL{e.Code, slices.Clone(e.Data)}
 }
 
 func (e *EDNS0_LOCAL) pack() ([]byte, error) {
-	return cloneSlice(e.Data), nil
+	return slices.Clone(e.Data), nil
 }
 
 func (e *EDNS0_LOCAL) unpack(b []byte) error {
-	e.Data = cloneSlice(b)
+	e.Data = slices.Clone(b)
 	return nil
 }
 
@@ -732,10 +733,10 @@ type EDNS0_PADDING struct {
 
 // Option implements the EDNS0 interface.
 func (e *EDNS0_PADDING) Option() uint16        { return EDNS0PADDING }
-func (e *EDNS0_PADDING) pack() ([]byte, error) { return cloneSlice(e.Padding), nil }
-func (e *EDNS0_PADDING) unpack(b []byte) error { e.Padding = cloneSlice(b); return nil }
+func (e *EDNS0_PADDING) pack() ([]byte, error) { return slices.Clone(e.Padding), nil }
+func (e *EDNS0_PADDING) unpack(b []byte) error { e.Padding = slices.Clone(b); return nil }
 func (e *EDNS0_PADDING) String() string        { return fmt.Sprintf("%0X", e.Padding) }
-func (e *EDNS0_PADDING) copy() EDNS0           { return &EDNS0_PADDING{cloneSlice(e.Padding)} }
+func (e *EDNS0_PADDING) copy() EDNS0           { return &EDNS0_PADDING{slices.Clone(e.Padding)} }
 
 // Extended DNS Error Codes (RFC 8914).
 const (

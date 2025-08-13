@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -1557,18 +1558,10 @@ func (a *APLPrefix) len() int {
 	return 4 + (prefix+7)/8
 }
 
-// cloneSlice returns a shallow copy of s.
-func cloneSlice[E any, S ~[]E](s S) S {
-	if s == nil {
-		return nil
-	}
-	return append(S(nil), s...)
-}
-
 // copyNet returns a copy of a subnet.
 func copyNet(n net.IPNet) net.IPNet {
 	return net.IPNet{
-		IP:   cloneSlice(n.IP),
-		Mask: cloneSlice(n.Mask),
+		IP:   slices.Clone(n.IP),
+		Mask: slices.Clone(n.Mask),
 	}
 }

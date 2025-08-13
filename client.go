@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net"
+	"slices"
 	"time"
 )
 
@@ -94,10 +95,10 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	// reuse m's byffer
 	r.Data = m.Data
 	if len(r.Data) < int(m.UDPSize) {
-		r.Data = append(r.Data, make([]byte, (int(m.UDPSize)-len(r.Data)))...)
+		r.Data = slices.Grow(r.Data, int(m.UDPSize)-len(r.Data))
 	}
 	if len(r.Data) < MinMsgSize {
-		r.Data = append(r.Data, make([]byte, MinMsgSize-len(r.Data))...)
+		r.Data = slices.Grow(r.Data, MinMsgSize-len(r.Data))
 	}
 
 	_, err = io.Copy(r, conn)

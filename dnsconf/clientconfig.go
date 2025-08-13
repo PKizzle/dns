@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -69,7 +70,7 @@ func FromReader(resolvconf io.Reader) (*Config, error) {
 			}
 
 		case "search": // set search path to given servers
-			c.Search = cloneSlice(f[1:])
+			c.Search = slices.Clone(f[1:])
 
 		case "options": // magic options
 			for _, s := range f[1:] {
@@ -133,14 +134,4 @@ func (c *Config) NameList(name string) []string {
 		names = append(names, name)
 	}
 	return names
-}
-
-// Note copied from types.go
-
-// cloneSlice returns a shallow copy of s.
-func cloneSlice[E any, S ~[]E](s S) S {
-	if s == nil {
-		return nil
-	}
-	return append(S(nil), s...)
 }
