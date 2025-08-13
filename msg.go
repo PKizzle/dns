@@ -924,11 +924,14 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 
 	if sock, ok := r.Conn().(*net.UDPConn); ok {
 		sess := r.Session()
-		oob := sourceFromOOB(sess.oobdata)
-		n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
-		return int64(n), err
+		if sess != nil {
+			oob := sourceFromOOB(sess.oobdata)
+			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
+			return int64(n), err
+		}
 	}
-	// error here?
+
+	// clients end up here
 	n, err := r.Conn().Write(m.Data)
 	return int64(n), err
 }
