@@ -1,5 +1,7 @@
 //go:build ignore
 
+// move to dnsutils
+
 package dns
 
 import (
