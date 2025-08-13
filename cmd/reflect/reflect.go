@@ -38,7 +38,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"syscall"
@@ -50,7 +49,6 @@ import (
 var (
 	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 	printf     = flag.Bool("print", false, "print replies")
-	cpu        = flag.Int("cpu", 0, "number of cpu to use")
 )
 
 const dom = "whoami.miek.nl."
@@ -140,9 +138,6 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	if *cpu != 0 {
-		runtime.GOMAXPROCS(*cpu)
-	}
 	dns.HandleFunc("miek.nl.", handleReflect)
 	for i := 0; i < 10; i++ {
 		go serve("tcp", name, secret, true)

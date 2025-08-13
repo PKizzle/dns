@@ -24,32 +24,22 @@ Or even:
 
 	mx, err := dns.New("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 
-In the DNS messages are exchanged, these messages contain resource records
-(sets). Use pattern for creating a message:
+In the DNS messages are exchanged, these messages contain resource records (sets). Use pattern for creating a message:
 
 	m := new(dns.Msg)
-	m.SetQuestion("miek.nl.", dns.TypeMX)
-
-Or when not certain if the domain name is fully qualified:
-
-	m.SetQuestion(dns.Fqdn("miek.nl"), dns.TypeMX)
+	m.Question = []dns.RR{mx}
 
 The message m is now a message with the question section set to ask the MX
-records for the miek.nl. zone.
+records for the miek.nl. zone. Or when making an actual request.
 
-The following is slightly more verbose, but more flexible:
-
-	m1 := new(dns.Msg)
-	m1.Id = dns.Id()
-	m1.RecursionDesired = true
-	m1.Question = make([]dns.Question, 1)
-	m1.Question[0] = dns.Question{"miek.nl.", dns.TypeMX, dns.ClassINET}
+	m.ID = dns.ID()
+	m.RecursionDesired = true
 
 After creating a message it can be sent. Basic use pattern for synchronous
-querying the DNS at a server configured on 127.0.0.1 and port 53:
+querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
 
 	c := new(dns.Client)
-	in, rtt, err := c.Exchange(m1, "127.0.0.1:53")
+	in, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
 
 More advanced options are available using a net.Dialer and the corresponding API.
 For example it is possible to set a timeout, or to specify a source IP address
@@ -65,15 +55,13 @@ and port to use for the connection:
 		Timeout: 200 * time.Millisecond,
 		LocalAddr: &laddr,
 	}
-	in, rtt, err := c.Exchange(m1, "8.8.8.8:53")
+	in, rtt, err := c.Exchange(m1, "udp", "8.8.8.8:53")
 
-If these "advanced" features are not needed, a simple UDP query can be sent,
-with:
+If these "advanced" features are not needed, a simple UDP query can be sent with:
 
-	in, err := dns.Exchange(m1, "127.0.0.1:53")
+	in, err := dns.Exchange(m, "udp", "127.0.0.1:53")
 
-When this functions returns you will get DNS message. A DNS message consists
-out of four sections.
+When this functions returns you will get DNS message. A DNS message consists out of four (five in this package) sections.
 The question section: in.Question, the answer section: in.Answer,
 the authority section: in.Ns and the additional section: in.Extra.
 
@@ -111,41 +99,7 @@ bit to a request.
 
 Signature generation, signature verification and key generation are all supported.
 
-# DYNAMIC UPDATES
-
-Dynamic updates reuses the DNS message format, but renames three of the
-sections. Question is Zone, Answer is Prerequisite, Authority is Update, only
-the Additional is not renamed. See RFC 2136 for the gory details.
-
-You can set a rather complex set of rules for the existence of absence of
-certain resource records or names in a zone to specify if resource records
-should be added or removed. The table from RFC 2136 supplemented with the Go
-DNS function shows which functions exist to specify the prerequisites.
-
-	3.2.4 - Table Of Metavalues Used In Prerequisite Section
-
-	 CLASS    TYPE     RDATA    Meaning                    Function
-	 --------------------------------------------------------------
-	 ANY      ANY      empty    Name is in use             dns.NameUsed
-	 ANY      rrset    empty    RRset exists (value indep) dns.RRsetUsed
-	 NONE     ANY      empty    Name is not in use         dns.NameNotUsed
-	 NONE     rrset    empty    RRset does not exist       dns.RRsetNotUsed
-	 zone     rrset    rr       RRset exists (value dep)   dns.Used
-
-The prerequisite section can also be left empty. If you have decided on the
-prerequisites you can tell what RRs should be added or deleted. The next table
-shows the options you have and what functions to call.
-
-	3.4.2.6 - Table Of Metavalues Used In Update Section
-
-	 CLASS    TYPE     RDATA    Meaning                     Function
-	 ---------------------------------------------------------------
-	 ANY      ANY      empty    Delete all RRsets from name dns.RemoveName
-	 ANY      rrset    empty    Delete an RRset             dns.RemoveRRset
-	 NONE     rrset    rr       Delete an RR from RRset     dns.Remove
-	 zone     rrset    rr       Add to an RRset             dns.Insert
-
-# TRANSACTION SIGNATURE
+# Transaction signaturE
 
 An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
 The supported algorithms include: HmacSHA1, HmacSHA256 and HmacSHA512.
@@ -183,52 +137,7 @@ request an AXFR for miek.nl. with TSIG key named "axfr." and secret
 You can now read the records from the transfer as they come in. Each envelope
 is checked with TSIG. If something is not correct an error is returned.
 
-A custom TSIG implementation can be used. This requires additional code to
-perform any session establishment and signature generation/verification. The
-client must be configured with an implementation of the TsigProvider interface:
-
-	type Provider struct{}
-
-	func (*Provider) Generate(msg []byte, tsig *dns.TSIG) ([]byte, error) {
-		// Use tsig.Hdr.Name and tsig.Algorithm in your code to
-		// generate the MAC using msg as the payload.
-	}
-
-	func (*Provider) Verify(msg []byte, tsig *dns.TSIG) error {
-		// Use tsig.Hdr.Name and tsig.Algorithm in your code to verify
-		// that msg matches the value in tsig.MAC.
-	}
-
-	c := new(dns.Client)
-	c.TsigProvider = new(Provider)
-	m := new(dns.Msg)
-	m.SetQuestion("miek.nl.", dns.TypeMX)
-	m.SetTsig(keyname, dns.HmacSHA256, 300, time.Now().Unix())
-	...
-	// TSIG RR is calculated by calling your Generate method
-
-Basic use pattern validating and replying to a message that has TSIG set.
-
-	server := &dns.Server{Addr: ":53", Net: "udp"}
-	server.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-	go server.ListenAndServe()
-	dns.HandleFunc(".", handleRequest)
-
-	func handleRequest(w dns.ResponseWriter, r *dns.Msg) {
-		m := new(dns.Msg)
-		m.SetReply(r)
-		if r.IsTsig() != nil {
-			if w.TsigStatus() == nil {
-				// *Msg r has an TSIG record and it was validated
-				m.SetTsig("axfr.", dns.HmacSHA256, 300, time.Now().Unix())
-			} else {
-				// *Msg r has an TSIG records and it was not validated
-			}
-		}
-		w.WriteMsg(m)
-	}
-
-# PRIVATE RRS
+# Private RRs
 
 RFC 6895 sets aside a range of type codes for private use. This range is 65,280
 - 65,534 (0xFF00 - 0xFFFE). When experimenting with new Resource Records these
