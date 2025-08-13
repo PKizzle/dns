@@ -44,6 +44,7 @@ import (
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 var (
@@ -66,7 +67,7 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 	m := new(dns.Msg)
 	m.Network = r.Network
-	m.SetReply(r)
+	dnsutil.SetReply(m, r)
 	println(w.RemoteAddr().String())
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
