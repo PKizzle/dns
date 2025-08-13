@@ -42,19 +42,16 @@ func (rr *OPT) SetCompactAnswers(co bool) {
 	}
 }
 
-/*
-// ExtendedRcode returns the EDNS extended RCODE field (the upper 8 bits of the TTL).
-func (rr *OPT) ExtendedRcode() int {
-	return int(rr.Hdr.TTL&0xFF000000>>24) << 4
+// Rcode returns the EDNS extended Rcode field (the upper 8 bits of the TTL).
+func (rr *OPT) Rcode() uint16 {
+	return uint16(rr.Hdr.TTL&0xFF000000>>24) << 4
 }
 
-// SetExtendedRcode sets the EDNS extended RCODE field.
-//
-// If the RCODE is not an extended RCODE, will reset the extended RCODE field to 0.
-func (rr *OPT) SetExtendedRcode(v uint16) {
-	rr.Hdr.TTL = rr.Hdr.Ttl&0x00FFFFFF | uint32(v>>4)<<24
+// SetRcode sets the EDNS extended Rcode field.
+// If the Rcode is not an extended Rcode, will reset the extended Rcode field to 0.
+func (rr *OPT) SetRcode(v uint16) {
+	rr.Hdr.TTL = rr.Hdr.TTL&0x00FFFFFF | uint32(v>>4)<<24
 }
-*/
 
 // Z returns the Z part of the OPT RR as a uint16 with only the 15 least significant bits used.
 func (rr *OPT) Z() uint16 {

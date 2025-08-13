@@ -457,17 +457,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		return ErrRcode
 	}
 
-	/*
-		// Set extended rcode unconditionally if we have an opt, this will allow
-		// resetting the extended rcode bits if they need to.
-		if opt := m.IsEdns0(); opt != nil {
-			opt.SetExtendedRcode(uint16(m.Rcode()))
-		} else if m.Rcode() > 0xF {
-			// If Rcode is an extended one and opt is nil, error out.
-			return nil, ErrExtendedRcode
-		}
-	*/
-
 	// Convert convenient Msg into wire-like Header.
 	var dh header
 	dh.ID = m.ID
@@ -530,11 +519,16 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		}
 	}
 
-	// Extended Rcode
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers {
+	// Add an OPT RR if we see any of these.
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
 		opt := new(OPT)
 		if m.UDPSize > MinMsgSize {
 			opt.SetUDPSize(m.UDPSize)
+		}
+		if m.Rcode > 0xF {
+			// 12 bits go in OPT.
+			opt.SetRcode(m.Rcode)
+			// we leave m.Rcode as packing/unpacking will take the correct bits there.
 		}
 		if m.Security {
 			opt.SetSecurity(true)
@@ -564,13 +558,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 
 // We only allow a single question in the question section.
 func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	// TODO(tmthrgd): Stop accepting partial questions. These are here
-	// ostensibly for dynamic updates (see RFC 2136), but that standard doesn't
-	// actually permit partial question records and this seems to be a hold over
-	// of earlier unpacking code that was more generic. Instead we should
-	// enforce that we've properly received an entire question by removing the
-	// msg.Empty() checks.
-
 	name, err := unpackName(msg, msgBuf)
 	if err != nil {
 		return nil, err
@@ -663,7 +650,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 			// move to end, so it can be removed latter and unpack the opt for the settings.
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
-			// m.Rcode == something someting, TODO
+			m.Rcode += opt.Rcode() // TODO: test this
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
 
