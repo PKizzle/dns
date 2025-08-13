@@ -7,6 +7,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -118,7 +119,7 @@ func (srv *Server) ListenAndServe() error {
 		return nil
 	case "tcp-tls", "tcp4-tls", "tcp6-tls":
 		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
-			return errors.New("dns: neither Certificates nor GetCertificate set in Config")
+			return errors.New("dns: neither Certificates nor GetCertificate set")
 		}
 		network := strings.TrimSuffix(srv.Net, "-tls")
 		l, err := listenTCP(network, addr, srv.ReusePort)
@@ -231,7 +232,7 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 			}
 
 			oob = oob[:oobn]
-			w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr, oob}}
+			w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr, oob}, hijacked: new(atomic.Bool)}
 			r.Data = r.Data[:n]
 			go srv.serveUDP(&wg, w, r)
 		}
@@ -245,7 +246,7 @@ func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
 
 // Serve a new TCP connection.
 func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
-	w := &response{conn: conn}
+	w := &response{conn: conn, hijacked: new(atomic.Bool)}
 
 	idleTimeout := 2 * time.Second
 	if srv.IdleTimeout != nil {
@@ -267,17 +268,21 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
+		// tcp pipelining
 		wg.Add(1)
-		srv.serveDNS(wg, w, r)
+		go func() {
+			srv.serveDNS(wg, w, r)
+		}()
 
-		if w.hijacked { // TODO
+		if w.hijacked.Load() {
 			break // client will call Close() themselves
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
 		timeout = idleTimeout
 	}
 
-	if !w.hijacked {
+	if !w.hijacked.Load() {
+		wg.Wait() // wait for anyone still processing
 		w.Close()
 	}
 }

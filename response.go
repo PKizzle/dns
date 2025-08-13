@@ -3,9 +3,11 @@ package dns
 import (
 	"io"
 	"net"
+	"sync/atomic"
 )
 
-// A ResponseWriter interface is used by an DNS handler to construct an DNS response.
+// A ResponseWriter interface is used by an DNS handler to construct an DNS response. Note that a response
+// writer may be used concurrently with TCP pipelining, so be aware that writes need to be atomic.
 type ResponseWriter interface {
 	// LocalAddr returns the net.Addr of the server.
 	LocalAddr() net.Addr
@@ -17,24 +19,25 @@ type ResponseWriter interface {
 	io.Writer
 	// Session returns the UDP oob session data to correctly route UDP packets.
 	Session() *Session
-	// Hijack lets the caller take over the TCP connection. For UDP this has no effect.
+	// Hijack lets the caller take over the TCP connection. For UDP this has no effect. The handler is then
+	// responsible for the connection. This is also means that MaxTCPQueries will not have an effect.
 	Hijack()
 }
 
-// response implements response.Writer
+// response implements response.Writer. This struct is read-only execpt the hijacked.
 type response struct {
 	session  *Session // used for UDP reply routing, needs to be in the interface! If needed
-	hijacked bool     // connection has been hijacked by handler, TODO, flesh this out
 	conn     net.Conn
+	hijacked *atomic.Bool // connection has been hijacked by handler
 }
 
 func (w *response) Conn() net.Conn    { return w.conn }
 func (w *response) Session() *Session { return w.session }
 
-// Write writes the buffer p to the m.Data.
+// Write writes the buffer p to w.conn.
 func (w *response) Write(p []byte) (n int, err error) { return w.conn.Write(p) }
 
-// Read read the data from m.Data into p.
+// Read read the data from w.conn  into p.
 func (w *response) Read(p []byte) (n int, err error) { return w.conn.Read(p) }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
@@ -65,7 +68,7 @@ func (w *response) RemoteAddr() net.Addr {
 }
 
 // Hijack implements the ResponseWriter.Hijack method.
-func (w *response) Hijack() { w.hijacked = true }
+func (w *response) Hijack() { w.hijacked.Store(true) }
 
 func (w *response) Close() error {
 	if sock, ok := w.conn.(io.Closer); ok {

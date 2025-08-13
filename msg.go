@@ -918,7 +918,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		l := make([]byte, 2, 2)
 		binary.BigEndian.PutUint16(l[0:], uint16(len(m.Data)))
 		l = append(l, m.Data...)
-		n, err := tcp.Write(l)
+		n, err := tcp.Write(l) // single write to supported tcp pipelining
 		return int64(n), err
 	}
 
