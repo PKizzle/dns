@@ -82,6 +82,8 @@ type Server struct {
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReusePort bool
 
+	ctx      context.Context // server wide context to signal shutdown to running handlers
+	cancel   context.CancelFunc
 	exited   chan struct{}
 	shutdown chan bool
 }
@@ -93,6 +95,7 @@ func (srv *Server) init() {
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
 	}
+	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
@@ -162,7 +165,8 @@ func (srv *Server) ActivateAndServe() error {
 
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and ActivateAndServe will return.
 // A context.Context may be passed to limit how long to wait for connections to terminate. Not used at the moment.
-func (srv *Server) Shutdown(ctx context.Context) {
+func (srv *Server) Shutdown() {
+	srv.cancel()
 	close(srv.shutdown)
 	<-srv.exited
 }
@@ -289,7 +293,7 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 	}
 	// finally call the handler attached.
 	r.Options = 0
-	srv.Handler.ServeDNS(w, r)
+	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()
 }
 

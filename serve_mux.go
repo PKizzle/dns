@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"io"
 	"strings"
 	"sync"
@@ -10,22 +11,23 @@ import (
 // to the question section (mostly first 20-ish bytes) are decoded. The rest of the message is available in
 // r.Data, so if a message is deemed worthwhile a:
 //
-//	r.Options = OptionUnpackNone
 //	r.Unpack()
 //
 // Should be performed, to get the entire message.
+//
+// The context is cancelled when the server exits.
 type Handler interface {
-	ServeDNS(w ResponseWriter, r *Msg)
+	ServeDNS(ctx context.Context, w ResponseWriter, r *Msg)
 }
 
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
 // Handler object that calls f.
-type HandlerFunc func(ResponseWriter, *Msg)
+type HandlerFunc func(context.Context, ResponseWriter, *Msg)
 
 // ServeDNS calls f(w, r).
-func (f HandlerFunc) ServeDNS(w ResponseWriter, r *Msg) { f(w, r) }
+func (f HandlerFunc) ServeDNS(ctx context.Context, w ResponseWriter, r *Msg) { f(ctx, w, r) }
 
 // ServeMux is an DNS request multiplexer. It matches the zone name of
 // each incoming request against a list of registered patterns add calls
@@ -93,7 +95,7 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func (mux *ServeMux) HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg)) {
 	mux.Handle(pattern, HandlerFunc(handler))
 }
 
@@ -113,7 +115,7 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // that is also registered), otherwise the child gets the query.
 //
 // If no handler is found, or there is no question, a standard REFUSED message is returned.
-func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
+func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
 	var h Handler
 	if len(req.Question) == 0 {
 		handleRefused(w, req)
@@ -123,7 +125,7 @@ func (mux *ServeMux) ServeDNS(w ResponseWriter, req *Msg) {
 	h = mux.match(req.Question[0].Header().Name, qtype)
 
 	if h != nil {
-		h.ServeDNS(w, req)
+		h.ServeDNS(ctx, w, req)
 	} else {
 		handleRefused(w, req)
 	}
@@ -138,7 +140,7 @@ func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, h
 func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
 // HandleFunc registers the handler function with the given pattern in the DefaultServeMux.
-func HandleFunc(pattern string, handler func(ResponseWriter, *Msg)) {
+func HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
