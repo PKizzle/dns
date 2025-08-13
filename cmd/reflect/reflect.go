@@ -95,11 +95,9 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if *printf {
-		println(m.String())
+		fmt.Print(m.String())
 	}
-	if err := m.Pack(); err != nil {
-		println("packing shit", err.Error())
-	}
+	m.Pack()
 	io.Copy(w, m)
 }
 

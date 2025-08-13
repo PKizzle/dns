@@ -13,12 +13,12 @@ type ResponseWriter interface {
 	RemoteAddr() net.Addr
 	// Conn returns the underlaying connection.
 	Conn() net.Conn
-	// Hijack lets the caller take over the TCP connection. For UDP this has no effect.
-	Hijack()
 	// ResponseWriter must also implement the io.Writer interface.
 	io.Writer
-	// Session returns the UDP oob session data
+	// Session returns the UDP oob session data to correctly route UDP packets.
 	Session() *Session
+	// Hijack lets the caller take over the TCP connection. For UDP this has no effect.
+	Hijack()
 }
 
 // response implements response.Writer

@@ -279,17 +279,18 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 }
 
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
-	defer wg.Done()
-
 	r.Options = OptionUnpackQuestion | OptionUnpackHeader
 
 	err := r.Unpack()
 	if err != nil {
 		// bogus, don't even reply
+		wg.Done()
 		return
 	}
 	// finally call the handler attached.
+	r.Options = 0
 	srv.Handler.ServeDNS(w, r)
+	wg.Done()
 }
 
 /*
