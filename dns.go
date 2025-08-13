@@ -12,6 +12,7 @@ import (
 //go:generate go run pack_generate.go
 //go:generate go run parse_generate.go
 //go:generate go run len_generate.go
+//go:generate go run dnsutil_generate.go
 
 const (
 	// DefaultMsgSize is the standard default for messages larger than 512 bytes.

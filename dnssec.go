@@ -18,8 +18,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -198,7 +196,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
-	off, err1 := packName(dnsutil.Canonical(k.Hdr.Name), owner, 0, nil, false)
+	off, err1 := packName(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
 	}
@@ -268,7 +266,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		rr.OrigTTL = h0.TTL
 	}
 	rr.TypeCovered = h0.t
-	rr.Labels = uint8(dnsutil.Count(h0.Name))
+	rr.Labels = uint8(dnsutilCount(h0.Name))
 
 	if strings.HasPrefix(h0.Name, "*") {
 		rr.Labels-- // wildcard, remove from label count
@@ -283,7 +281,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 	sigwire.Inception = rr.Inception
 	sigwire.KeyTag = rr.KeyTag
 	// For signing, lowercase this name
-	sigwire.SignerName = dnsutil.Canonical(rr.SignerName)
+	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
 
 	// Create the desired binary blob
 	signdata := make([]byte, DefaultMsgSize)
@@ -360,7 +358,7 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 // and that the Protocol field is set to 3 (RFC 4034 2.1.2).
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// First the easy checks
-	if !IsRRset(rrset) {
+	if !dnsutilIsRRset(rrset) {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {
@@ -402,7 +400,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	sigwire.Expiration = rr.Expiration
 	sigwire.Inception = rr.Inception
 	sigwire.KeyTag = rr.KeyTag
-	sigwire.SignerName = dnsutil.Canonical(rr.SignerName)
+	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
 	// Create the desired binary blob
 	signeddata := make([]byte, DefaultMsgSize)
 	n, err := packSigWire(sigwire, signeddata)
@@ -616,7 +614,7 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 			// TODO
 		*/
 		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		h.Name = dnsutil.Canonical(h.Name)
+		h.Name = dnsutilCanonical(h.Name)
 		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
 		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
 		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
@@ -629,49 +627,49 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 		//	conversion.
 		switch x := r1.(type) {
 		case *NS:
-			x.Ns = dnsutil.Canonical(x.Ns)
+			x.Ns = dnsutilCanonical(x.Ns)
 		case *MD:
-			x.Md = dnsutil.Canonical(x.Md)
+			x.Md = dnsutilCanonical(x.Md)
 		case *MF:
-			x.Mf = dnsutil.Canonical(x.Mf)
+			x.Mf = dnsutilCanonical(x.Mf)
 		case *CNAME:
-			x.Target = dnsutil.Canonical(x.Target)
+			x.Target = dnsutilCanonical(x.Target)
 		case *SOA:
-			x.Ns = dnsutil.Canonical(x.Ns)
-			x.Mbox = dnsutil.Canonical(x.Mbox)
+			x.Ns = dnsutilCanonical(x.Ns)
+			x.Mbox = dnsutilCanonical(x.Mbox)
 		case *MB:
-			x.Mb = dnsutil.Canonical(x.Mb)
+			x.Mb = dnsutilCanonical(x.Mb)
 		case *MG:
-			x.Mg = dnsutil.Canonical(x.Mg)
+			x.Mg = dnsutilCanonical(x.Mg)
 		case *MR:
-			x.Mr = dnsutil.Canonical(x.Mr)
+			x.Mr = dnsutilCanonical(x.Mr)
 		case *PTR:
-			x.Ptr = dnsutil.Canonical(x.Ptr)
+			x.Ptr = dnsutilCanonical(x.Ptr)
 		case *MINFO:
-			x.Rmail = dnsutil.Canonical(x.Rmail)
-			x.Email = dnsutil.Canonical(x.Email)
+			x.Rmail = dnsutilCanonical(x.Rmail)
+			x.Email = dnsutilCanonical(x.Email)
 		case *MX:
-			x.Mx = dnsutil.Canonical(x.Mx)
+			x.Mx = dnsutilCanonical(x.Mx)
 		case *RP:
-			x.Mbox = dnsutil.Canonical(x.Mbox)
-			x.Txt = dnsutil.Canonical(x.Txt)
+			x.Mbox = dnsutilCanonical(x.Mbox)
+			x.Txt = dnsutilCanonical(x.Txt)
 		case *AFSDB:
-			x.Hostname = dnsutil.Canonical(x.Hostname)
+			x.Hostname = dnsutilCanonical(x.Hostname)
 		case *RT:
-			x.Host = dnsutil.Canonical(x.Host)
+			x.Host = dnsutilCanonical(x.Host)
 		case *SIG:
-			x.SignerName = dnsutil.Canonical(x.SignerName)
+			x.SignerName = dnsutilCanonical(x.SignerName)
 		case *PX:
-			x.Map822 = dnsutil.Canonical(x.Map822)
-			x.Mapx400 = dnsutil.Canonical(x.Mapx400)
+			x.Map822 = dnsutilCanonical(x.Map822)
+			x.Mapx400 = dnsutilCanonical(x.Mapx400)
 		case *NAPTR:
-			x.Replacement = dnsutil.Canonical(x.Replacement)
+			x.Replacement = dnsutilCanonical(x.Replacement)
 		case *KX:
-			x.Exchanger = dnsutil.Canonical(x.Exchanger)
+			x.Exchanger = dnsutilCanonical(x.Exchanger)
 		case *SRV:
-			x.Target = dnsutil.Canonical(x.Target)
+			x.Target = dnsutilCanonical(x.Target)
 		case *DNAME:
-			x.Target = dnsutil.Canonical(x.Target)
+			x.Target = dnsutilCanonical(x.Target)
 		}
 		// 6.2. Canonical RR Form. (5) - origTTL
 		wire := make([]byte, r1.Len()+1) // +1 to be safe(r)

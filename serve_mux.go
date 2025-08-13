@@ -5,8 +5,6 @@ import (
 	"net"
 	"strings"
 	"sync"
-
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // A ResponseWriter interface is used by an DNS handler to
@@ -80,7 +78,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 	// Handle forces the use of a caninical string, but we need to call strings.ToLower to make that match.
 
 	var handler Handler
-	for off, end := 0, false; !end; off, end = dnsutil.Next(q, off) {
+	for off, end := 0, false; !end; off, end = dnsutilNext(q, off) {
 		if h, ok := mux.z[strings.ToLower(q[off:])]; ok {
 			if t != TypeDS {
 				return h
@@ -100,7 +98,7 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 
 // Handle adds a handler to the ServeMux for pattern.
 func (mux *ServeMux) Handle(pattern string, handler Handler) {
-	if dnsutil.Canonical(pattern) != pattern || pattern == "" {
+	if dnsutilCanonical(pattern) != pattern || pattern == "" {
 		panic("dns: pattern should be in canonical form: " + pattern)
 	}
 	mux.m.Lock()
@@ -166,7 +164,7 @@ func handleRefused(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.Data = r.Data
 
-	m.SetReply(r)
+	dnsutilSetReply(m, r)
 	m.Rcode = RcodeRefused
 	m.Pack()
 	io.Copy(w, m)

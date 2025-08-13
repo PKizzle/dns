@@ -19,10 +19,16 @@ var exclude = []string{"APLPrefix", "RFC3597"}
 
 var FlagDebug = flag.Bool("debug", false, "Emit the non-formatted code to standard output and do not write it to a file.")
 
+// Ast returns the *ast.File of file or an error.
+func Ast(file string) (f *ast.File, t *token.FileSet, err error) {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, file, nil, parser.AllErrors|parser.ParseComments|parser.SkipObjectResolution)
+	return node, fset, err
+}
+
 // Types returns all types names from the file that are exported.
 func Types(file string) ([]string, error) {
-	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
+	node, _, err := Ast(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse %s: %v", file, err)
 	}
@@ -51,8 +57,7 @@ func Types(file string) ([]string, error) {
 
 // Fields returns the export type names and the field's names. Each name is prefixed with "rr.".
 func Fields(file string) (map[string][]string, error) {
-	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, file, nil, parser.AllErrors|parser.ParseComments|parser.SkipObjectResolution)
+	node, _, err := Ast(file)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +100,7 @@ func fields(node ast.Node) []string {
 
 // StructTypeSpecs returns the struct types from file that can be inspected for the struct tags.
 func StructTypeSpecs(file string) ([]*ast.TypeSpec, error) {
-	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, file, nil, parser.AllErrors|parser.ParseComments|parser.SkipObjectResolution)
+	node, _, err := Ast(file)
 	if err != nil {
 		return nil, err
 	}

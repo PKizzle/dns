@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 const maxTok = 512 // Token buffer start size, and growth size amount.
@@ -189,8 +187,8 @@ type ZoneParser struct {
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
-		origin = dnsutil.Fqdn(origin)
-		if _, ok := dnsutil.IsName(origin); !ok {
+		origin = dnsutilFqdn(origin)
+		if ok := dnsutilIsName(origin); !ok {
 			pe = &ParseError{file, "bad initial origin name", lex{}}
 		}
 	}
@@ -1271,13 +1269,13 @@ func toAbsoluteName(name, origin string) (absolute string, ok bool) {
 	}
 
 	// require a valid domain name
-	_, ok = dnsutil.IsName(name)
+	ok = dnsutilIsName(name)
 	if !ok || name == "" {
 		return "", false
 	}
 
 	// check if name is already absolute
-	if dnsutil.IsFqdn(name) {
+	if dnsutilIsFqdn(name) {
 		return name, true
 	}
 

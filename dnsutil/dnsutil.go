@@ -1,7 +1,4 @@
-// Package dnsutil contains function that are useful in the context of working with the DNS. Note that all of
-// these function and types do not reference the main dns package, because that would create an import cycle.
-//
-// For instance [dns.IsRRset] is not found here.
+// Package dnsutil contains function that are useful in the context of working with the DNS.
 package dnsutil
 
 // Trim removes the zone component from q. It returns the trimmed

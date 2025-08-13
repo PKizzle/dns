@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"codeberg.org/miekg/dns/dnsutil"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -46,7 +45,7 @@ func (key tsigHMACProvider) Generate(msg []byte, t *TSIG) ([]byte, error) {
 		return nil, err
 	}
 	var h hash.Hash
-	switch dnsutil.Canonical(t.Algorithm) {
+	switch dnsutilCanonical(t.Algorithm) {
 	case HmacSHA1:
 		h = hmac.New(sha1.New, rawsecret)
 	case HmacSHA224:

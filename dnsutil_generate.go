@@ -1,0 +1,63 @@
+//go:build ignore
+
+// dnsutil_generate generates zdnsutil.go which is a copy of dnsutil/shared.go and internalized.
+
+package main
+
+import (
+	"bytes"
+	"flag"
+	"go/ast"
+	"go/printer"
+	"go/token"
+	"log"
+	"strings"
+
+	"codeberg.org/miekg/dns/internal/generate"
+)
+
+const out = "zdnsutil.go"
+
+func main() {
+	flag.Parse()
+	node, fset, err := generate.Ast("dnsutil/shared.go")
+	if err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
+
+	node.Name = ast.NewIdent("dns")
+	// put 'dnsutil' before each name.
+	for _, decl := range node.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok && fn.Name.IsExported() {
+			fn.Name.Name = "dnsutil" + fn.Name.Name
+		}
+	}
+	// remove import
+	newImports := []ast.Spec{}
+	for _, imp := range node.Imports {
+		if strings.Trim(imp.Path.Value, `"`) != "codeberg.org/miekg/dns" {
+			newImports = append(newImports, imp)
+		}
+	}
+
+	for _, decl := range node.Decls {
+		if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.IMPORT {
+			genDecl.Specs = newImports
+			break
+		}
+	}
+
+	source := &bytes.Buffer{}
+	if err := printer.Fprint(source, fset, node); err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
+
+	// silly: go over bytes and remove `dns.` everyhwere.
+	source2 := bytes.Replace(source.Bytes(), []byte(`dns.`), nil, -1)
+	// but then "fix" it for function calls: IsFqdn and Fqdn who are now named dnsutilIsFqdn and dnsutilFqdn
+	for _, fix := range [][]byte{[]byte(" IsFqdn(s)"), []byte(" Fqdn(s)"), []byte(" Next(s, off)")} {
+		replace := append([]byte(" dnsutil"), fix[1:]...)
+		source2 = bytes.Replace(source2, fix, replace, -1)
+	}
+	generate.Write(bytes.NewBuffer(source2), out)
+}

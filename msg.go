@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/dnsutil"
 	"codeberg.org/miekg/dns/internal/ddd"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -98,7 +97,7 @@ func packName(s string, msg []byte, off int, compression map[string]uint16, comp
 	// should be kept in sync with this function.
 
 	// If not fully qualified, error out.
-	if !dnsutil.IsFqdn(s) {
+	if !dnsutilIsFqdn(s) {
 		return len(msg), ErrFqdn
 	}
 
