@@ -56,7 +56,7 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 type Server struct {
 	// Address to listen on, ":dns" if empty.
 	Addr string
-	// if "tcp" or "tcp-tls" (DNS over TLS) it will invoke a TCP listener, otherwise an UDP one
+	// iF "tcp" or "tcp-tls" (DNS over TLS) it will invoke a TCP listener, otherwise an UDP one.
 	Net string
 	// TCP Listener to use, this is to aid in systemd's socket activation.
 	Listener net.Listener
@@ -296,7 +296,9 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		wg.Done()
 		return
 	}
-	// finally call the handler attached.
+	// if a response -> discard here, no dns ping-pong
+	// for reset everything is valide
+
 	r.Options = 0
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()
