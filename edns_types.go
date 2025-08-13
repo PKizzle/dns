@@ -132,6 +132,27 @@ func (o *LLQ) String() string {
 	return sb.String()
 }
 
+// The Cookie option is used to add a DNS Cookie to a message.
+//
+// The Cookie field consists out of a client cookie (RFC 7873 Section 4), that is
+// always 8 bytes. It may then optionally be followed by the server cookie. The server
+// cookie is of variable length, 8 to a maximum of 32 bytes. In other words:
+//
+//	cCookie := o.Cookie[:16]
+//	sCookie := o.Cookie[16:]
+//
+// There is no guarantee that the Cookie string has a specific length.
+type COOKIE struct {
+	Cookie string `dns:"hex"`
+}
+
+func (o *COOKIE) Len() int { return tlv + len(o.Cookie) }
+func (o *COOKIE) String() string {
+	sb := sprintOptionHeader(o)
+	sb.WriteString(o.Cookie)
+	return sb.String()
+}
+
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
 // The identifier is an opaque string encoded as hex.
 type NSID struct {

@@ -58,6 +58,15 @@ func (o *NSID) pack(msg []byte, off int) (int, error) {
 	return hex.Decode(msg[off:], []byte(o.Nsid))
 }
 
+func (o *COOKIE) pack(msg []byte, off int) (int, error) {
+	return hex.Decode(msg[off:], []byte(o.Cookie))
+}
+
+func (o *COOKIE) unpack(s *cryptobyte.String) error {
+	o.Cookie = hex.EncodeToString(*s)
+	return nil
+}
+
 func (o *PADDING) unpack(s *cryptobyte.String) error {
 	return nil
 }
