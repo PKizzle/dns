@@ -5,6 +5,11 @@ import "fmt"
 // Error represents a DNS error.
 type Error struct{ err string }
 
+func (e *Error) Fmt(format string, a ...any) error {
+	e.err += fmt.Sprintf(format, a...)
+	return e
+}
+
 func (e *Error) Error() string { return "dns: " + e.err }
 
 var (

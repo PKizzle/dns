@@ -93,6 +93,8 @@ const tlv = 4
 
 func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	switch x := option.(type) {
+	case *LLQ:
+		return x.unpack(s)
 	case *NSID:
 		return x.unpack(s)
 	case *PADDING:
@@ -108,6 +110,8 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 
 func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	switch x := option.(type) {
+	case *LLQ:
+		return x.pack(msg, off)
 	case *NSID:
 		return x.pack(msg, off)
 	case *PADDING:

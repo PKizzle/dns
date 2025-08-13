@@ -75,12 +75,13 @@ func (o *PADDING) pack(msg []byte, off int) (int, error) {
 	return 0, nil
 }
 
-func (o *EDE) unpack(s *cryptobyte.String) error {
+func (o *EDE) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint16(&o.InfoCode) {
 		return ErrUnpackOverflow
 	}
-	// TODO
-	//	s.CopyBytes(o.ExtraText) // rest should be the string
+	if o.ExtraText, err = unpackStringAny(s, len(*s)); err != nil {
+		return ErrUnpackOverflow.Fmt(": %s", "EDE option")
+	}
 	return nil
 }
 
