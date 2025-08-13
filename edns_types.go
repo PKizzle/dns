@@ -178,4 +178,20 @@ type PADDING struct {
 }
 
 func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
-func (o *PADDING) String() string { return "" }
+func (o *PADDING) String() string { return "" } // tODO miek
+
+// EDE option is used to return additional information about the cause of DNS errors.
+type EDE struct {
+	InfoCode  uint16
+	ExtraText string
+}
+
+func (o *EDE) Len() int { return tlv + 2 + len(o.ExtraText) }
+func (o *EDE) String() string {
+	// strings.Builder TODO: miek
+	info := strconv.FormatUint(uint64(o.InfoCode), 10)
+	if s, ok := ExtendedErrorToString[o.InfoCode]; ok {
+		info += fmt.Sprintf(" (%s)", s)
+	}
+	return fmt.Sprintf("%s: (%s)", info, o.ExtraText)
+}

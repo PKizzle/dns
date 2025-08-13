@@ -74,3 +74,21 @@ func (o *PADDING) unpack(s *cryptobyte.String) error {
 func (o *PADDING) pack(msg []byte, off int) (int, error) {
 	return 0, nil
 }
+
+func (o *EDE) unpack(s *cryptobyte.String) error {
+	if !s.ReadUint16(&o.InfoCode) {
+		return ErrUnpackOverflow
+	}
+	// TODO
+	//	s.CopyBytes(o.ExtraText) // rest should be the string
+	return nil
+}
+
+func (o *EDE) pack(msg []byte, off int) (int, error) {
+	off, err := packUint16(o.InfoCode, msg, off)
+	if err != nil {
+		return off, err
+	}
+	o.ExtraText = string(msg[off:])
+	return off, nil
+}
