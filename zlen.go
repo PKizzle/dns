@@ -88,6 +88,13 @@ func (rr *X25) Len() int {
 	return l
 }
 
+func (rr *ISDN) Len() int {
+	l := rr.Hdr.Len()
+	l += len(rr.Address) + 1
+	l += len(rr.SubAddress) + 1
+	return l
+}
+
 func (rr *RT) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
@@ -245,6 +252,11 @@ func (rr *RRSIG) Len() int {
 	l += 2 // KeyTag
 	l += len(rr.SignerName)
 	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
+	return l
+}
+
+func (rr *NXT) Len() int {
+	l := rr.Hdr.Len()
 	return l
 }
 

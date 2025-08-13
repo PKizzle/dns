@@ -30,6 +30,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *X25:
 		return x.parse(c, o)
+	case *ISDN:
+		return x.parse(c, o)
 	case *RT:
 		return x.parse(c, o)
 	case *NS:
@@ -67,6 +69,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	case *SIG:
 		return x.parse(c, o)
 	case *RRSIG:
+		return x.parse(c, o)
+	case *NXT:
 		return x.parse(c, o)
 	case *NSEC:
 		return x.parse(c, o)

@@ -397,6 +397,19 @@ func (rr *X25) String() string {
 	return sb.String()
 }
 
+// ISDN RR. See RFC 1183, Section 3.2.
+type ISDN struct {
+	Hdr        Header
+	Address    string
+	SubAddress string
+}
+
+func (rr *ISDN) String() string {
+	sb := sprintHeader(rr)
+	sb.WriteString(sprintTxt([]string{rr.Address, rr.SubAddress}))
+	return sb.String()
+}
+
 // RT RR. See RFC 1183, Section 3.3.
 type RT struct {
 	Hdr        Header
@@ -667,7 +680,7 @@ func (rr *GPOS) String() string {
 	return sb.String()
 }
 
-// LOC RR. See RFC RFC 1876.
+// LOC RR. See RFC 1876.
 type LOC struct {
 	Hdr       Header
 	Version   uint8
@@ -781,6 +794,11 @@ func (rr *RRSIG) String() string {
 	return sb.String()
 }
 
+// NXT RR. See RFC 2535.
+type NXT struct {
+	NSEC
+}
+
 // NSEC RR. See RFC 4034 and RFC 3755.
 type NSEC struct {
 	Hdr        Header
@@ -873,7 +891,7 @@ func (rr *TALINK) String() string {
 	return sb.String()
 }
 
-// SSHFP RR. See RFC RFC 4255.
+// SSHFP RR. See RFC 4255.
 type SSHFP struct {
 	Hdr         Header
 	Algorithm   uint8
@@ -889,7 +907,7 @@ func (rr *SSHFP) String() string {
 	return sb.String()
 }
 
-// KEY RR. See RFC RFC 2535.
+// KEY RR. See RFC 2535.
 type KEY struct {
 	DNSKEY
 }
@@ -1228,7 +1246,7 @@ func (rr *NINFO) String() string {
 	return sb.String()
 }
 
-// NID RR. See RFC RFC 6742.
+// NID RR. See RFC 6742.
 type NID struct {
 	Hdr        Header
 	Preference uint16

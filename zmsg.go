@@ -286,6 +286,34 @@ func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 	return nil
 }
 
+func (rr *ISDN) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = packString(rr.Address, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packString(rr.SubAddress, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *ISDN) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Address, err = unpackString(&s)
+	if err != nil {
+		return err
+	}
+	rr.SubAddress, err = unpackString(&s)
+	if err != nil {
+		return err
+	}
+	if !s.Empty() {
+		return ErrTrailingRData
+	}
+	return nil
+}
+
 func (rr *RT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = packUint16(rr.Preference, msg, off)
 	if err != nil {
@@ -919,6 +947,18 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
+	if !s.Empty() {
+		return ErrTrailingRData
+	}
+	return nil
+}
+
+func (rr *NXT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *NXT) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
 	if !s.Empty() {
 		return ErrTrailingRData
 	}

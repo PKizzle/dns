@@ -10,12 +10,12 @@ import (
 )
 
 func sprintName(s string) string {
-	var dst strings.Builder
+	var sb strings.Builder
 
 	for i := 0; i < len(s); {
 		if s[i] == '.' {
-			if dst.Len() != 0 {
-				dst.WriteByte('.')
+			if sb.Len() != 0 {
+				sb.WriteByte('.')
 			}
 			i++
 			continue
@@ -24,44 +24,44 @@ func sprintName(s string) string {
 		b, n := nextByte(s, i)
 		if n == 0 {
 			// Drop "dangling" incomplete escapes.
-			if dst.Len() == 0 {
+			if sb.Len() == 0 {
 				return s[:i]
 			}
 			break
 		}
 		if isDomainNameLabelSpecial(b) {
-			if dst.Len() == 0 {
-				dst.Grow(len(s) * 2)
-				dst.WriteString(s[:i])
+			if sb.Len() == 0 {
+				sb.Grow(len(s) * 2)
+				sb.WriteString(s[:i])
 			}
-			dst.WriteByte('\\')
-			dst.WriteByte(b)
+			sb.WriteByte('\\')
+			sb.WriteByte(b)
 		} else if b < ' ' || b > '~' { // unprintable, use \DDD
-			if dst.Len() == 0 {
-				dst.Grow(len(s) * 2)
-				dst.WriteString(s[:i])
+			if sb.Len() == 0 {
+				sb.Grow(len(s) * 2)
+				sb.WriteString(s[:i])
 			}
-			dst.WriteString(escapeByte(b))
+			sb.WriteString(escapeByte(b))
 		} else {
-			if dst.Len() != 0 {
-				dst.WriteByte(b)
+			if sb.Len() != 0 {
+				sb.WriteByte(b)
 			}
 		}
 		i += n
 	}
-	if dst.Len() == 0 {
+	if sb.Len() == 0 {
 		return s
 	}
-	return dst.String()
+	return sb.String()
 }
 
 func sprintTxtOctet(s string) string {
-	var dst strings.Builder
-	dst.Grow(2 + len(s))
-	dst.WriteByte('"')
+	var sb strings.Builder
+	sb.Grow(2 + len(s))
+	sb.WriteByte('"')
 	for i := 0; i < len(s); {
 		if i+1 < len(s) && s[i] == '\\' && s[i+1] == '.' {
-			dst.WriteString(s[i : i+2])
+			sb.WriteString(s[i : i+2])
 			i += 2
 			continue
 		}
@@ -70,34 +70,34 @@ func sprintTxtOctet(s string) string {
 		if n == 0 {
 			i++ // dangling back slash
 		} else {
-			writeTXTStringByte(&dst, b)
+			writeTXTStringByte(&sb, b)
 		}
 		i += n
 	}
-	dst.WriteByte('"')
-	return dst.String()
+	sb.WriteByte('"')
+	return sb.String()
 }
 
 func sprintTxt(txt []string) string {
-	var out strings.Builder
+	var sb strings.Builder
 	for i, s := range txt {
-		out.Grow(3 + len(s))
+		sb.Grow(3 + len(s))
 		if i > 0 {
-			out.WriteString(` "`)
+			sb.WriteString(` "`)
 		} else {
-			out.WriteByte('"')
+			sb.WriteByte('"')
 		}
 		for j := 0; j < len(s); {
 			b, n := nextByte(s, j)
 			if n == 0 {
 				break
 			}
-			writeTXTStringByte(&out, b)
+			writeTXTStringByte(&sb, b)
 			j += n
 		}
-		out.WriteByte('"')
+		sb.WriteByte('"')
 	}
-	return out.String()
+	return sb.String()
 }
 
 func writeTXTStringByte(s *strings.Builder, b byte) {
