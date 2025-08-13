@@ -97,6 +97,10 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *PADDING:
 		return x.unpack(s)
+	case *EDE:
+		return x.unpack(s)
+	case *COOKIE:
+		return x.unpack(s)
 	}
 	// Coder() check, abuse Type()?
 	return fmt.Errorf("dns: no option unpack defined")
@@ -107,6 +111,10 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *NSID:
 		return x.pack(msg, off)
 	case *PADDING:
+		return x.pack(msg, off)
+	case *EDE:
+		return x.pack(msg, off)
+	case *COOKIE:
 		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?
