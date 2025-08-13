@@ -2,26 +2,9 @@ package dns
 
 import (
 	"io"
-	"net"
 	"strings"
 	"sync"
 )
-
-// A ResponseWriter interface is used by an DNS handler to
-// construct an DNS response.
-type ResponseWriter interface {
-	// LocalAddr returns the net.Addr of the server.
-	LocalAddr() net.Addr
-	// RemoteAddr returns the net.Addr of the client that sent the current request.
-	RemoteAddr() net.Addr
-	// Writer writes the message back to the client.
-	io.Writer
-	// Closer closes the connection.
-	io.Closer
-	// Hijack lets the caller take over the connection.
-	// TODO: make this actually work.
-	Hijack()
-}
 
 // Handler is implemented by any value that implements ServeDNS. The message r is minimally decoded, only up
 // to the question section (mostly first 20-ish bytes) are decoded. The rest of the message is available in

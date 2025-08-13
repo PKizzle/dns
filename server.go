@@ -239,8 +239,11 @@ func (srv *Server) serveUDP(pc net.PacketConn) {
 func (srv *Server) serveTCPConn(wg *sync.WaitGroup, conn net.Conn) {
 	defer wg.Done()
 
-	w := &response{Writer: conn}
-	idleTimeout := srv.IdleTimeout()
+	w := &response{conn: conn}
+	idleTimeout := 2 * time.Second
+	if srv.IdleTimeout != nil {
+		idleTimeout = srv.IdleTimeout()
+	}
 	timeout := srv.getReadTimeout()
 
 	limit := srv.MaxTCPQueries
@@ -278,7 +281,7 @@ func (srv *Server) serveTCPConn(wg *sync.WaitGroup, conn net.Conn) {
 func (srv *Server) serveUDPConn(wg *sync.WaitGroup, conn *net.UDPConn, r *Msg) {
 	defer wg.Done()
 
-	w := &response{Writer: conn}
+	w := &response{conn: conn}
 
 	srv.serveDNS(w, r)
 }

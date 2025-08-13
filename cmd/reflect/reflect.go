@@ -66,7 +66,6 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
 	m.Network = r.Network
 	dnsutil.SetReply(m, r)
-	println(w.RemoteAddr().String())
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
@@ -78,7 +77,6 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 		a = ip.IP
 		v4 = a.To4() != nil
 	}
-	println(a.String())
 
 	if v4 {
 		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: a.To4()}
@@ -98,37 +96,23 @@ func handleReflect(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if *printf {
-		fmt.Printf("%v\n", m.String())
+		println(m.String())
 	}
 	if err := m.Pack(); err != nil {
 		println("packing shit", err.Error())
 	}
-	_, err := io.Copy(w, m)
-	if err != nil {
-		println("RR", err.Error())
-	}
+	io.Copy(w, m)
 }
 
-func serve(net, name, _ string, soreuseport bool) {
-	switch name {
-	case "":
-		server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: soreuseport}
-		if err := server.ListenAndServe(); err != nil {
-			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
-		}
-	default:
-		server := &dns.Server{Addr: ":8053", Net: net, ReusePort: soreuseport}
-		if err := server.ListenAndServe(); err != nil {
-			fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
-		}
+func serve(net string) {
+	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true}
+	if err := server.ListenAndServe(); err != nil {
+		fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 	}
 }
 
 func main() {
-	var name, secret string
-	flag.Usage = func() {
-		flag.PrintDefaults()
-	}
+	flag.Parse()
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
@@ -140,8 +124,8 @@ func main() {
 
 	dns.HandleFunc("miek.nl.", handleReflect)
 	for i := 0; i < 10; i++ {
-		go serve("tcp", name, secret, true)
-		go serve("udp", name, secret, true)
+		go serve("tcp")
+		go serve("udp")
 	}
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
