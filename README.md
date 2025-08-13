@@ -4,7 +4,7 @@ Things compile, the few tests work, but expect breakage, or large things to chan
 
 [![](https://godoc.org/codeberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
 
-# Alternative (more granular) approach to a DNS library (version 2)
+# Even more alternative approach to a DNS library (version 2)
 
 > Less is more.
 
