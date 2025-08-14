@@ -103,6 +103,7 @@ type ttlState struct {
 
 // New reads the RR contained in the string s. Only the first RR is returned.
 // If s contains no records, New will return nil with no error.
+// The origin for resolving relative domain names defaults to the DNS root (.).
 //
 // The class defaults to IN and TTL defaults to 3600. The full zone file syntax
 // like $TTL, $ORIGIN, etc. is supported.
