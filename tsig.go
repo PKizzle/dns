@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto"
 	"strconv"
 	"strings"
 	"time"
@@ -25,26 +26,26 @@ type TSIG struct {
 	Fudge      uint16
 	MACSize    uint16
 	MAC        string `dns:"size-hex:MACSize"`
-	OrigId     uint16
+	OrigID     uint16
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
 func (rr *TSIG) Header() *Header { return &rr.Hdr }
-func (rr *TSIG) Data() []Field {
-	return []Field{rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
+func (rr *TSIG) Len() int {
+	return rr.Hdr.Len() + len(rr.Algorithm) + 8 + int(rr.MACSize) + 6 + int(rr.OtherLen)
 }
 
-func (rr *TSIG) Len() int {
-	return 0
+func (rr *TSIG) Data() []Field {
+	return []Field{rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigID, rr.Error, rr.OtherLen, rr.OtherData}
 }
 
 func (rr *TSIG) String() string {
 	sb := sprintHeader(rr)
 	sprintData(sb, rr.Algorithm, tsigTimeToString(rr.TimeSigned),
 		strconv.Itoa(int(rr.Fudge)), strconv.Itoa(int(rr.MACSize)),
-		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigId)),
+		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigID)),
 		strconv.Itoa(int(rr.Error)), strconv.Itoa(int(rr.OtherLen)), rr.OtherData)
 	return sb.String()
 }
@@ -59,6 +60,19 @@ func tsigTimeToString(t uint64) string {
 	return ti.Format("20060102150405")
 }
 
+func (rr *TSIG) Sign(k crypto.Signer, m *Msg) error {
+	return nil
+}
+
+type Verifier interface{
+	Verify(msg []byte, secret, requestMAC string, timersOnly bool) error {
+}
+
+type VerifierOption struct {
+	TimersOnly bool
+	RequestMAC string
+}
+
 /*
 // TsigProvider provides the API to plug-in a custom TSIG implementation.
 type TsigProvider interface {
@@ -67,6 +81,8 @@ type TsigProvider interface {
 	// Verify is passed the DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 	Verify(msg []byte, t *TSIG) error
 }
+
+
 
 type tsigHMACProvider string
 
@@ -126,47 +142,6 @@ func (ts tsigSecretProvider) Verify(msg []byte, t *TSIG) error {
 		return ErrSecret
 	}
 	return tsigHMACProvider(key).Verify(msg, t)
-}
-
-// TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
-type TSIG struct {
-	Hdr        Header
-	Algorithm  string `dns:"domain-name"`
-	TimeSigned uint64 `dns:"uint48"`
-	Fudge      uint16
-	MACSize    uint16
-	MAC        string `dns:"size-hex:MACSize"`
-	OrigId     uint16
-	Error      uint16
-	OtherLen   uint16
-	OtherData  string `dns:"size-hex:OtherLen"`
-}
-
-func (rr *TSIG) Data() []Field {
-	return []Field{rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
-}
-
-func (rr *TSIG) Header() *Header { return &rr.Hdr }
-
-// TSIG has no official presentation format, but this will suffice.
-
-func (rr *TSIG) String() string {
-	s := "\n;; TSIG PSEUDOSECTION:\n; " // add another semi-colon to signify TSIG does not have a presentation format
-	s += rr.Hdr.String(rr) +
-		" " + rr.Algorithm +
-		" " + tsigTimeToString(rr.TimeSigned) +
-		" " + strconv.Itoa(int(rr.Fudge)) +
-		" " + strconv.Itoa(int(rr.MACSize)) +
-		" " + strings.ToUpper(rr.MAC) +
-		" " + strconv.Itoa(int(rr.OrigId)) +
-		" " + strconv.Itoa(int(rr.Error)) + // BIND prints NOERROR
-		" " + strconv.Itoa(int(rr.OtherLen)) +
-		" " + rr.OtherData
-	return s
-}
-
-func (*TSIG) parse(c *zlexer, origin string) *ParseError {
-	return &ParseError{err: "TSIG records do not have a presentation format"}
 }
 
 // The following values must be put in wireformat, so that the MAC can be calculated.
