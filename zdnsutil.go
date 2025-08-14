@@ -132,10 +132,12 @@ func dnsutilIsName(s string) bool {
 		off    int
 		begin  int
 		wasDot bool
+		escape bool
 	)
 	for i := 0; i < len(s); i++ {
 		switch s[i] {
 		case '\\':
+			escape = !escape
 			if off+1 > lenmsg {
 				return false
 			}
@@ -151,6 +153,7 @@ func dnsutilIsName(s string) bool {
 
 			wasDot = false
 		case '.':
+			escape = false
 			if i == 0 && len(s) > 1 {
 				// leading dots are not legal except for the root zone
 				return false
@@ -178,6 +181,9 @@ func dnsutilIsName(s string) bool {
 		default:
 			wasDot = false
 		}
+	}
+	if escape {
+		return false
 	}
 	return true
 }
