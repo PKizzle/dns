@@ -92,6 +92,7 @@ const (
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
 	TypeAMTRELAY   uint16 = 260
+	TypeRESINFO    uint16 = 261
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -1496,6 +1497,14 @@ func (rr *OPT) Len() int {
 }
 
 var _ RR = &OPT{}
+
+// RESINFO RR. See RFC 9606.
+type RESINFO struct {
+	Hdr Header
+	Txt []string `dns:"txt"`
+}
+
+func (rr *RESINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
 
 // APL RR. See RFC 3123.
 type APL struct {
