@@ -40,10 +40,10 @@ changes wherever reasonable.
 - `New` will return an RR, `NewRR` will be gone.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
 - More:
-  - msg is a io.Writer
-  - msg.Data is re-used between request and reply (otionally turn off)
-  - private RR is doable
-  - private EDNS0 is doable
+  - msg is a io.Writer.
+  - msg.Data is re-used between request and reply (otionally turn off).
+  - private RRs are easier.
+  - private EDNS0 are almost being able to do.
 
 ### Setting EDNS0
 
@@ -120,6 +120,15 @@ OLD                                                                  | NEW
                                                                      | miek.nl.                IN      A
 ```
 
+### Server
+
+Because Msg now carries its binary data too (you can still discard it) there is no need to do TSIG in the
+server it self, it can now be done in a handler.
+
+The default implementation of `dns.ResponseHandler` is thread safe and this allows for TCP pipelining, which
+is thusly implemented in `dns.Server`. Writing or reading data is now done with `io.Copy` no more `ReadMsg` or
+`WriteMsg`.
+
 # Users
 
 A not-so-up-to-date-list-that-may-be-actually-current:
@@ -130,7 +139,7 @@ Send pull request if you want to be listed here.
 
 # Features
 
-- UDP/TCP queries, IPv4 and IPv6
+- UDP/TCP queries, TCP query-pipelining, IPv4 and IPv6
 - RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE (for all record types) are supported
 - Fast
 - Server side programming (mimicking the net/http package)
