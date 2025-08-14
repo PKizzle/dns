@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"crypto"
 	"strconv"
 	"strings"
 	"time"
@@ -60,20 +59,30 @@ func tsigTimeToString(t uint64) string {
 	return ti.Format("20060102150405")
 }
 
-func (rr *TSIG) Sign(k crypto.Signer, m *Msg) error {
+func (rr *TSIG) Sign(k TSIGSigner, m *Msg) error {
 	return nil
 }
 
-// Signer interface, SecretsFunc()
-
-type Verifier interface {
-	Verify(msg []byte, secret, requestMAC string, timersOnly bool)
+func (rr *TSIG) Verify(k TSIGVerifier, m *Msg, options TSIGVerifierOption) error {
+	return nil
 }
 
-type VerifierOption struct {
+type TSIGVerifierOption struct {
 	TimersOnly bool
 	RequestMAC string
 }
+
+type (
+	TSIGSigner interface {
+		// Sign is passed the DNS message to be signed and a partial TSIG RR. It returns the signature in t, otherwise an error.
+		Sign(t *TSIG, m *Msg) error
+	}
+
+	TSIGVerifier interface {
+		// Verify is passed the DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
+		Verify(t *TSIG, m *Msg, options TSIGVerifierOption) error
+	}
+)
 
 /*
 // TsigProvider provides the API to plug-in a custom TSIG implementation.
