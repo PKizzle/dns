@@ -3,6 +3,7 @@
 package dns
 
 func (rr *NULL) Header() *Header       { return &rr.Hdr }
+func (rr *NXNAME) Header() *Header     { return &rr.Hdr }
 func (rr *CNAME) Header() *Header      { return &rr.Hdr }
 func (rr *HINFO) Header() *Header      { return &rr.Hdr }
 func (rr *MB) Header() *Header         { return &rr.Hdr }
@@ -83,6 +84,7 @@ func (rr *IXFR) Header() *Header       { return &rr.Hdr }
 // TypeToRR is a map of constructors for each RR type.
 var TypeToRR = map[uint16]func() RR{
 	TypeNULL:       func() RR { return new(NULL) },
+	TypeNXNAME:     func() RR { return new(NXNAME) },
 	TypeCNAME:      func() RR { return new(CNAME) },
 	TypeHINFO:      func() RR { return new(HINFO) },
 	TypeMB:         func() RR { return new(MB) },
@@ -166,6 +168,8 @@ func RRToType(rr RR) uint16 {
 	switch rr.(type) {
 	case *NULL:
 		return TypeNULL
+	case *NXNAME:
+		return TypeNXNAME
 	case *CNAME:
 		return TypeCNAME
 	case *HINFO:
@@ -329,6 +333,7 @@ func RRToType(rr RR) uint16 {
 // TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
 	TypeNULL:       "NULL",
+	TypeNXNAME:     "NXNAME",
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
 	TypeMB:         "MB",
@@ -474,6 +479,7 @@ func (rr *NSEC3PARAM) Data() []Field {
 	return []Field{rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
 }
 func (rr *NULL) Data() []Field       { return []Field{rr.Null} }
+func (rr *NXNAME) Data() []Field     { return []Field{} }
 func (rr *NXT) Data() []Field        { return []Field{} }
 func (rr *OPENPGPKEY) Data() []Field { return []Field{rr.PublicKey} }
 func (rr *OPT) Data() []Field        { return []Field{rr.Options} }

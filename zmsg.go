@@ -24,6 +24,18 @@ func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 	return nil
 }
 
+func (rr *NXNAME) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *NXNAME) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.Empty() {
+		return ErrTrailingRData
+	}
+	return nil
+}
+
 func (rr *CNAME) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = packName(rr.Target, msg, off, compression, true)
 	if err != nil {

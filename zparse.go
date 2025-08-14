@@ -6,6 +6,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	switch x := rr.(type) {
 	case *NULL:
 		return x.parse(c, o)
+	case *NXNAME:
+		return x.parse(c, o)
 	case *CNAME:
 		return x.parse(c, o)
 	case *HINFO:

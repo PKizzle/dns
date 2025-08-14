@@ -13,6 +13,11 @@ func (rr *NULL) Len() int {
 	return l
 }
 
+func (rr *NXNAME) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
 func (rr *CNAME) Len() int {
 	l := rr.Hdr.Len()
 	l += len(rr.Target)

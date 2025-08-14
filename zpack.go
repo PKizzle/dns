@@ -10,6 +10,8 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	switch x := rr.(type) {
 	case *NULL:
 		return x.pack(msg, off, compression)
+	case *NXNAME:
+		return x.pack(msg, off, compression)
 	case *CNAME:
 		return x.pack(msg, off, compression)
 	case *HINFO:
@@ -173,6 +175,8 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 func unpack(rr RR, data, msgBuf []byte) error {
 	switch x := rr.(type) {
 	case *NULL:
+		return x.unpack(data, msgBuf)
+	case *NXNAME:
 		return x.unpack(data, msgBuf)
 	case *CNAME:
 		return x.unpack(data, msgBuf)
