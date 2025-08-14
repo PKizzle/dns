@@ -554,6 +554,14 @@ func (rr *ZONEMD) Len() int {
 	return l
 }
 
+func (rr *RESINFO) Len() int {
+	l := rr.Hdr.Len()
+	for _, x := range rr.Txt {
+		l += len(x) + 1
+	}
+	return l
+}
+
 func (rr *APL) Len() int {
 	l := rr.Hdr.Len()
 	for _, x := range rr.Prefixes {

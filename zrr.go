@@ -76,6 +76,7 @@ func (rr *OPENPGPKEY) Header() *Header { return &rr.Hdr }
 func (rr *CSYNC) Header() *Header      { return &rr.Hdr }
 func (rr *ZONEMD) Header() *Header     { return &rr.Hdr }
 func (rr *OPT) Header() *Header        { return &rr.Hdr }
+func (rr *RESINFO) Header() *Header    { return &rr.Hdr }
 func (rr *APL) Header() *Header        { return &rr.Hdr }
 func (rr *ANY) Header() *Header        { return &rr.Hdr }
 func (rr *AXFR) Header() *Header       { return &rr.Hdr }
@@ -157,6 +158,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeCSYNC:      func() RR { return new(CSYNC) },
 	TypeZONEMD:     func() RR { return new(ZONEMD) },
 	TypeOPT:        func() RR { return new(OPT) },
+	TypeRESINFO:    func() RR { return new(RESINFO) },
 	TypeAPL:        func() RR { return new(APL) },
 	TypeANY:        func() RR { return new(ANY) },
 	TypeAXFR:       func() RR { return new(AXFR) },
@@ -314,6 +316,8 @@ func RRToType(rr RR) uint16 {
 		return TypeZONEMD
 	case *OPT:
 		return TypeOPT
+	case *RESINFO:
+		return TypeRESINFO
 	case *APL:
 		return TypeAPL
 	case *ANY:
@@ -405,6 +409,7 @@ var TypeToString = map[uint16]string{
 	TypeCSYNC:      "CSYNC",
 	TypeZONEMD:     "ZONEMD",
 	TypeOPT:        "OPT",
+	TypeRESINFO:    "RESINFO",
 	TypeAPL:        "APL",
 	TypeANY:        "ANY",
 	TypeAXFR:       "AXFR",
@@ -485,6 +490,7 @@ func (rr *OPENPGPKEY) Data() []Field { return []Field{rr.PublicKey} }
 func (rr *OPT) Data() []Field        { return []Field{rr.Options} }
 func (rr *PTR) Data() []Field        { return []Field{rr.Ptr} }
 func (rr *PX) Data() []Field         { return []Field{rr.Preference, rr.Map822, rr.Mapx400} }
+func (rr *RESINFO) Data() []Field    { return []Field{rr.Txt} }
 func (rr *RFC3597) Data() []Field    { return []Field{rr.Rdata} }
 func (rr *RKEY) Data() []Field       { return []Field{rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey} }
 func (rr *RP) Data() []Field         { return []Field{rr.Mbox, rr.Txt} }

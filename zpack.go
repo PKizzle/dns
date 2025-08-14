@@ -156,6 +156,8 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 		return x.pack(msg, off, compression)
 	case *OPT:
 		return x.pack(msg, off, compression)
+	case *RESINFO:
+		return x.pack(msg, off, compression)
 	case *APL:
 		return x.pack(msg, off, compression)
 	case *ANY:
@@ -321,6 +323,8 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	case *ZONEMD:
 		return x.unpack(data, msgBuf)
 	case *OPT:
+		return x.unpack(data, msgBuf)
+	case *RESINFO:
 		return x.unpack(data, msgBuf)
 	case *APL:
 		return x.unpack(data, msgBuf)
