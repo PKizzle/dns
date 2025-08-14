@@ -64,8 +64,10 @@ func (rr *TSIG) Sign(k crypto.Signer, m *Msg) error {
 	return nil
 }
 
-type Verifier interface{
-	Verify(msg []byte, secret, requestMAC string, timersOnly bool) error {
+// Signer interface, SecretsFunc()
+
+type Verifier interface {
+	Verify(msg []byte, secret, requestMAC string, timersOnly bool)
 }
 
 type VerifierOption struct {
