@@ -17,7 +17,7 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
 	srv.NotifyStartedFunc = waitLock.Unlock
-	srv.MsgInvalidFunc = func(m *dns.Msg, err error) { fmt.Printf("invalid message: %s %T", err, err) }
+	srv.MsgInvalidFunc = func(m *dns.Msg, err error) { fmt.Printf("invalid message: %s - %T\n", err, err) }
 
 	for _, opt := range opts {
 		opt(srv)

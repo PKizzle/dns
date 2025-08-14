@@ -299,7 +299,6 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
-			srv.MsgInvalidFunc(r, err)
 			continue
 		}
 
