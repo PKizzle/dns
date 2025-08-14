@@ -55,35 +55,47 @@ const (
 	ExtendedErrorNoReachableAuthority
 	ExtendedErrorNetworkError
 	ExtendedErrorInvalidData
+	ExtendedErrorSignatureExpiredBeforeValid
+	ExtendedErrorTooEarly
+	ExtendedErrorUnsupportedNSEC3IterValue
+	ExtendedErrorUnableToConformToPolicy
+	ExtendedErrorSynthesized
+	ExtendedErrorInvalidQueryType
 )
 
 // ExtendedErrorToString maps extended error info codes to a human readable description.
 var ExtendedErrorToString = map[uint16]string{
-	ExtendedErrorOther:                      "Other",
-	ExtendedErrorUnsupportedDNSKEYAlgorithm: "Unsupported DNSKEY Algorithm",
-	ExtendedErrorUnsupportedDSDigestType:    "Unsupported DS Digest Type",
-	ExtendedErrorStaleAnswer:                "Stale Answer",
-	ExtendedErrorForgedAnswer:               "Forged Answer",
-	ExtendedErrorDNSSECIndeterminate:        "DNSSEC Indeterminate",
-	ExtendedErrorDNSBogus:                   "DNSSEC Bogus",
-	ExtendedErrorSignatureExpired:           "Signature Expired",
-	ExtendedErrorSignatureNotYetValid:       "Signature Not Yet Valid",
-	ExtendedErrorDNSKEYMissing:              "DNSKEY Missing",
-	ExtendedErrorRRSIGsMissing:              "RRSIGs Missing",
-	ExtendedErrorNoZoneKeyBitSet:            "No Zone Key Bit Set",
-	ExtendedErrorNSECMissing:                "NSEC Missing",
-	ExtendedErrorCachedError:                "Cached Error",
-	ExtendedErrorNotReady:                   "Not Ready",
-	ExtendedErrorBlocked:                    "Blocked",
-	ExtendedErrorCensored:                   "Censored",
-	ExtendedErrorFiltered:                   "Filtered",
-	ExtendedErrorProhibited:                 "Prohibited",
-	ExtendedErrorStaleNXDOMAINAnswer:        "Stale NXDOMAIN Answer",
-	ExtendedErrorNotAuthoritative:           "Not Authoritative",
-	ExtendedErrorNotSupported:               "Not Supported",
-	ExtendedErrorNoReachableAuthority:       "No Reachable Authority",
-	ExtendedErrorNetworkError:               "Network Error",
-	ExtendedErrorInvalidData:                "Invalid Data",
+	ExtendedErrorOther:                       "Other",
+	ExtendedErrorUnsupportedDNSKEYAlgorithm:  "Unsupported DNSKEY Algorithm",
+	ExtendedErrorUnsupportedDSDigestType:     "Unsupported DS Digest Type",
+	ExtendedErrorStaleAnswer:                 "Stale Answer",
+	ExtendedErrorForgedAnswer:                "Forged Answer",
+	ExtendedErrorDNSSECIndeterminate:         "DNSSEC Indeterminate",
+	ExtendedErrorDNSBogus:                    "DNSSEC Bogus",
+	ExtendedErrorSignatureExpired:            "Signature Expired",
+	ExtendedErrorSignatureNotYetValid:        "Signature Not Yet Valid",
+	ExtendedErrorDNSKEYMissing:               "DNSKEY Missing",
+	ExtendedErrorRRSIGsMissing:               "RRSIGs Missing",
+	ExtendedErrorNoZoneKeyBitSet:             "No Zone Key Bit Set",
+	ExtendedErrorNSECMissing:                 "NSEC Missing",
+	ExtendedErrorCachedError:                 "Cached Error",
+	ExtendedErrorNotReady:                    "Not Ready",
+	ExtendedErrorBlocked:                     "Blocked",
+	ExtendedErrorCensored:                    "Censored",
+	ExtendedErrorFiltered:                    "Filtered",
+	ExtendedErrorProhibited:                  "Prohibited",
+	ExtendedErrorStaleNXDOMAINAnswer:         "Stale NXDOMAIN Answer",
+	ExtendedErrorNotAuthoritative:            "Not Authoritative",
+	ExtendedErrorNotSupported:                "Not Supported",
+	ExtendedErrorNoReachableAuthority:        "No Reachable Authority",
+	ExtendedErrorNetworkError:                "Network Error",
+	ExtendedErrorInvalidData:                 "Invalid Data",
+	ExtendedErrorSignatureExpiredBeforeValid: "Signature Expired Before Valid",
+	ExtendedErrorTooEarly:                    "Too Early",
+	ExtendedErrorUnsupportedNSEC3IterValue:   "Unsupported NSEC3 Iterations Value",
+	ExtendedErrorUnableToConformToPolicy:     "Unable To Conform To Policy",
+	ExtendedErrorSynthesized:                 "Synthesized",
+	ExtendedErrorInvalidQueryType:            "Invalid Query Type",
 }
 
 // StringToExtendedError is a map from human readable descriptions to extended error info codes.
