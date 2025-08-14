@@ -104,7 +104,6 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	case *COOKIE:
 		return x.unpack(s)
 	}
-	// Coder() check, abuse Type()?
 	return fmt.Errorf("dns: no option unpack defined")
 }
 
