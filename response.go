@@ -26,7 +26,7 @@ type ResponseWriter interface {
 
 // response implements response.Writer. This struct is read-only execpt the hijacked.
 type response struct {
-	session  *Session // used for UDP reply routing, needs to be in the interface! If needed
+	session  *Session // used for UDP reply routing.
 	conn     net.Conn
 	hijacked *atomic.Bool // connection has been hijacked by handler
 }

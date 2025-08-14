@@ -678,7 +678,7 @@ func (m *Msg) Unpack() error {
 	s := cryptobyte.String(m.Data)
 	var dh header
 	if !dh.unpack(&s) {
-		return ErrTruncatedMessage
+		return ErrUnpackOverflow.Fmt(": %s", "MsgHeader")
 	}
 	m.setMsgHeader(dh)
 	if m.Options&OptionUnpackHeader == OptionUnpackHeader {

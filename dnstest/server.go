@@ -1,6 +1,7 @@
 package dnstest
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -10,20 +11,16 @@ import (
 )
 
 func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	server := &dns.Server{
-		PacketConn: pc,
-		Listener:   l,
+	srv := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Hour}
 
-		ReadTimeout:  time.Hour,
-		WriteTimeout: time.Hour,
-	}
-
+	srv.Init()
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
-	server.NotifyStartedFunc = waitLock.Unlock
+	srv.NotifyStartedFunc = waitLock.Unlock
+	srv.MsgInvalidFunc = func(m *dns.Msg, err error) { fmt.Printf("invalid message: %s %T", err, err) }
 
 	for _, opt := range opts {
-		opt(server)
+		opt(srv)
 	}
 
 	var (
@@ -44,12 +41,12 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	fin := make(chan error, 1)
 
 	go func() {
-		fin <- server.ActivateAndServe()
+		fin <- srv.ActivateAndServe()
 		closer.Close()
 	}()
 
 	waitLock.Lock()
-	return server, addr, fin, nil
+	return srv, addr, fin, nil
 }
 
 func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
@@ -57,41 +54,32 @@ func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 	if err != nil {
 		return nil, "", nil, err
 	}
-
 	return Server(pc, nil, opts...)
 }
 
-func PacketConnServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	return UDPServer(laddr, append(opts, func(srv *dns.Server) {
-		// Make srv.PacketConn opaque to trigger the generic code paths.
-		srv.PacketConn = struct{ net.PacketConn }{srv.PacketConn}
-	})...)
+func UnixServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
+	l, err := net.Listen("unix", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	return Server(nil, l, opts...)
 }
 
-/*
-func RunLocalTCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
+func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
 		return nil, "", nil, err
 	}
-
-	return RunLocalServer(nil, l, opts...)
+	return Server(nil, l, opts...)
 }
 
+/*
 func RunLocalTLSServer(laddr string, config *tls.Config) (*dns.Server, string, chan error, error) {
 	return RunLocalTCPServer(laddr, func(srv *dns.Server) {
 		srv.Listener = tls.NewListener(srv.Listener, config)
 	})
 }
 
-func RunLocalUnixServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	l, err := net.Listen("unix", laddr)
-	if err != nil {
-		return nil, "", nil, err
-	}
-
-	return RunLocalServer(nil, l, opts...)
-}
 
 func RunLocalUnixGramServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
 	pc, err := net.ListenPacket("unixgram", laddr)
