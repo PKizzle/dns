@@ -98,7 +98,7 @@ bit to a request.
 
 Signature generation, signature verification and key generation are all supported. See [RRSIG].
 
-# Transaction signature
+# Transaction signature, TODO
 
 An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
 The supported algorithms include: HmacSHA1, HmacSHA256 and HmacSHA512.

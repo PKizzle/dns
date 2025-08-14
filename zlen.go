@@ -13,6 +13,11 @@ func (rr *NULL) Len() int {
 	return l
 }
 
+func (rr *NXNAME) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
 func (rr *CNAME) Len() int {
 	l := rr.Hdr.Len()
 	l += len(rr.Target)
@@ -546,6 +551,14 @@ func (rr *ZONEMD) Len() int {
 	l++    // Scheme
 	l++    // Hash
 	l += len(rr.Digest) / 2
+	return l
+}
+
+func (rr *RESINFO) Len() int {
+	l := rr.Hdr.Len()
+	for _, x := range rr.Txt {
+		l += len(x) + 1
+	}
 	return l
 }
 

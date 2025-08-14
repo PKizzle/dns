@@ -43,3 +43,12 @@ func TestIsFqdn(t *testing.T) {
 		}
 	}
 }
+
+func TestIsNameOpenEscape(t *testing.T) {
+	if ok := IsName("example.net."); !ok {
+		t.Fatalf("expected ok, but got not ok")
+	}
+	if ok := IsName("example.net\\"); ok {
+		t.Fatalf("expected not ok, but got ok")
+	}
+}

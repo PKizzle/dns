@@ -1,7 +1,5 @@
 //go:build ignore
 
-// move to dnsutils
-
 package dns
 
 import (
@@ -10,8 +8,8 @@ import (
 	"strings"
 )
 
-// HashName hashes a string (label) according to RFC 5155. It returns the hashed string in uppercase.
-func HashName(label string, ha uint8, iter uint16, salt string) string {
+// hashName hashes a string (label) according to RFC 5155. It returns the hashed string in uppercase.
+func hashName(label string, ha uint8, iter uint16, salt string) string {
 	if ha != SHA1 {
 		return ""
 	}
@@ -49,7 +47,7 @@ func HashName(label string, ha uint8, iter uint16, salt string) string {
 
 // Cover returns true if a name is covered by the NSEC3 record.
 func (rr *NSEC3) Cover(name string) bool {
-	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
+	nameHash := hashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
 	labelIndices := Split(owner)
 	if len(labelIndices) < 2 {
@@ -81,7 +79,7 @@ func (rr *NSEC3) Cover(name string) bool {
 
 // Match returns true if a name matches the NSEC3 record
 func (rr *NSEC3) Match(name string) bool {
-	nameHash := HashName(name, rr.Hash, rr.Iterations, rr.Salt)
+	nameHash := hashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
 	labelIndices := Split(owner)
 	if len(labelIndices) < 2 {
@@ -92,8 +90,5 @@ func (rr *NSEC3) Match(name string) bool {
 	if !IsSubDomain(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
 		return false
 	}
-	if ownerHash == nameHash {
-		return true
-	}
-	return false
+	return ownerHash == nameHash
 }

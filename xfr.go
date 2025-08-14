@@ -3,6 +3,7 @@
 package dns
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 )
@@ -22,6 +23,7 @@ type Transfer struct {
 	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
 	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
 	tsigTimersOnly bool
+	TLS            *tls.Config // TLS config. If Xfr over TLS will be attempted
 }
 
 func (t *Transfer) tsigProvider() TsigProvider {
@@ -59,7 +61,11 @@ func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
 	}
 
 	if t.Conn == nil {
-		t.Conn, err = DialTimeout("tcp", a, timeout)
+		if t.TLS != nil {
+			t.Conn, err = DialTimeoutWithTLS("tcp-tls", a, t.TLS, timeout)
+		} else {
+			t.Conn, err = DialTimeout("tcp", a, timeout)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -205,6 +211,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 //	ch := make(chan *dns.Envelope)
 //	tr := new(dns.Transfer)
 //	var wg sync.WaitGroup
+//	wg.Add(1)
 //	go func() {
 //		tr.Out(w, r, ch)
 //		wg.Done()
@@ -246,10 +253,13 @@ func (t *Transfer) ReadMsg() (*Msg, error) {
 	if err := m.Unpack(p); err != nil {
 		return nil, err
 	}
-	if ts, tp := m.IsTsig(), t.tsigProvider(); ts != nil && tp != nil {
+
+	if tp := t.tsigProvider(); tp != nil {
 		// Need to work on the original message p, as that was used to calculate the tsig.
 		err = TsigVerifyWithProvider(p, tp, t.tsigRequestMAC, t.tsigTimersOnly)
-		t.tsigRequestMAC = ts.MAC
+		if ts := m.IsTsig(); ts != nil {
+			t.tsigRequestMAC = ts.MAC
+		}
 	}
 	return m, err
 }

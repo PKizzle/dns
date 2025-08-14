@@ -2,24 +2,27 @@
 
 package dns
 
-func (rr *LLQ) Header() *Header     { return &Header{Name: "."} }
-func (rr *LLQ) Pseudo() bool        { return true }
-func (rr *COOKIE) Header() *Header  { return &Header{Name: "."} }
-func (rr *COOKIE) Pseudo() bool     { return true }
-func (rr *NSID) Header() *Header    { return &Header{Name: "."} }
-func (rr *NSID) Pseudo() bool       { return true }
-func (rr *PADDING) Header() *Header { return &Header{Name: "."} }
-func (rr *PADDING) Pseudo() bool    { return true }
-func (rr *EDE) Header() *Header     { return &Header{Name: "."} }
-func (rr *EDE) Pseudo() bool        { return true }
+func (rr *LLQ) Header() *Header       { return &Header{Name: "."} }
+func (rr *LLQ) Pseudo() bool          { return true }
+func (rr *REPORTING) Header() *Header { return &Header{Name: "."} }
+func (rr *REPORTING) Pseudo() bool    { return true }
+func (rr *COOKIE) Header() *Header    { return &Header{Name: "."} }
+func (rr *COOKIE) Pseudo() bool       { return true }
+func (rr *NSID) Header() *Header      { return &Header{Name: "."} }
+func (rr *NSID) Pseudo() bool         { return true }
+func (rr *PADDING) Header() *Header   { return &Header{Name: "."} }
+func (rr *PADDING) Pseudo() bool      { return true }
+func (rr *EDE) Header() *Header       { return &Header{Name: "."} }
+func (rr *EDE) Pseudo() bool          { return true }
 
 // CodeToRR is a map of constructors for each EDNS0 RR type.
 var CodeToRR = map[uint16]func() EDNS0{
-	CodeLLQ:     func() EDNS0 { return new(LLQ) },
-	CodeCOOKIE:  func() EDNS0 { return new(COOKIE) },
-	CodeNSID:    func() EDNS0 { return new(NSID) },
-	CodePADDING: func() EDNS0 { return new(PADDING) },
-	CodeEDE:     func() EDNS0 { return new(EDE) },
+	CodeLLQ:       func() EDNS0 { return new(LLQ) },
+	CodeREPORTING: func() EDNS0 { return new(REPORTING) },
+	CodeCOOKIE:    func() EDNS0 { return new(COOKIE) },
+	CodeNSID:      func() EDNS0 { return new(NSID) },
+	CodePADDING:   func() EDNS0 { return new(PADDING) },
+	CodeEDE:       func() EDNS0 { return new(EDE) },
 }
 
 // RRToCode is the reverse of CodeToRR, implemented as a function.
@@ -27,6 +30,8 @@ func RRToCode(rr EDNS0) uint16 {
 	switch rr.(type) {
 	case *LLQ:
 		return CodeLLQ
+	case *REPORTING:
+		return CodeREPORTING
 	case *COOKIE:
 		return CodeCOOKIE
 	case *NSID:
@@ -41,15 +46,17 @@ func RRToCode(rr EDNS0) uint16 {
 
 // CodeToString is a map of strings for each EDNS0 RR type.
 var CodeToString = map[uint16]string{
-	CodeLLQ:     "LLQ",
-	CodeCOOKIE:  "COOKIE",
-	CodeNSID:    "NSID",
-	CodePADDING: "PADDING",
-	CodeEDE:     "EDE",
+	CodeLLQ:       "LLQ",
+	CodeREPORTING: "REPORTING",
+	CodeCOOKIE:    "COOKIE",
+	CodeNSID:      "NSID",
+	CodePADDING:   "PADDING",
+	CodeEDE:       "EDE",
 }
 
-func (rr *COOKIE) Data() []Field  { return []Field{rr.Cookie} }
-func (rr *EDE) Data() []Field     { return []Field{rr.InfoCode, rr.ExtraText} }
-func (rr *LLQ) Data() []Field     { return []Field{rr.Version, rr.Opcode, rr.Error, rr.ID, rr.LeaseLife} }
-func (rr *NSID) Data() []Field    { return []Field{rr.Nsid} }
-func (rr *PADDING) Data() []Field { return []Field{rr.Padding} }
+func (rr *COOKIE) Data() []Field    { return []Field{rr.Cookie} }
+func (rr *EDE) Data() []Field       { return []Field{rr.InfoCode, rr.ExtraText} }
+func (rr *LLQ) Data() []Field       { return []Field{rr.Version, rr.Opcode, rr.Error, rr.ID, rr.LeaseLife} }
+func (rr *NSID) Data() []Field      { return []Field{rr.Nsid} }
+func (rr *PADDING) Data() []Field   { return []Field{rr.Padding} }
+func (rr *REPORTING) Data() []Field { return []Field{rr.AgentDomain} }

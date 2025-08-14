@@ -3,6 +3,7 @@
 package dns
 
 func (rr *NULL) Header() *Header       { return &rr.Hdr }
+func (rr *NXNAME) Header() *Header     { return &rr.Hdr }
 func (rr *CNAME) Header() *Header      { return &rr.Hdr }
 func (rr *HINFO) Header() *Header      { return &rr.Hdr }
 func (rr *MB) Header() *Header         { return &rr.Hdr }
@@ -75,6 +76,7 @@ func (rr *OPENPGPKEY) Header() *Header { return &rr.Hdr }
 func (rr *CSYNC) Header() *Header      { return &rr.Hdr }
 func (rr *ZONEMD) Header() *Header     { return &rr.Hdr }
 func (rr *OPT) Header() *Header        { return &rr.Hdr }
+func (rr *RESINFO) Header() *Header    { return &rr.Hdr }
 func (rr *APL) Header() *Header        { return &rr.Hdr }
 func (rr *ANY) Header() *Header        { return &rr.Hdr }
 func (rr *AXFR) Header() *Header       { return &rr.Hdr }
@@ -83,6 +85,7 @@ func (rr *IXFR) Header() *Header       { return &rr.Hdr }
 // TypeToRR is a map of constructors for each RR type.
 var TypeToRR = map[uint16]func() RR{
 	TypeNULL:       func() RR { return new(NULL) },
+	TypeNXNAME:     func() RR { return new(NXNAME) },
 	TypeCNAME:      func() RR { return new(CNAME) },
 	TypeHINFO:      func() RR { return new(HINFO) },
 	TypeMB:         func() RR { return new(MB) },
@@ -155,6 +158,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeCSYNC:      func() RR { return new(CSYNC) },
 	TypeZONEMD:     func() RR { return new(ZONEMD) },
 	TypeOPT:        func() RR { return new(OPT) },
+	TypeRESINFO:    func() RR { return new(RESINFO) },
 	TypeAPL:        func() RR { return new(APL) },
 	TypeANY:        func() RR { return new(ANY) },
 	TypeAXFR:       func() RR { return new(AXFR) },
@@ -166,6 +170,8 @@ func RRToType(rr RR) uint16 {
 	switch rr.(type) {
 	case *NULL:
 		return TypeNULL
+	case *NXNAME:
+		return TypeNXNAME
 	case *CNAME:
 		return TypeCNAME
 	case *HINFO:
@@ -310,6 +316,8 @@ func RRToType(rr RR) uint16 {
 		return TypeZONEMD
 	case *OPT:
 		return TypeOPT
+	case *RESINFO:
+		return TypeRESINFO
 	case *APL:
 		return TypeAPL
 	case *ANY:
@@ -329,6 +337,7 @@ func RRToType(rr RR) uint16 {
 // TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
 	TypeNULL:       "NULL",
+	TypeNXNAME:     "NXNAME",
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
 	TypeMB:         "MB",
@@ -400,6 +409,7 @@ var TypeToString = map[uint16]string{
 	TypeCSYNC:      "CSYNC",
 	TypeZONEMD:     "ZONEMD",
 	TypeOPT:        "OPT",
+	TypeRESINFO:    "RESINFO",
 	TypeAPL:        "APL",
 	TypeANY:        "ANY",
 	TypeAXFR:       "AXFR",
@@ -474,11 +484,13 @@ func (rr *NSEC3PARAM) Data() []Field {
 	return []Field{rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
 }
 func (rr *NULL) Data() []Field       { return []Field{rr.Null} }
+func (rr *NXNAME) Data() []Field     { return []Field{} }
 func (rr *NXT) Data() []Field        { return []Field{} }
 func (rr *OPENPGPKEY) Data() []Field { return []Field{rr.PublicKey} }
 func (rr *OPT) Data() []Field        { return []Field{rr.Options} }
 func (rr *PTR) Data() []Field        { return []Field{rr.Ptr} }
 func (rr *PX) Data() []Field         { return []Field{rr.Preference, rr.Map822, rr.Mapx400} }
+func (rr *RESINFO) Data() []Field    { return []Field{rr.Txt} }
 func (rr *RFC3597) Data() []Field    { return []Field{rr.Rdata} }
 func (rr *RKEY) Data() []Field       { return []Field{rr.Flags, rr.Protocol, rr.Algorithm, rr.PublicKey} }
 func (rr *RP) Data() []Field         { return []Field{rr.Mbox, rr.Txt} }

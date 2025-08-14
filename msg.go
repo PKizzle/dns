@@ -559,16 +559,16 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	name, err := unpackName(msg, msgBuf)
 	if err != nil {
-		return nil, err
+		return nil, (&Error{err: err.Error()}).Fmt(": %s", "question.Name")
 	}
 	var qtype uint16
 	if !msg.Empty() && !msg.ReadUint16(&qtype) {
-		return nil, ErrTruncatedMessage
+		return nil, ErrTruncatedMessage.Fmt(": %s", "question.Type")
 	}
 
 	var qclass uint16
 	if !msg.Empty() && !msg.ReadUint16(&qclass) {
-		return nil, ErrTruncatedMessage
+		return nil, ErrTruncatedMessage.Fmt(": %s", "question.Class")
 	}
 
 	var rr RR
@@ -830,27 +830,27 @@ func (m *Msg) Len() int {
 func (dh *header) pack(msg []byte, off int) (int, error) {
 	off, err := packUint16(dh.ID, msg, off)
 	if err != nil {
-		return off, err
+		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.ID")
 	}
 	off, err = packUint16(dh.Bits, msg, off)
 	if err != nil {
-		return off, err
+		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Bits")
 	}
 	off, err = packUint16(dh.Qdcount, msg, off)
 	if err != nil {
-		return off, err
+		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Qdcount")
 	}
 	off, err = packUint16(dh.Ancount, msg, off)
 	if err != nil {
-		return off, err
+		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Ancount")
 	}
 	off, err = packUint16(dh.Nscount, msg, off)
 	if err != nil {
-		return off, err
+		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Nscount")
 	}
 	off, err = packUint16(dh.Arcount, msg, off)
 	if err != nil {
-		return off, err
+		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Arcount")
 	}
 	return off, nil
 }

@@ -52,6 +52,13 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	return server.ActivateAndServe()
 }
 
+// InvalidMsgFunc is a listener hook for observing incoming messages that were discarded
+// because they could not be parsed or an eariler error in the server.
+// Every message that is read by a Reader will eventually be provided to the Handler, or passed to this function.
+type InvalidMsgFunc func(m *Msg, err error)
+
+func DefaultMsgInvalidFunc(m *Msg, err error) {}
+
 // A Server defines parameters for running an DNS server.
 type Server struct {
 	// Address to listen on, ":dns" if empty.
@@ -77,6 +84,9 @@ type Server struct {
 	IdleTimeout func() time.Duration
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
+	// MsgInvalidFunc is optional, will be called on an error in the server or if a message is received but cannot be parsed.
+	// The message may be set to nil, if there wasn't one yet.
+	MsgInvalidFunc InvalidMsgFunc
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
@@ -96,6 +106,9 @@ type Server struct {
 func (srv *Server) init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
+	}
+	if srv.MsgInvalidFunc == nil {
+		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
@@ -202,7 +215,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 		default:
 			conn, err := ln.Accept()
 			if err != nil {
-				// skip (log, whatever)
+				srv.MsgInvalidFunc(nil, err)
 				continue
 			}
 			go srv.serveTCP(&wg, conn)
@@ -231,7 +244,7 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 			oob := make([]byte, oobSize)
 			n, oobn, _, raddr, err := pc.(*net.UDPConn).ReadMsgUDP(r.Data, oob)
 			if err != nil {
-				// nothing?? TODO
+				srv.MsgInvalidFunc(r, err)
 				continue
 			}
 
@@ -268,7 +281,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
-			// handle error, return turnong
+			srv.MsgInvalidFunc(r, err)
 			continue
 		}
 
@@ -298,28 +311,14 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 
 	err := r.Unpack()
 	if err != nil {
-		// bogus, don't even reply
+		srv.MsgInvalidFunc(r, err)
 		wg.Done()
 		return
 	}
-	// if a response -> discard here, no dns ping-pong
-	// for reset everything is valide
-
+	if r.Response == true {
+		srv.MsgInvalidFunc(r, &Error{err: "r.Response is set"})
+	}
 	r.Options = 0
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()
 }
-
-/*
-// ConnectionState() implements the ConnectionStater.ConnectionState() interface.
-func (w *response) ConnectionState() *tls.ConnectionState {
-	type tlsConnectionStater interface {
-		ConnectionState() tls.ConnectionState
-	}
-	if v, ok := w.tcp.(tlsConnectionStater); ok {
-		t := v.ConnectionState()
-		return &t
-	}
-	return nil
-}
-*/
