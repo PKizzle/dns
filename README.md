@@ -232,6 +232,11 @@ _all of them_
 - 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 - 8914 - Extended DNS Errors
 - 8976 - Message Digest for DNS Zones (ZONEMD RR)
+- 9461 - Service Binding Mapping for DNS Servers
+- 9462 - Discovery of Designated Resolvers
+- 9460 - SVCB and HTTPS Records
+- 9567 - DNS Error Reporting
+- 9606 - DNS Resolver Information
 
 ## Loosely Based Upon
 

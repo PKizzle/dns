@@ -93,3 +93,19 @@ func (o *EDE) pack(msg []byte, off int) (int, error) {
 	o.ExtraText = string(msg[off:])
 	return off, nil
 }
+
+func (e *REPORTING) unpack(s *cryptobyte.String) (err error) {
+	e.AgentDomain, err = unpackName(s, nil) // TODO: unpackNAme with nil buffer, no compression pointers..
+	if err != nil {
+		return ErrUnpackOverflow.Fmt(": %s", "REPORTING agent domain")
+	}
+	return nil
+}
+
+func (e *REPORTING) pack(msg []byte, off int) (int, error) {
+	off, err := packName(e.AgentDomain, msg, off, nil, false)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
