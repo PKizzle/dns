@@ -8,8 +8,6 @@ import (
 
 func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
 	switch x := rr.(type) {
-	case *ANY:
-		return x.pack(msg, off, compression)
 	case *NULL:
 		return x.pack(msg, off, compression)
 	case *CNAME:
@@ -33,6 +31,8 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	case *AFSDB:
 		return x.pack(msg, off, compression)
 	case *X25:
+		return x.pack(msg, off, compression)
+	case *ISDN:
 		return x.pack(msg, off, compression)
 	case *RT:
 		return x.pack(msg, off, compression)
@@ -71,6 +71,8 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	case *SIG:
 		return x.pack(msg, off, compression)
 	case *RRSIG:
+		return x.pack(msg, off, compression)
+	case *NXT:
 		return x.pack(msg, off, compression)
 	case *NSEC:
 		return x.pack(msg, off, compression)
@@ -153,19 +155,23 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	case *OPT:
 		return x.pack(msg, off, compression)
 	case *APL:
+		return x.pack(msg, off, compression)
+	case *ANY:
+		return x.pack(msg, off, compression)
+	case *AXFR:
+		return x.pack(msg, off, compression)
+	case *IXFR:
 		return x.pack(msg, off, compression)
 	}
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := rr.(Packer); ok {
 		return x.Pack(msg, off)
 	}
-	return 0, fmt.Errorf("no pack defined")
+	return 0, fmt.Errorf("dns: no pack defined")
 }
 
 func unpack(rr RR, data, msgBuf []byte) error {
 	switch x := rr.(type) {
-	case *ANY:
-		return x.unpack(data, msgBuf)
 	case *NULL:
 		return x.unpack(data, msgBuf)
 	case *CNAME:
@@ -189,6 +195,8 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	case *AFSDB:
 		return x.unpack(data, msgBuf)
 	case *X25:
+		return x.unpack(data, msgBuf)
+	case *ISDN:
 		return x.unpack(data, msgBuf)
 	case *RT:
 		return x.unpack(data, msgBuf)
@@ -227,6 +235,8 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	case *SIG:
 		return x.unpack(data, msgBuf)
 	case *RRSIG:
+		return x.unpack(data, msgBuf)
+	case *NXT:
 		return x.unpack(data, msgBuf)
 	case *NSEC:
 		return x.unpack(data, msgBuf)
@@ -310,10 +320,16 @@ func unpack(rr RR, data, msgBuf []byte) error {
 		return x.unpack(data, msgBuf)
 	case *APL:
 		return x.unpack(data, msgBuf)
+	case *ANY:
+		return x.unpack(data, msgBuf)
+	case *AXFR:
+		return x.unpack(data, msgBuf)
+	case *IXFR:
+		return x.unpack(data, msgBuf)
 	}
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := rr.(Packer); ok {
 		return x.Unpack(data)
 	}
-	return fmt.Errorf("no unpack defined")
+	return fmt.Errorf("dns: no unpack defined")
 }

@@ -3,6 +3,7 @@ package dns
 import (
 	"encoding/hex"
 	"fmt"
+	"strconv"
 
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -88,11 +89,19 @@ var ExtendedErrorToString = map[uint16]string{
 // StringToExtendedError is a map from human readable descriptions to extended error info codes.
 var StringToExtendedError = reverseInt16(ExtendedErrorToString)
 
+const tlv = 4
+
 func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	switch x := option.(type) {
+	case *LLQ:
+		return x.unpack(s)
 	case *NSID:
 		return x.unpack(s)
 	case *PADDING:
+		return x.unpack(s)
+	case *EDE:
+		return x.unpack(s)
+	case *COOKIE:
 		return x.unpack(s)
 	}
 	// Coder() check, abuse Type()?
@@ -101,13 +110,59 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 
 func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	switch x := option.(type) {
+	case *LLQ:
+		return x.pack(msg, off)
 	case *NSID:
 		return x.pack(msg, off)
 	case *PADDING:
 		return x.pack(msg, off)
+	case *EDE:
+		return x.pack(msg, off)
+	case *COOKIE:
+		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?
 	return 0, fmt.Errorf("dns: no option pack defined")
+}
+
+// LLQ stands for Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
+// Implemented for completeness, as the EDNS0 type code is assigned.
+type LLQ struct {
+	Version   uint16
+	Opcode    uint16
+	Error     uint16
+	ID        uint64
+	LeaseLife uint32
+}
+
+func (o *LLQ) Len() int { return tlv + 18 }
+func (o *LLQ) String() string {
+	sb := sprintOptionHeader(o)
+	sprintData(sb, strconv.FormatUint(uint64(o.Version), 10), strconv.FormatUint(uint64(o.Opcode), 10),
+		strconv.FormatUint(uint64(o.Error), 10), strconv.FormatUint(o.ID, 10),
+		strconv.FormatUint(uint64(o.LeaseLife), 10))
+	return sb.String()
+}
+
+// The Cookie option is used to add a DNS Cookie to a message.
+//
+// The Cookie field consists out of a client cookie (RFC 7873 Section 4), that is
+// always 8 bytes. It may then optionally be followed by the server cookie. The server
+// cookie is of variable length, 8 to a maximum of 32 bytes. In other words:
+//
+//	cCookie := o.Cookie[:16]
+//	sCookie := o.Cookie[16:]
+//
+// There is no guarantee that the Cookie string has a specific length.
+type COOKIE struct {
+	Cookie string `dns:"hex"`
+}
+
+func (o *COOKIE) Len() int { return tlv + len(o.Cookie) }
+func (o *COOKIE) String() string {
+	sb := sprintOptionHeader(o)
+	sb.WriteString(o.Cookie)
+	return sb.String()
 }
 
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
@@ -116,7 +171,7 @@ type NSID struct {
 	Nsid string `dns:"hex"`
 }
 
-func (o *NSID) Len() int { return 4 + len(o.Nsid)/2 }
+func (o *NSID) Len() int { return tlv + len(o.Nsid)/2 }
 func (o *NSID) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Nsid)
@@ -134,5 +189,21 @@ type PADDING struct {
 	Padding string `dns:"octet"`
 }
 
-func (o *PADDING) Len() int       { return 0 }
-func (o *PADDING) String() string { return "" }
+func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
+func (o *PADDING) String() string { return "" } // tODO miek
+
+// EDE option is used to return additional information about the cause of DNS errors.
+type EDE struct {
+	InfoCode  uint16
+	ExtraText string
+}
+
+func (o *EDE) Len() int { return tlv + 2 + len(o.ExtraText) }
+func (o *EDE) String() string {
+	// strings.Builder TODO: miek
+	info := strconv.FormatUint(uint64(o.InfoCode), 10)
+	if s, ok := ExtendedErrorToString[o.InfoCode]; ok {
+		info += fmt.Sprintf(" (%s)", s)
+	}
+	return fmt.Sprintf("%s: (%s)", info, o.ExtraText)
+}

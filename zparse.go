@@ -4,8 +4,6 @@ package dns
 
 func parse(rr RR, c *zlexer, o string) *ParseError {
 	switch x := rr.(type) {
-	case *ANY:
-		return x.parse(c, o)
 	case *NULL:
 		return x.parse(c, o)
 	case *CNAME:
@@ -29,6 +27,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	case *AFSDB:
 		return x.parse(c, o)
 	case *X25:
+		return x.parse(c, o)
+	case *ISDN:
 		return x.parse(c, o)
 	case *RT:
 		return x.parse(c, o)
@@ -67,6 +67,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	case *SIG:
 		return x.parse(c, o)
 	case *RRSIG:
+		return x.parse(c, o)
+	case *NXT:
 		return x.parse(c, o)
 	case *NSEC:
 		return x.parse(c, o)
@@ -149,6 +151,12 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	case *OPT:
 		return x.parse(c, o)
 	case *APL:
+		return x.parse(c, o)
+	case *ANY:
+		return x.parse(c, o)
+	case *AXFR:
+		return x.parse(c, o)
+	case *IXFR:
 		return x.parse(c, o)
 	}
 	// If here we need to setup the channel and send the elements.

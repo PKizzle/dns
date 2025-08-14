@@ -81,13 +81,14 @@ var RcodeToString = map[uint16]string{
 	RcodeNotZone:        "NOTZONE",
 	RcodeBadSig:         "BADSIG", // Also known as RcodeBadVers, see RFC 6891
 	//	RcodeBadVers:        "BADVERS",
-	RcodeBadKey:    "BADKEY",
-	RcodeBadTime:   "BADTIME",
-	RcodeBadMode:   "BADMODE",
-	RcodeBadName:   "BADNAME",
-	RcodeBadAlg:    "BADALG",
-	RcodeBadTrunc:  "BADTRUNC",
-	RcodeBadCookie: "BADCOOKIE",
+	RcodeStatefulNotImplemented: "DSOTYPENI",
+	RcodeBadKey:                 "BADKEY",
+	RcodeBadTime:                "BADTIME",
+	RcodeBadMode:                "BADMODE",
+	RcodeBadName:                "BADNAME",
+	RcodeBadAlg:                 "BADALG",
+	RcodeBadTrunc:               "BADTRUNC",
+	RcodeBadCookie:              "BADCOOKIE",
 }
 
 // Domain names are a sequence of counted strings split at the dots. They end with a zero-length string.
@@ -911,11 +912,14 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 
 	if sock, ok := r.Conn().(*net.UDPConn); ok {
 		sess := r.Session()
-		oob := sourceFromOOB(sess.oobdata)
-		n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
-		return int64(n), err
+		if sess != nil {
+			oob := sourceFromOOB(sess.oobdata)
+			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
+			return int64(n), err
+		}
 	}
-	// error here?
+
+	// clients end up here
 	n, err := r.Conn().Write(m.Data)
 	return int64(n), err
 }

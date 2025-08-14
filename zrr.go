@@ -2,7 +2,6 @@
 
 package dns
 
-func (rr *ANY) Header() *Header        { return &rr.Hdr }
 func (rr *NULL) Header() *Header       { return &rr.Hdr }
 func (rr *CNAME) Header() *Header      { return &rr.Hdr }
 func (rr *HINFO) Header() *Header      { return &rr.Hdr }
@@ -15,6 +14,7 @@ func (rr *MD) Header() *Header         { return &rr.Hdr }
 func (rr *MX) Header() *Header         { return &rr.Hdr }
 func (rr *AFSDB) Header() *Header      { return &rr.Hdr }
 func (rr *X25) Header() *Header        { return &rr.Hdr }
+func (rr *ISDN) Header() *Header       { return &rr.Hdr }
 func (rr *RT) Header() *Header         { return &rr.Hdr }
 func (rr *NS) Header() *Header         { return &rr.Hdr }
 func (rr *PTR) Header() *Header        { return &rr.Hdr }
@@ -34,6 +34,7 @@ func (rr *GPOS) Header() *Header       { return &rr.Hdr }
 func (rr *LOC) Header() *Header        { return &rr.Hdr }
 func (rr *SIG) Header() *Header        { return &rr.Hdr }
 func (rr *RRSIG) Header() *Header      { return &rr.Hdr }
+func (rr *NXT) Header() *Header        { return &rr.Hdr }
 func (rr *NSEC) Header() *Header       { return &rr.Hdr }
 func (rr *DLV) Header() *Header        { return &rr.Hdr }
 func (rr *CDS) Header() *Header        { return &rr.Hdr }
@@ -75,10 +76,12 @@ func (rr *CSYNC) Header() *Header      { return &rr.Hdr }
 func (rr *ZONEMD) Header() *Header     { return &rr.Hdr }
 func (rr *OPT) Header() *Header        { return &rr.Hdr }
 func (rr *APL) Header() *Header        { return &rr.Hdr }
+func (rr *ANY) Header() *Header        { return &rr.Hdr }
+func (rr *AXFR) Header() *Header       { return &rr.Hdr }
+func (rr *IXFR) Header() *Header       { return &rr.Hdr }
 
 // TypeToRR is a map of constructors for each RR type.
 var TypeToRR = map[uint16]func() RR{
-	TypeANY:        func() RR { return new(ANY) },
 	TypeNULL:       func() RR { return new(NULL) },
 	TypeCNAME:      func() RR { return new(CNAME) },
 	TypeHINFO:      func() RR { return new(HINFO) },
@@ -91,6 +94,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeMX:         func() RR { return new(MX) },
 	TypeAFSDB:      func() RR { return new(AFSDB) },
 	TypeX25:        func() RR { return new(X25) },
+	TypeISDN:       func() RR { return new(ISDN) },
 	TypeRT:         func() RR { return new(RT) },
 	TypeNS:         func() RR { return new(NS) },
 	TypePTR:        func() RR { return new(PTR) },
@@ -110,6 +114,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeLOC:        func() RR { return new(LOC) },
 	TypeSIG:        func() RR { return new(SIG) },
 	TypeRRSIG:      func() RR { return new(RRSIG) },
+	TypeNXT:        func() RR { return new(NXT) },
 	TypeNSEC:       func() RR { return new(NSEC) },
 	TypeDLV:        func() RR { return new(DLV) },
 	TypeCDS:        func() RR { return new(CDS) },
@@ -151,13 +156,14 @@ var TypeToRR = map[uint16]func() RR{
 	TypeZONEMD:     func() RR { return new(ZONEMD) },
 	TypeOPT:        func() RR { return new(OPT) },
 	TypeAPL:        func() RR { return new(APL) },
+	TypeANY:        func() RR { return new(ANY) },
+	TypeAXFR:       func() RR { return new(AXFR) },
+	TypeIXFR:       func() RR { return new(IXFR) },
 }
 
 // RRToType is the reverse of TypeToRR, implemented as a function.
 func RRToType(rr RR) uint16 {
 	switch rr.(type) {
-	case *ANY:
-		return TypeANY
 	case *NULL:
 		return TypeNULL
 	case *CNAME:
@@ -182,6 +188,8 @@ func RRToType(rr RR) uint16 {
 		return TypeAFSDB
 	case *X25:
 		return TypeX25
+	case *ISDN:
+		return TypeISDN
 	case *RT:
 		return TypeRT
 	case *NS:
@@ -220,6 +228,8 @@ func RRToType(rr RR) uint16 {
 		return TypeSIG
 	case *RRSIG:
 		return TypeRRSIG
+	case *NXT:
+		return TypeNXT
 	case *NSEC:
 		return TypeNSEC
 	case *DLV:
@@ -302,6 +312,12 @@ func RRToType(rr RR) uint16 {
 		return TypeOPT
 	case *APL:
 		return TypeAPL
+	case *ANY:
+		return TypeANY
+	case *AXFR:
+		return TypeAXFR
+	case *IXFR:
+		return TypeIXFR
 	}
 	// if here, we don't have the RR in our pkg, check if it does Typer.
 	if x, ok := rr.(Typer); ok {
@@ -312,7 +328,6 @@ func RRToType(rr RR) uint16 {
 
 // TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
-	TypeANY:        "ANY",
 	TypeNULL:       "NULL",
 	TypeCNAME:      "CNAME",
 	TypeHINFO:      "HINFO",
@@ -325,6 +340,7 @@ var TypeToString = map[uint16]string{
 	TypeMX:         "MX",
 	TypeAFSDB:      "AFSDB",
 	TypeX25:        "X25",
+	TypeISDN:       "ISDN",
 	TypeRT:         "RT",
 	TypeNS:         "NS",
 	TypePTR:        "PTR",
@@ -344,6 +360,7 @@ var TypeToString = map[uint16]string{
 	TypeLOC:        "LOC",
 	TypeSIG:        "SIG",
 	TypeRRSIG:      "RRSIG",
+	TypeNXT:        "NXT",
 	TypeNSEC:       "NSEC",
 	TypeDLV:        "DLV",
 	TypeCDS:        "CDS",
@@ -384,6 +401,9 @@ var TypeToString = map[uint16]string{
 	TypeZONEMD:     "ZONEMD",
 	TypeOPT:        "OPT",
 	TypeAPL:        "APL",
+	TypeANY:        "ANY",
+	TypeAXFR:       "AXFR",
+	TypeIXFR:       "IXFR",
 	TypeNSAPPTR:    "NSAP-PTR",
 }
 
@@ -397,6 +417,7 @@ func (rr *ANY) Data() []Field       { return []Field{} }
 func (rr *APL) Data() []Field       { return []Field{rr.Prefixes} }
 func (rr *APLPrefix) Data() []Field { return []Field{rr.Negation, rr.Network} }
 func (rr *AVC) Data() []Field       { return []Field{rr.Txt} }
+func (rr *AXFR) Data() []Field      { return []Field{} }
 func (rr *CAA) Data() []Field       { return []Field{rr.Flag, rr.Tag, rr.Value} }
 func (rr *CDNSKEY) Data() []Field   { return []Field{} }
 func (rr *CDS) Data() []Field       { return []Field{} }
@@ -420,10 +441,12 @@ func (rr *HIP) Data() []Field {
 func (rr *IPSECKEY) Data() []Field {
 	return []Field{rr.Precedence, rr.GatewayType, rr.Algorithm, rr.GatewayAddr, rr.GatewayHost, rr.PublicKey}
 }
-func (rr *KEY) Data() []Field { return []Field{} }
-func (rr *KX) Data() []Field  { return []Field{rr.Preference, rr.Exchanger} }
-func (rr *L32) Data() []Field { return []Field{rr.Preference, rr.Locator32} }
-func (rr *L64) Data() []Field { return []Field{rr.Preference, rr.Locator64} }
+func (rr *ISDN) Data() []Field { return []Field{rr.Address, rr.SubAddress} }
+func (rr *IXFR) Data() []Field { return []Field{} }
+func (rr *KEY) Data() []Field  { return []Field{} }
+func (rr *KX) Data() []Field   { return []Field{rr.Preference, rr.Exchanger} }
+func (rr *L32) Data() []Field  { return []Field{rr.Preference, rr.Locator32} }
+func (rr *L64) Data() []Field  { return []Field{rr.Preference, rr.Locator64} }
 func (rr *LOC) Data() []Field {
 	return []Field{rr.Version, rr.Size, rr.HorizPre, rr.VertPre, rr.Latitude, rr.Longitude, rr.Altitude}
 }
@@ -451,6 +474,7 @@ func (rr *NSEC3PARAM) Data() []Field {
 	return []Field{rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
 }
 func (rr *NULL) Data() []Field       { return []Field{rr.Null} }
+func (rr *NXT) Data() []Field        { return []Field{} }
 func (rr *OPENPGPKEY) Data() []Field { return []Field{rr.PublicKey} }
 func (rr *OPT) Data() []Field        { return []Field{rr.Options} }
 func (rr *PTR) Data() []Field        { return []Field{rr.Ptr} }

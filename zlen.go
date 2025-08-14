@@ -7,11 +7,6 @@ import (
 	"net"
 )
 
-func (rr *ANY) Len() int {
-	l := rr.Hdr.Len()
-	return l
-}
-
 func (rr *NULL) Len() int {
 	l := rr.Hdr.Len()
 	l += len(rr.Null)
@@ -85,6 +80,13 @@ func (rr *AFSDB) Len() int {
 func (rr *X25) Len() int {
 	l := rr.Hdr.Len()
 	l += len(rr.PSDNAddress) + 1
+	return l
+}
+
+func (rr *ISDN) Len() int {
+	l := rr.Hdr.Len()
+	l += len(rr.Address) + 1
+	l += len(rr.SubAddress) + 1
 	return l
 }
 
@@ -245,6 +247,11 @@ func (rr *RRSIG) Len() int {
 	l += 2 // KeyTag
 	l += len(rr.SignerName)
 	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
+	return l
+}
+
+func (rr *NXT) Len() int {
+	l := rr.Hdr.Len()
 	return l
 }
 
@@ -547,5 +554,20 @@ func (rr *APL) Len() int {
 	for _, x := range rr.Prefixes {
 		l += x.len()
 	}
+	return l
+}
+
+func (rr *ANY) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
+func (rr *AXFR) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
+func (rr *IXFR) Len() int {
+	l := rr.Hdr.Len()
 	return l
 }

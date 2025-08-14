@@ -83,9 +83,8 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
 
-	// buffer-reuse?
-
-	_, err = io.Copy(conn, m) // n unused??
+	remote := &response{conn: conn} // for Session() call in msg.go#L926
+	_, err = io.Copy(remote, m)     // n unused??
 	if err != nil {
 		return nil, time.Since(t), err
 	}

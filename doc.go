@@ -29,14 +29,12 @@ In the DNS messages are exchanged, these messages contain resource records (sets
 	m := new(dns.Msg)
 	m.Question = []dns.RR{mx}
 
-The message m is now a message with the question section set to ask the MX
-records for the miek.nl. zone. Or when making an actual request.
+The message m is now a message with the question section set to ask the MX records for the miek.nl. zone. Or when making an actual request.
 
 	m.ID = dns.ID()
 	m.RecursionDesired = true
 
-After creating a message it can be sent. Basic use pattern for synchronous
-querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
+After creating a message it can be sent. Basic use pattern for synchronous querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
 
 	c := new(dns.Client)
 	in, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
@@ -44,6 +42,7 @@ querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
 More advanced options are available using a net.Dialer and the corresponding API.
 For example it is possible to set a timeout, or to specify a source IP address
 and port to use for the connection:
+TODO - different
 
 	c := new(dns.Client)
 	laddr := net.UDPAddr{
@@ -63,10 +62,9 @@ If these "advanced" features are not needed, a simple UDP query can be sent with
 
 When this functions returns you will get DNS message. A DNS message consists out of four (five in this package) sections.
 The question section: in.Question, the answer section: in.Answer,
-the authority section: in.Ns and the additional section: in.Extra.
+the authority section: in.Ns and the additional section: in.Extra. And the fifth the pseud section: in.Pseudo, see [Msg].
 
-Each of these sections (except the Question section) contain a []RR. Basic
-use pattern for accessing the rdata of a TXT RR as the first RR in
+Each of these sections contain a []RR. Basic use pattern for accessing the rdata of a TXT RR as the first RR in
 the Answer section:
 
 	if t, ok := in.Answer[0].(*dns.TXT); ok {
@@ -95,11 +93,12 @@ Requesting DNSSEC information for a zone is done by adding the DO (DNSSEC OK)
 bit to a request.
 
 	m := new(dns.Msg)
-	m.SetEdns0(4096, true)
+	m.Security = true
+	m.UDPSize = 4096
 
-Signature generation, signature verification and key generation are all supported.
+Signature generation, signature verification and key generation are all supported. See [RRSIG].
 
-# Transaction signaturE
+# Transaction signature
 
 An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
 The supported algorithms include: HmacSHA1, HmacSHA256 and HmacSHA512.
@@ -137,39 +136,25 @@ request an AXFR for miek.nl. with TSIG key named "axfr." and secret
 You can now read the records from the transfer as they come in. Each envelope
 is checked with TSIG. If something is not correct an error is returned.
 
-# Private RRs
-
-RFC 6895 sets aside a range of type codes for private use. This range is 65,280
-- 65,534 (0xFF00 - 0xFFFE). When experimenting with new Resource Records these
-can be used, before requesting an official type code from IANA.
-
-See https://miek.nl/2014/september/21/idn-and-private-rr-in-go-dns/ for more
-information.
-
 # EDNS0
 
 EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated by
-RFC 6891. It defines a new RR type, the OPT RR, which is then completely
-abused.
+RFC 6891. It defines a new RR type, the OPT RR, which is then completely abused.
 
-Basic use pattern for creating an (empty) OPT RR:
+In this package all EDNS0 options are implemented as RR, doing basic "EDNS0" things, like
+setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you. See [Msg].
 
-	o := new(dns.OPT)
-	o.Hdr.Name = "." // MUST be the root zone, per definition.
-	o.Hdr.Rrtype = dns.TypeOPT
+The data of an OPT RR sits in the [Msg.Pseudo[ section consists out of a slice of EDNS0 (RFC 6891) interfaces.
+These are just RRs with an extra Pseudo() method.
 
-The rdata of an OPT RR consists out of a slice of EDNS0 (RFC 6891) interfaces.
-Currently only a few have been standardized: EDNS0_NSID (RFC 5001) and
-EDNS0_SUBNET (RFC 7871). Note that these options may be combined in an OPT RR.
 Basic use pattern for a server to check if (and which) options are set:
 
-	// o is a dns.OPT
-	for _, s := range o.Option {
-		switch e := s.(type) {
-		case *dns.EDNS0_NSID:
-			// do stuff with e.Nsid
-		case *dns.EDNS0_SUBNET:
-			// access e.Family, e.Address, etc.
+	for _, o := range msg.Pseudo {
+		switch x := o.(type) {
+		case *dns.NSID:
+			// do stuff with x.Nsid
+		case *dns.SUBNET:
+			// access x.Family, x.Address, etc.
 		}
 	}
 

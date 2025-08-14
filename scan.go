@@ -604,9 +604,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			if zp.c.Peek().token == "" {
 				// This is a dynamic update rr.
-
-				// TODO(tmthrgd): Previously slurpRemainder was only called
-				// for certain RR types, which may have been important.
 				if err := slurpRemainder(zp.c); err != nil {
 					return zp.setParseError(err.err, err.lex)
 				}
@@ -1266,6 +1263,10 @@ func toAbsoluteName(name, origin string) (absolute string, ok bool) {
 			return "", false
 		}
 		return origin, true
+	}
+
+	if name == "\n" {
+		return "", false
 	}
 
 	// require a valid domain name

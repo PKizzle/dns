@@ -115,33 +115,35 @@ const (
 	ClassANY    = 255
 
 	// Message Response Codes, see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
-	RcodeSuccess        = 0  // NoError   - No Error                          [DNS]
-	RcodeFormatError    = 1  // FormErr   - Format Error                      [DNS]
-	RcodeServerFailure  = 2  // ServFail  - Server Failure                    [DNS]
-	RcodeNameError      = 3  // NXDomain  - Non-Existent Domain               [DNS]
-	RcodeNotImplemented = 4  // NotImp    - Not Implemented                   [DNS]
-	RcodeRefused        = 5  // Refused   - Query Refused                     [DNS]
-	RcodeYXDomain       = 6  // YXDomain  - Name Exists when it should not    [DNS Update]
-	RcodeYXRrset        = 7  // YXRRSet   - RR Set Exists when it should not  [DNS Update]
-	RcodeNXRrset        = 8  // NXRRSet   - RR Set that should exist does not [DNS Update]
-	RcodeNotAuth        = 9  // NotAuth   - Server Not Authoritative for zone [DNS Update]
-	RcodeNotZone        = 10 // NotZone   - Name not contained in zone        [DNS Update/TSIG]
-	RcodeBadSig         = 16 // BADSIG    - TSIG Signature Failure            [TSIG]
-	RcodeBadVers        = 16 // BADVERS   - Bad OPT Version                   [EDNS0]
-	RcodeBadKey         = 17 // BADKEY    - Key not recognized                [TSIG]
-	RcodeBadTime        = 18 // BADTIME   - Signature out of time window      [TSIG]
-	RcodeBadMode        = 19 // BADMODE   - Bad TKEY Mode                     [TKEY]
-	RcodeBadName        = 20 // BADNAME   - Duplicate key name                [TKEY]
-	RcodeBadAlg         = 21 // BADALG    - Algorithm not supported           [TKEY]
-	RcodeBadTrunc       = 22 // BADTRUNC  - Bad Truncation                    [TSIG]
-	RcodeBadCookie      = 23 // BADCOOKIE - Bad/missing Server Cookie         [DNS Cookies]
+	RcodeSuccess                = 0  // NoError   - No Error                          [DNS]
+	RcodeFormatError            = 1  // FormErr   - Format Error                      [DNS]
+	RcodeServerFailure          = 2  // ServFail  - Server Failure                    [DNS]
+	RcodeNameError              = 3  // NXDomain  - Non-Existent Domain               [DNS]
+	RcodeNotImplemented         = 4  // NotImp    - Not Implemented                   [DNS]
+	RcodeRefused                = 5  // Refused   - Query Refused                     [DNS]
+	RcodeYXDomain               = 6  // YXDomain  - Name Exists when it should not    [DNS Update]
+	RcodeYXRrset                = 7  // YXRRSet   - RR Set Exists when it should not  [DNS Update]
+	RcodeNXRrset                = 8  // NXRRSet   - RR Set that should exist does not [DNS Update]
+	RcodeNotAuth                = 9  // NotAuth   - Server Not Authoritative for zone [DNS Update]
+	RcodeNotZone                = 10 // NotZone   - Name not contained in zone        [DNS Update/TSIG]
+	RcodeStatefulNotImplemented = 11 // DSOTYPENI - DSO-TYPE Not Implemented [DSO]
+	RcodeBadSig                 = 16 // BADSIG    - TSIG Signature Failure            [TSIG]
+	RcodeBadVers                = 16 // BADVERS   - Bad OPT Version                   [EDNS0]
+	RcodeBadKey                 = 17 // BADKEY    - Key not recognized                [TSIG]
+	RcodeBadTime                = 18 // BADTIME   - Signature out of time window      [TSIG]
+	RcodeBadMode                = 19 // BADMODE   - Bad TKEY Mode                     [TKEY]
+	RcodeBadName                = 20 // BADNAME   - Duplicate key name                [TKEY]
+	RcodeBadAlg                 = 21 // BADALG    - Algorithm not supported           [TKEY]
+	RcodeBadTrunc               = 22 // BADTRUNC  - Bad Truncation                    [TSIG]
+	RcodeBadCookie              = 23 // BADCOOKIE - Bad/missing Server Cookie         [DNS Cookies]
 
 	// Message Opcodes. There is no 3.
-	OpcodeQuery  = 0
-	OpcodeIQuery = 1
-	OpcodeStatus = 2
-	OpcodeNotify = 4
-	OpcodeUpdate = 5
+	OpcodeQuery    = 0
+	OpcodeIQuery   = 1
+	OpcodeStatus   = 2
+	OpcodeNotify   = 4
+	OpcodeUpdate   = 5
+	OpcodeStateful = 6
 )
 
 // Used in ZONEMD https://tools.ietf.org/html/rfc8976
@@ -231,20 +233,6 @@ var CertTypeToString = map[uint16]string{
 
 // Prefix for IPv4 encoded as IPv6 address
 const ipv4InIPv6Prefix = "::ffff:"
-
-// ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY
-// is named "*" there.
-type ANY struct {
-	Hdr Header
-	// Does not have any rdata
-}
-
-func (rr *ANY) String() string { return rr.Hdr.String() }
-
-// REMOVE??
-func (*ANY) parse(c *zlexer, origin string) *ParseError {
-	return &ParseError{err: "ANY records do not have a presentation format"}
-}
 
 // NULL RR. See RFC 1035.
 type NULL struct {
@@ -394,6 +382,19 @@ type X25 struct {
 func (rr *X25) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.PSDNAddress)
+	return sb.String()
+}
+
+// ISDN RR. See RFC 1183, Section 3.2.
+type ISDN struct {
+	Hdr        Header
+	Address    string
+	SubAddress string
+}
+
+func (rr *ISDN) String() string {
+	sb := sprintHeader(rr)
+	sb.WriteString(sprintTxt([]string{rr.Address, rr.SubAddress}))
 	return sb.String()
 }
 
@@ -667,7 +668,7 @@ func (rr *GPOS) String() string {
 	return sb.String()
 }
 
-// LOC RR. See RFC RFC 1876.
+// LOC RR. See RFC 1876.
 type LOC struct {
 	Hdr       Header
 	Version   uint8
@@ -781,6 +782,11 @@ func (rr *RRSIG) String() string {
 	return sb.String()
 }
 
+// NXT RR. See RFC 2535.
+type NXT struct {
+	NSEC
+}
+
 // NSEC RR. See RFC 4034 and RFC 3755.
 type NSEC struct {
 	Hdr        Header
@@ -873,7 +879,7 @@ func (rr *TALINK) String() string {
 	return sb.String()
 }
 
-// SSHFP RR. See RFC RFC 4255.
+// SSHFP RR. See RFC 4255.
 type SSHFP struct {
 	Hdr         Header
 	Algorithm   uint8
@@ -889,7 +895,7 @@ func (rr *SSHFP) String() string {
 	return sb.String()
 }
 
-// KEY RR. See RFC RFC 2535.
+// KEY RR. See RFC 2535.
 type KEY struct {
 	DNSKEY
 }
@@ -1228,7 +1234,7 @@ func (rr *NINFO) String() string {
 	return sb.String()
 }
 
-// NID RR. See RFC RFC 6742.
+// NID RR. See RFC 6742.
 type NID struct {
 	Hdr        Header
 	Preference uint16
@@ -1564,4 +1570,39 @@ func copyNet(n net.IPNet) net.IPNet {
 		IP:   slices.Clone(n.IP),
 		Mask: slices.Clone(n.Mask),
 	}
+}
+
+// Meta RRs
+
+// ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY is named "*" there.
+type ANY struct {
+	Hdr Header
+}
+
+func (rr *ANY) String() string { return rr.Hdr.String() }
+
+func (*ANY) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "ANY records do not have a presentation format"}
+}
+
+// AXFR is a meta record used (solely) in question sections to ask for a zone transfer.
+type AXFR struct {
+	Hdr Header
+}
+
+func (rr *AXFR) String() string { return rr.Hdr.String() }
+
+func (*AXFR) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "AXFR records do not have a presentation format"}
+}
+
+// IXFR is a meta record used (solely) in question sections to ask for an incremental zone transfer.
+type IXFR struct {
+	Hdr Header
+}
+
+func (rr *IXFR) String() string { return rr.Hdr.String() }
+
+func (*IXFR) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "IXFR records do not have a presentation format"}
 }

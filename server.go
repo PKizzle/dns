@@ -268,14 +268,16 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
-		// tcp pipelining
-		wg.Add(1)
+		if !w.hijacked.Load() {
+			wg.Add(1)
+		}
 		go func() {
 			srv.serveDNS(wg, w, r)
 		}()
 
 		if w.hijacked.Load() {
-			break // client will call Close() themselves
+			wg.Done() // call done because hijack has been called in the handler
+			break     // client will call Close() themselves
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
 		timeout = idleTimeout
