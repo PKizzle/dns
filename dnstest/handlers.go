@@ -1,13 +1,14 @@
 package dnstest
 
 import (
+	"context"
 	"io"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func HelloHandler(w dns.ResponseWriter, req *dns.Msg) {
+func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 
@@ -17,7 +18,7 @@ func HelloHandler(w dns.ResponseWriter, req *dns.Msg) {
 	io.Copy(w, m)
 }
 
-func HelloHandlerBadID(w dns.ResponseWriter, req *dns.Msg) {
+func HelloHandlerBadID(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.ID++
@@ -28,7 +29,7 @@ func HelloHandlerBadID(w dns.ResponseWriter, req *dns.Msg) {
 	io.Copy(w, m)
 }
 
-func HelloHandlerBadThenGoodID(w dns.ResponseWriter, req *dns.Msg) {
+func HelloHandlerBadThenGoodID(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.ID++
@@ -43,7 +44,7 @@ func HelloHandlerBadThenGoodID(w dns.ResponseWriter, req *dns.Msg) {
 	io.Copy(w, m)
 }
 
-func HelloHandlerEchoAddrPort(w dns.ResponseWriter, req *dns.Msg) {
+func HelloHandlerEchoAddrPort(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 
@@ -54,7 +55,7 @@ func HelloHandlerEchoAddrPort(w dns.ResponseWriter, req *dns.Msg) {
 	io.Copy(w, m)
 }
 
-func AnotherHelloHandler(w dns.ResponseWriter, req *dns.Msg) {
+func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 
