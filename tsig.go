@@ -1,20 +1,9 @@
-//go:build ignore
-
 package dns
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/binary"
-	"encoding/hex"
-	"hash"
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/cryptobyte"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -28,6 +17,49 @@ const (
 	HmacMD5 = "hmac-md5.sig-alg.reg.int." // Deprecated: HmacMD5 is no longer supported.
 )
 
+// TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
+type TSIG struct {
+	Hdr        Header
+	Algorithm  string `dns:"domain-name"`
+	TimeSigned uint64 `dns:"uint48"`
+	Fudge      uint16
+	MACSize    uint16
+	MAC        string `dns:"size-hex:MACSize"`
+	OrigId     uint16
+	Error      uint16
+	OtherLen   uint16
+	OtherData  string `dns:"size-hex:OtherLen"`
+}
+
+func (rr *TSIG) Header() *Header { return &rr.Hdr }
+func (rr *TSIG) Data() []Field {
+	return []Field{rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigId, rr.Error, rr.OtherLen, rr.OtherData}
+}
+
+func (rr *TSIG) Len() int {
+	return 0
+}
+
+func (rr *TSIG) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, rr.Algorithm, tsigTimeToString(rr.TimeSigned),
+		strconv.Itoa(int(rr.Fudge)), strconv.Itoa(int(rr.MACSize)),
+		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigId)),
+		strconv.Itoa(int(rr.Error)), strconv.Itoa(int(rr.OtherLen)), rr.OtherData)
+	return sb.String()
+}
+
+func (*TSIG) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "TSIG records do not have a presentation format"}
+}
+
+// Translate the TSIG time signed into a date. There is no need for RFC1982 calculations as this date is 48 bits.
+func tsigTimeToString(t uint64) string {
+	ti := time.Unix(int64(t), 0).UTC()
+	return ti.Format("20060102150405")
+}
+
+/*
 // TsigProvider provides the API to plug-in a custom TSIG implementation.
 type TsigProvider interface {
 	// Generate is passed the DNS message to be signed and the partial TSIG RR. It returns the signature and nil, otherwise an error.
@@ -380,13 +412,6 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	return nil, nil, ErrNoSig
 }
 
-// Translate the TSIG time signed into a date. There is no
-// need for RFC1982 calculations as this date is 48 bits.
-func tsigTimeToString(t uint64) string {
-	ti := time.Unix(int64(t), 0).UTC()
-	return ti.Format("20060102150405")
-}
-
 func packTsigWire(tw *tsigWireFmt, msg []byte) (int, error) {
 	// copied from zmsg.go TSIG packing
 	// RR_Header
@@ -454,3 +479,4 @@ func packTimerWire(tw *timerWireFmt, msg []byte) (int, error) {
 	}
 	return off, nil
 }
+*/
