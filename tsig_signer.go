@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/binary"
 	"encoding/hex"
 	"hash"
 	"time"
@@ -16,7 +15,7 @@ import (
 // HMAC contains the secret used to create the TSIG.
 type HMAC string
 
-func (h HMAC) Sign(t *TSIG, m *Msg) error {
+func (h HMAC) Sign(t *TSIG, p []byte) error {
 	secret, err := fromBase64([]byte(h))
 	if err != nil {
 		return err
@@ -36,21 +35,13 @@ func (h HMAC) Sign(t *TSIG, m *Msg) error {
 	default:
 		return ErrKeyAlg
 	}
-	hs.Write(m.Data)
+	hs.Write(p)
 	t.MAC = hex.EncodeToString(hs.Sum(nil))
 	return nil
 }
 
+// mac creates the buffer with the TSIG and message data that can then be signed.
 func (rr *TSIG) mac(m *Msg, options TSIGOption) ([]byte, error) {
-	if rr.TimeSigned == 0 {
-		rr.TimeSigned = uint64(time.Now().Unix())
-	}
-	if rr.Fudge == 0 {
-		rr.Fudge = 300 // Standard (RFC) default.
-	}
-
-	binary.BigEndian.PutUint16(m.Data[0:2], rr.OrigID)
-
 	buf := []byte{}
 	if options.RequestMAC != "" {
 		mw := &macWireFmt{MAC: options.RequestMAC, MACSize: uint16(len(options.RequestMAC) / 2)}
@@ -91,13 +82,12 @@ func (rr *TSIG) mac(m *Msg, options TSIGOption) ([]byte, error) {
 	}
 
 	if options.RequestMAC != "" {
-		x := append(buf, buf...)
-		buf = append(x, tsigvar...)
+		buf = append(buf, m.Data...)
+		buf = append(buf, tsigvar...)
 		return buf, nil
 	}
 
-	buf = append(buf, tsigvar...)
-	return buf, nil
+	return append(m.Data, tsigvar...), nil
 }
 
 // If we have the MAC use this type to convert it to wiredata. Section 3.4.3. Request MAC.

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -53,18 +54,43 @@ func (*TSIG) parse(c *zlexer, origin string) *ParseError {
 	return &ParseError{err: "TSIG records do not have a presentation format"}
 }
 
+// Sign fills out the TSIG record. This should be a "stub" TSIG RR with the algorithm, key name
+// (owner name of the RR), time fudge (defaults to 300 seconds, if zero) and the current
+// time. The TSIG MAC is saved in that RR. When Sign is called for the first time
+// options.RequestMAC should be empty and options.TimersOnly should be false.
+//
+// The completed TSIG is then appended to m.Data and to m.Pseudo. Do not to call m.Pack() after this.
 func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
-	// MESSAGE ID??
-	if err := k.Sign(rr, m); err != nil {
-		return err
-	}
-	// restore msg ID, as the origID is used to calculate hash
+	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
+	binary.BigEndian.PutUint16(m.Data[0:2], rr.OrigID)
 	defer func() {
 		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
 	}()
+	macbuf, err := rr.mac(m, options)
+	if err != nil {
+		return err
+	}
+	k.Sign(rr, macbuf)
+
 	rr.MACSize = uint16(len(rr.MAC) / 2)
-	rr.TimeSigned = 0
-	// bla bla
+	if rr.TimeSigned == 0 {
+		rr.TimeSigned = uint64(time.Now().Unix())
+	}
+	if rr.Fudge == 0 {
+		rr.Fudge = 300 // Standard (RFC) default.
+	}
+	// clear otherdata 'n stuff?
+	t := make([]byte, rr.Len())
+	off, err := PackRR(rr, t, 0, nil)
+	if err != nil {
+		return err
+	}
+	t = t[:off]
+
+	m.Data = append(m.Data, t...)
+	// Update the ArCount directly in the buffer. And add to pseudo
+	binary.BigEndian.PutUint16(m.Data[10:], uint16(len(m.Extra)+int(m.ps)+1))
+	m.Pseudo = append(m.Pseudo, rr)
 	return nil
 }
 
@@ -79,9 +105,9 @@ type TSIGOption struct {
 
 type (
 	TSIGSigner interface {
-		// Sign is passed the DNS message (that does not yet have a TSIG attached) to be signed and a partial TSIG RR. It returns the signature in
-		// t.MAC as a hex encoded string.
-		Sign(t *TSIG, m *Msg) error
+		// Sign is passed the to-be-signed binary data extracted from the DNS message in [Sign]. It should return
+		// the signature in t.MAC as a hex encoded string.
+		Sign(t *TSIG, p []byte) error
 	}
 
 	TSIGVerifier interface {
