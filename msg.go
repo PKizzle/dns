@@ -267,15 +267,10 @@ func UnpackName(msg []byte, off int) (string, int, error) {
 func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	name := make([]byte, 0, maxDomainNamePresentationLength)
 	budget := maxDomainNameWireOctets
-	var ptrs int // number of pointers followed, can be just bool
+	var ptrs bool
 
 	// If we never see a pointer, we need to ensure that we advance s to our final position.
 	cs := *s
-	defer func() {
-		if ptrs == 0 {
-			*s = cs
-		}
-	}()
 
 	for {
 		var c byte
@@ -290,6 +285,9 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			}
 			// If we see a zero-length label (root label), this is the end of the name.
 			if len(label) == 0 {
+				if !ptrs {
+					*s = cs
+				}
 				if len(name) == 0 {
 					return ".", nil
 				}
@@ -314,7 +312,7 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return "", ErrUnpackOverflow
 			}
 			// If this is the first pointer we've seen, we need to advance s to our current position.
-			if ptrs == 0 {
+			if !ptrs {
 				*s = cs
 			}
 			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
@@ -325,7 +323,7 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
 			cs = msgBuf[off:]
-			ptrs++
+			ptrs = true
 		default: // 0x80 and 0x40 are reserved
 			return "", &Error{err: "reserved domain name label type"}
 		}
