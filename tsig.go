@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"encoding/binary"
 	"strconv"
 	"strings"
 	"time"
@@ -59,28 +60,40 @@ func tsigTimeToString(t uint64) string {
 	return ti.Format("20060102150405")
 }
 
-func (rr *TSIG) Sign(k TSIGSigner, m *Msg) error {
+func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
+	// MESSAGE ID??
+	if err := k.Sign(rr, m); err != nil {
+		return err
+	}
+	// restore msg ID, as the origID is used to calculate hash
+	defer func() {
+		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
+	}()
+	rr.MACSize = uint16(len(rr.MAC) / 2)
+	rr.TimeSigned = 0
+	// bla bla
 	return nil
 }
 
-func (rr *TSIG) Verify(k TSIGVerifier, m *Msg, options TSIGVerifierOption) error {
+func (rr *TSIG) Verify(k TSIGVerifier, m *Msg, options TSIGOption) error {
 	return nil
 }
 
-type TSIGVerifierOption struct {
+type TSIGOption struct {
 	TimersOnly bool
 	RequestMAC string
 }
 
 type (
 	TSIGSigner interface {
-		// Sign is passed the DNS message to be signed and a partial TSIG RR. It returns the signature in t, otherwise an error.
+		// Sign is passed the DNS message (that does not yet have a TSIG attached) to be signed and a partial TSIG RR. It returns the signature in
+		// t.MAC as a hex encoded string.
 		Sign(t *TSIG, m *Msg) error
 	}
 
 	TSIGVerifier interface {
-		// Verify is passed the DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
-		Verify(t *TSIG, m *Msg, options TSIGVerifierOption) error
+		// Verify is passed the full DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
+		Verify(t *TSIG, m *Msg, options TSIGOption) error
 	}
 )
 
@@ -92,36 +105,6 @@ type TsigProvider interface {
 	// Verify is passed the DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 	Verify(msg []byte, t *TSIG) error
 }
-
-
-
-type tsigHMACProvider string
-
-func (key tsigHMACProvider) Generate(msg []byte, t *TSIG) ([]byte, error) {
-	// If we barf here, the caller is to blame
-	rawsecret, err := fromBase64([]byte(key))
-	if err != nil {
-		return nil, err
-	}
-	var h hash.Hash
-	switch dnsutilCanonical(t.Algorithm) {
-	case HmacSHA1:
-		h = hmac.New(sha1.New, rawsecret)
-	case HmacSHA224:
-		h = hmac.New(sha256.New224, rawsecret)
-	case HmacSHA256:
-		h = hmac.New(sha256.New, rawsecret)
-	case HmacSHA384:
-		h = hmac.New(sha512.New384, rawsecret)
-	case HmacSHA512:
-		h = hmac.New(sha512.New, rawsecret)
-	default:
-		return nil, ErrKeyAlg
-	}
-	h.Write(msg)
-	return h.Sum(nil), nil
-}
-
 func (key tsigHMACProvider) Verify(msg []byte, t *TSIG) error {
 	b, err := key.Generate(msg, t)
 	if err != nil {
@@ -153,23 +136,6 @@ func (ts tsigSecretProvider) Verify(msg []byte, t *TSIG) error {
 		return ErrSecret
 	}
 	return tsigHMACProvider(key).Verify(msg, t)
-}
-
-// The following values must be put in wireformat, so that the MAC can be calculated.
-// RFC 2845, section 3.4.2. TSIG Variables.
-type tsigWireFmt struct {
-	// From RR_Header
-	Name  string `dns:"domain-name"`
-	Class uint16
-	Ttl   uint32
-	// Rdata of the TSIG
-	Algorithm  string `dns:"domain-name"`
-	TimeSigned uint64 `dns:"uint48"`
-	Fudge      uint16
-	// MACSize, MAC and OrigId excluded
-	Error     uint16
-	OtherLen  uint16
-	OtherData string `dns:"size-hex:OtherLen"`
 }
 
 // If we have the MAC use this type to convert it to wiredata. Section 3.4.3. Request MAC
@@ -398,71 +364,4 @@ func stripTsig(msg []byte) ([]byte, *TSIG, error) {
 	return nil, nil, ErrNoSig
 }
 
-func packTsigWire(tw *tsigWireFmt, msg []byte) (int, error) {
-	// copied from zmsg.go TSIG packing
-	// RR_Header
-	off, err := PackDomainName(tw.Name, msg, 0, nil, false)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint16(tw.Class, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint32(tw.Ttl, msg, off)
-	if err != nil {
-		return off, err
-	}
-
-	off, err = PackDomainName(tw.Algorithm, msg, off, nil, false)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint48(tw.TimeSigned, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint16(tw.Fudge, msg, off)
-	if err != nil {
-		return off, err
-	}
-
-	off, err = packUint16(tw.Error, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint16(tw.OtherLen, msg, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = packStringHex(tw.OtherData, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
-}
-
-func packMacWire(mw *macWireFmt, msg []byte) (int, error) {
-	off, err := packUint16(mw.MACSize, msg, 0)
-	if err != nil {
-		return off, err
-	}
-	off, err = packStringHex(mw.MAC, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
-}
-
-func packTimerWire(tw *timerWireFmt, msg []byte) (int, error) {
-	off, err := packUint48(tw.TimeSigned, msg, 0)
-	if err != nil {
-		return off, err
-	}
-	off, err = packUint16(tw.Fudge, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
-}
 */

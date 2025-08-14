@@ -1,0 +1,197 @@
+package dns
+
+import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/binary"
+	"encoding/hex"
+	"hash"
+	"time"
+)
+
+// default implemention for TSIGSigner and TSIGVerifier
+
+// HMAC contains the secret used to create the TSIG.
+type HMAC string
+
+func (h HMAC) Sign(t *TSIG, m *Msg) error {
+	secret, err := fromBase64([]byte(h))
+	if err != nil {
+		return err
+	}
+	var hs hash.Hash
+	switch t.Algorithm {
+	case HmacSHA1:
+		hs = hmac.New(sha1.New, secret)
+	case HmacSHA224:
+		hs = hmac.New(sha256.New224, secret)
+	case HmacSHA256:
+		hs = hmac.New(sha256.New, secret)
+	case HmacSHA384:
+		hs = hmac.New(sha512.New384, secret)
+	case HmacSHA512:
+		hs = hmac.New(sha512.New, secret)
+	default:
+		return ErrKeyAlg
+	}
+	hs.Write(m.Data)
+	t.MAC = hex.EncodeToString(hs.Sum(nil))
+	return nil
+}
+
+func (rr *TSIG) mac(m *Msg, options TSIGOption) ([]byte, error) {
+	if rr.TimeSigned == 0 {
+		rr.TimeSigned = uint64(time.Now().Unix())
+	}
+	if rr.Fudge == 0 {
+		rr.Fudge = 300 // Standard (RFC) default.
+	}
+
+	binary.BigEndian.PutUint16(m.Data[0:2], rr.OrigID)
+
+	buf := []byte{}
+	if options.RequestMAC != "" {
+		mw := &macWireFmt{MAC: options.RequestMAC, MACSize: uint16(len(options.RequestMAC) / 2)}
+		buf = make([]byte, len(mw.MAC)) // long enough
+		n, err := mw.pack(buf)
+		if err != nil {
+			return nil, err
+		}
+		buf = buf[:n]
+	}
+
+	tsigvar := make([]byte, DefaultMsgSize)
+	if options.TimersOnly {
+		tw := &timerWireFmt{TimeSigned: rr.TimeSigned, Fudge: rr.Fudge}
+		n, err := tw.pack(tsigvar)
+		if err != nil {
+			return nil, err
+		}
+		tsigvar = tsigvar[:n]
+
+	} else {
+
+		tw := new(tsigWireFmt)
+		tw.Name = dnsutilCanonical(rr.Hdr.Name)
+		tw.Class = ClassANY
+		tw.TTL = rr.Hdr.TTL
+		tw.Algorithm = rr.Algorithm
+		tw.TimeSigned = rr.TimeSigned
+		tw.Fudge = rr.Fudge
+		tw.Error = rr.Error
+		tw.OtherLen = rr.OtherLen
+		tw.OtherData = rr.OtherData
+		n, err := tw.pack(tsigvar)
+		if err != nil {
+			return nil, err
+		}
+		tsigvar = tsigvar[:n]
+	}
+
+	if options.RequestMAC != "" {
+		x := append(buf, buf...)
+		buf = append(x, tsigvar...)
+		return buf, nil
+	}
+
+	buf = append(buf, tsigvar...)
+	return buf, nil
+}
+
+// If we have the MAC use this type to convert it to wiredata. Section 3.4.3. Request MAC.
+type macWireFmt struct {
+	MACSize uint16
+	MAC     string `dns:"size-hex:MACSize"`
+}
+
+func (mw *macWireFmt) pack(buf []byte) (int, error) {
+	off, err := packUint16(mw.MACSize, buf, 0)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringHex(mw.MAC, buf, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+// 3.3. Time values used in TSIG calculations.
+type timerWireFmt struct {
+	TimeSigned uint64 `dns:"uint48"`
+	Fudge      uint16
+}
+
+func (tw *timerWireFmt) pack(buf []byte) (int, error) {
+	off, err := packUint48(tw.TimeSigned, buf, 0)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(tw.Fudge, buf, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+// The following values must be put in wireformat, so that the MAC can be calculated.
+// RFC 2845, section 3.4.2. TSIG Variables.
+type tsigWireFmt struct {
+	// from Header
+	Name  string `dns:"domain-name"`
+	Class uint16
+	TTL   uint32
+	// Rdata of the TSIG
+	Algorithm  string `dns:"domain-name"`
+	TimeSigned uint64 `dns:"uint48"`
+	Fudge      uint16
+	// MACSize, MAC and OrigId excluded
+	Error     uint16
+	OtherLen  uint16
+	OtherData string `dns:"size-hex:OtherLen"`
+}
+
+func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
+	// Header
+	off, err := packName(tw.Name, buf, 0, nil, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(tw.Class, buf, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint32(tw.TTL, buf, off)
+	if err != nil {
+		return off, err
+	}
+
+	off, err = packName(tw.Algorithm, buf, off, nil, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint48(tw.TimeSigned, buf, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(tw.Fudge, buf, off)
+	if err != nil {
+		return off, err
+	}
+
+	off, err = packUint16(tw.Error, buf, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(tw.OtherLen, buf, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringHex(tw.OtherData, buf, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
