@@ -336,7 +336,7 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	off, err = packName(rr.Header().Name, msg, off, nil, true)
+	off, err = packName(rr.Header().Name, msg, off, nil, false)
 	if err != nil {
 		return len(msg), err
 	}
@@ -378,7 +378,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 
 	rdlength := off1 - headerEnd
 	if int(uint16(rdlength)) != rdlength { // overflow
-		return headerEnd, len(msg), ErrLenRData
+		return headerEnd, len(msg), ErrLenData
 	}
 
 	// The RDLENGTH field is the last field in the header and we set it here.
@@ -559,7 +559,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	name, err := unpackName(msg, msgBuf)
 	if err != nil {
-		return nil, (&Error{err: err.Error()}).Fmt(": %s", "question.Name")
+		return nil, fmt.Errorf("%s: question.Name", err.Error())
 	}
 	var qtype uint16
 	if !msg.Empty() && !msg.ReadUint16(&qtype) {
@@ -893,18 +893,19 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-// WriteTo writes the message to w. When w is a *net.TCPConn, the write is prefixed with an uint16 with the
+// WriteTo writes the message to w. W must be a dns.ResponseWriter, when w contains a *net.TCPConn, the write is prefixed with an uint16 with the
 // length of the buffer, otherwise the m.Data is written as-is.
 func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	r, ok := w.(ResponseWriter)
 	if !ok {
 		return 0, fmt.Errorf("dns: writer is not a ResponseWriter")
 	}
-	if tcp, ok := r.Conn().(*net.TCPConn); ok {
+
+	if sock, ok := r.Conn().(*net.TCPConn); ok {
 		l := make([]byte, 2, 2)
-		binary.BigEndian.PutUint16(l[0:], uint16(len(m.Data)))
+		binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 		l = append(l, m.Data...)
-		n, err := tcp.Write(l) // single write to supported tcp pipelining
+		n, err := sock.Write(l) // single write to supported tcp pipelining and be atomic
 		return int64(n), err
 	}
 
@@ -925,21 +926,6 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 // ReadFrom reads from r. When r is a *net.TCPConn, first 2 bytes of length are read, then m.Data is *resized*
 // to this length and the data is read. Otherwise the data is read into m.Data.
 func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
-	if sock, ok := r.(*net.TCPConn); ok {
-		l := uint16(0)
-		if err := binary.Read(sock, binary.BigEndian, &l); err != nil {
-			return 0, err
-		}
-		li := int(l)
-		if len(m.Data) < li {
-			m.Data = append(m.Data, make([]byte, li-len(m.Data))...)
-		} else {
-			m.Data = m.Data[:li]
-		}
-		n, err := io.ReadFull(sock, m.Data)
-		return int64(n), err
-	}
-
 	if sock, ok := r.(*net.UDPConn); ok {
 		n, err := sock.Read(m.Data)
 		if err != nil {
@@ -949,10 +935,25 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 		return int64(n), nil
 	}
 
-	n, err := r.Read(m.Data)
-	if err != nil {
+	// When doing io.Copy that underlaying type we get from net is net.tcpConnWithoutWriteTo, not a
+	// net.TCPConn.For udp this seems not to be the case, so the fallthrough when things are not UDP like
+	// is too assume TCP.
+
+	l := uint16(0)
+	if err := binary.Read(r, binary.BigEndian, &l); err != nil {
 		return 0, err
 	}
+	li := int(l)
+	if li < MsgHeaderSize {
+		return 0, fmt.Errorf("dns: TCP message size, can not be smaller than %d", MsgHeaderSize)
+	}
+
+	if len(m.Data) < li {
+		m.Data = append(m.Data, make([]byte, li-len(m.Data))...)
+	} else {
+		m.Data = m.Data[:li]
+	}
+	n, err := io.ReadFull(r, m.Data)
 	m.Data = m.Data[:n]
-	return int64(n), nil
+	return int64(n), err
 }

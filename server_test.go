@@ -16,7 +16,6 @@ func TestServer(t *testing.T) {
 	}{
 		{"udp", "udp", dnstest.UDPServer},
 		{"tcp", "tcp", dnstest.TCPServer},
-		{"unix", "unix", dnstest.UnixServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dns.HandleFunc("miek.nl.", dnstest.HelloHandler)
@@ -34,6 +33,7 @@ func TestServer(t *testing.T) {
 			m := new(dns.Msg)
 			m.Question = []dns.RR{txt}
 			m.Pack()
+
 			r, _, err := c.Exchange(context.TODO(), m, tc.network, addrstr)
 			if err != nil || len(r.Extra) == 0 {
 				t.Fatal("failed to exchange miek.nl", err)

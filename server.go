@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"net"
 	"strings"
 	"sync"
@@ -299,6 +300,9 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
+			if err == io.EOF {
+				break
+			}
 			continue
 		}
 

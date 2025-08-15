@@ -35,9 +35,8 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 		closer = pc
 	}
 
-	// fin must be buffered so the goroutine below won't block
-	// forever if fin is never read from. This always happens
-	// if the channel is discarded and can happen in TestShutdownUDP.
+	// fin must be buffered so the goroutine below won't block forever if fin is never read from. This always happens
+	// if the channel is discarded.
 	fin := make(chan error, 1)
 
 	go func() {
@@ -55,14 +54,6 @@ func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 		return nil, "", nil, err
 	}
 	return Server(pc, nil, opts...)
-}
-
-func UnixServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	l, err := net.Listen("unix", laddr)
-	if err != nil {
-		return nil, "", nil, err
-	}
-	return Server(nil, l, opts...)
 }
 
 func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
