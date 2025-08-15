@@ -24,8 +24,7 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// ListenAndServeTLS acts like http.ListenAndServeTLS, more information in
-// http://golang.org/pkg/net/http/#ListenAndServeTLS
+// ListenAndServeTLS acts like [http.ListenAndServeTLS].
 func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -46,10 +45,8 @@ func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// ActivateAndServe activates a server with a listener from systemd,
-// l and p should not both be non-nil.
-// If both l and p are not nil only p will be used.
-// Invoke handler for incoming queries.
+// ActivateAndServe activates a server with a listener from systemd, l and p should not both be non-nil.
+// If both l and p are not nil only p will be used. Invoke handler for incoming queries.
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	server := &Server{Listener: l, PacketConn: p, Handler: handler}
 	return server.ActivateAndServe()

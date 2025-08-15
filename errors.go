@@ -37,5 +37,4 @@ var (
 	ErrUnpackOverflow   = &Error{err: "overflow unpacking data"}
 	ErrTrailingData     = &Error{err: "trailing record rdata"}
 	ErrLenData          = &Error{err: "inconsitent rdata length"}
-	ErrMsgUnpacked      = &Error{err: "msg has not been packed"}
 )

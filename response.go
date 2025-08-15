@@ -7,7 +7,8 @@ import (
 )
 
 // A ResponseWriter interface is used by an DNS handler to construct an DNS response. Note that a response
-// writer may be used concurrently with TCP pipelining, so be aware that writes need to be atomic.
+// writer may be used concurrently with TCP pipelining, so be aware that writes need to be atomic. If a write
+// is attmpted an the Data buffer in the message is empty the write methods will call m.Pack().
 type ResponseWriter interface {
 	// LocalAddr returns the net.Addr of the server.
 	LocalAddr() net.Addr

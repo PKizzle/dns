@@ -98,7 +98,6 @@ func handleReflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if *printf {
 		fmt.Print(m.String())
 	}
-	m.Pack()
 	io.Copy(w, m)
 }
 

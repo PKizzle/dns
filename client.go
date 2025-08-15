@@ -36,9 +36,9 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 	return dialer.DialContext
 }
 
-// Exchange performs a synchronous UDP query. It sends the message m to the address
+// Exchange performs a synchronous query over "network". It sends the message m to the address
 // contained in a and waits for a reply. Exchange does not retry a failed query, nor
-// will it fall back to TCP in case of truncation.
+// will it fall back to TCP in case of truncation. If the Data buffer in m is empty, Exchange call m.Pack().
 //
 // See [client.Exchange] for more information on setting larger buffer sizes.
 func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err error) {
@@ -51,18 +51,18 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // contained in a and waits for a reply. Basic use pattern with a *dns.Client:
 //
 //	c := new(dns.Client)
-//	resp, rtt, err := c.Exchange(m, "127.0.0.1:53")
+//	resp, rtt, err := c.Exchange(ctx, m, "tcp", "127.0.0.1:53")
 //
-// If client does not have a transport [DefaultTransport] is used.
-// Exchange does not retry a failed query, nor will it fall back to TCP in case of truncation.
+// If client does not have a transport set [DefaultTransport] is used.
+// Exchange does not retry a failed query, nor will it fall back to TCP in case of truncation when UDP is
+// used.
 //
 // It is up to the caller to create a message that allows for larger responses to be returned. Specifically
 // this means setting [Msg.Bufsize] that will advertise a larger buffer. Messages without an Bufsize will
 // fall back to the historic limit of 512 octets (bytes).
 //
-// The full binary data is included in the (decoded) message r.Data.
-//
-// Exchange calls Pack() on m if len(m.Data) == 0.
+// The full binary data is included in the (decoded) message as r.Data. If the Data buffer in m is empty
+// client.Exchange call m.Pack().
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	var conn net.Conn
 	if c.Transport == nil {
@@ -83,7 +83,9 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 
 	if len(m.Data) == 0 {
-		return nil, time.Since(t), ErrMsgUnpacked
+		if err := m.Pack(); err != nil {
+			return nil, time.Since(t), err
+		}
 	}
 
 	if _, err := io.Copy(remote, m); err != nil {
@@ -103,8 +105,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		return nil, time.Since(t), err
 	}
 
-	err = r.Unpack()
-	if err != nil {
+	if err = r.Unpack(); err != nil {
 		return r, time.Since(t), err
 	}
 	if r.ID != m.ID {

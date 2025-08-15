@@ -11,9 +11,8 @@ func TestClient(t *testing.T) {
 	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
 	m.Question = []RR{mx}
 
-	nsid := &NSID{}
-	m.Pseudo = []RR{nsid}
-	m.Pack()
+	//	nsid := &NSID{}
+	//	m.Pseudo = []RR{nsid}
 
 	c := &Client{}
 	r, _, err := c.Exchange(context.Background(), m, "udp", "8.8.8.8:53")

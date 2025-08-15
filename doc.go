@@ -39,30 +39,9 @@ After creating a message it can be sent. Basic use pattern for synchronous query
 	c := new(dns.Client)
 	in, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
 
-More advanced options are available using a net.Dialer and the corresponding API.
-For example it is possible to set a timeout, or to specify a source IP address
-and port to use for the connection:
-TODO - different
-
-	c := new(dns.Client)
-	laddr := net.UDPAddr{
-		IP: net.ParseIP("[::1]"),
-		Port: 12345,
-		Zone: "",
-	}
-	c.Dialer = &net.Dialer{
-		Timeout: 200 * time.Millisecond,
-		LocalAddr: &laddr,
-	}
-	in, rtt, err := c.Exchange(m1, "udp", "8.8.8.8:53")
-
-If these "advanced" features are not needed, a simple UDP query can be sent with:
-
-	in, err := dns.Exchange(m, "udp", "127.0.0.1:53")
-
 When this functions returns you will get DNS message. A DNS message consists out of four (five in this package) sections.
 The question section: in.Question, the answer section: in.Answer,
-the authority section: in.Ns and the additional section: in.Extra. And the fifth the pseud section: in.Pseudo, see [Msg].
+the authority section: in.Ns and the additional section: in.Extra. And the extra and new fifth the pseudo section: in.Pseudo, see [Msg].
 
 Each of these sections contain a []RR. Basic use pattern for accessing the rdata of a TXT RR as the first RR in
 the Answer section:
@@ -97,44 +76,6 @@ bit to a request.
 	m.UDPSize = 4096
 
 Signature generation, signature verification and key generation are all supported. See [RRSIG].
-
-# Transaction signature, TODO
-
-An TSIG or transaction signature adds a HMAC TSIG record to each message sent.
-The supported algorithms include: HmacSHA1, HmacSHA256 and HmacSHA512.
-
-Basic use pattern when querying with a TSIG name "axfr." (note that these key names
-must be fully qualified - as they are domain names) and the base64 secret
-"so6ZGir4GPAqINNh9U5c3A==":
-
-If an incoming message contains a TSIG record it MUST be the last record in
-the additional section (RFC2845 3.2).  This means that you should make the
-call to SetTsig last, right before executing the query.  If you make any
-changes to the RRset after calling SetTsig() the signature will be incorrect.
-
-	c := new(dns.Client)
-	c.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-	m := new(dns.Msg)
-	m.SetQuestion("miek.nl.", dns.TypeMX)
-	m.SetTsig("axfr.", dns.HmacSHA256, 300, time.Now().Unix())
-	...
-	// When sending the TSIG RR is calculated and filled in before sending
-
-When requesting an zone transfer (almost all TSIG usage is when requesting zone
-transfers), with TSIG, this is the basic use pattern. In this example we
-request an AXFR for miek.nl. with TSIG key named "axfr." and secret
-"so6ZGir4GPAqINNh9U5c3A==" and using the server 176.58.119.54:
-
-	t := new(dns.Transfer)
-	m := new(dns.Msg)
-	t.TsigSecret = map[string]string{"axfr.": "so6ZGir4GPAqINNh9U5c3A=="}
-	m.SetAxfr("miek.nl.")
-	m.SetTsig("axfr.", dns.HmacSHA256, 300, time.Now().Unix())
-	c, err := t.In(m, "176.58.119.54:53")
-	for r := range c { ... }
-
-You can now read the records from the transfer as they come in. Each envelope
-is checked with TSIG. If something is not correct an error is returned.
 
 # EDNS0
 

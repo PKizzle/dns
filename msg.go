@@ -883,12 +883,24 @@ func (m *Msg) setMsgHeader(dh header) {
 
 // Write writes the buffer p to the m.Data.
 func (m *Msg) Write(p []byte) (n int, err error) {
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
+			return 0, err
+		}
+	}
+
 	n = copy(m.Data, p)
 	return n, nil
 }
 
-// Read read the data from m.Data into p.
+// Read reads the data from m.Data into p.
 func (m *Msg) Read(p []byte) (n int, err error) {
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
+			return 0, err
+		}
+	}
+
 	n = copy(p, m.Data)
 	return n, nil
 }
@@ -899,6 +911,12 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	r, ok := w.(ResponseWriter)
 	if !ok {
 		return 0, fmt.Errorf("dns: writer is not a ResponseWriter")
+	}
+
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
+			return 0, err
+		}
 	}
 
 	if r.Conn() == nil {
@@ -930,6 +948,12 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 // ReadFrom reads from r. When r is a *net.TCPConn, first 2 bytes of length are read, then m.Data is *resized*
 // to this length and the data is read. Otherwise the data is read into m.Data.
 func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
+			return 0, err
+		}
+	}
+
 	if sock, ok := r.(*net.UDPConn); ok {
 		n, err := sock.Read(m.Data)
 		if err != nil {
