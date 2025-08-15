@@ -307,7 +307,7 @@ if rr.%s != "-" {
 				log.Fatalln(rrname, fieldname, tag)
 			}
 		}
-		fmt.Fprintf(b, `if !s.Empty() { return ErrTrailingRData.Fmt(": %%s", "%s")}`+"\n", rrname)
+		fmt.Fprintf(b, `if !s.Empty() { return ErrTrailingData.Fmt(": %%s", "%s")}`+"\n", rrname)
 		fmt.Fprint(b, "return nil }\n\n")
 	}
 

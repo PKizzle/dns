@@ -79,18 +79,15 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 }
 
 // ExchangeWithContext behaves like Exchange, but with a supplied connection.
-// Reuses the connection.
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
-
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
-	_, err = io.Copy(remote, m)     // n unused??
-	if err != nil {
+
+	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
 	}
 
 	r = new(Msg)
-	// reuse m's byffer
 	r.Data = m.Data
 	if len(r.Data) < int(m.UDPSize) {
 		r.Data = append(r.Data, make([]byte, (int(m.UDPSize)-len(r.Data)))...)
@@ -99,11 +96,17 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		r.Data = append(r.Data, make([]byte, MinMsgSize-len(r.Data))...)
 	}
 
-	_, err = io.Copy(r, conn)
-	if err != nil {
+	if _, err := io.Copy(r, conn); err != nil {
 		return nil, time.Since(t), err
 	}
 
 	err = r.Unpack()
-	return r, time.Since(t), err
+	if err != nil {
+		return r, time.Since(t), err
+	}
+	if r.ID != m.ID {
+		return r, time.Since(t), ErrID
+	}
+
+	return r, time.Since(t), nil
 }

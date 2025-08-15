@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"io"
 	"net"
 	"strings"
 	"sync"
@@ -76,16 +77,13 @@ type Server struct {
 	// Default buffer size to use to read incoming UDP messages. If not set
 	// it defaults to MinMsgSize (512 B).
 	UDPSize int
-	// The net.Conn.SetReadTimeout value for new connections, defaults to 2 * time.Second.
+	// The read timeout vaule for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
-	// The net.Conn.SetWriteTimeout value for new connections, defaults to 2 * time.Second.
-	WriteTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout func() time.Duration
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
-	// MsgInvalidFunc is optional, will be called on an error in the server or if a message is received but cannot be parsed.
-	// The message may be set to nil, if there wasn't one yet.
+	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
 	MaxTCPQueries int
@@ -103,7 +101,8 @@ type Server struct {
 	shutdown chan bool
 }
 
-func (srv *Server) init() {
+// Init sets some default values in Server.
+func (srv *Server) Init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
@@ -114,6 +113,8 @@ func (srv *Server) init() {
 		srv.Handler = DefaultServeMux
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
+	srv.exited = make(chan struct{})
+	srv.shutdown = make(chan bool)
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server.
@@ -123,7 +124,7 @@ func (srv *Server) ListenAndServe() error {
 		addr = ":domain"
 	}
 
-	srv.init()
+	srv.Init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -163,11 +164,9 @@ func (srv *Server) ListenAndServe() error {
 	return &Error{err: "bad network"}
 }
 
-// ActivateAndServe starts a nameserver with the PacketConn or Listener
-// configured in *Server. Its main use is to start a server from systemd.
+// ActivateAndServe starts a nameserver with the PacketConn or Listener configured in *Server. Its main use is to start a server from systemd.
 func (srv *Server) ActivateAndServe() error {
 	if srv.PacketConn != nil {
-		// Check PacketConn interface's type is valid and value is not nil
 		if t, ok := srv.PacketConn.(*net.UDPConn); ok && t != nil {
 			if e := setUDPSocketOptions(t); e != nil {
 				return e
@@ -183,8 +182,14 @@ func (srv *Server) ActivateAndServe() error {
 
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and ActivateAndServe will return.
 // A context.Context may be passed to limit how long to wait for connections to terminate. Not used at the moment.
-func (srv *Server) Shutdown() {
+func (srv *Server) Shutdown(ctx context.Context) {
 	srv.cancel()
+	if srv.Listener != nil {
+		srv.Listener.Close()
+	}
+	if srv.PacketConn != nil {
+		srv.PacketConn.Close()
+	}
 	close(srv.shutdown)
 	<-srv.exited
 }
@@ -202,6 +207,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
+	timeout := srv.getReadTimeout()
 
 	var wg sync.WaitGroup
 
@@ -215,9 +221,9 @@ func (srv *Server) listenTCP(ln net.Listener) {
 		default:
 			conn, err := ln.Accept()
 			if err != nil {
-				srv.MsgInvalidFunc(nil, err)
 				continue
 			}
+			conn.SetReadDeadline(time.Now().Add(timeout))
 			go srv.serveTCP(&wg, conn)
 		}
 	}
@@ -228,29 +234,42 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
+	timeout := srv.getReadTimeout()
 
 	var wg sync.WaitGroup
 
 	for {
 		select {
 		case <-srv.shutdown:
-			pc.Close() // add more channels?
+			pc.Close()
 			wg.Wait()
 			close(srv.exited)
 			return
 		default:
 			r := &Msg{Data: make([]byte, srv.UDPSize)}
-
 			oob := make([]byte, oobSize)
-			n, oobn, _, raddr, err := pc.(*net.UDPConn).ReadMsgUDP(r.Data, oob)
-			if err != nil {
-				srv.MsgInvalidFunc(r, err)
-				continue
+			w := &response{hijacked: new(atomic.Bool)}
+
+			pc.SetReadDeadline(time.Now().Add(timeout))
+
+			switch x := pc.(type) {
+			case *net.UDPConn:
+				if n, oobn, _, raddr, err := x.ReadMsgUDP(r.Data, oob); err != nil {
+					continue
+				} else {
+					w.conn = x
+					w.session = &Session{raddr, oob[:oobn]}
+					r.Data = r.Data[:n]
+				}
+			default:
+				if n, _, err := x.ReadFrom(r.Data); err != nil {
+					continue
+				} else {
+					// w.conn = pc
+					r.Data = r.Data[:n]
+				}
 			}
 
-			oob = oob[:oobn]
-			w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr, oob}, hijacked: new(atomic.Bool)}
-			r.Data = r.Data[:n]
 			go srv.serveUDP(&wg, w, r)
 		}
 	}
@@ -281,7 +300,9 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
-			srv.MsgInvalidFunc(r, err)
+			if err == io.EOF {
+				break
+			}
 			continue
 		}
 
