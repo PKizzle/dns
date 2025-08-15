@@ -10,6 +10,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/net/ipv4"
 )
 
 // Default maximum number of TCP queries before we close the socket.
@@ -64,7 +66,7 @@ func DefaultMsgInvalidFunc(m *Msg, err error) {}
 type Server struct {
 	// Address to listen on, ":dns" if empty.
 	Addr string
-	// iF "tcp" or "tcp-tls" (DNS over TLS) it will invoke a TCP listener, otherwise an UDP one.
+	// If "tcp" or "tcp-tls" (DNS over TLS) it will invoke a TCP listener, otherwise an UDP one.
 	Net string
 	// TCP Listener to use, this is to aid in systemd's socket activation.
 	Listener net.Listener
@@ -74,8 +76,7 @@ type Server struct {
 	PacketConn net.PacketConn
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
-	// Default buffer size to use to read incoming UDP messages. If not set
-	// it defaults to MinMsgSize (512 B).
+	// Default buffer size to use to read incoming UDP messages. If not set it defaults to MinMsgSize (512 B).
 	UDPSize int
 	// The read timeout vaule for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
@@ -229,6 +230,11 @@ func (srv *Server) listenTCP(ln net.Listener) {
 	}
 }
 
+// BatchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
+// needs to be made with how much memory needs to be pre-allocated and how fast things should go. It is
+// set to set to 10.
+const BatchSize = 10
+
 // listenUDP starts a UDP listener for the server.
 func (srv *Server) listenUDP(pc net.PacketConn) {
 	if srv.NotifyStartedFunc != nil {
@@ -237,6 +243,8 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 	timeout := srv.getReadTimeout()
 
 	var wg sync.WaitGroup
+	// suspect this somehow works on Linux, but not other OSes.
+	xpc := ipv4.NewPacketConn(pc)
 
 	for {
 		select {
@@ -246,31 +254,28 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 			close(srv.exited)
 			return
 		default:
-			r := &Msg{Data: make([]byte, srv.UDPSize)}
-			oob := make([]byte, oobSize)
-			w := &response{hijacked: new(atomic.Bool)}
-
-			pc.SetReadDeadline(time.Now().Add(timeout))
-
-			switch x := pc.(type) {
-			case *net.UDPConn:
-				if n, oobn, _, raddr, err := x.ReadMsgUDP(r.Data, oob); err != nil {
-					continue
-				} else {
-					w.conn = x
-					w.session = &Session{raddr, oob[:oobn]}
-					r.Data = r.Data[:n]
-				}
-			default:
-				if n, _, err := x.ReadFrom(r.Data); err != nil {
-					continue
-				} else {
-					// w.conn = pc
-					r.Data = r.Data[:n]
-				}
+			bufs := make([][]byte, BatchSize, BatchSize)
+			msgs := make([]ipv4.Message, BatchSize, BatchSize)
+			for i := range BatchSize {
+				bufs[i] = make([]byte, srv.UDPSize)
+				msgs[i].Buffers = [][]byte{bufs[i]}
+				msgs[i].OOB = make([]byte, oobSize)
 			}
+			xpc.SetReadDeadline(time.Now().Add(timeout))
+			n, err := xpc.ReadBatch(msgs, 0)
+			if err != nil {
+				continue
+			}
+			for i := range n {
+				msg := msgs[i]
+				raddr := msg.Addr
+				oob := msg.OOB[:msg.NN]
 
-			go srv.serveUDP(&wg, w, r)
+				r := &Msg{Data: msg.Buffers[0][:msg.N]}
+				w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr.(*net.UDPAddr), oob}, hijacked: new(atomic.Bool)}
+
+				go srv.serveUDP(&wg, w, r)
+			}
 		}
 	}
 }
