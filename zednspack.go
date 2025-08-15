@@ -75,6 +75,60 @@ func (o *PADDING) pack(msg []byte, off int) (int, error) {
 	return 0, nil
 }
 
+func (o *DAU) pack(msg []byte, off int) (off1 int, err error) {
+	for i := range o.AlgCode {
+		if off, err = packUint8(o.AlgCode[i], msg, off); err != nil {
+			return off, err
+		}
+	}
+	return off, nil
+}
+
+func (o *DAU) unpack(s *cryptobyte.String) error {
+	for !s.Empty() {
+		var a uint8
+		s.ReadUint8(&a)
+		o.AlgCode = append(o.AlgCode, a)
+	}
+	return nil
+}
+
+func (o *DHU) pack(msg []byte, off int) (off1 int, err error) {
+	for i := range o.AlgCode {
+		if off, err = packUint8(o.AlgCode[i], msg, off); err != nil {
+			return off, err
+		}
+	}
+	return off, nil
+}
+
+func (o *DHU) unpack(s *cryptobyte.String) error {
+	for !s.Empty() {
+		var a uint8
+		s.ReadUint8(&a)
+		o.AlgCode = append(o.AlgCode, a)
+	}
+	return nil
+}
+
+func (o *N3U) pack(msg []byte, off int) (off1 int, err error) {
+	for i := range o.AlgCode {
+		if off, err = packUint8(o.AlgCode[i], msg, off); err != nil {
+			return off, err
+		}
+	}
+	return off, nil
+}
+
+func (o *N3U) unpack(s *cryptobyte.String) error {
+	for !s.Empty() {
+		var a uint8
+		s.ReadUint8(&a)
+		o.AlgCode = append(o.AlgCode, a)
+	}
+	return nil
+}
+
 func (o *EDE) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint16(&o.InfoCode) {
 		return ErrUnpackOverflow
@@ -108,4 +162,22 @@ func (e *REPORTING) pack(msg []byte, off int) (int, error) {
 		return off, err
 	}
 	return off, nil
+}
+
+func (o *EXPIRE) pack(msg []byte, off int) (int, error) {
+	if o.Expire == 0 {
+		return off, nil
+	}
+	return packUint32(o.Expire, msg, off)
+}
+
+func (o *EXPIRE) unpack(s *cryptobyte.String) error {
+	if s.Empty() { // zero-length EXPIRE query, see RFC 7314 Section 2
+		o.Expire = 0
+		return nil
+	}
+	if !s.ReadUint32(&o.Expire) {
+		return ErrUnpackOverflow
+	}
+	return nil
 }

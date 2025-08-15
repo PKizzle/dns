@@ -12,6 +12,14 @@ func (rr *NSID) Header() *Header      { return &Header{Name: "."} }
 func (rr *NSID) Pseudo() bool         { return true }
 func (rr *PADDING) Header() *Header   { return &Header{Name: "."} }
 func (rr *PADDING) Pseudo() bool      { return true }
+func (rr *EXPIRE) Header() *Header    { return &Header{Name: "."} }
+func (rr *EXPIRE) Pseudo() bool       { return true }
+func (rr *DAU) Header() *Header       { return &Header{Name: "."} }
+func (rr *DAU) Pseudo() bool          { return true }
+func (rr *DHU) Header() *Header       { return &Header{Name: "."} }
+func (rr *DHU) Pseudo() bool          { return true }
+func (rr *N3U) Header() *Header       { return &Header{Name: "."} }
+func (rr *N3U) Pseudo() bool          { return true }
 func (rr *EDE) Header() *Header       { return &Header{Name: "."} }
 func (rr *EDE) Pseudo() bool          { return true }
 
@@ -22,6 +30,10 @@ var CodeToRR = map[uint16]func() EDNS0{
 	CodeCOOKIE:    func() EDNS0 { return new(COOKIE) },
 	CodeNSID:      func() EDNS0 { return new(NSID) },
 	CodePADDING:   func() EDNS0 { return new(PADDING) },
+	CodeEXPIRE:    func() EDNS0 { return new(EXPIRE) },
+	CodeDAU:       func() EDNS0 { return new(DAU) },
+	CodeDHU:       func() EDNS0 { return new(DHU) },
+	CodeN3U:       func() EDNS0 { return new(N3U) },
 	CodeEDE:       func() EDNS0 { return new(EDE) },
 }
 
@@ -38,6 +50,14 @@ func RRToCode(rr EDNS0) uint16 {
 		return CodeNSID
 	case *PADDING:
 		return CodePADDING
+	case *EXPIRE:
+		return CodeEXPIRE
+	case *DAU:
+		return CodeDAU
+	case *DHU:
+		return CodeDHU
+	case *N3U:
+		return CodeN3U
 	case *EDE:
 		return CodeEDE
 	}
@@ -51,12 +71,20 @@ var CodeToString = map[uint16]string{
 	CodeCOOKIE:    "COOKIE",
 	CodeNSID:      "NSID",
 	CodePADDING:   "PADDING",
+	CodeEXPIRE:    "EXPIRE",
+	CodeDAU:       "DAU",
+	CodeDHU:       "DHU",
+	CodeN3U:       "N3U",
 	CodeEDE:       "EDE",
 }
 
 func (rr *COOKIE) Data() []Field    { return []Field{rr.Cookie} }
+func (rr *DAU) Data() []Field       { return []Field{rr.AlgCode} }
+func (rr *DHU) Data() []Field       { return []Field{rr.AlgCode} }
 func (rr *EDE) Data() []Field       { return []Field{rr.InfoCode, rr.ExtraText} }
+func (rr *EXPIRE) Data() []Field    { return []Field{rr.Expire} }
 func (rr *LLQ) Data() []Field       { return []Field{rr.Version, rr.Opcode, rr.Error, rr.ID, rr.LeaseLife} }
+func (rr *N3U) Data() []Field       { return []Field{rr.AlgCode} }
 func (rr *NSID) Data() []Field      { return []Field{rr.Nsid} }
 func (rr *PADDING) Data() []Field   { return []Field{rr.Padding} }
 func (rr *REPORTING) Data() []Field { return []Field{rr.AgentDomain} }

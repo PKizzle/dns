@@ -108,6 +108,79 @@ type PADDING struct {
 func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
 func (o *PADDING) String() string { return "" } // tODO miek
 
+// EXPIRE implements the EDNS0 option as described in RFC 7314.
+type EXPIRE struct {
+	// If Expire is zero this option will be empty.
+	Expire uint32
+}
+
+func (o *EXPIRE) Len() int { return tlv + 4 }
+func (o *EXPIRE) String() (s string) {
+	sb := sprintOptionHeader(o)
+	if o.Expire == 0 {
+		return sb.String()
+	}
+	sb.WriteString(strconv.FormatUint(uint64(o.Expire), 10))
+	return sb.String()
+}
+
+// DAU implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
+type DAU struct {
+	AlgCode []uint8
+}
+
+func (o *DAU) Len() int { return tlv + len(o.AlgCode) }
+func (o *DAU) String() string {
+	sb := sprintOptionHeader(o)
+	for _, alg := range o.AlgCode {
+		sb.WriteByte(' ')
+		if a, ok := AlgorithmToString[alg]; ok {
+			sb.WriteString(a)
+		} else {
+			sb.WriteString(strconv.Itoa(int(alg)))
+		}
+	}
+	return sb.String()
+}
+
+// DHU implements the EDNS0 "DS Hash Understood" option. See RFC 6975.
+type DHU struct {
+	AlgCode []uint8
+}
+
+func (o *DHU) Len() int { return tlv + len(o.AlgCode) }
+func (o *DHU) String() string {
+	sb := sprintOptionHeader(o)
+	for _, alg := range o.AlgCode {
+		sb.WriteByte(' ')
+		if a, ok := AlgorithmToString[alg]; ok {
+			sb.WriteString(a)
+		} else {
+			sb.WriteString(strconv.Itoa(int(alg)))
+		}
+	}
+	return sb.String()
+}
+
+// EDNS0_N3U implements the EDNS0 "NSEC3 Hash Understood" option. See RFC 6975.
+type N3U struct {
+	AlgCode []uint8
+}
+
+func (o *N3U) Len() int { return tlv + len(o.AlgCode) }
+func (o *N3U) String() string {
+	sb := sprintOptionHeader(o)
+	for _, alg := range o.AlgCode {
+		sb.WriteByte(' ')
+		if a, ok := AlgorithmToString[alg]; ok {
+			sb.WriteString(a)
+		} else {
+			sb.WriteString(strconv.Itoa(int(alg)))
+		}
+	}
+	return sb.String()
+}
+
 // EDE option is used to return additional information about the cause of DNS errors.
 type EDE struct {
 	InfoCode  uint16
@@ -218,6 +291,14 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *COOKIE:
 		return x.unpack(s)
+	case *EXPIRE:
+		return x.unpack(s)
+	case *DAU:
+		return x.unpack(s)
+	case *DHU:
+		return x.unpack(s)
+	case *N3U:
+		return x.unpack(s)
 	}
 	return fmt.Errorf("dns: no option unpack defined")
 }
@@ -235,6 +316,14 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *REPORTING:
 		return x.pack(msg, off)
 	case *COOKIE:
+		return x.pack(msg, off)
+	case *EXPIRE:
+		return x.pack(msg, off)
+	case *DAU:
+		return x.pack(msg, off)
+	case *DHU:
+		return x.pack(msg, off)
+	case *N3U:
 		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?

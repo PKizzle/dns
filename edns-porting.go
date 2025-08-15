@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"slices"
 	"strconv"
 
 	"golang.org/x/crypto/cryptobyte"
@@ -112,101 +111,6 @@ func (o *SUBNET) String() (s string) {
 	}
 	s += "/" + strconv.Itoa(int(o.SourceNetmask)) + "/" + strconv.Itoa(int(e.SourceScope))
 	return
-}
-
-// DAU implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
-type DAU struct {
-	AlgCode []uint8
-}
-
-func (o *DAU) pack(msg []byte, off int) ([]byte, error) { return slices.Clone(o.AlgCode), nil }
-func (o *DAU) unpack(s *cryptobyte.String) error        { o.AlgCode = slices.Clone(b); return nil }
-
-func (o *DAU) String() string {
-	sb := sprintOptionHeader(o)
-	for _, alg := range o.AlgCode {
-		sb.WriteByte(' ')
-		if a, ok := AlgorithmToString[alg]; ok {
-			sb.WriteString(a)
-		} else {
-			sb.WriteString(strconv.Itoa(int(alg)))
-		}
-	}
-	return sb.String()
-}
-
-// DHU implements the EDNS0 "DS Hash Understood" option. See RFC 6975.
-type DHU struct {
-	AlgCode []uint8
-}
-
-func (o *DHU) pack(msg []byte, off int) ([]byte, error) { return cloneSlice(o.AlgCode), nil }
-func (o *DHU) unpack(s *cryptobyte.String) error        { o.AlgCode = cloneSlice(b); return nil }
-
-func (o *DHU) String() string {
-	sb := sprintOptionHeader(o)
-	for _, alg := range o.AlgCode {
-		sb.WriteByte(' ')
-		if a, ok := AlgorithmToString[alg]; ok {
-			sb.WriteString(a)
-		} else {
-			sb.WriteString(strconv.Itoa(int(alg)))
-		}
-	}
-	return sb.String()
-}
-
-// EDNS0_N3U implements the EDNS0 "NSEC3 Hash Understood" option. See RFC 6975.
-type N3U struct {
-	AlgCode []uint8
-}
-
-func (o *N3U) pack(msg []byte, off int) ([]byte, error) { return cloneSlice(o.AlgCode), nil }
-func (o *N3U) unpack(s *cryptobyte.String) error        { o.AlgCode = cloneSlice(b); return nil }
-
-func (o *N3U) String() string {
-	sb := sprintOptionHeader(o)
-	for _, alg := range o.AlgCode {
-		sb.WriteByte(' ')
-		if a, ok := AlgorithmToString[alg]; ok {
-			sb.WriteString(a)
-		} else {
-			sb.WriteString(strconv.Itoa(int(alg)))
-		}
-	}
-	return sb.String()
-}
-
-// EXPIRE implements the EDNS0 option as described in RFC 7314.
-type EXPIRE struct {
-	// If Expire is zero this option will be empty.
-	Expire uint32
-}
-
-func (o *EXPIRE) pack(msg []byte, off int) ([]byte, error) {
-	if o.Expire == 0 {
-		return []byte{}, nil
-	}
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, o.Expire)
-	return b, nil
-}
-
-func (o *EXPIRE) unpack(s *cryptobyte.String) error {
-	if len(b) == 0 {
-		// zero-length EXPIRE query, see RFC 7314 Section 2
-		o.Expire = 0
-		return nil
-	}
-	o.Expire = binary.BigEndian.Uint32(b)
-	return nil
-}
-
-func (o *EXPIRE) String() (s string) {
-	if o.Expire == 0 {
-		return ""
-	}
-	return strconv.FormatUint(uint64(o.Expire), 10)
 }
 
 // TCPKEEPALIVE is an EDNS0 option that instructs the server to keep
