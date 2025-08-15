@@ -3,7 +3,6 @@ package dns
 import (
 	"context"
 	"io"
-	"strings"
 	"sync"
 )
 
@@ -55,17 +54,17 @@ var DefaultServeMux = NewServeMux()
 
 func (mux *ServeMux) match(q string, t uint16) Handler {
 	mux.m.RLock()
-	defer mux.m.RUnlock()
 	if mux.z == nil {
 		return nil
 	}
 
-	// Handle forces the use of a caninical string, but we need to call strings.ToLower to make that match.
+	q = dnsutilCanonical(q)
 
 	var handler Handler
 	for off, end := 0, false; !end; off, end = dnsutilNext(q, off) {
-		if h, ok := mux.z[strings.ToLower(q[off:])]; ok {
+		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
+				mux.m.RUnlock()
 				return h
 			}
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
@@ -75,9 +74,11 @@ func (mux *ServeMux) match(q string, t uint16) Handler {
 
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
+		mux.m.RUnlock()
 		return h
 	}
 
+	mux.m.RUnlock()
 	return handler
 }
 
@@ -123,12 +124,10 @@ func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
 	}
 	qtype := RRToType(req.Question[0])
 	h = mux.match(req.Question[0].Header().Name, qtype)
-
-	if h != nil {
-		h.ServeDNS(ctx, w, req)
-	} else {
+	if h == nil {
 		handleRefused(w, req)
 	}
+	h.ServeDNS(ctx, w, req)
 }
 
 // Handle registers the handler with the given pattern

@@ -38,10 +38,9 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 
 // Exchange performs a synchronous UDP query. It sends the message m to the address
 // contained in a and waits for a reply. Exchange does not retry a failed query, nor
-// will it fall back to TCP in case of truncation. The message's Data byffer must have been written to by
-// calling m.Pack() before calling Exchange.
+// will it fall back to TCP in case of truncation.
 //
-// See client.Exchange for more information on setting larger buffer sizes.
+// See [client.Exchange] for more information on setting larger buffer sizes.
 func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err error) {
 	client := Client{Transport: DefaultTransport}
 	r, _, err = client.Exchange(ctx, m, network, address)
@@ -52,7 +51,6 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // contained in a and waits for a reply. Basic use pattern with a *dns.Client:
 //
 //	c := new(dns.Client)
-//	m.Pack()
 //	resp, rtt, err := c.Exchange(m, "127.0.0.1:53")
 //
 // If client does not have a transport [DefaultTransport] is used.
@@ -62,8 +60,9 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // this means setting [Msg.Bufsize] that will advertise a larger buffer. Messages without an Bufsize will
 // fall back to the historic limit of 512 octets (bytes).
 //
-// The full binary data is included in the (decoded) message r. Any TSIG or SIG(0) can still be performed on
-// those octets.
+// The full binary data is included in the (decoded) message r.Data.
+//
+// Exchange calls Pack() on m.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	var conn net.Conn
 	if c.Transport == nil {
@@ -82,6 +81,8 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
+
+	m.Pack()
 
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
