@@ -1,34 +1,8 @@
 package dnstest
 
-import (
-	"context"
-	"io"
+// do not define handler here. Also like the coredns's server.go a lot better.
 
-	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
-)
-
-func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	m := new(dns.Msg)
-	dnsutil.SetReply(m, req)
-
-	m.Extra = make([]dns.RR, 1)
-	m.Extra[0] = &dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}
-	m.Pack()
-	io.Copy(w, m)
-}
-
-func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	m := new(dns.Msg)
-	dnsutil.SetReply(m, req)
-
-	m.Extra = make([]dns.RR, 1)
-	m.Extra[0] = &dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}
-	m.Pack()
-
-	io.Copy(w, m)
-}
-
+/*
 func HelloHandlerBadID(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
@@ -70,3 +44,4 @@ func HelloHandlerEchoAddrPort(ctx context.Context, w dns.ResponseWriter, req *dn
 
 	io.Copy(w, m)
 }
+*/

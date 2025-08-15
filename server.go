@@ -233,6 +233,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 // BatchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
 // needs to be made with how much memory needs to be pre-allocated and how fast things should go. It is
 // set to set to 10.
+// If this is a not a const, but var, or worse a filed in [Server] it about 10k qps *slower*.
 const BatchSize = 10
 
 // listenUDP starts a UDP listener for the server.

@@ -2,10 +2,12 @@ package dns_test
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 func TestServer(t *testing.T) {
@@ -18,8 +20,8 @@ func TestServer(t *testing.T) {
 		{"tcp", "tcp", dnstest.TCPServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			dns.HandleFunc("miek.nl.", dnstest.HelloHandler)
-			dns.HandleFunc("example.com.", dnstest.AnotherHelloHandler)
+			dns.HandleFunc("miek.nl.", HelloHandler)
+			dns.HandleFunc("example.com.", AnotherHelloHandler)
 
 			s, addrstr, _, err := tc.run(":0")
 			if err != nil {
@@ -64,4 +66,25 @@ func TestServer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+	m := new(dns.Msg)
+	dnsutil.SetReply(m, req)
+
+	m.Extra = make([]dns.RR, 1)
+	m.Extra[0] = &dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}
+	m.Pack()
+	io.Copy(w, m)
+}
+
+func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+	m := new(dns.Msg)
+	dnsutil.SetReply(m, req)
+
+	m.Extra = make([]dns.RR, 1)
+	m.Extra[0] = &dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}
+	m.Pack()
+
+	io.Copy(w, m)
 }

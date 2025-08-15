@@ -901,6 +901,11 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		return 0, fmt.Errorf("dns: writer is not a ResponseWriter")
 	}
 
+	if r.Conn() == nil {
+		n, err := w.Write(m.Data)
+		return int64(n), err
+	}
+
 	if sock, ok := r.Conn().(*net.TCPConn); ok {
 		l := make([]byte, 2, 2)
 		binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
@@ -918,7 +923,6 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		}
 	}
 
-	// clients end up here
 	n, err := r.Conn().Write(m.Data)
 	return int64(n), err
 }
