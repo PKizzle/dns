@@ -116,7 +116,7 @@ func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
 				return
 			}
 			if !isSOAFirst(in) {
-				c <- &Envelope{in.Answer, ErrSoa}
+				c <- &Envelope{in.Answer, ErrSOA}
 				return
 			}
 			first = !first
@@ -173,7 +173,7 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 		if n == 0 {
 			// Check if the returned answer is ok
 			if !isSOAFirst(in) {
-				c <- &Envelope{in.Answer, ErrSoa}
+				c <- &Envelope{in.Answer, ErrSOA}
 				return
 			}
 			// This serial is important

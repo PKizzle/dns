@@ -19,7 +19,7 @@ var (
 	ErrFqdn             = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
 	ErrName             = &Error{err: "bad domain name"}
 	ErrLabel            = &Error{err: "bad label type"}
-	ErrID               = &Error{err: "id mismatch"}       // ErrId indicates there is a mismatch with the message's ID.
+	ErrID               = &Error{err: "id mismatch"}
 	ErrKeyAlg           = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey              = &Error{err: "bad key"}
 	ErrKeySize          = &Error{err: "bad key size"}
@@ -28,7 +28,6 @@ var (
 	ErrPrivKey          = &Error{err: "bad private key"}
 	ErrRcode            = &Error{err: "bad rcode"}
 	ErrRRset            = &Error{err: "bad rrset"}
-	ErrSecret           = &Error{err: "no secrets defined"}
 	ErrShortRead        = &Error{err: "short read"}
 	ErrSig              = &Error{err: "bad signature"} // ErrSig indicates that a signature can not be cryptographically validated.
 	ErrSOA              = &Error{err: "no SOA"}        // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
