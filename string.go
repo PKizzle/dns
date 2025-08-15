@@ -272,6 +272,7 @@ func sprintHeader(rr RR) *strings.Builder {
 	return &sb
 }
 
+// must look just enough so parsing from text will also work.
 func sprintOptionHeader(rr EDNS0) *strings.Builder {
 	sb := strings.Builder{}
 	sb.WriteByte('.')

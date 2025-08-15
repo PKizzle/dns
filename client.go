@@ -62,7 +62,7 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 //
 // The full binary data is included in the (decoded) message r.Data.
 //
-// Exchange calls Pack() on m.
+// Exchange calls Pack() on m if len(m.Data) == 0.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	var conn net.Conn
 	if c.Transport == nil {
@@ -77,12 +77,14 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 	return c.ExchangeWithConn(ctx, m, conn)
 }
 
-// ExchangeWithContext behaves like Exchange, but with a supplied connection.
+// ExchangeWithConn behaves like [client.Exchange], but with a supplied connection.
 func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r *Msg, rtt time.Duration, err error) {
 	t := time.Now()
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 
-	m.Pack()
+	if len(m.Data) == 0 {
+		return nil, time.Since(t), ErrMsgUnpacked
+	}
 
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err

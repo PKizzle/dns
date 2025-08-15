@@ -13,6 +13,7 @@ func TestClient(t *testing.T) {
 
 	nsid := &NSID{}
 	m.Pseudo = []RR{nsid}
+	m.Pack()
 
 	c := &Client{}
 	r, _, err := c.Exchange(context.Background(), m, "udp", "8.8.8.8:53")

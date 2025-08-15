@@ -116,12 +116,17 @@ type EDE struct {
 
 func (o *EDE) Len() int { return tlv + 2 + len(o.ExtraText) }
 func (o *EDE) String() string {
-	// strings.Builder TODO: miek
-	info := strconv.FormatUint(uint64(o.InfoCode), 10)
+	sb := sprintOptionHeader(o)
+	sb.WriteString(strconv.FormatUint(uint64(o.InfoCode), 10))
 	if s, ok := ExtendedErrorToString[o.InfoCode]; ok {
-		info += fmt.Sprintf(" (%s)", s)
+		sb.WriteString(" (")
+		sb.WriteString(s)
+		sb.WriteByte(')')
 	}
-	return fmt.Sprintf("%s: (%s)", info, o.ExtraText)
+	sb.WriteString(" : (")
+	sb.WriteString(o.ExtraText)
+	sb.WriteByte(')')
+	return sb.String()
 }
 
 // Extended DNS Error Codes (RFC 8914).

@@ -33,6 +33,8 @@ func TestServer(t *testing.T) {
 			txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
 			m := new(dns.Msg)
 			m.Question = []dns.RR{txt}
+			m.Pack()
+
 			r, _, err := c.Exchange(context.TODO(), m, tc.network, addrstr)
 			if err != nil || len(r.Extra) == 0 {
 				t.Fatal("failed to exchange miek.nl", err)
@@ -44,6 +46,8 @@ func TestServer(t *testing.T) {
 
 			txt = &dns.TXT{Hdr: dns.Header{Name: "example.com.", Class: dns.ClassINET}}
 			m.Question = []dns.RR{txt}
+			m.Pack()
+
 			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
 			if err != nil {
 				t.Fatal("failed to exchange example.com", err)
@@ -56,6 +60,8 @@ func TestServer(t *testing.T) {
 			// Test Mixes cased as noticed by Ask.
 			txt = &dns.TXT{Hdr: dns.Header{Name: "eXaMPlE.cOm.", Class: dns.ClassINET}}
 			m.Question = []dns.RR{txt}
+			m.Pack()
+
 			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
 			if err != nil {
 				t.Error("failed to exchange eXaMplE.cOm", err)

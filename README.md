@@ -15,6 +15,10 @@ resolvers with it.
 We try to keep the "main" branch as sane as possible and at the bleeding edge of standards, avoiding breaking
 changes wherever reasonable.
 
+The naming of types follows the RFCs. EDNS0 types are similarly named, DHU (Ds Hash Understood), if there is a
+clash between an actual RR's and an EDNS0 one, the EDNS0 type will get an 'E' as prefix, e.g. EDHU. This will
+also be done if the RR was named later than the EDNS0 option!
+
 # Goals
 
 - KISS.
