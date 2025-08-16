@@ -1,14 +1,15 @@
 /*
-Package dns implements a full featured interface to the Domain Name System.
-Both server- and client-side programming is supported. The package allows
-complete control over what is sent out to the DNS. The API follows the
-less-is-more principle, by presenting a small, clean interface.
+Package dns implements a full featured interface to the Domain Name System. Both server- and client-side programming is supported.
+
+The package allows complete control over what is sent out to the DNS. The API follows the less-is-more principle, by presenting a small, clean interface.
 
 It supports (asynchronous) querying/replying, incoming/outgoing zone transfers,
 TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 
-Resource records are native types. They are not stored in wire format. Basic
-usage pattern for creating a new resource record:
+Resource records (RRs) are native types. They are not stored in wire format. Everything is modelled or made to look like a RR.
+The question section holds an RR and the EDNS0 option codes are also RRs.
+
+Basic usage pattern for creating a new resource record:
 
 	r ;= &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
 

@@ -366,11 +366,17 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 			return off, ErrBuf
 		}
 		code := RRToCode(option) // TODO(miek): unknown codes, caught later
+
 		packUint16(code, msg, off)
-		packUint16(uint16(l), msg, off)
-		off, _ = packOptionCode(option, msg, off+4)
+		packUint16(uint16(l-tlv), msg, off+2)
+		optionoff, err := packOptionCode(option, msg, off+4)
+		if err != nil {
+			return off, err
+		}
+
+		off += optionoff + l
 	}
-	return 0, nil
+	return off, nil
 }
 
 func unpackStringOctet(s *cryptobyte.String) (string, error) {

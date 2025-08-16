@@ -6,15 +6,32 @@ import (
 	"testing"
 )
 
-// TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0.
+// TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
+// checks if we create the correct wire-format.
 func ExampleMsg_Question() {
-	msg := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
+	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
 	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
-	msg.Question = []RR{mx}
+	m.Question = []RR{mx}
 
-	msg.Pack()
-	fmt.Printf("%v\n", msg.Data)
+	m.Pack()
+	fmt.Printf("%v\n", m.Data)
 	// Output: [0 3 1 0 0 1 0 0 0 0 0 0 4 109 105 101 107 2 110 108 0 0 15 0 1]
+}
+
+func TestIT(t *testing.T) {
+	h := &Header{Name: "."}
+	println(h.Len())
+}
+
+func ExampleMsg_Pseudo_nsid() {
+	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
+	m.Question = []RR{&MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}}
+	m.Pseudo = []RR{&NSID{}}
+
+	m.Pack()
+	// 41 is OPT after the zeros, 04 -> rdlength, 03 -> code of NSID, 00 -> "rdlength" of NSID
+	fmt.Printf("%v\n", m.Data)
+	// Output: [0 3 1 0 0 1 0 0 0 0 0 1 4 109 105 101 107 2 110 108 0 0 15 0 1 0 0 41 0 0 0 0 0 0 0 4 0 3 0 0]
 }
 
 func TestReadMsgBinary(t *testing.T) {

@@ -1468,7 +1468,8 @@ func (rr *ZONEMD) String() string {
 
 // OPT is the EDNS0 RR appended to messages to convey extra (meta) information. See RFC 6891. This record is
 // not (directly) found in messages as the pack and unpack function take care of this. Any EDNS0 options are
-// found in the [Pseudo] section of the message.
+// found in the [Pseudo] section of the message. There should be rarely the need to access specifics of this
+// RR as you can just set things directly on [Msg].
 type OPT struct {
 	Hdr     Header
 	Options []EDNS0 `dns:"opt"`
@@ -1478,7 +1479,7 @@ type OPT struct {
 
 func (rr *OPT) String() string { return "" }
 
-/*
+/* XXX(miek): leave here if we know for sure the generated one is OK.
 func (rr *OPT) Data() []Field {
 	fields := make([]Field, len(rr.Options))
 	for i := range rr.Options {
