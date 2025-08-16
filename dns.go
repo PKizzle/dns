@@ -8,10 +8,12 @@ import (
 
 //go:generate go run rr_generate.go
 //go:generate go run ednsrr_generate.go
+//go:generate go run dsorr_generate.go
 //go:generate go run msg_generate.go
 //go:generate go run pack_generate.go
 //go:generate go run parse_generate.go
 //go:generate go run len_generate.go
+//go:generate go run dsolen_generate.go
 //go:generate go run dnsutil_generate.go
 
 const (
@@ -121,11 +123,20 @@ func (h *Header) String() string {
 }
 
 // EDNS0 determines if the "RR" is posing as an EDNS0 option. EDNS0 options are considered just RRs and must
-// be added to the [Pseudo] section of a DNS message. The Len method must return the length of the octects in
-// the [OPT] [RR], which is four plus the encoded lengh of the option itself.
+// be added to the [Pseudo] section of a DNS message. The Len method must return the length of the octets in
+// the [OPT] [RR], which is four (2 octets for the type, and 2 octets for the length) plus the encoded lengh of the option itself.
 type EDNS0 interface {
 	RR
 	Pseudo() bool
+}
+
+// DSO determines if the "RR" is posing as an DSO option. DSO options are considered just RRs and must
+// be added to the [Stateful] section of a DNS message. The Len method must return the the length of the
+// octets for the entire option, which is four (2 octets for the type, and 2 octets for the length) plus the
+// encoded length of the option itself.
+type DSO interface {
+	RR
+	Stateful() bool
 }
 
 // MsgHeader is the header of a DNS message. This contains most header bits, except Rcode as that needs to be
@@ -162,7 +173,7 @@ type Msg struct {
 	Question []RR
 	Answer   []RR // Holds the RR(s) of the answer section.
 	Ns       []RR // Holds the RR(s) of the authority section.
-	Extra    []RR // Holds the RR(s) of the additional section, execpt records that go into the pseudo section.
+	Extra    []RR // Holds the RR(s) of the additional section, except records that go into the pseudo section.
 	// The Pseudo section is a virtual (doesn't exist on the wire) section in this package. It holds the OPT
 	// EDNS0 option codes, that are interpreted (and shown) as RRs. If a TSIG or SIG(0) record is present it also sits in this
 	// section. If an OPT RR is present it will always be the first RR in this section.
@@ -170,6 +181,8 @@ type Msg struct {
 	// ps holds the number of real RRs in the pseudo section, this is 3 max (OPT, TSIG and SIG(0)). The number of
 	// virtual RR in pseudo is len(Pseudo). This is set after Unpack.
 	ps uint8
+
+	Stateful []RR // Holds the DSO RR(s) for Stateful operations.
 
 	// Data is the data of the message that was either received from the wire or is about to be send
 	// over the wire. Note that this data is a snapshot of the Msg as it was packed or unpacked.

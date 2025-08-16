@@ -128,7 +128,7 @@ const (
 	RcodeNXRrset                = 8  // NXRRSet   - RR Set that should exist does not [DNS Update]
 	RcodeNotAuth                = 9  // NotAuth   - Server Not Authoritative for zone [DNS Update]
 	RcodeNotZone                = 10 // NotZone   - Name not contained in zone        [DNS Update/TSIG]
-	RcodeStatefulNotImplemented = 11 // DSOTYPENI - DSO-TYPE Not Implemented [DSO]
+	RcodeStatefulNotImplemented = 11 // DSOTYPENI - DSO-TYPE Not Implemented [DSO]    [DSO]
 	RcodeBadSig                 = 16 // BADSIG    - TSIG Signature Failure            [TSIG]
 	RcodeBadVers                = 16 // BADVERS   - Bad OPT Version                   [EDNS0]
 	RcodeBadKey                 = 17 // BADKEY    - Key not recognized                [TSIG]

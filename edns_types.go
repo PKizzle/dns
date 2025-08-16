@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// Code option codes.
+// ENDS0 option codes.
 const (
 	CodeNone         uint16 = 0x0
 	CodeLLQ          uint16 = 0x1    // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01

@@ -59,11 +59,12 @@ var ClassToString = map[uint16]string{
 
 // OpcodeToString maps Opcodes to strings.
 var OpcodeToString = map[uint8]string{
-	OpcodeQuery:  "QUERY",
-	OpcodeIQuery: "IQUERY",
-	OpcodeStatus: "STATUS",
-	OpcodeNotify: "NOTIFY",
-	OpcodeUpdate: "UPDATE",
+	OpcodeQuery:    "QUERY",
+	OpcodeIQuery:   "IQUERY",
+	OpcodeStatus:   "STATUS",
+	OpcodeNotify:   "NOTIFY",
+	OpcodeUpdate:   "UPDATE",
+	OpcodeStateful: "STATEFUL",
 }
 
 // RcodeToString maps Rcodes to strings.
