@@ -8,11 +8,12 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-// Recorder is a type of ResponseWriter that captures the Msg's data written to it.
+// Recorder is a type of ResponseWriter that captures the all the messages written to it.
 type Recorder struct {
-	conn  net.Conn
-	Msg   *dns.Msg
-	Start time.Time
+	conn    net.Conn
+	Discard bool // When true the message is record, but now written to the underlaying connection.
+	Msgs    []*dns.Msg
+	Start   time.Time
 }
 
 var _ dns.ResponseWriter = &Recorder{}
@@ -31,8 +32,13 @@ func (r *Recorder) Session() *dns.Session { return nil }
 
 // Write is a wrapper that records the message that gets written to it.
 func (r *Recorder) Write(b []byte) (int, error) {
-	r.Msg = &dns.Msg{Data: b}
-	r.Msg.Unpack()
+	msg := &dns.Msg{Data: b}
+	msg.Unpack()
+	r.Msgs = append(r.Msgs, msg)
+
+	if r.Discard {
+		return len(b), nil
+	}
 	if r.conn != nil {
 		return r.conn.Write(b)
 	}

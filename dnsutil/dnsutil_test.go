@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestTrimZone(t *testing.T) {
+func TestTrim(t *testing.T) {
 	tests := []struct {
 		qname    string
 		zone     string

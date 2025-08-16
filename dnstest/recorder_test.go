@@ -15,7 +15,7 @@ func TestRecord(t *testing.T) {
 
 	io.Copy(recorder, m)
 
-	if x := recorder.Msg.Question[0].Header().Name; x != "miek.nl." {
+	if x := recorder.Msgs[0].Question[0].Header().Name; x != "miek.nl." {
 		t.Errorf("expected %s, got %s", "miek.nl.", x)
 	}
 }
