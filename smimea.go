@@ -13,14 +13,13 @@ func (r *SMIMEA) Sign(usage, selector, matchingType int, cert *x509.Certificate)
 	r.Selector = uint8(selector)
 	r.MatchingType = uint8(matchingType)
 
-	r.Certificate, err = CertificateToDANE(r.Selector, r.MatchingType, cert)
+	r.Certificate, err = certificateToDANE(r.Selector, r.MatchingType, cert)
 	return err
 }
 
-// Verify verifies a SMIMEA record against an SSL certificate. If it is OK
-// a nil error is returned.
+// Verify verifies a SMIMEA record against a TLS certificate. If it is OK a nil error is returned.
 func (r *SMIMEA) Verify(cert *x509.Certificate) error {
-	c, err := CertificateToDANE(r.Selector, r.MatchingType, cert)
+	c, err := certificateToDANE(r.Selector, r.MatchingType, cert)
 	if err != nil {
 		return err // Not also ErrSig?
 	}
@@ -31,7 +30,7 @@ func (r *SMIMEA) Verify(cert *x509.Certificate) error {
 }
 
 // SMIMEAName returns the ownername of a SMIMEA resource record as per the
-// format specified in RFC 'draft-ietf-dane-smime-12' Section 2 and 3
+// format specified in RFC 'draft-ietf-dane-smime-12' Section 2 and 3.
 func SMIMEAName(email, domain string) (string, error) {
 	hasher := sha256.New()
 	hasher.Write([]byte(email))
