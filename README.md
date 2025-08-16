@@ -1,10 +1,6 @@
-# WORK IN PROGRESS
-
-Things compile, the few tests work, but expect breakage, or large things to change.
-
-[![](https://godoc.org/codeberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
-
 # Even more alternative approach to a DNS library (version 2)
+
+(Previous version is https://github.com/miekg/dns)
 
 > Less is more.
 
@@ -25,8 +21,8 @@ wins.
 
 - KISS.
 - Everything is an RR.
-- Fast.
 - Small API.
+- Fast. The cmd/reflect server does 350K/200K UDP/TCP respectively.
 
 ## Difference with github.com/miekg/dns
 
