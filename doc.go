@@ -6,12 +6,13 @@ The package allows complete control over what is sent out to the DNS. The API fo
 It supports (asynchronous) querying/replying, incoming/outgoing zone transfers,
 TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 
-Resource records (RRs) are native types. They are not stored in wire format. Everything is modelled or made to look like a RR.
+Resource records (RRs) are native types. They are not stored in wire format. Everything is modelled or made to look like an RR.
 The question section holds an RR and the EDNS0 option codes are also RRs.
 
 Basic usage pattern for creating a new resource record:
 
-	r ;= &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
+	r := &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600},
+			Preference: 10, Mx: "mx.miek.nl."}
 
 Or directly from a string (which is slower):
 
@@ -25,7 +26,7 @@ Or even:
 
 	mx, err := dns.New("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 
-In the DNS messages are exchanged, these messages contain resource records (sets). Use pattern for creating a message:
+In the DNS, messages are exchanged, these messages contain RRs (RRsets). Use pattern for creating a message:
 
 	m := new(dns.Msg)
 	m.Question = []dns.RR{mx}
@@ -40,9 +41,15 @@ After creating a message it can be sent. Basic use pattern for synchronous query
 	c := new(dns.Client)
 	in, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
 
-When this functions returns you will get DNS message. A DNS message consists out of four (five in this package) sections.
-The question section: in.Question, the answer section: in.Answer,
-the authority section: in.Ns and the additional section: in.Extra. And the extra and new fifth the pseudo section: in.Pseudo, see [Msg].
+When this functions returns you will get DNS message back. A DNS message consists out of four (five in this package) sections.
+
+  - The question section: in.Question.
+  - The answer section: in.Answer.
+  - The authority section: in.Ns.
+  - The additional section: in.Extra.
+  - And the extra and new fifth the pseudo section: in.Pseudo, see [Msg].
+
+The later was added to make it easier to deal with EDNS0 option codes, which become more and more prevalent.
 
 Each of these sections contain a []RR. Basic use pattern for accessing the rdata of a TXT RR as the first RR in
 the Answer section:
@@ -76,22 +83,25 @@ bit to a request.
 	m.Security = true
 	m.UDPSize = 4096
 
-Signature generation, signature verification and key generation are all supported. See [RRSIG].
+When sending a message [Msg.Pack] is called, this takes care of allocating an OPT RR and setting the DO bit and the
+UDPSize in there.
+
+Signature generation, signature verification (See [RRSIG] and key generation are all supported.
 
 # EDNS0
 
-EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated by
-RFC 6891. It defines a new RR type, the OPT RR, which is then completely abused.
+EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated by RFC 6891. It defines a new RR type,
+the [OPT] RR, which is then completely abused.
 
-In this package all EDNS0 options are implemented as RR, doing basic "EDNS0" things, like
-setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you. See [Msg].
+In this package all EDNS0 options are implemented as RRs, doing basic "EDNS0" things, like
+setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you and these can be set directly on the message as shown above.
 
-The data of an OPT RR sits in the [Msg.Pseudo[ section consists out of a slice of EDNS0 (RFC 6891) interfaces.
+The data of an OPT RR sits in the [Msg.Pseudo] section consists out of a slice of EDNS0 (RFC 6891) interfaces.
 These are just RRs with an extra Pseudo() method.
 
-Basic use pattern for a server to check if (and which) options are set:
+Basic use pattern for a server to check if (and which) options are set, which is simular to how to deal with RRs.
 
-	for _, o := range msg.Pseudo {
+	for _, o := range m.Pseudo {
 		switch x := o.(type) {
 		case *dns.NSID:
 			// do stuff with x.Nsid
@@ -100,18 +110,8 @@ Basic use pattern for a server to check if (and which) options are set:
 		}
 	}
 
-SIG(0)
+# Further reading
 
-From RFC 2931:
-
-	SIG(0) provides protection for DNS transactions and requests ....
-	... protection for glue records, DNS requests, protection for message headers
-	on requests and responses, and protection of the overall integrity of a response.
-
-It works like TSIG, except that SIG(0) uses public key cryptography, instead of
-the shared secret approach in TSIG. Supported algorithms: ECDSAP256SHA256,
-ECDSAP384SHA384, RSASHA1, RSASHA256 and RSASHA512.
-
-Signing subsequent messages in multi-message sessions is not implemented.
+All functionality and types are documented in their respecitive types and function.
 */
 package dns

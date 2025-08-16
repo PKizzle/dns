@@ -158,10 +158,10 @@ type MsgHeader struct {
 	AuthenticatedData  bool
 	CheckingDisabled   bool
 
-	Rcode uint16 // Rcode is the message response code, see the RcodeXXX constants.
+	Rcode uint16 // Rcode is the message response code, extended rcodes can be set on this value.
 
 	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
-	// putting the bits in the right places.
+	// putting the bits in the right places and creating an OPT RR if needed.
 	UDPSize        uint16 // UDPSize is the OPT's RR advertised UDP size.
 	Version        uint8  // Version is the EDNS version, always zero.
 	Security       bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
@@ -181,7 +181,8 @@ type Msg struct {
 	Extra    []RR // Holds the RR(s) of the additional section, except records that go into the pseudo section.
 	// The Pseudo section is a virtual (doesn't exist on the wire) section in this package. It holds the OPT
 	// EDNS0 option codes, that are interpreted (and shown) as RRs. If a TSIG or SIG(0) record is present it also sits in this
-	// section. If an OPT RR is present it will always be the first RR in this section.
+	// section. This package takes care of hidding the OPT RR, it will never be visible in Extra, not the
+	// Pseudo section.
 	Pseudo []RR // Holds the RR(s) of the (virtual) peusdo section.
 	// ps holds the number of real RRs in the pseudo section, this is 3 max (OPT, TSIG and SIG(0)). The number of
 	// virtual RR in pseudo is len(Pseudo). This is set after Unpack.
@@ -211,9 +212,9 @@ const (
 
 // Convert a MsgHeader to a string, with dig-like headers:
 //
-// ;; opcode: QUERY, status: NOERROR, id: 48404
-//
-// ;; flags: qr aa rd ra;
+//	;; QUERY, status: NOERROR, id: 51664, flags: qr rd ra do co
+//	;; EDNS, version: 0, udp: 512
+//	;; QUESTION: 1, PSEUDO: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0
 func (h *MsgHeader) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(";; ")

@@ -11,16 +11,16 @@ import (
 // ENDS0 option codes.
 const (
 	CodeNone         uint16 = 0x0
-	CodeLLQ          uint16 = 0x1    // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
-	CodeUL           uint16 = 0x2    // Update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
+	CodeLLQ          uint16 = 0x1    // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01.
+	CodeUL           uint16 = 0x2    // Update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt.
 	CodeNSID         uint16 = 0x3    // Nsid (See RFC 5001).
-	CodeESU          uint16 = 0x4    // ENUM Source-URI draft: https://datatracker.ietf.org/doc/html/draft-kaplan-enum-source-uri-00
-	CodeDAU          uint16 = 0x5    // DNSSEC Algorithm Understood
-	CodeDHU          uint16 = 0x6    // DS Hash Understood
-	CodeN3U          uint16 = 0x7    // NSEC3 Hash Understood
+	CodeESU          uint16 = 0x4    // ENUM Source-URI draft: https://datatracker.ietf.org/doc/html/draft-kaplan-enum-source-uri-00.
+	CodeDAU          uint16 = 0x5    // DNSSEC Algorithm Understood.
+	CodeDHU          uint16 = 0x6    // DS Hash Understood.
+	CodeN3U          uint16 = 0x7    // NSEC3 Hash Understood.
 	CodeSUBNET       uint16 = 0x8    // Client-subnet, see RFC 7871.
 	CodeEXPIRE       uint16 = 0x9    // Expire, RFC 7314.
-	CodeCOOKIE       uint16 = 0xa    // Cookie
+	CodeCOOKIE       uint16 = 0xa    // Cookie.
 	CodeTCPKEEPALIVE uint16 = 0xb    // TCP keep alive (see RFC 7828).
 	CodePADDING      uint16 = 0xc    // Padding (see RFC 7830).
 	CodeEDE          uint16 = 0xf    // Extended DNS errors (see RFC 8914).
@@ -31,6 +31,8 @@ const (
 
 // LLQ stands for Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
 // Implemented for completeness, as the EDNS0 type code is assigned.
+//
+// This record must be put in the pseudo section.
 type LLQ struct {
 	Version   uint16
 	Opcode    uint16
@@ -49,6 +51,8 @@ func (o *LLQ) String() string {
 }
 
 // REPORTING implements the EDNS0 Reporting Channel option (RFC 9567).
+//
+// This record must be put in the pseudo section.
 type REPORTING struct {
 	AgentDomain string
 }
@@ -70,6 +74,8 @@ func (o *REPORTING) String() string {
 //	sCookie := o.Cookie[16:]
 //
 // There is no guarantee that the Cookie string has a specific length.
+//
+// This record must be put in the pseudo section.
 type COOKIE struct {
 	Cookie string `dns:"hex"`
 }
@@ -83,6 +89,8 @@ func (o *COOKIE) String() string {
 
 // NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
 // The identifier is an opaque string encoded as hex.
+//
+// This record must be put in the pseudo section.
 type NSID struct {
 	Nsid string `dns:"hex"`
 }
@@ -101,6 +109,8 @@ func (o *NSID) String() string {
 
 // PADDING option is used to add padding to a request/response. The default value of padding SHOULD be 0x0 but
 // other values MAY be used.
+//
+// This record must be put in the pseudo section.
 type PADDING struct {
 	Padding string `dns:"octet"`
 }
@@ -109,6 +119,8 @@ func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
 func (o *PADDING) String() string { return "" } // tODO miek
 
 // EXPIRE implements the EDNS0 option as described in RFC 7314.
+//
+// This record must be put in the pseudo section.
 type EXPIRE struct {
 	// If Expire is zero this option will be empty.
 	Expire uint32
@@ -125,6 +137,8 @@ func (o *EXPIRE) String() (s string) {
 }
 
 // DAU implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
+//
+// This record must be put in the pseudo section.
 type DAU struct {
 	AlgCode []uint8
 }
@@ -144,6 +158,8 @@ func (o *DAU) String() string {
 }
 
 // DHU implements the EDNS0 "DS Hash Understood" option. See RFC 6975.
+//
+// This record must be put in the pseudo section.
 type DHU struct {
 	AlgCode []uint8
 }
@@ -163,6 +179,8 @@ func (o *DHU) String() string {
 }
 
 // EDNS0_N3U implements the EDNS0 "NSEC3 Hash Understood" option. See RFC 6975.
+//
+// This record must be put in the pseudo section.
 type N3U struct {
 	AlgCode []uint8
 }
@@ -182,6 +200,8 @@ func (o *N3U) String() string {
 }
 
 // TCPKEEPALIVE is an EDNS0 option that instructs the server to keep the TCP connection alivo. See RFC 7828.
+//
+// This record must be put in the pseudo section.
 type TCPKEEPALIVE struct {
 	// Timeout is an idle timeout value for the TCP connection, specified in
 	// units of 100 milliseconds, encoded in network byte order. If set to 0,
@@ -211,6 +231,8 @@ func (o *TCPKEEPALIVE) String() string {
 }
 
 // EDE option is used to return additional information about the cause of DNS errors.
+//
+// This record must be put in the pseudo section.
 type EDE struct {
 	InfoCode  uint16
 	ExtraText string

@@ -69,19 +69,18 @@ var OpcodeToString = map[uint8]string{
 
 // RcodeToString maps Rcodes to strings.
 var RcodeToString = map[uint16]string{
-	RcodeSuccess:        "NOERROR",
-	RcodeFormatError:    "FORMERR",
-	RcodeServerFailure:  "SERVFAIL",
-	RcodeNameError:      "NXDOMAIN",
-	RcodeNotImplemented: "NOTIMPL",
-	RcodeRefused:        "REFUSED",
-	RcodeYXDomain:       "YXDOMAIN", // See RFC 2136
-	RcodeYXRrset:        "YXRRSET",
-	RcodeNXRrset:        "NXRRSET",
-	RcodeNotAuth:        "NOTAUTH",
-	RcodeNotZone:        "NOTZONE",
-	RcodeBadSig:         "BADSIG", // Also known as RcodeBadVers, see RFC 6891
-	//	RcodeBadVers:        "BADVERS",
+	RcodeSuccess:                "NOERROR",
+	RcodeFormatError:            "FORMERR",
+	RcodeServerFailure:          "SERVFAIL",
+	RcodeNameError:              "NXDOMAIN",
+	RcodeNotImplemented:         "NOTIMPL",
+	RcodeRefused:                "REFUSED",
+	RcodeYXDomain:               "YXDOMAIN", // See RFC 2136.
+	RcodeYXRrset:                "YXRRSET",
+	RcodeNXRrset:                "NXRRSET",
+	RcodeNotAuth:                "NOTAUTH",
+	RcodeNotZone:                "NOTZONE",
+	RcodeBadSig:                 "BADSIG", // Also known as RcodeBadVers "BADVERS", see RFC 6891.
 	RcodeStatefulNotImplemented: "DSOTYPENI",
 	RcodeBadKey:                 "BADKEY",
 	RcodeBadTime:                "BADTIME",

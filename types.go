@@ -52,7 +52,7 @@ const (
 	TypeKX         uint16 = 36
 	TypeCERT       uint16 = 37
 	TypeDNAME      uint16 = 39
-	TypeOPT        uint16 = 41 // EDNS
+	TypeOPT        uint16 = 41
 	TypeAPL        uint16 = 42
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
@@ -97,7 +97,7 @@ const (
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
 
-	// Valid Question types only.
+	// Valid question types only.
 	TypeIXFR  uint16 = 251
 	TypeAXFR  uint16 = 252
 	TypeMAILB uint16 = 253
@@ -108,7 +108,7 @@ const (
 	TypeDLV      uint16 = 32769
 	TypeReserved uint16 = 65535
 
-	// valid Question classes only.
+	// valid question classes only.
 	ClassINET   = 1
 	ClassCSNET  = 2
 	ClassCHAOS  = 3
@@ -148,7 +148,7 @@ const (
 	OpcodeStateful = 6
 )
 
-// Used in ZONEMD https://tools.ietf.org/html/rfc8976
+// Used in ZONEMD, RFC 8976.
 const (
 	ZoneMDSchemeSimple = 1
 
@@ -156,7 +156,7 @@ const (
 	ZoneMDHashAlgSHA512 = 2
 )
 
-// Used in IPSEC https://datatracker.ietf.org/doc/html/rfc4025#section-2.3
+// Used in IPSEC, RFC 4025, Section 2.3.
 const (
 	IPSECGatewayNone uint8 = iota
 	IPSECGatewayIPv4
@@ -164,7 +164,7 @@ const (
 	IPSECGatewayHost
 )
 
-// Used in AMTRELAY https://datatracker.ietf.org/doc/html/rfc8777#section-4.2.3
+// Used in AMTRELAY, RFC 8777, Section 4.2.3.
 const (
 	AMTRELAYNone = IPSECGatewayNone
 	AMTRELAYIPv4 = IPSECGatewayIPv4

@@ -57,6 +57,8 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 // Every message that is read by a Reader will eventually be provided to the Handler, or passed to this function.
 type InvalidMsgFunc func(m *Msg, err error)
 
+// DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a
+// noop.
 func DefaultMsgInvalidFunc(m *Msg, err error) {}
 
 // A Server defines parameters for running an DNS server.
@@ -227,11 +229,11 @@ func (srv *Server) listenTCP(ln net.Listener) {
 	}
 }
 
-// BatchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
+// batchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
 // needs to be made with how much memory needs to be pre-allocated and how fast things should go. It is
 // set to set to 10.
 // If this is a not a const, but var, or worse a filed in [Server] it about 10k qps *slower*.
-const BatchSize = 10
+const batchSize = 10
 
 // listenUDP starts a UDP listener for the server.
 func (srv *Server) listenUDP(pc net.PacketConn) {
@@ -252,9 +254,9 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 			close(srv.exited)
 			return
 		default:
-			bufs := make([][]byte, BatchSize, BatchSize)
-			msgs := make([]ipv4.Message, BatchSize, BatchSize)
-			for i := range BatchSize {
+			bufs := make([][]byte, batchSize, batchSize)
+			msgs := make([]ipv4.Message, batchSize, batchSize)
+			for i := range batchSize {
 				bufs[i] = make([]byte, srv.UDPSize)
 				msgs[i].Buffers = [][]byte{bufs[i]}
 				msgs[i].OOB = make([]byte, oobSize)

@@ -9,6 +9,7 @@ import (
 )
 
 // CertificateToDANE converts a certificate to a hex string as used in the TLSA or SMIMEA records.
+// TODO: move to dnsutil.
 func CertificateToDANE(selector, matchingType uint8, cert *x509.Certificate) (string, error) {
 	switch matchingType {
 	case 0:
