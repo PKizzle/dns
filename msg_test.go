@@ -18,11 +18,6 @@ func ExampleMsg_Question() {
 	// Output: [0 3 1 0 0 1 0 0 0 0 0 0 4 109 105 101 107 2 110 108 0 0 15 0 1]
 }
 
-func TestIT(t *testing.T) {
-	h := &Header{Name: "."}
-	println(h.Len())
-}
-
 func ExampleMsg_Pseudo_nsid() {
 	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
 	m.Question = []RR{&MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}}
