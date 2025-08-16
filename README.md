@@ -170,8 +170,7 @@ the following should work:
 
 ## Examples
 
-A short "how to use the API" is at the beginning of doc.go (this also will show when you call `godoc
-github.com/miekg/dns`).
+A short "how to use the API" is at the beginning of doc.go (this also will show when you call `godoc codeberg.org/miekg/dns`).
 
 ## Supported RFCs
 
@@ -184,7 +183,7 @@ _all of them_
 - 1995 - IXFR
 - 1996 - DNS notify
 - 2136 - DNS Update (dynamic updates)
-- 2181 - RRset definition - there is no RRset type though, just []RR
+- 2181 - RRset definition
 - 2537 - RSAMD5 DNS keys
 - 2065 - DNSSEC (updated in later RFCs)
 - 2671 - EDNS record
@@ -200,7 +199,7 @@ _all of them_
 - 3596 - AAAA record
 - 3597 - Unknown RRs
 - 4025 - A Method for Storing IPsec Keying Material in DNS
-- 403{3,4,5} - DNSSEC + validation functions
+- 403{3,4,5} - DNSSEC
 - 4255 - SSHFP record
 - 4343 - Case insensitivity
 - 4408 - SPF record
@@ -229,6 +228,7 @@ _all of them_
 - 7477 - CSYNC RR
 - 7828 - edns-tcp-keepalive EDNS0 Option
 - 7553 - URI record
+- 7719 - DNS Terminology
 - 7858 - DNS over TLS: Initiation and Performance Considerations
 - 7871 - EDNS0 Client Subnet
 - 7873 - Domain Name System (DNS) Cookies
@@ -241,6 +241,7 @@ _all of them_
 - 9461 - Service Binding Mapping for DNS Servers
 - 9462 - Discovery of Designated Resolvers
 - 9460 - SVCB and HTTPS Records
+- 9499 - DNS Terminology
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
 
