@@ -89,6 +89,11 @@ type Copier interface {
 	Copy() RR
 }
 
+// RRset is a just list of RRs. There is no guarantee that this is an official RRset as defined in
+// RFC 7719, Section 4 "RRset", use [dnsutil.IsRRset] to make that determination.
+// The type is defined here to implement the [sort.Interface].
+type RRset []RR
+
 // Header is the header in a DNS resource record. It implements the RR interface, as a header is the RR
 // without any data.
 type Header struct {
