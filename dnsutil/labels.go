@@ -4,10 +4,9 @@ import (
 	"strings"
 )
 
-// Split splits a name s into its label indexes.
+// Split splits a name s into its label indexes, s must be a syntactically valid domain name.
 // www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
-// The root name (.) returns nil. Also see SplitDomainName.
-// s must be a syntactically valid domain name.
+// The root name (.) returns the empty slice.
 func Split(s string) []int {
 	if s == "." {
 		return nil
