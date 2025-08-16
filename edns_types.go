@@ -275,8 +275,6 @@ var ExtendedErrorToString = map[uint16]string{
 // StringToExtendedError is a map from human readable descriptions to extended error info codes.
 var StringToExtendedError = reverseInt16(ExtendedErrorToString)
 
-const tlv = 4
-
 func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	switch x := option.(type) {
 	case *LLQ:
@@ -329,3 +327,6 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	// Coder() check, abuse Type()?
 	return 0, fmt.Errorf("dns: no option pack defined")
 }
+
+// type, length, value is the length the code (2 octets) and length (2 octects) of each EDNS0 option code.
+const tlv = 4

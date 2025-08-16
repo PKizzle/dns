@@ -37,7 +37,8 @@ type RR interface {
 	// Data returns all the rdata fields of the resource record.
 	Data() []Field
 	// SetData sets the rdata fields of the resource record. SetData([]Field) error??
-	// Len is the length if the RR when encoded in wire format, this is not a perfect metric and returning
+
+	// Len is the length of the RR when encoded in wire format, this is not a perfect metric and returning
 	// a slightly too large value is OK.
 	Len() int
 }
@@ -120,7 +121,8 @@ func (h *Header) String() string {
 }
 
 // EDNS0 determines if the "RR" is posing as an EDNS0 option. EDNS0 options are considered just RRs and must
-// be added to the [Pseudo] section of a DNS message.
+// be added to the [Pseudo] section of a DNS message. The Len method must return the length of the octects in
+// the [OPT] [RR], which is four plus the encoded lengh of the option itself.
 type EDNS0 interface {
 	RR
 	Pseudo() bool
@@ -166,7 +168,7 @@ type Msg struct {
 	// section. If an OPT RR is present it will always be the first RR in this section.
 	Pseudo []RR // Holds the RR(s) of the (virtual) peusdo section.
 	// ps holds the number of real RRs in the pseudo section, this is 3 max (OPT, TSIG and SIG(0)). The number of
-	// virtual RR in pseudo is len(Pseudo).
+	// virtual RR in pseudo is len(Pseudo). This is set after Unpack.
 	ps uint8
 
 	// Data is the data of the message that was either received from the wire or is about to be send
