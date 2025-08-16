@@ -14,7 +14,7 @@ type ResponseWriter interface {
 	LocalAddr() net.Addr
 	// RemoteAddr returns the net.Addr of the client that sent the current request.
 	RemoteAddr() net.Addr
-	// Conn returns the underlaying connection.
+	// Conn returns the underlaying connection. This must never return nil.
 	Conn() net.Conn
 	// ResponseWriter must also implement the io.Writer interface.
 	io.Writer

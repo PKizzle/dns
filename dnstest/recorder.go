@@ -2,6 +2,7 @@
 package dnstest
 
 import (
+	"net"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -9,23 +10,39 @@ import (
 
 // Recorder is a type of ResponseWriter that captures the Msg's data written to it.
 type Recorder struct {
-	dns.ResponseWriter
+	conn  net.Conn
 	Msg   *dns.Msg
 	Start time.Time
 }
 
+var _ dns.ResponseWriter = &Recorder{}
+
 // NewRecorder makes and returns a new Recorder, with start time set to now.
 func NewRecorder(w dns.ResponseWriter) *Recorder {
-	return &Recorder{ResponseWriter: w, Start: time.Now()}
+	if w == nil {
+		return &Recorder{Start: time.Now()}
+	}
+	return &Recorder{conn: w.Conn(), Start: time.Now()}
 }
 
-// Write is a wrapper that records the length of the message that gets written.
-// Write overrides the wrapped ResponseWriter's write method.
-func (r *Recorder) Write(p []byte) (int, error) {
-	n, err := r.ResponseWriter.Write(p)
-	if err == nil {
-		r.Msg = &dns.Msg{Data: p}
-		r.Msg.Unpack()
+func (r *Recorder) Conn() net.Conn        { return r }
+func (r *Recorder) Hijack()               {}
+func (r *Recorder) Session() *dns.Session { return nil }
+
+// Write is a wrapper that records the message that gets written to it.
+func (r *Recorder) Write(b []byte) (int, error) {
+	r.Msg = &dns.Msg{Data: b}
+	r.Msg.Unpack()
+	if r.conn != nil {
+		return r.conn.Write(b)
 	}
-	return n, err
+	return len(b), nil
 }
+
+func (r *Recorder) Read(b []byte) (n int, err error)   { return len(b), nil }
+func (r *Recorder) Close() error                       { return nil }
+func (r *Recorder) LocalAddr() net.Addr                { return nil }
+func (r *Recorder) RemoteAddr() net.Addr               { return nil }
+func (r *Recorder) SetDeadline(t time.Time) error      { return nil }
+func (r *Recorder) SetReadDeadline(t time.Time) error  { return nil }
+func (r *Recorder) SetWriteDeadline(t time.Time) error { return nil }

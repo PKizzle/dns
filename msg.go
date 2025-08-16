@@ -932,11 +932,6 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		}
 	}
 
-	if r.Conn() == nil {
-		n, err := w.Write(m.Data)
-		return int64(n), err
-	}
-
 	if sock, ok := r.Conn().(*net.TCPConn); ok {
 		l := make([]byte, 2, 2)
 		binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
