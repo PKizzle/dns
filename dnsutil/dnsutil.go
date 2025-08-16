@@ -2,8 +2,7 @@
 package dnsutil
 
 // Trim removes the zone component from q. It returns the trimmed
-// name or an error is zone is longer then qname. The trimmed name will be returned
-// without a trailing dot.
+// name or an error is zone is longer than q. The trimmed name will be returned without a trailing dot.
 func Trim(q string, z string) string {
 	zl := Count(z)
 	i, ok := Prev(q, zl)
@@ -15,11 +14,10 @@ func Trim(q string, z string) string {
 }
 
 /*
-// IsBelow?
-// IsSubDomain checks if child is indeed a child of the parent. If child and parent
-// are the same domain true is returned as well.
-func IsSubDomain(parent, child string) bool {
+// IsBelow checks if child sits below parent in the DNS tree. If child and parent
+// are the same true is returned as well.
+func IsBelow(parent, child string) bool {
 	// Entire child is contained in parent
-	return CompareDomainName(parent, child) == CountLabel(parent)
+	return CompareDomainName(parent, child) == Count(parent)
 }
 */

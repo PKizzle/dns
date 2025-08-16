@@ -20,13 +20,14 @@ wins.
 # Goals
 
 - KISS.
-- Everything is an RR.
+- Everything is an resource record.
 - Small API.
-- Fast. The cmd/reflect server does 350K/200K UDP/TCP respectively.
+- Fast.
+  - The cmd/reflect server does 350K/280K UDP/TCP respectively
 
 ## Difference with github.com/miekg/dns
 
-- `Msg` contains a buffer named Data that holds the binary data for this package. This pulls TSIG/SIG(0)
+- `Msg` contains a buffer named Data that holds the binary data for this message. This pulls TSIG/SIG(0)
   handling out of the client, simplifying it enormously as we can get rid of `dns.Conn`.
 - `Msg` includes all the ENDS0 OPT RR bits, as this almost was a real message header; in this package it now
   is.
@@ -43,14 +44,11 @@ wins.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
 - More:
   - msg is a io.Writer.
-  - msg.Data is re-used between request and reply (otionally turn off).
+  - msg.Data is re-used between request and reply in Exchange.
   - private RRs are easier.
-  - private EDNS0 are almost being able to do.
+  - private EDNS0 are almost implementatable.
 
 ### Setting EDNS0
-
-Both `SetQuestion` and `SetEdns0` are extra helper methods, build on top of the core library, here
-I'm still contemplating if that is even necessary.
 
 ```
 OLD                                           | NEW
@@ -62,8 +60,7 @@ m.SetEdns0(4096, true)                        | m.UDPSize = 4096
                                               | m.Security = true
 ```
 
-For `IsEdns0` (again helper function) the following is done to just get the UDPSize or the DO-bit, you then need to retrieve the bits
-from the `OPT` RR.
+Setting the UDP buffer size:
 
 ```
 OLD                                                      | NEW
@@ -76,7 +73,7 @@ for i := len(m.Extra) - 1; i >= 0; i-- {                 |
 }                                                        |
 ```
 
-Accessing ENDS0 options, again requires getting the `OPT` and getting the options from there.
+Accessing ENDS0 options:
 
 ```
 OLD                                                      | NEW
@@ -107,6 +104,9 @@ m.Extra = append(m.Extra, o)                                      |
 
 ### Text Output
 
+Note the `do` flag now being shown as if it was set in the message header, OPT options are displayed as RRs
+and can also be created with `dns.New`.
+
 ```
 OLD                                                                  | NEW
                                                                      |
@@ -125,9 +125,10 @@ OLD                                                                  | NEW
 ### Server
 
 Because Msg now carries its binary data too (you can still discard it) there is no need to do TSIG in the
-server it self, it can now be done in a handler.
+server it self, it can now be done in a handler. This, again, removes a little of internal code that slowed
+things down.
 
-The default implementation of `dns.ResponseHandler` is thread safe and this allows for TCP pipelining, which
+The default implementation of `dns.ResponseWriter` is thread safe and this allows for TCP pipelining, which
 is thusly implemented in `dns.Server`. Writing or reading data is now done with `io.Copy` no more `ReadMsg` or
 `WriteMsg`.
 
@@ -141,16 +142,16 @@ Send pull request if you want to be listed here.
 
 # Features
 
-- UDP/TCP queries, TCP query-pipelining, IPv4 and IPv6
-- RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE (for all record types) are supported
-- Fast
-- Server side programming (mimicking the net/http package)
-- Client side programming
-- DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA and Ed25519
-- EDNS0, NSID, Cookies
-- AXFR/IXFR
-- TSIG, SIG(0)
-- DNS over TLS (DoT): encrypted connection between client and server over TCP
+- UDP/TCP queries, TCP query-pipelining, IPv4 and IPv6.
+- RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE - for _all_ record types) is supported.
+- Fast.
+- Server side programming (mimicking the net/http package).
+- Client side programming.
+- DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA and Ed25519.
+- EDNS0, NSID, Cookies, etc.
+- AXFR/IXFR.
+- TSIG, SIG(0).
+- DNS over TLS (DoT): encrypted connection between client and server over TCP.
 
 Have fun!
 

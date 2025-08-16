@@ -10,7 +10,7 @@ import (
 // This is copied to zdnsutil.go in the main package to also have access to these functions and not have an
 // import cycle.
 
-// Count return the number of labels in the name s.
+// Count returns the number of labels in the name s.
 func Count(s string) (labels int) {
 	if s == "." {
 		return
@@ -80,8 +80,7 @@ func Fqdn(s string) string {
 	return s + "."
 }
 
-// IsFqdn checks if a domain name is fully qualified. Note that due the escapes in the names this is not
-// completely trivial to establish.
+// IsFqdn checks if a domain name is fully qualified. Note that due the escapes in names this is not completely trivial to establish.
 func IsFqdn(s string) bool {
 	if s == "." {
 		return true
@@ -189,7 +188,8 @@ func IsName(s string) bool {
 	return true
 }
 
-// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question and sets [m.Response] to true in m
+// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question and sets query
+// response bit to true.
 func SetReply(m, r *dns.Msg) *dns.Msg {
 	m.ID = r.ID
 	m.Response = true
