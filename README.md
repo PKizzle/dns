@@ -168,6 +168,7 @@ the following should work:
 ## Examples
 
 A short "how to use the API" is at the beginning of doc.go (this also will show when you call `godoc codeberg.org/miekg/dns`).
+The cmd/ directory contains a few example programs.
 
 ## Supported RFCs
 
