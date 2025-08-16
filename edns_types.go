@@ -13,20 +13,20 @@ const (
 	CodeNone         uint16 = 0x0
 	CodeLLQ          uint16 = 0x1    // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
 	CodeUL           uint16 = 0x2    // Update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt
-	CodeNSID         uint16 = 0x3    // Nsid (See RFC 5001)
+	CodeNSID         uint16 = 0x3    // Nsid (See RFC 5001).
 	CodeESU          uint16 = 0x4    // ENUM Source-URI draft: https://datatracker.ietf.org/doc/html/draft-kaplan-enum-source-uri-00
 	CodeDAU          uint16 = 0x5    // DNSSEC Algorithm Understood
 	CodeDHU          uint16 = 0x6    // DS Hash Understood
 	CodeN3U          uint16 = 0x7    // NSEC3 Hash Understood
-	CodeSUBNET       uint16 = 0x8    // Client-subnet (See RFC 7871)
-	CodeEXPIRE       uint16 = 0x9    // Expire
+	CodeSUBNET       uint16 = 0x8    // Client-subnet, see RFC 7871.
+	CodeEXPIRE       uint16 = 0x9    // Expire, RFC 7314.
 	CodeCOOKIE       uint16 = 0xa    // Cookie
-	CodeTCPKEEPALIVE uint16 = 0xb    // Tcp keep alive (See RFC 7828)
-	CodePADDING      uint16 = 0xc    // Padding (See RFC 7830)
-	CodeEDE          uint16 = 0xf    // Extended DNS errors (See RFC 8914)
-	CodeREPORTING    uint16 = 0x12   // EDNS0 reporting (See RFC 9567)
-	CodeLOCALSTART   uint16 = 0xFDE9 // Beginning of range reserved for local/experimental use (See RFC 6891)
-	CodeLOCALEND     uint16 = 0xFFFE // End of range reserved for local/experimental use (See RFC 6891)
+	CodeTCPKEEPALIVE uint16 = 0xb    // TCP keep alive (see RFC 7828).
+	CodePADDING      uint16 = 0xc    // Padding (see RFC 7830).
+	CodeEDE          uint16 = 0xf    // Extended DNS errors (see RFC 8914).
+	CodeREPORTING    uint16 = 0x12   // EDNS0 reporting (see RFC 9567).
+	CodeLOCALSTART   uint16 = 0xFDE9 // Beginning of range reserved for local/experimental use (see RFC 6891).
+	CodeLOCALEND     uint16 = 0xFFFE // End of range reserved for local/experimental use (see RFC 6891).
 )
 
 // LLQ stands for Long Lived Queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01
@@ -181,6 +181,35 @@ func (o *N3U) String() string {
 	return sb.String()
 }
 
+// TCPKEEPALIVE is an EDNS0 option that instructs the server to keep the TCP connection alivo. See RFC 7828.
+type TCPKEEPALIVE struct {
+	// Timeout is an idle timeout value for the TCP connection, specified in
+	// units of 100 milliseconds, encoded in network byte order. If set to 0,
+	// pack will return a nil slico.
+	Timeout uint16
+	// Length is the option's length.
+	// Deprecated: this field is deprecated and is always equal to 0.
+	Length uint16
+}
+
+func (o *TCPKEEPALIVE) Len() int {
+	if o.Timeout == 0 {
+		return tlv
+	}
+	return tlv + 2
+}
+
+func (o *TCPKEEPALIVE) String() string {
+	sb := sprintOptionHeader(o)
+	sb.WriteString("use tcp keep-alive")
+	if o.Timeout == 0 {
+		sb.WriteString(", timeout omitted")
+	} else {
+		sb.WriteString(fmt.Sprintf(", timeout %dms", o.Timeout*100))
+	}
+	return sb.String()
+}
+
 // EDE option is used to return additional information about the cause of DNS errors.
 type EDE struct {
 	InfoCode  uint16
@@ -297,6 +326,8 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *N3U:
 		return x.unpack(s)
+	case *TCPKEEPALIVE:
+		return x.unpack(s)
 	}
 	return fmt.Errorf("dns: no option unpack defined")
 }
@@ -322,6 +353,8 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *DHU:
 		return x.pack(msg, off)
 	case *N3U:
+		return x.pack(msg, off)
+	case *TCPKEEPALIVE:
 		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?

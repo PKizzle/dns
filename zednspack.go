@@ -181,3 +181,20 @@ func (o *EXPIRE) unpack(s *cryptobyte.String) error {
 	}
 	return nil
 }
+
+func (o *TCPKEEPALIVE) pack(msg []byte, off int) (int, error) {
+	if o.Timeout > 0 {
+		return packUint16(o.Timeout, msg, off)
+	}
+	return off, nil
+}
+
+func (o *TCPKEEPALIVE) unpack(s *cryptobyte.String) error {
+	if s.Empty() {
+		return nil
+	}
+	if !s.ReadUint16(&o.Timeout) {
+		return ErrUnpackOverflow
+	}
+	return nil
+}

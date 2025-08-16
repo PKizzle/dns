@@ -2,39 +2,42 @@
 
 package dns
 
-func (rr *LLQ) Header() *Header       { return &Header{Name: "."} }
-func (rr *LLQ) Pseudo() bool          { return true }
-func (rr *REPORTING) Header() *Header { return &Header{Name: "."} }
-func (rr *REPORTING) Pseudo() bool    { return true }
-func (rr *COOKIE) Header() *Header    { return &Header{Name: "."} }
-func (rr *COOKIE) Pseudo() bool       { return true }
-func (rr *NSID) Header() *Header      { return &Header{Name: "."} }
-func (rr *NSID) Pseudo() bool         { return true }
-func (rr *PADDING) Header() *Header   { return &Header{Name: "."} }
-func (rr *PADDING) Pseudo() bool      { return true }
-func (rr *EXPIRE) Header() *Header    { return &Header{Name: "."} }
-func (rr *EXPIRE) Pseudo() bool       { return true }
-func (rr *DAU) Header() *Header       { return &Header{Name: "."} }
-func (rr *DAU) Pseudo() bool          { return true }
-func (rr *DHU) Header() *Header       { return &Header{Name: "."} }
-func (rr *DHU) Pseudo() bool          { return true }
-func (rr *N3U) Header() *Header       { return &Header{Name: "."} }
-func (rr *N3U) Pseudo() bool          { return true }
-func (rr *EDE) Header() *Header       { return &Header{Name: "."} }
-func (rr *EDE) Pseudo() bool          { return true }
+func (rr *LLQ) Header() *Header          { return &Header{Name: "."} }
+func (rr *LLQ) Pseudo() bool             { return true }
+func (rr *REPORTING) Header() *Header    { return &Header{Name: "."} }
+func (rr *REPORTING) Pseudo() bool       { return true }
+func (rr *COOKIE) Header() *Header       { return &Header{Name: "."} }
+func (rr *COOKIE) Pseudo() bool          { return true }
+func (rr *NSID) Header() *Header         { return &Header{Name: "."} }
+func (rr *NSID) Pseudo() bool            { return true }
+func (rr *PADDING) Header() *Header      { return &Header{Name: "."} }
+func (rr *PADDING) Pseudo() bool         { return true }
+func (rr *EXPIRE) Header() *Header       { return &Header{Name: "."} }
+func (rr *EXPIRE) Pseudo() bool          { return true }
+func (rr *DAU) Header() *Header          { return &Header{Name: "."} }
+func (rr *DAU) Pseudo() bool             { return true }
+func (rr *DHU) Header() *Header          { return &Header{Name: "."} }
+func (rr *DHU) Pseudo() bool             { return true }
+func (rr *N3U) Header() *Header          { return &Header{Name: "."} }
+func (rr *N3U) Pseudo() bool             { return true }
+func (rr *TCPKEEPALIVE) Header() *Header { return &Header{Name: "."} }
+func (rr *TCPKEEPALIVE) Pseudo() bool    { return true }
+func (rr *EDE) Header() *Header          { return &Header{Name: "."} }
+func (rr *EDE) Pseudo() bool             { return true }
 
 // CodeToRR is a map of constructors for each EDNS0 RR type.
 var CodeToRR = map[uint16]func() EDNS0{
-	CodeLLQ:       func() EDNS0 { return new(LLQ) },
-	CodeREPORTING: func() EDNS0 { return new(REPORTING) },
-	CodeCOOKIE:    func() EDNS0 { return new(COOKIE) },
-	CodeNSID:      func() EDNS0 { return new(NSID) },
-	CodePADDING:   func() EDNS0 { return new(PADDING) },
-	CodeEXPIRE:    func() EDNS0 { return new(EXPIRE) },
-	CodeDAU:       func() EDNS0 { return new(DAU) },
-	CodeDHU:       func() EDNS0 { return new(DHU) },
-	CodeN3U:       func() EDNS0 { return new(N3U) },
-	CodeEDE:       func() EDNS0 { return new(EDE) },
+	CodeLLQ:          func() EDNS0 { return new(LLQ) },
+	CodeREPORTING:    func() EDNS0 { return new(REPORTING) },
+	CodeCOOKIE:       func() EDNS0 { return new(COOKIE) },
+	CodeNSID:         func() EDNS0 { return new(NSID) },
+	CodePADDING:      func() EDNS0 { return new(PADDING) },
+	CodeEXPIRE:       func() EDNS0 { return new(EXPIRE) },
+	CodeDAU:          func() EDNS0 { return new(DAU) },
+	CodeDHU:          func() EDNS0 { return new(DHU) },
+	CodeN3U:          func() EDNS0 { return new(N3U) },
+	CodeTCPKEEPALIVE: func() EDNS0 { return new(TCPKEEPALIVE) },
+	CodeEDE:          func() EDNS0 { return new(EDE) },
 }
 
 // RRToCode is the reverse of CodeToRR, implemented as a function.
@@ -58,6 +61,8 @@ func RRToCode(rr EDNS0) uint16 {
 		return CodeDHU
 	case *N3U:
 		return CodeN3U
+	case *TCPKEEPALIVE:
+		return CodeTCPKEEPALIVE
 	case *EDE:
 		return CodeEDE
 	}
@@ -66,25 +71,27 @@ func RRToCode(rr EDNS0) uint16 {
 
 // CodeToString is a map of strings for each EDNS0 RR type.
 var CodeToString = map[uint16]string{
-	CodeLLQ:       "LLQ",
-	CodeREPORTING: "REPORTING",
-	CodeCOOKIE:    "COOKIE",
-	CodeNSID:      "NSID",
-	CodePADDING:   "PADDING",
-	CodeEXPIRE:    "EXPIRE",
-	CodeDAU:       "DAU",
-	CodeDHU:       "DHU",
-	CodeN3U:       "N3U",
-	CodeEDE:       "EDE",
+	CodeLLQ:          "LLQ",
+	CodeREPORTING:    "REPORTING",
+	CodeCOOKIE:       "COOKIE",
+	CodeNSID:         "NSID",
+	CodePADDING:      "PADDING",
+	CodeEXPIRE:       "EXPIRE",
+	CodeDAU:          "DAU",
+	CodeDHU:          "DHU",
+	CodeN3U:          "N3U",
+	CodeTCPKEEPALIVE: "TCPKEEPALIVE",
+	CodeEDE:          "EDE",
 }
 
-func (rr *COOKIE) Data() []Field    { return []Field{rr.Cookie} }
-func (rr *DAU) Data() []Field       { return []Field{rr.AlgCode} }
-func (rr *DHU) Data() []Field       { return []Field{rr.AlgCode} }
-func (rr *EDE) Data() []Field       { return []Field{rr.InfoCode, rr.ExtraText} }
-func (rr *EXPIRE) Data() []Field    { return []Field{rr.Expire} }
-func (rr *LLQ) Data() []Field       { return []Field{rr.Version, rr.Opcode, rr.Error, rr.ID, rr.LeaseLife} }
-func (rr *N3U) Data() []Field       { return []Field{rr.AlgCode} }
-func (rr *NSID) Data() []Field      { return []Field{rr.Nsid} }
-func (rr *PADDING) Data() []Field   { return []Field{rr.Padding} }
-func (rr *REPORTING) Data() []Field { return []Field{rr.AgentDomain} }
+func (rr *COOKIE) Data() []Field       { return []Field{rr.Cookie} }
+func (rr *DAU) Data() []Field          { return []Field{rr.AlgCode} }
+func (rr *DHU) Data() []Field          { return []Field{rr.AlgCode} }
+func (rr *EDE) Data() []Field          { return []Field{rr.InfoCode, rr.ExtraText} }
+func (rr *EXPIRE) Data() []Field       { return []Field{rr.Expire} }
+func (rr *LLQ) Data() []Field          { return []Field{rr.Version, rr.Opcode, rr.Error, rr.ID, rr.LeaseLife} }
+func (rr *N3U) Data() []Field          { return []Field{rr.AlgCode} }
+func (rr *NSID) Data() []Field         { return []Field{rr.Nsid} }
+func (rr *PADDING) Data() []Field      { return []Field{rr.Padding} }
+func (rr *REPORTING) Data() []Field    { return []Field{rr.AgentDomain} }
+func (rr *TCPKEEPALIVE) Data() []Field { return []Field{rr.Timeout, rr.Length} }

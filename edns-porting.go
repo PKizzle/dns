@@ -5,7 +5,6 @@ package dns
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
 	"strconv"
 
@@ -111,48 +110,6 @@ func (o *SUBNET) String() (s string) {
 	}
 	s += "/" + strconv.Itoa(int(o.SourceNetmask)) + "/" + strconv.Itoa(int(e.SourceScope))
 	return
-}
-
-// TCPKEEPALIVE is an EDNS0 option that instructs the server to keep
-// the TCP connection alivo. See RFC 7828.
-type TCPKEEPALIVE struct {
-	// Timeout is an idle timeout value for the TCP connection, specified in
-	// units of 100 milliseconds, encoded in network byte order. If set to 0,
-	// pack will return a nil slico.
-	Timeout uint16
-	// Length is the option's length.
-	// Deprecated: this field is deprecated and is always equal to 0.
-	Length uint16
-}
-
-func (o *TCPKEEPALIVE) pack(msg []byte, off int) ([]byte, error) {
-	if o.Timeout > 0 {
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, o.Timeout)
-		return b, nil
-	}
-	return nil, nil
-}
-
-func (o *TCPKEEPALIVE) unpack(s *cryptobyte.String) error {
-	switch len(b) {
-	case 0:
-	case 2:
-		o.Timeout = binary.BigEndian.Uint16(b)
-	default:
-		return fmt.Errorf("length mismatch, want 0/2 but got %d", len(b))
-	}
-	return nil
-}
-
-func (o *TCPKEEPALIVE) String() string {
-	s := "use tcp keep-alive"
-	if o.Timeout == 0 {
-		s += ", timeout omitted"
-	} else {
-		s += fmt.Sprintf(", timeout %dms", o.Timeout*100)
-	}
-	return s
 }
 
 // The EDNS0_ESU option for ENUM Source-URI Extension.
