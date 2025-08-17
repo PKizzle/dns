@@ -47,3 +47,22 @@ func RR(msgBuf []byte, off int) int {
 	off += 2 + int(rdlength)
 	return off
 }
+
+// To jumps to the start of the i-th RR in the message. When we jump over the message 0 is returned.
+func To(i int, msgBuf []byte, off int) int {
+	off += 12
+	if off > len(msgBuf) {
+		return 0
+	}
+	off = Question(msgBuf, off)
+	if off > len(msgBuf) {
+		return 0
+	}
+	for range i {
+		off = RR(msgBuf, off)
+		if off > len(msgBuf) {
+			return 0
+		}
+	}
+	return off
+}

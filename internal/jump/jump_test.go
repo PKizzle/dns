@@ -2,11 +2,12 @@ package jump
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
 func TestName(t *testing.T) {
-	tcs := []struct {
+	testcases := []struct {
 		buf   []byte
 		start int
 		off   int
@@ -23,11 +24,33 @@ func TestName(t *testing.T) {
 		// miek.nl (4 miek 2 nl), no null byte, should terminate.
 		{[]byte{4, 109, 105, 101, 107, 2, 110, 108}, 2, 0, Name},
 	}
-	for i, tc := range tcs {
+	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			off := Name(tc.buf, tc.start)
 			if off != tc.off {
 				t.Errorf("expected offset %d, got %d", tc.off, off)
+			}
+		})
+	}
+}
+
+func TestTo(t *testing.T) {
+	testcases := []struct {
+		binary string
+		start  int
+		rrs    int
+		off    int
+	}{
+		{"dig-mx-miek.nl", 0, 1, 10},
+	}
+	//	binary := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("test %d: %s", i, tc.binary), func(t *testing.T) {
+			buf, _ := os.ReadFile("../../testdata/" + tc.binary)
+			off := To(tc.rrs, buf, tc.start)
+			fmt.Printf("%v\n", buf[off:])
+			if off != tc.off {
+				t.Errorf("expected to land on %d, got %d", tc.off, off)
 			}
 		})
 	}
