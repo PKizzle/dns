@@ -58,7 +58,7 @@ func (rr *TSIG) mac(m *Msg, options TSIGOption) ([]byte, error) {
 		buf = buf[:n]
 	}
 
-	tsigvar := make([]byte, DefaultMsgSize)
+	tsigvar := make([]byte, MinMsgSize)
 	if options.TimersOnly {
 		tw := &timerWireFmt{TimeSigned: rr.TimeSigned, Fudge: rr.Fudge}
 		n, err := tw.pack(tsigvar)

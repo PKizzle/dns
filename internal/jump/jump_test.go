@@ -41,14 +41,16 @@ func TestTo(t *testing.T) {
 		rrs    int
 		off    int
 	}{
-		{"dig-mx-miek.nl", 0, 1, 10},
+		{"dig-mx-miek.nl", 0, 1, 62},
+		{"dig-mx-miek.nl", 0, 2, 78},
+		{"dig-mx-miek.nl", 0, 3, 98},
+		{"dig-mx-miek.nl", 0, 10, 0},
 	}
 	//	binary := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("test %d: %s", i, tc.binary), func(t *testing.T) {
 			buf, _ := os.ReadFile("../../testdata/" + tc.binary)
 			off := To(tc.rrs, buf, tc.start)
-			fmt.Printf("%v\n", buf[off:])
 			if off != tc.off {
 				t.Errorf("expected to land on %d, got %d", tc.off, off)
 			}

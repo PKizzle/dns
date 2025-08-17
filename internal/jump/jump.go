@@ -3,7 +3,7 @@ package jump
 
 import "encoding/binary"
 
-// Main use is find the last RR in a message for TSIG.
+// Main use is to find the last RR in a message for TSIG.
 
 // Name jumps the name that should start msgBuf[off].
 func Name(msgBuf []byte, off int) int {
@@ -48,9 +48,9 @@ func RR(msgBuf []byte, off int) int {
 	return off
 }
 
-// To jumps to the start of the i-th RR in the message. When we jump over the message 0 is returned.
-func To(i int, msgBuf []byte, off int) int {
-	off += 12
+// To jumps to the start of the i-th RR in the message, that start at msgBuf[0]. When we jump over the message 0 is returned.
+func To(i int, msgBuf []byte) int {
+	off := 12
 	if off > len(msgBuf) {
 		return 0
 	}

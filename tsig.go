@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"codeberg.org/miekg/dns/internal/jump"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -59,7 +61,8 @@ func (*TSIG) parse(c *zlexer, origin string) *ParseError {
 // time. The TSIG MAC is saved in that RR. When Sign is called for the first time
 // options.RequestMAC should be empty and options.TimersOnly should be false.
 //
-// The completed TSIG is then appended to m.Data and to m.Pseudo. Do not to call m.Pack() after this.
+// The completed TSIG is then appended to m.Data and to m.Pseudo. The additional record count is updated
+// in m.Data to reflect this addition.
 func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
 	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
 	binary.BigEndian.PutUint16(m.Data[0:2], rr.OrigID)
@@ -70,7 +73,9 @@ func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
 	if err != nil {
 		return err
 	}
-	k.Sign(rr, macbuf)
+	if err := k.Sign(rr, macbuf); err != nil {
+		return err
+	}
 
 	rr.MACSize = uint16(len(rr.MAC) / 2)
 	if rr.TimeSigned == 0 {
@@ -94,7 +99,40 @@ func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
 	return nil
 }
 
+// Verify uses the TSIG record to verify the data in the message. In binary TSIG record should be still
+// attached to m.Data and must be the last RR in the message. On successful verification, the TSIG record will
+// be removed from m.Data but left in m.Pseudo (addtional record count will be updated), and a nil error is returned.
 func (rr *TSIG) Verify(k TSIGVerifier, m *Msg, options TSIGOption) error {
+	lastrr := len(m.Question) + len(m.Answer) + len(m.Extra) + int(m.ps) - 1
+	if lastrr < 1 {
+		return ErrNoTSIG
+	}
+
+	last := jump.To(lastrr, m.Data)
+	if last == 0 {
+		return ErrNoTSIG
+	}
+	m.Data = m.Data[:last]
+	macbuf, err := rr.mac(m, options)
+	if err != nil {
+		return err
+	}
+	if err := k.Verify(rr, macbuf, options); err != nil {
+		return err
+	}
+
+	now := uint64(time.Now().Unix())
+	// Fudge factor works both ways. A message can arrive before it was signed because of clock skew.
+	// We check this after verifying the signature, following draft-ietf-dnsop-rfc2845bis
+	// instead of RFC2845, in order to prevent a security vulnerability as reported in CVE-2017-3142/3143.
+	fudge := now - rr.TimeSigned
+	if now < rr.TimeSigned {
+		fudge = rr.TimeSigned - now
+	}
+	if uint64(rr.Fudge) < fudge {
+		return ErrTime
+	}
+
 	return nil
 }
 

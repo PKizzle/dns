@@ -186,14 +186,14 @@ type Msg struct {
 	Extra    []RR // Holds the RR(s) of the additional section, except records that go into the pseudo section.
 	// The Pseudo section is a virtual (doesn't exist on the wire) section in this package. It holds the OPT
 	// EDNS0 option codes, that are interpreted (and shown) as RRs. If a TSIG or SIG(0) record is present it also sits in this
-	// section. This package takes care of hidding the OPT RR, it will never be visible in Extra, not the
-	// Pseudo section.
+	// section. This package takes care of hidding the OPT RR, it will never be visible in Extra, nor in the Pseudo section.
 	Pseudo []RR // Holds the RR(s) of the (virtual) peusdo section.
-	// ps holds the number of real RRs in the pseudo section, this is 3 max (OPT, TSIG and SIG(0)). The number of
-	// virtual RR in pseudo is len(Pseudo). This is set after Unpack.
+	// ps holds the number of real RRs in the pseudo section, this is 2 max: TSIG and SIG(0), although that
+	// should never be the case. The number of virtual RR in pseudo is len(Pseudo). This is set after Unpack.
+	// The OPT RR is completely hidden from view, on m.Data holds that.
 	ps uint8
 
-	Stateful []RR // Holds the DSO RR(s) for Stateful operations.
+	Stateful []RR // Holds the DSO RR(s) for Stateful operations, see RFC 8490.
 
 	// Data is the data of the message that was either received from the wire or is about to be send
 	// over the wire. Note that this data is a snapshot of the Msg as it was packed or unpacked.

@@ -14,7 +14,6 @@ func (e *Error) Error() string { return "dns: " + e.err }
 
 var (
 	ErrAlg              = &Error{err: "bad algorithm"}                  // ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrAuth             = &Error{err: "bad authentication"}             // ErrAuth indicates an error in the TSIG authentication.
 	ErrBuf              = &Error{err: "buffer size too small"}          // ErrBuf indicates that the buffer used is too small for the message.
 	ErrFqdn             = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
 	ErrName             = &Error{err: "bad domain name"}
@@ -24,7 +23,7 @@ var (
 	ErrKey              = &Error{err: "bad key"}
 	ErrKeySize          = &Error{err: "bad key size"}
 	ErrLongDomain       = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
-	ErrNoSig            = &Error{err: "no signature found"}
+	ErrNoTSIG           = &Error{err: "no TSIG signature found"}
 	ErrPrivKey          = &Error{err: "bad private key"}
 	ErrRcode            = &Error{err: "bad rcode"}
 	ErrRRset            = &Error{err: "bad rrset"}
