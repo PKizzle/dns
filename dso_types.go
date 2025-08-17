@@ -12,7 +12,7 @@ const (
 
 // for string we want to be able parse them with New().
 
-// KEEPALIVE impleemnts  RFC 8490, Section 7.1: Keepalive TLV.
+// KEEPALIVE implements  RFC 8490, Section 7.1: Keepalive TLV.
 //
 // This record must be put in the stateful section.
 type KEEPALIVE struct {
