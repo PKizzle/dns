@@ -22,7 +22,7 @@ import (
 //
 // runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 4 -T 4", if runtime.NumCPU returns 4.
 //
-// See dnsperf on how to create queries. The queries io.Reader is drained in placed in a file.
+// See dnsperf on how to create queries. The queries io.Reader is drained and placed in a file.
 //
 // The output is simular to running Go benchmark tests and can be used in benchstat.
 func Run(t *testing.T, queries io.Reader, addr, network string, duration time.Duration) error {
