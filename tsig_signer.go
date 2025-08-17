@@ -10,16 +10,12 @@ import (
 	"time"
 )
 
-// default implemention for TSIGSigner and TSIGVerifier
-
-// HMAC contains the secret used to create the TSIG.
+// HMAC is the secret used to create the TSIG.
 type HMAC string
 
-func (h HMAC) Sign(t *TSIG, p []byte) error {
-	secret, err := fromBase64([]byte(h))
-	if err != nil {
-		return err
-	}
+func (h HMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
+	secret := []byte(h)
+
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
@@ -33,15 +29,24 @@ func (h HMAC) Sign(t *TSIG, p []byte) error {
 	case HmacSHA512:
 		hs = hmac.New(sha512.New, secret)
 	default:
-		return ErrKeyAlg
+		return nil, ErrKeyAlg
 	}
 	hs.Write(p)
-	t.MAC = hex.EncodeToString(hs.Sum(nil))
-	return nil
+	return hs.Sum(nil), nil
 }
 
 func (h HMAC) Verify(t *TSIG, p []byte) error {
-	// verify
+	buf, err := h.Sign(t, p)
+	if err != nil {
+		return err
+	}
+	mac, err := hex.DecodeString(t.MAC)
+	if err != nil {
+		return err
+	}
+	if !hmac.Equal(buf, mac) {
+		return ErrSig
+	}
 	return nil
 }
 

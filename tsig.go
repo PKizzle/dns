@@ -2,6 +2,7 @@ package dns
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"strconv"
 	"strings"
 	"time"
@@ -73,10 +74,12 @@ func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
 	if err != nil {
 		return err
 	}
-	if err := k.Sign(rr, macbuf); err != nil {
+	mac, err := k.Sign(rr, macbuf)
+	if err != nil {
 		return err
 	}
 
+	rr.MAC = hex.EncodeToString(mac)
 	rr.MACSize = uint16(len(rr.MAC) / 2)
 	if rr.TimeSigned == 0 {
 		rr.TimeSigned = uint64(time.Now().Unix())
@@ -143,9 +146,9 @@ type TSIGOption struct {
 
 type (
 	TSIGSigner interface {
-		// Sign is passed the to-be-signed binary data extracted from the DNS message in [Sign]. It should return
-		// the signature in t.MAC as a hex encoded string.
-		Sign(t *TSIG, p []byte) error
+		// Sign is passed the to-be-signed binary data extracted from the DNS message in. It should return
+		// signature or an error.
+		Sign(t *TSIG, p []byte) ([]byte, error)
 	}
 
 	TSIGVerifier interface {
