@@ -44,11 +44,15 @@ func RR(msgBuf []byte, off int) int {
 		return 0
 	}
 	rdlength := binary.BigEndian.Uint16(msgBuf[off:])
-	off += 2 + int(rdlength)
+	println("READ RDLENGTH", rdlength, "at", off)
+	println(off+2+int(rdlength), off, 2, rdlength)
+	off = off + 2 + int(rdlength)
+	println("RETTING", off)
 	return off
 }
 
-// To jumps to the start of the i-th RR in the message, that start at msgBuf[0]. When we jump over the message 0 is returned.
+// To jumps to the start of the i-th RR in the message, that start at msgBuf[0]. This counts from 0 which
+// return the RR after the question section. When we jump over the message 0 is returned.
 func To(i int, msgBuf []byte) int {
 	off := 12
 	if off > len(msgBuf) {
@@ -60,6 +64,7 @@ func To(i int, msgBuf []byte) int {
 	}
 	for range i {
 		off = RR(msgBuf, off)
+		println(off)
 		if off > len(msgBuf) {
 			return 0
 		}

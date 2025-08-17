@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 func TestName(t *testing.T) {
@@ -37,23 +39,27 @@ func TestName(t *testing.T) {
 func TestTo(t *testing.T) {
 	testcases := []struct {
 		binary string
-		start  int
 		rrs    int
 		off    int
 	}{
-		{"dig-mx-miek.nl", 0, 1, 62},
-		{"dig-mx-miek.nl", 0, 2, 78},
-		{"dig-mx-miek.nl", 0, 3, 98},
-		{"dig-mx-miek.nl", 0, 10, 0},
+		//		{"dig-mx-miek.nl", 0, 25},
+		//		{"dig-mx-miek.nl", 1, 62},
+		//		{"dig-mx-miek.nl", 2, 98},
+		//		{"dig-mx-miek.nl", 3, 114},
+		//		{"dig-mx-miek.nl", 4, 135},
+		{"dig-mx-miek.nl", 5, 158}, // OPT RR
+		{"dig-mx-miek.nl", 6, 0},   // overshoot
 	}
-	//	binary := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("test %d: %s", i, tc.binary), func(t *testing.T) {
 			buf, _ := os.ReadFile("../../testdata/" + tc.binary)
-			off := To(tc.rrs, buf, tc.start)
+			off := To(tc.rrs, buf)
 			if off != tc.off {
 				t.Errorf("expected to land on %d, got %d", tc.off, off)
+				t.Logf("%v\n", buf[off:])
 			}
+			t.Log(bin.Dump(buf))
+			t.Log(bin.Dump(buf[off:], off))
 		})
 	}
 }

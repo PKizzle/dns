@@ -38,6 +38,7 @@ func TestReadMsgBinary(t *testing.T) {
 			msg := &Msg{Data: buf}
 			if err := msg.Unpack(); err != nil {
 				t.Errorf("%s", err)
+				t.Logf("%v\n", msg.Data)
 			}
 			t.Logf("%s\n", msg)
 		})
