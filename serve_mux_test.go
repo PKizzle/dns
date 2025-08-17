@@ -25,3 +25,14 @@ func TestServeMuxDSRouting(t *testing.T) {
 		t.Errorf("expected %s, got %s", "miek.nl. for DS", zone)
 	}
 }
+
+func BenchmarkServeMux(b *testing.B) {
+	mux := NewServeMux()
+	noopHandler := func(ctx context.Context, w ResponseWriter, req *Msg) {}
+	mux.Handle("_udp.example.org.", HandlerFunc(noopHandler))
+
+	for b.Loop() {
+		mux.match("_dns._udp.example.com.", TypeSRV)
+		mux.match("miek.nl.", TypeSRV)
+	}
+}

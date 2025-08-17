@@ -16,11 +16,12 @@ import (
 )
 
 // Run runs dnsperf which read the queries from the io.Reader and benchmarks the server running on addr. The
-// test runs for duration. The thread count is set the runtime.NumCPU. I.e.
+// test runs for duration. The thread count is set the runtime.NumCPU/2, as both the server and requestor are
+// running on the same machine. I.e.
 //
 //	Run(q, "127.0.0.1:8053", udp, 2*time.Second, 10)
 //
-// runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 4 -T 4", 10 times (if runtime.NumCPU returns 4).
+// runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 2 -T 2", 10 times (if runtime.NumCPU returns 2).
 //
 // See dnsperf on how to create queries. The queries io.Reader is drained and placed in a file.
 //
@@ -45,8 +46,8 @@ func Run(t *testing.T, queries io.Reader, addr, network string, duration time.Du
 		"-p", port,
 		"-d", dir + "/queries.txt",
 		"-l", fmt.Sprintf("%d", int(duration.Seconds())),
-		"-c", strconv.Itoa(runtime.NumCPU()), // clients
-		"-T", strconv.Itoa(runtime.NumCPU()), // threads
+		"-c", strconv.Itoa(runtime.NumCPU() / 2), // clients
+		"-T", strconv.Itoa(runtime.NumCPU() / 2), // threads
 	}
 	if network == "tcp" {
 		args = append(args, "-m", network)

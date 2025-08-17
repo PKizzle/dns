@@ -171,6 +171,11 @@ type MsgHeader struct {
 // Msg is a DNS message.
 type Msg struct {
 	MsgHeader
+
+	// optimization to put the qtype directly in the message, shortcuts needing to actually have a question
+	// section (this will then be zero) and avoid RRToType which is slightly slower in the hot path.
+	qtype uint16
+
 	// Question holds a single "RR", in quotes because it is only the domain name, type and class that is
 	// actually encoded here. This package takes care of taking and returning the right bit of an RR.
 	// Setting the question is done like so: msg.Question = []RR{&MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}}

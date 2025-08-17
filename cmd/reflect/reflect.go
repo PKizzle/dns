@@ -60,7 +60,7 @@ func handleReflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		a   net.IP
 	)
 	if err := r.Unpack(); err != nil {
-		log.Printf("%s", err.Error())
+		log.Fatalf("%s", err.Error())
 	}
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, r)

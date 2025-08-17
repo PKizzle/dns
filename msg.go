@@ -561,7 +561,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 }
 
 // We only allow a single question in the question section.
-func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	name, err := unpackName(msg, msgBuf)
 	if err != nil {
 		return nil, fmt.Errorf("%s: question.Name", err.Error())
@@ -570,6 +570,7 @@ func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	if !msg.Empty() && !msg.ReadUint16(&qtype) {
 		return nil, ErrTruncatedMessage.Fmt(": %s", "question.Type")
 	}
+	m.qtype = qtype
 
 	var qclass uint16
 	if !msg.Empty() && !msg.ReadUint16(&qclass) {
@@ -586,7 +587,7 @@ func unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	return rr, nil
 }
 
-func unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
+func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
 	// We don't preallocate dst according to cnt as that value may be attacker
 	// controlled. A malicious adversary could send us as 12-byte packet
 	// containing only the header that claims to contain 65535 questions. As
@@ -594,7 +595,7 @@ func unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, e
 	// mere 12-byte packet.
 	var dst []RR
 	for i := 0; i < int(cnt); i++ {
-		r, err := unpackQuestion(msg, msgBuf)
+		r, err := m.unpackQuestion(msg, msgBuf)
 		if err != nil {
 			return dst, err
 		}
@@ -621,7 +622,7 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	s := cryptobyte.String(msg)
 	var err error
-	m.Question, err = unpackQuestions(dh.Qdcount, &s, msgBuf)
+	m.Question, err = m.unpackQuestions(dh.Qdcount, &s, msgBuf)
 	if err != nil {
 		return err
 	}

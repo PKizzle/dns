@@ -23,7 +23,7 @@ wins.
 - Everything is an resource record.
 - Small API.
 - Fast.
-  - The cmd/reflect server does 350K/280K UDP/TCP respectively
+  - The cmd/reflect server does 350K/280K UDP/TCP respectively.
 
 ## Difference with github.com/miekg/dns
 

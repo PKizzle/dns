@@ -55,7 +55,7 @@ func (f HandlerFunc) ServeDNS(ctx context.Context, w ResponseWriter, r *Msg) { f
 // The zero ServeMux is empty and ready for use.
 type ServeMux struct {
 	z map[string]Handler
-	m sync.RWMutex
+	sync.RWMutex
 }
 
 // NewServeMux allocates and returns a new ServeMux.
@@ -65,7 +65,7 @@ func NewServeMux() *ServeMux { return new(ServeMux) }
 var DefaultServeMux = NewServeMux()
 
 func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
-	mux.m.RLock()
+	mux.RLock()
 	if mux.z == nil {
 		return nil, ""
 	}
@@ -77,7 +77,7 @@ func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 	for off, end := 0, false; !end; off, end = dnsutilNext(q, off) {
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
-				mux.m.RUnlock()
+				mux.RUnlock()
 				return h, q[off:]
 			}
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
@@ -86,15 +86,16 @@ func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 		}
 	}
 	if handler != nil {
-		mux.m.RUnlock()
+		mux.RUnlock()
 		return handler, zone
 	}
 
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
-		mux.m.RUnlock()
+		mux.RUnlock()
 		return h, "."
 	}
+	mux.RUnlock()
 	return nil, ""
 }
 
@@ -103,12 +104,12 @@ func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if dnsutilCanonical(pattern) != pattern || pattern == "" {
 		panic("dns: pattern should be in canonical form: " + pattern)
 	}
-	mux.m.Lock()
+	mux.Lock()
 	if mux.z == nil {
 		mux.z = make(map[string]Handler)
 	}
 	mux.z[pattern] = handler
-	mux.m.Unlock()
+	mux.Unlock()
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
@@ -121,9 +122,9 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 	if pattern == "" {
 		panic("dns: pattern should be in canonical form: " + pattern)
 	}
-	mux.m.Lock()
+	mux.Lock()
 	delete(mux.z, pattern)
-	mux.m.Unlock()
+	mux.Unlock()
 }
 
 // ServeDNS dispatches the request to the handler whose pattern most closely matches the request message.
@@ -131,16 +132,16 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // ServeDNS is DNSSEC aware, meaning that queries for the DS record are redirected to the parent zone (if
 // that is also registered), otherwise the child gets the query.
 //
-// If no handler is found a standard REFUSED message is returned. No check are made on the request message.
+// If no handler is found a standard REFUSED message is returned. No checks are made on the request message.
 func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
-	qtype := RRToType(req.Question[0])
-	h, zone := mux.match(req.Question[0].Header().Name, qtype)
-	if h == nil {
-		refuse(w, req)
+	h, zone := mux.match(req.Question[0].Header().Name, req.qtype)
+	if h != nil {
+		ctx = context.WithValue(ctx, contextKeyZone, zone)
+		h.ServeDNS(ctx, w, req)
 		return
 	}
-	ctx = context.WithValue(ctx, contextKeyZone, zone)
-	h.ServeDNS(ctx, w, req)
+
+	refuse(w, req)
 }
 
 // Handle registers the handler with the given pattern

@@ -99,7 +99,7 @@ func TestCount(t *testing.T) {
 	for s, i := range splitter {
 		x := Count(s)
 		if x != i {
-			t.Errorf("CountLabel should have %d, got %d", i, x)
+			t.Errorf("Count should have %d, got %d", i, x)
 		}
 	}
 }

@@ -448,7 +448,6 @@ func (rr *HINFO) Data() []Field     { return []Field{rr.Cpu, rr.Os} }
 func (rr *HIP) Data() []Field {
 	return []Field{rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
 }
-
 func (rr *IPSECKEY) Data() []Field {
 	return []Field{rr.Precedence, rr.GatewayType, rr.Algorithm, rr.GatewayAddr, rr.GatewayHost, rr.PublicKey}
 }
@@ -481,7 +480,6 @@ func (rr *NSEC) Data() []Field    { return []Field{rr.NextDomain, rr.TypeBitMap}
 func (rr *NSEC3) Data() []Field {
 	return []Field{rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt, rr.HashLength, rr.NextDomain, rr.TypeBitMap}
 }
-
 func (rr *NSEC3PARAM) Data() []Field {
 	return []Field{rr.Hash, rr.Flags, rr.Iterations, rr.SaltLength, rr.Salt}
 }
@@ -504,7 +502,6 @@ func (rr *SIG) Data() []Field { return []Field{} }
 func (rr *SMIMEA) Data() []Field {
 	return []Field{rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
 }
-
 func (rr *SOA) Data() []Field {
 	return []Field{rr.Ns, rr.Mbox, rr.Serial, rr.Refresh, rr.Retry, rr.Expire, rr.Minttl}
 }
@@ -516,7 +513,6 @@ func (rr *TALINK) Data() []Field { return []Field{rr.PreviousName, rr.NextName} 
 func (rr *TKEY) Data() []Field {
 	return []Field{rr.Algorithm, rr.Inception, rr.Expiration, rr.Mode, rr.Error, rr.KeySize, rr.Key, rr.OtherLen, rr.OtherData}
 }
-
 func (rr *TLSA) Data() []Field {
 	return []Field{rr.Usage, rr.Selector, rr.MatchingType, rr.Certificate}
 }
