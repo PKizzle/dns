@@ -42,11 +42,11 @@ func TestTo(t *testing.T) {
 		rrs    int
 		off    int
 	}{
-		//		{"dig-mx-miek.nl", 0, 25},
-		//		{"dig-mx-miek.nl", 1, 62},
-		//		{"dig-mx-miek.nl", 2, 98},
-		//		{"dig-mx-miek.nl", 3, 114},
-		//		{"dig-mx-miek.nl", 4, 135},
+		{"dig-mx-miek.nl", 0, 25},
+		{"dig-mx-miek.nl", 1, 62},
+		{"dig-mx-miek.nl", 2, 98},
+		{"dig-mx-miek.nl", 3, 114},
+		{"dig-mx-miek.nl", 4, 135},
 		{"dig-mx-miek.nl", 5, 158}, // OPT RR
 		{"dig-mx-miek.nl", 6, 0},   // overshoot
 	}
@@ -57,9 +57,8 @@ func TestTo(t *testing.T) {
 			if off != tc.off {
 				t.Errorf("expected to land on %d, got %d", tc.off, off)
 				t.Logf("%v\n", buf[off:])
+				t.Log(bin.Dump(buf))
 			}
-			t.Log(bin.Dump(buf))
-			t.Log(bin.Dump(buf[off:], off))
 		})
 	}
 }

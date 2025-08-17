@@ -434,9 +434,7 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	}
 
 	if err := unpack(rr, data, msgBuf); err != nil {
-		// TODO(tmthrgd): Do we want to return a partially filled in RR here
-		// or even the RR_Header we were given like above?
-		return nil, err
+		return rr, err
 	}
 
 	return rr, nil

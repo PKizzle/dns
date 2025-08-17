@@ -27,7 +27,7 @@ func Name(msgBuf []byte, off int) int {
 // Question jumps the question section that should start at msgBuf[off].
 func Question(msgBuf []byte, off int) int {
 	off = Name(msgBuf, off)
-	if off > len(msgBuf) {
+	if off >= len(msgBuf) || off == 0 {
 		return 0
 	}
 	return off + 4 // type + class
@@ -36,18 +36,15 @@ func Question(msgBuf []byte, off int) int {
 // RR jumps the RR that starts at msgBuf[off].
 func RR(msgBuf []byte, off int) int {
 	off = Name(msgBuf, off)
-	if off > len(msgBuf) {
+	if off >= len(msgBuf) || off == 0 {
 		return 0
 	}
-	off += 8                 // type + class + ttl
-	if off+2 > len(msgBuf) { // not enough room to read rdlength
+	off += 8                  // type + class + ttl
+	if off+2 >= len(msgBuf) { // not enough room to read rdlength
 		return 0
 	}
 	rdlength := binary.BigEndian.Uint16(msgBuf[off:])
-	println("READ RDLENGTH", rdlength, "at", off)
-	println(off+2+int(rdlength), off, 2, rdlength)
 	off = off + 2 + int(rdlength)
-	println("RETTING", off)
 	return off
 }
 
@@ -55,17 +52,16 @@ func RR(msgBuf []byte, off int) int {
 // return the RR after the question section. When we jump over the message 0 is returned.
 func To(i int, msgBuf []byte) int {
 	off := 12
-	if off > len(msgBuf) {
+	if off >= len(msgBuf) {
 		return 0
 	}
 	off = Question(msgBuf, off)
-	if off > len(msgBuf) {
+	if off >= len(msgBuf) {
 		return 0
 	}
 	for range i {
 		off = RR(msgBuf, off)
-		println(off)
-		if off > len(msgBuf) {
+		if off >= len(msgBuf) {
 			return 0
 		}
 	}

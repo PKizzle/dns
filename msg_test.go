@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 // TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
@@ -31,16 +33,17 @@ func ExampleMsg_Pseudo_nsid() {
 
 func TestReadMsgBinary(t *testing.T) {
 	// TODO: turn into test
-	binary := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
-	for i, bin := range binary {
-		t.Run(fmt.Sprintf("test %d: %s", i, bin), func(t *testing.T) {
-			buf, _ := os.ReadFile("testdata/" + bin)
+	binaries := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
+	for i, binary := range binaries {
+		t.Run(fmt.Sprintf("test %d: %s", i, binary), func(t *testing.T) {
+			buf, _ := os.ReadFile("testdata/" + binary)
 			msg := &Msg{Data: buf}
 			if err := msg.Unpack(); err != nil {
 				t.Errorf("%s", err)
 				t.Logf("%v\n", msg.Data)
 			}
 			t.Logf("%s\n", msg)
+			t.Logf("%s\n", bin.Dump(msg.Data))
 		})
 	}
 }
