@@ -1,0 +1,31 @@
+package main
+
+import (
+	"context"
+	"os/exec"
+	"strings"
+	"testing"
+	"time"
+
+	"codeberg.org/miekg/dns/internal/dnsperf"
+)
+
+// TestReflect tests reflect's performance
+func TestReflect(t *testing.T) {
+	timeout := 3 * time.Second // run reflect for 3s, test for 2s
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	cmd := exec.CommandContext(ctx, "./reflect")
+	go func() {
+		if err := cmd.Run(); err != nil {
+			panic(err)
+		}
+	}()
+
+	queries := strings.NewReader("whoami.miek.nl. A")
+	if err := dnsperf.Run(t, queries, "127.0.0.1:8053", "udp", 2*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+}
