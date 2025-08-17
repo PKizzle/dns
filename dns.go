@@ -218,9 +218,9 @@ const (
 func (h *MsgHeader) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(";; ")
-	sb.WriteString(OpcodeToString[h.Opcode])
+	sb.WriteString(sprintOpcode(h.Opcode))
 	sb.WriteString(", status: ")
-	sb.WriteString(RcodeToString[h.Rcode])
+	sb.WriteString(sprintRcode(h.Rcode))
 	sb.WriteString(", id: ")
 	sb.WriteString(strconv.Itoa(int(h.ID)))
 	sb.WriteByte(',')

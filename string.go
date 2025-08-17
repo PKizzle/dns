@@ -29,7 +29,7 @@ func sprintName(s string) string {
 			}
 			break
 		}
-		if isDomainNameLabelSpecial(b) {
+		if isLabelSpecial(b) {
 			if sb.Len() == 0 {
 				sb.Grow(len(s) * 2)
 				sb.WriteString(s[:i])
@@ -146,10 +146,10 @@ func escapeByte(b byte) string {
 	return escapedByteLarge[int(b)*4 : int(b)*4+4]
 }
 
-// isDomainNameLabelSpecial returns true if
+// isLabelSpecial returns true if
 // a domain name label byte should be prefixed
 // with an escaping backslash.
-func isDomainNameLabelSpecial(b byte) bool {
+func isLabelSpecial(b byte) bool {
 	switch b {
 	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
 		return true
@@ -202,10 +202,24 @@ func sprintClass(c uint16) string {
 	return "CLASS" + strconv.Itoa(int(c))
 }
 
-// TimeToString translates the RRSIG's incep. and expir. times to the
+func sprintRcode(r uint16) string {
+	if r1, ok := RcodeToString[r]; ok {
+		return r1
+	}
+	return "RCODE" + strconv.Itoa(int(r))
+}
+
+func sprintOpcode(o uint8) string {
+	if o1, ok := OpcodeToString[o]; ok {
+		return o1
+	}
+	return "OPCODE" + strconv.Itoa(int(o))
+}
+
+// timeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
-func TimeToString(t uint32) string {
+func timeToString(t uint32) string {
 	mod := (int64(t)-time.Now().Unix())/year68 - 1
 	if mod < 0 {
 		mod = 0
@@ -214,10 +228,10 @@ func TimeToString(t uint32) string {
 	return ti.Format("20060102150405")
 }
 
-// StringToTime translates the RRSIG's incep. and expir. times from
+// stringToTime translates the RRSIG's incep. and expir. times from
 // string values like "20110403154150" to an 32 bit integer.
 // It takes serial arithmetic (RFC 1982) into account.
-func StringToTime(s string) (uint32, error) {
+func stringToTime(s string) (uint32, error) {
 	t, err := time.Parse("20060102150405", s)
 	if err != nil {
 		return 0, err

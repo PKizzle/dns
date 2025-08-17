@@ -958,7 +958,7 @@ func (rr *RRSIG) parse(c *zlexer, o string) *ParseError {
 
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if i, err := StringToTime(l.token); err != nil {
+	if i, err := stringToTime(l.token); err != nil {
 		// Try to see if all numeric and use it as epoch
 		if i, err := strconv.ParseUint(l.token, 10, 32); err == nil {
 			rr.Expiration = uint32(i)
@@ -971,7 +971,7 @@ func (rr *RRSIG) parse(c *zlexer, o string) *ParseError {
 
 	c.Next() // zBlank
 	l, _ = c.Next()
-	if i, err := StringToTime(l.token); err != nil {
+	if i, err := stringToTime(l.token); err != nil {
 		if i, err := strconv.ParseUint(l.token, 10, 32); err == nil {
 			rr.Inception = uint32(i)
 		} else {

@@ -789,8 +789,8 @@ func (rr *RRSIG) String() string {
 		strconv.Itoa(int(rr.Algorithm)),
 		strconv.Itoa(int(rr.Labels)),
 		strconv.FormatInt(int64(rr.OrigTTL), 10),
-		TimeToString(rr.Expiration),
-		TimeToString(rr.Inception),
+		timeToString(rr.Expiration),
+		timeToString(rr.Inception),
 		strconv.Itoa(int(rr.KeyTag)),
 		sprintName(rr.SignerName),
 		rr.Signature)
@@ -1108,8 +1108,8 @@ func (rr *TKEY) String() string {
 	sb := sprintHeader(rr)
 	sprintData(sb,
 		rr.Algorithm,
-		TimeToString(rr.Inception),
-		TimeToString(rr.Expiration),
+		timeToString(rr.Inception),
+		timeToString(rr.Expiration),
 		strconv.Itoa(int(rr.Mode)),
 		strconv.Itoa(int(rr.Error)),
 		strconv.Itoa(int(rr.KeySize)),

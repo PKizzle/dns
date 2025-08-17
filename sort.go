@@ -6,7 +6,7 @@ import "sort"
 // RFC 4034 Section 6. Note the TTL is skipped when comparing.
 // The result will be 0 if a == b, -1 if a < b, and +1 if a > b.
 //
-// DO NOT use yet ready
+// DO NOT use yet
 func Compare(a, b RR) int {
 	// Name
 

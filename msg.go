@@ -297,7 +297,7 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return "", ErrLongDomain
 			}
 			for _, b := range label {
-				if isDomainNameLabelSpecial(b) {
+				if isLabelSpecial(b) {
 					name = append(name, '\\', b)
 				} else if b < ' ' || b > '~' {
 					name = append(name, escapeByte(b)...)

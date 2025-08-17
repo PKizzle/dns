@@ -9,9 +9,10 @@ import (
 )
 
 // Recorder is a type of ResponseWriter that captures the all the messages written to it.
+// If Discard is true, this effectively a dns.DiscardWriter.
 type Recorder struct {
 	conn    net.Conn
-	Discard bool // When true the message is record, but now written to the underlaying connection.
+	Discard bool // When true the message is recorded, but not written to the underlaying connection.
 	Msgs    []*dns.Msg
 	Start   time.Time
 }
