@@ -21,7 +21,7 @@ import (
 //
 //	Run(q, "127.0.0.1:8053", udp, 2*time.Second, 10)
 //
-// runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 2 -T 2", 10 times (if runtime.NumCPU returns 2).
+// runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 2 -T 2", 10 times (if runtime.NumCPU returns 4).
 //
 // See dnsperf on how to create queries. The queries io.Reader is drained and placed in a file.
 //
