@@ -18,7 +18,7 @@ import (
 // Run runs dnsperf which read the queries from the io.Reader and benchmarks the server running on addr. The
 // test runs for duration. The thread count is set the runtime.NumCPU. I.e.
 //
-//	Run(q, "127.0.0.1:8053", udp, 2)
+//	Run(q, "127.0.0.1:8053", udp, 2*time.Second)
 //
 // runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 4 -T 4", if runtime.NumCPU returns 4.
 //
