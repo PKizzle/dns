@@ -111,7 +111,7 @@ type (
 	}
 
 	TSIGVerifier interface {
-		// Verify is passed the full DNS message to be verified and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
-		Verify(t *TSIG, m *Msg, options TSIGOption) error
+		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
+		Verify(t *TSIG, p []byte, options TSIGOption) error
 	}
 )

@@ -40,6 +40,11 @@ func (h HMAC) Sign(t *TSIG, p []byte) error {
 	return nil
 }
 
+func (h HMAC) Verify(t *TSIG, p []byte) error {
+	// verify
+	return nil
+}
+
 // mac creates the buffer with the TSIG and message data that can then be signed.
 func (rr *TSIG) mac(m *Msg, options TSIGOption) ([]byte, error) {
 	buf := []byte{}
