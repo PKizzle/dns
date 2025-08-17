@@ -48,8 +48,8 @@ func RR(msgBuf []byte, off int) int {
 	return off
 }
 
-// To jumps to the start of the i-th RR in the message, that start at msgBuf[0]. This counts from 0 which
-// return the RR after the question section. When we jump over the message 0 is returned.
+// To jumps to the start of the i-th RR in the message, that starts at msgBuf[0]. This counts from 0 which
+// returns the RR after the question section. When we jump over the message 0 is returned.
 func To(i int, msgBuf []byte) int {
 	off := 12
 	if off >= len(msgBuf) {

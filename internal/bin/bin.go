@@ -4,6 +4,8 @@ package bin
 import (
 	"fmt"
 	"strings"
+
+	"codeberg.org/miekg/dns"
 )
 
 // Dump dumps the slice p in a way to help debugging DNS binary code.
@@ -22,8 +24,72 @@ func Dump(p []byte, off ...int) string {
 	if len(p) == 0 {
 		return ""
 	}
-	const N = 16
 
+	const space = "   "
+	left := func(s string) string {
+		switch l := len(s); l {
+		case 0, 1, 2, 3:
+			return space[:3-l] + s
+		default:
+			return s[:3]
+		}
+	}
+	right := func(s string) string {
+		if len(s) < 3 {
+			return space
+		}
+		s = s[3:]
+		switch l := len(s); l {
+		case 0, 1, 2, 3:
+			return s[:l] + space[:3-l]
+		default:
+			return s[:3]
+		}
+	}
+	// create a lookup table for bytes we have detected to be some of importants like
+	// type (after a compression pointer) and the class (after the type) - if detected we print the mnemonic
+	// instead of the binary, split between the 3 and 3 chars we have, MX will be "MX_ ___" and RRSIG will be
+	// "RRS _IG" for instance.
+	strlist := map[int]string{}
+
+	state := 0 // 0, nothing
+	// 1, expect type
+	// 2, expect class
+	for i := 0; i < len(p)-1; i++ {
+		c := p[i]
+		c1 := p[i+1]
+		if c == 192 { // 0xC with a small enough pointer (check smallness? 12)
+			state = 1
+			i++ // skip pointer
+			continue
+		}
+		switch state {
+		case 1:
+			rrtype, ok := dns.TypeToString[uint16(c+c1)]
+			if !ok {
+				continue
+			}
+			strlist[i], strlist[i+1] = left(rrtype), right(rrtype)
+			i++
+			if uint16(c+c1) == dns.TypeOPT {
+				state = 0
+				continue
+			}
+			state = 2
+
+		case 2:
+			class, ok := dns.ClassToString[uint16(c+c1)]
+			if !ok {
+				continue
+			}
+			strlist[i], strlist[i+1] = left(class), right(class)
+			i++
+
+			state = 0
+		}
+	}
+
+	const N = 16
 	dump := strings.Builder{}
 	dump.WriteByte('\n') // usually called from test
 	dump.WriteString("     \t")
@@ -48,9 +114,15 @@ func Dump(p []byte, off ...int) string {
 
 		line := p[a:b]
 		sb.Reset()
-		for i := range line {
+		for j := range line {
+			if str, ok := strlist[j+a]; ok {
+				sb.WriteByte(' ')
+				sb.WriteString(str)
+				continue
+			}
+
 			sb.WriteByte(' ')
-			sb.WriteString(fmt.Sprintf("%03d", line[i]))
+			sb.WriteString(fmt.Sprintf("%03d", line[j]))
 		}
 
 		dump.WriteString(fmt.Sprintf("%5d\t|%s\n", row*N+plus, sb.String()))

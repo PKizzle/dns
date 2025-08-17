@@ -1,19 +1,20 @@
-package dns
+package dns_test
 
 import (
 	"fmt"
 	"os"
 	"testing"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
 // TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
 // checks if we create the correct wire-format.
 func ExampleMsg_Question() {
-	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
-	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
-	m.Question = []RR{mx}
+	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true}}
+	mx := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+	m.Question = []dns.RR{mx}
 
 	m.Pack()
 	fmt.Printf("%v\n", m.Data)
@@ -21,9 +22,9 @@ func ExampleMsg_Question() {
 }
 
 func ExampleMsg_Pseudo_nsid() {
-	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
-	m.Question = []RR{&MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}}
-	m.Pseudo = []RR{&NSID{}}
+	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true}}
+	m.Question = []dns.RR{&dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}}
+	m.Pseudo = []dns.RR{&dns.NSID{}}
 
 	m.Pack()
 	// 41 is OPT after the zeros, 04 -> rdlength, 03 -> code of NSID, 00 -> "rdlength" of NSID
@@ -37,7 +38,7 @@ func TestReadMsgBinary(t *testing.T) {
 	for i, binary := range binaries {
 		t.Run(fmt.Sprintf("test %d: %s", i, binary), func(t *testing.T) {
 			buf, _ := os.ReadFile("testdata/" + binary)
-			msg := &Msg{Data: buf}
+			msg := &dns.Msg{Data: buf}
 			if err := msg.Unpack(); err != nil {
 				t.Errorf("%s", err)
 				t.Logf("%v\n", msg.Data)
@@ -49,12 +50,12 @@ func TestReadMsgBinary(t *testing.T) {
 }
 
 func TestPackPackBinary(t *testing.T) {
-	msg := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]RR, 2)}
-	a := &A{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
-	msg.Question = []RR{a}
-	msg.Pseudo = []RR{&NSID{Nsid: "6770"}}
-	msg.Answer[0], _ = New("miek.nl.        14301   IN      A       45.138.52.215")
-	msg.Answer[1], _ = New("miek.nl.        14301   IN      A       45.138.52.216")
+	msg := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]dns.RR, 2)}
+	a := &dns.A{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+	msg.Question = []dns.RR{a}
+	msg.Pseudo = []dns.RR{&dns.NSID{Nsid: "6770"}}
+	msg.Answer[0], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.215")
+	msg.Answer[1], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.216")
 
 	t.Logf("%s\n", msg)
 	msg.Pack()
@@ -76,7 +77,7 @@ func TestUnpackName(t *testing.T) {
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			name, off, err := UnpackName(tc.buf, tc.start)
+			name, off, err := dns.UnpackName(tc.buf, tc.start)
 			if err != nil {
 				t.Fatal(err)
 			}
