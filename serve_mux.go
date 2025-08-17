@@ -12,12 +12,26 @@ import (
 //
 //	r.Unpack()
 //
-// Should be performed, to get the entire message.
+// to get the entire message.
 //
-// The context is cancelled when the server exits.
+// The context is cancelled when the server exits. The context carries the pattern of the handler (this is
+// commonly the DNS zone) in it. You can retrieve it with [Zone].
 type Handler interface {
 	ServeDNS(ctx context.Context, w ResponseWriter, r *Msg)
 }
+
+// Zone gets the zone from the context. If not found it returns the empty string.
+func Zone(ctx context.Context) string {
+	zone, ok := ctx.Value(contextKeyZone).(string)
+	if !ok {
+		return ""
+	}
+	return zone
+}
+
+type contextKey string
+
+var contextKeyZone = contextKey("zone")
 
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as DNS handlers.  If f is a function
@@ -45,41 +59,43 @@ type ServeMux struct {
 }
 
 // NewServeMux allocates and returns a new ServeMux.
-func NewServeMux() *ServeMux {
-	return new(ServeMux)
-}
+func NewServeMux() *ServeMux { return new(ServeMux) }
 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
-func (mux *ServeMux) match(q string, t uint16) Handler {
+func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 	mux.m.RLock()
 	if mux.z == nil {
-		return nil
+		return nil, ""
 	}
 
 	q = dnsutilCanonical(q)
 
 	var handler Handler
+	var zone string
 	for off, end := 0, false; !end; off, end = dnsutilNext(q, off) {
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				mux.m.RUnlock()
-				return h
+				return h, q[off:]
 			}
 			// Continue for DS to see if we have a parent too, if so delegate to the parent
 			handler = h
+			zone = q[off:]
 		}
+	}
+	if handler != nil {
+		mux.m.RUnlock()
+		return handler, zone
 	}
 
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
 		mux.m.RUnlock()
-		return h
+		return h, "."
 	}
-
-	mux.m.RUnlock()
-	return handler
+	return nil, ""
 }
 
 // Handle adds a handler to the ServeMux for pattern.
@@ -115,24 +131,20 @@ func (mux *ServeMux) HandleRemove(pattern string) {
 // ServeDNS is DNSSEC aware, meaning that queries for the DS record are redirected to the parent zone (if
 // that is also registered), otherwise the child gets the query.
 //
-// If no handler is found, or there is no question, a standard REFUSED message is returned.
+// If no handler is found a standard REFUSED message is returned. No check are made on the request message.
 func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
-	var h Handler
-	if len(req.Question) == 0 {
-		handleRefused(w, req)
+	qtype := RRToType(req.Question[0])
+	h, zone := mux.match(req.Question[0].Header().Name, qtype)
+	if h == nil {
+		refuse(w, req)
 		return
 	}
-	qtype := RRToType(req.Question[0])
-	h = mux.match(req.Question[0].Header().Name, qtype)
-	if h == nil {
-		handleRefused(w, req)
-	}
+	ctx = context.WithValue(ctx, contextKeyZone, zone)
 	h.ServeDNS(ctx, w, req)
 }
 
 // Handle registers the handler with the given pattern
-// in the DefaultServeMux. The documentation for
-// ServeMux explains how patterns are matched.
+// in the DefaultServeMux. The documentation for ServeMux explains how patterns are matched.
 func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, handler) }
 
 // HandleRemove deregisters the handle with the given pattern in the DefaultServeMux.
@@ -143,8 +155,8 @@ func HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *M
 	DefaultServeMux.HandleFunc(pattern, handler)
 }
 
-// handleRefused returns a HandlerFunc that returns REFUSED for every request it gets.
-func handleRefused(w ResponseWriter, r *Msg) {
+// refuse writes a REFUSED response to w.
+func refuse(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.Data = r.Data
 

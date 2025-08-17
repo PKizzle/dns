@@ -80,9 +80,7 @@ func TestServer(t *testing.T) {
 func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
-
-	m.Extra = make([]dns.RR, 1)
-	m.Extra[0] = &dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}
+	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}}
 	m.Pack()
 	io.Copy(w, m)
 }
@@ -90,10 +88,7 @@ func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
-
-	m.Extra = make([]dns.RR, 1)
-	m.Extra[0] = &dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}
+	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}}
 	m.Pack()
-
 	io.Copy(w, m)
 }
