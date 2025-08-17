@@ -13,15 +13,15 @@ func TestServeMuxDSRouting(t *testing.T) {
 	mux.Handle(".", HandlerFunc(noopHandler)) // previously you would get this..
 
 	_, zone := mux.match("child.miek.nl.", TypeTXT)
-	if zone != "child.miek.nl" {
+	if zone != "child.miek.nl." {
 		t.Errorf("expected %s, got %s", "child.miek.nl. for TXT", zone)
 	}
 	_, zone = mux.match("miek.nl.", TypeDS) // there is no parent
-	if zone != "miek.nl" {
+	if zone != "miek.nl." {
 		t.Errorf("expected %s, got %s", "miek.nl. for DS", zone)
 	}
 	_, zone = mux.match("child.miek.nl.", TypeDS) // miek.nl is the parent
-	if zone != "miek.nl" {
+	if zone != "miek.nl." {
 		t.Errorf("expected %s, got %s", "miek.nl. for DS", zone)
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -16,6 +17,10 @@ func TestReflect(t *testing.T) {
 	timeout := count*2*time.Second + 5*time.Second // run reflect for longer than the test.
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	if _, err := os.Stat("./reflect"); err != nil {
+		t.Skip("no reflect binary found in .")
+	}
 
 	cmd := exec.CommandContext(ctx, "./reflect")
 	go func() {
