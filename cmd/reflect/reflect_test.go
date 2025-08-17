@@ -12,7 +12,8 @@ import (
 
 // TestReflect tests reflect's performance
 func TestReflect(t *testing.T) {
-	timeout := 3 * time.Second // run reflect for 3s, test for 2s
+	const count = 10
+	timeout := count*2*time.Second + 5*time.Second // run reflect for longer than the test.
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
@@ -24,7 +25,7 @@ func TestReflect(t *testing.T) {
 	}()
 
 	queries := strings.NewReader("whoami.miek.nl. A")
-	if err := dnsperf.Run(t, queries, "127.0.0.1:8053", "udp", 2*time.Second); err != nil {
+	if err := dnsperf.Run(t, queries, "127.0.0.1:8053", "udp", 2*time.Second, count); err != nil {
 		t.Fatal(err)
 	}
 	cancel()
