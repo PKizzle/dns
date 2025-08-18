@@ -35,7 +35,7 @@ func (h HMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
 	return hs.Sum(nil), nil
 }
 
-func (h HMAC) Verify(t *TSIG, p []byte) error {
+func (h HMAC) Verify(t *TSIG, p []byte, options TSIGOption) error {
 	buf, err := h.Sign(t, p)
 	if err != nil {
 		return err

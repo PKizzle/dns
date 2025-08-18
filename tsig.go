@@ -22,14 +22,15 @@ const (
 )
 
 // TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
+// A TSIG RR when created must the [ClassANY], algorithm, timesigned, and optianal fudge factor.
 type TSIG struct {
 	Hdr        Header
-	Algorithm  string `dns:"domain-name"`
+	Algorithm  string `dns:"domain-name"` // Algorithm is encoded as a name.
 	TimeSigned uint64 `dns:"uint48"`
 	Fudge      uint16
 	MACSize    uint16
 	MAC        string `dns:"size-hex:MACSize"`
-	OrigID     uint16
+	OrigID     uint16 // OrigID is the original message ID, when creating a TSIG this should be set to the message ID.
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string `dns:"size-hex:OtherLen"`
@@ -61,7 +62,7 @@ func (*TSIG) parse(c *zlexer, origin string) *ParseError {
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero) The TSIG MAC is saved in that RR.
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
-	if m.ps == 0 {
+	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
 	}
 
@@ -124,7 +125,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
 // from m.Data, but left in the unpacked message m.
 func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
-	if m.ps == 0 {
+	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
 	}
 
