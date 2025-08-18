@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"golang.org/x/net/ipv4"
@@ -307,9 +306,6 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
 			if errors.Is(err, io.EOF) {
-				break
-			}
-			if errors.Is(err, syscall.EPIPE) {
 				break
 			}
 			continue
