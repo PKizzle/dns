@@ -97,13 +97,15 @@ func TestMsgExtendedRcode(t *testing.T) {
 	m.Question = []dns.RR{&dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}}
 	m.Rcode = dns.RcodeFormatError
 
+	//m.Rcode = dns.RcodeBadCookie
+	m.Rcode = dns.RcodeBadTime
+
 	fmt.Printf("%s\n", m)
-
-	m.Rcode = dns.RcodeBadCookie
-
-	fmt.Printf("%s\n", m)
-
 	m.Pack()
-	t.Logf("%s\n", bin.Dump(m.Data))
+	m.Rcode = 0
 
+	t.Logf("\n%s\n", bin.Dump(m.Data))
+
+	m.Unpack()
+	t.Logf("%s\n%s\n", m, bin.Dump(m.Data))
 }

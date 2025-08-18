@@ -17,7 +17,7 @@ import (
 //	16  | 107 002 110 108 000 000 015 000 001 192 012 000 015 000 001 000
 //	32  | 000 084 096 000 025 000 010 006 097 115 112 109 120 050 010 103
 //
-// Usally called as: t.Log(bin.Dump(buf))
+// Usally called as: t.Logf("\n%s\n", bin.Dump(buf))
 func Dump(p []byte, off ...int) string {
 	if len(p) == 0 {
 		return ""
@@ -25,7 +25,6 @@ func Dump(p []byte, off ...int) string {
 
 	const N = 16
 	dump := strings.Builder{}
-	dump.WriteByte('\n') // usually called from test
 	dump.WriteString("     \t")
 	for i := range N {
 		dump.WriteString(fmt.Sprintf("% 4d", i))

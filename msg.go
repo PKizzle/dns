@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/bin"
 	"codeberg.org/miekg/dns/internal/ddd"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -367,12 +366,10 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	}
 
 	rrtype := RRToType(rr)
-	println("RRTYPE", rrtype)
 	headerEnd, err = rr.Header().packHeader(msg, off, rrtype, compression)
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
-	println(bin.Dump(msg[:headerEnd]))
 
 	off1, err = pack(rr, msg, headerEnd, compression)
 	if err != nil {
@@ -494,6 +491,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		ps = 1
 	}
 	dh.Arcount = uint16(len(m.Extra) + ps)
+	println(dh.Arcount)
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
@@ -545,7 +543,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 				opt.Options = append(opt.Options, edns0)
 			}
 		}
-		println("packing new OPT", off, opt.String())
 		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
 		if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 			return err
@@ -649,13 +646,19 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option code and put those in the Pseudo
 	// section. Any TSIG and SIG0 records will also be put in the pseudo section, but after the options.
 
+	println("K", len(m.Extra), "dds")
 	j := 0
 	for i := 0; i < len(m.Extra)-j; i++ {
 		rr := m.Extra[i]
+		println("HAVE OTP?")
 		if opt, ok := rr.(*OPT); ok {
+			println("*OPT")
 			// move to end, so it can be removed latter and unpack the opt for the settings.
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
+			println("DDS")
+			println(m.Rcode)
+			println("opt", opt.Rcode())
 			m.Rcode += opt.Rcode() // TODO: test this
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
