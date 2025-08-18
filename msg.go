@@ -522,7 +522,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	}
 
 	// Add an OPT RR if we see any of these.
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
+	if m.isPeudo() {
 		opt := &OPT{Hdr: Header{Name: "."}}
 		if m.UDPSize > MinMsgSize {
 			opt.SetUDPSize(m.UDPSize)
@@ -811,6 +811,11 @@ func (m *Msg) isCompressible() bool {
 		len(m.Ns) > 0 || len(m.Extra) > 0
 }
 
+// isPeudo returns true of we should have a pseudo section in this message.
+func (m *Msg) isPeudo() bool {
+	return len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF
+}
+
 // Len returns the message length when in uncompressed wire format.
 func (m *Msg) Len() int {
 	l := MsgHeaderSize
@@ -833,8 +838,8 @@ func (m *Msg) Len() int {
 	}
 
 	const minHeaderSize = 11 // smallest possible RR header where the name is the root label.
-	// See line 524, same 'if'.
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
+
+	if m.isPseudo() {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
 		l += minHeaderSize
 	}
