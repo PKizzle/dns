@@ -148,6 +148,8 @@ const (
 	OpcodeStateful = 6
 )
 
+// Names for things inside RRs should be RR-name (all capitals) and than snakecase the rest.
+
 // Used in ZONEMD, RFC 8976.
 const (
 	ZONEMDSchemeSimple = 1
