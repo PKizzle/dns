@@ -8,7 +8,6 @@
 # * Run: make -f Makefile.release release
 #   * will *commit* your change with 'Release $VERSION'
 #   * push to github
-#
 
 define GO
 //+build ignore
@@ -18,7 +17,7 @@ package main
 import (
 	"fmt"
 
-	"coreberg.org/miekg/dns"
+	"codeberg.org/miekg/dns"
 )
 
 func main() {
@@ -47,6 +46,6 @@ commit:
 
 .PHONY: push
 push:
-	@echo Pushing release $(VERSION) to master
+	@echo Pushing release $(VERSION) to main
 	git push --tags
 	git push
