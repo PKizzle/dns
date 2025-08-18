@@ -148,6 +148,8 @@ const (
 	OpcodeStateful = 6
 )
 
+// Names for things inside RRs should be RR-name (all capitals) and than snakecase the rest.
+
 // Used in ZONEMD, RFC 8976.
 const (
 	ZONEMDSchemeSimple = 1
@@ -596,7 +598,7 @@ func (rr *CERT) String() string {
 	sb.WriteByte(' ')
 
 	if algorithm, ok := AlgorithmToString[rr.Algorithm]; !ok {
-		algorithm = strconv.Itoa(int(rr.Algorithm))
+		sb.WriteString(strconv.Itoa(int(rr.Algorithm)))
 	} else {
 		sb.WriteString(algorithm)
 	}

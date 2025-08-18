@@ -316,7 +316,8 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				*s = cs
 			}
 			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
-			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior occurance".
+			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
+			// occurrence".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
 			if int(off) >= offset(cs, msgBuf)-2 {
 				return "", &Error{err: "pointer not to prior occurrence of name"}
@@ -486,11 +487,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	dh.Qdcount = uint16(len(m.Question))
 	dh.Ancount = uint16(len(m.Answer))
 	dh.Nscount = uint16(len(m.Ns))
-	ps := 0
-	if len(m.Pseudo) > 0 {
-		ps = 1
-	}
-	dh.Arcount = uint16(len(m.Extra) + ps)
+	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
@@ -521,7 +518,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	}
 
 	// Add an OPT RR if we see any of these.
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
+	if m.isPseudo() > 0 {
 		opt := &OPT{Hdr: Header{Name: "."}}
 		if m.UDPSize > MinMsgSize {
 			opt.SetUDPSize(m.UDPSize)
@@ -542,9 +539,8 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 				opt.Options = append(opt.Options, edns0)
 			}
 		}
-		// pack here, so we dont increase m.Extra - which is weird for the caller, Arcount already updated
-		// above.
-		if _, off, err = packRR(opt, m.Data, off, compression); err != nil {
+		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
+		if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 			return err
 		}
 	}
@@ -669,7 +665,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	// remove the option
 	m.Extra = m.Extra[:len(m.Extra)-j]
 
-	m.ps = 0 // unless TSIG, SIG(0)
+	m.ps = 0 // unless TSIG, SIG(0) TODO
 
 	if !s.Empty() {
 		return &Error{err: "trailing message data"}
@@ -805,7 +801,14 @@ func (m *Msg) isCompressible() bool {
 		len(m.Ns) > 0 || len(m.Extra) > 0
 }
 
-const minHeaderSize = 11 // smallest possible RR header where the name is the root label.
+// isPseudo returns (1) true of we should have a pseudo section in this message, or not (0). It returns an
+// int becuse we need that number of the Extra section sizing.
+func (m *Msg) isPseudo() int {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
+		return 1
+	}
+	return 0
+}
 
 // Len returns the message length when in uncompressed wire format.
 func (m *Msg) Len() int {
@@ -824,14 +827,13 @@ func (m *Msg) Len() int {
 		l += r.Len()
 	}
 
-	pseudo := false
 	for _, r := range m.Pseudo {
-		if _, ok := r.(EDNS0); ok {
-			pseudo = true
-		}
 		l += r.Len()
 	}
-	if pseudo {
+
+	const minHeaderSize = 11 // smallest possible RR header where the name is the root label.
+
+	if m.isPseudo() > 0 {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
 		l += minHeaderSize
 	}

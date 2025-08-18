@@ -104,7 +104,7 @@ func (rr *TSIG) Sign(k TSIGSigner, m *Msg, options TSIGOption) error {
 
 // Verify uses the TSIG record to verify the data in the message. In binary TSIG record should be still
 // attached to m.Data and must be the last RR in the message. On successful verification, the TSIG record will
-// be removed from m.Data but left in m.Pseudo (addtional record count will be updated), and a nil error is returned.
+// be removed from m.Data but left in m.Pseudo (additional record count will be updated), and a nil error is returned.
 func (rr *TSIG) Verify(k TSIGVerifier, m *Msg, options TSIGOption) error {
 	lastrr := len(m.Question) + len(m.Answer) + len(m.Extra) + int(m.ps) - 1
 	if lastrr < 1 {

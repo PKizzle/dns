@@ -7,8 +7,8 @@
 
 - All basics work.
 - Simpler.
-- Faster.
-- CoreDNS convenience functions included in `dns` or otherwise in `dnsutils`.
+- Fast(er); recvmmsg and pipeling suppport.
+- More convenience functions included in `dns` or otherwise in `dnsutils`.
 - Example programs included _and_ benchmarked in `cmd/`.
 
 See [open issues](https://codeberg.org/miekg/dns/issues) on the remaining work.
@@ -37,9 +37,19 @@ wins.
 - Small API.
 - Fast.
   - The cmd/reflect server does 350K/280K UDP/TCP respectively.
+- Improved naming by embracing sub-packages.
 
 ## Difference with github.com/miekg/dns
 
+- Many functions (and new ones) are moved into dns/dnsutil.
+- `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern (usually) zone that lead to
+  invocation of this Handler.
+- `internal/*` packages that hold code that used to be private, but was cluttering; also allowed for better
+  naming.
+
+  - builtin perf testing with internal/dnsperf
+
+- Interfaces do not have private methods.
 - `Msg` contains a buffer named Data that holds the binary data for this message. This pulls TSIG/SIG(0)
   handling out of the client, simplifying it enormously as we can get rid of `dns.Conn`.
 - `Msg` includes all the ENDS0 OPT RR bits, as this almost was a real message header; in this package it now
