@@ -2300,3 +2300,81 @@ func (rr *IXFR) unpack(data, msgBuf []byte) (err error) {
 	}
 	return nil
 }
+
+func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = packName(rr.Algorithm, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint48(rr.TimeSigned, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.Fudge, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.MACSize, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringHex(rr.MAC, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.OrigID, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.Error, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packUint16(rr.OtherLen, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packStringHex(rr.OtherData, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Algorithm, err = unpackName(&s, msgBuf)
+	if err != nil {
+		return err
+	}
+	if !s.ReadUint48(&rr.TimeSigned) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint16(&rr.Fudge) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint16(&rr.MACSize) {
+		return ErrUnpackOverflow
+	}
+	rr.MAC, err = unpackStringHex(&s, int(rr.MACSize))
+	if err != nil {
+		return err
+	}
+	if !s.ReadUint16(&rr.OrigID) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint16(&rr.Error) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint16(&rr.OtherLen) {
+		return ErrUnpackOverflow
+	}
+	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
+	if err != nil {
+		return err
+	}
+	if !s.Empty() {
+		return ErrTrailingData.Fmt(": %s", "TSIG")
+	}
+	return nil
+}

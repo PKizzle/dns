@@ -166,6 +166,8 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 		return x.pack(msg, off, compression)
 	case *IXFR:
 		return x.pack(msg, off, compression)
+	case *TSIG:
+		return x.pack(msg, off, compression)
 	}
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := rr.(Packer); ok {
@@ -333,6 +335,8 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	case *AXFR:
 		return x.unpack(data, msgBuf)
 	case *IXFR:
+		return x.unpack(data, msgBuf)
+	case *TSIG:
 		return x.unpack(data, msgBuf)
 	}
 	// if here, we don't have the RR in our pkg, check if it does Packer.

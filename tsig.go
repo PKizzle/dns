@@ -3,8 +3,6 @@ package dns
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"strconv"
-	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/jump"
@@ -20,43 +18,6 @@ const (
 
 	HmacMD5 = "hmac-md5.sig-alg.reg.int." // Deprecated: HmacMD5 is no longer supported.
 )
-
-// TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
-// A TSIG RR when created must the [ClassANY], algorithm, timesigned, and optianal fudge factor.
-type TSIG struct {
-	Hdr        Header
-	Algorithm  string `dns:"domain-name"` // Algorithm is encoded as a name.
-	TimeSigned uint64 `dns:"uint48"`
-	Fudge      uint16
-	MACSize    uint16
-	MAC        string `dns:"size-hex:MACSize"`
-	OrigID     uint16 // OrigID is the original message ID, when creating a TSIG this should be set to the message ID.
-	Error      uint16
-	OtherLen   uint16
-	OtherData  string `dns:"size-hex:OtherLen"`
-}
-
-func (rr *TSIG) Header() *Header { return &rr.Hdr }
-func (rr *TSIG) Len() int {
-	return rr.Hdr.Len() + len(rr.Algorithm) + 8 + int(rr.MACSize) + 6 + int(rr.OtherLen)
-}
-
-func (rr *TSIG) Data() []Field {
-	return []Field{rr.Algorithm, rr.TimeSigned, rr.Fudge, rr.MACSize, rr.MAC, rr.OrigID, rr.Error, rr.OtherLen, rr.OtherData}
-}
-
-func (rr *TSIG) String() string {
-	sb := sprintHeader(rr)
-	sprintData(sb, rr.Algorithm, tsigTimeToString(rr.TimeSigned),
-		strconv.Itoa(int(rr.Fudge)), strconv.Itoa(int(rr.MACSize)),
-		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigID)),
-		strconv.Itoa(int(rr.Error)), strconv.Itoa(int(rr.OtherLen)), rr.OtherData)
-	return sb.String()
-}
-
-func (*TSIG) parse(c *zlexer, origin string) *ParseError {
-	return &ParseError{err: "TSIG records do not have a presentation format"}
-}
 
 // TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero) The TSIG MAC is saved in that RR.

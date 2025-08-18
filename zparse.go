@@ -162,6 +162,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *IXFR:
 		return x.parse(c, o)
+	case *TSIG:
+		return x.parse(c, o)
 	}
 	// If here we need to setup the channel and send the elements.
 	// if here, we don't have the RR in our pkg, check if it does Packer.
