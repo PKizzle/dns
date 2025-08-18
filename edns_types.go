@@ -3,6 +3,7 @@ package dns
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
 	"strconv"
 
 	"golang.org/x/crypto/cryptobyte"
@@ -253,6 +254,48 @@ func (o *EDE) String() string {
 	return sb.String()
 }
 
+// SUBNET is the subnet option that is used to give the remote nameserver
+// an idea of where the client is, see RFC 7871. It can give back a different
+// answer depending on the location or network topology.
+type SUBNET struct {
+	Family        uint16 // 1 for IP, 2 for IP6.
+	SourceNetmask uint8  // 32 for IPV4, 128 for IPv6.
+	SourceScope   uint8
+	Address       net.IP // Client IP address.
+}
+
+func (o *SUBNET) Len() int { return tlv + 2 + 2 + len(o.Address) }
+func (o *SUBNET) String() string {
+	sb := sprintOptionHeader(o)
+	switch {
+	case o.Address == nil:
+		sb.WriteString("<nil>")
+	case o.Address.To4() != nil:
+		sb.WriteString(o.Address.String())
+	default:
+		sb.WriteByte('[')
+		sb.WriteString(o.Address.String())
+		sb.WriteByte(']')
+	}
+	sb.WriteByte('/')
+	sb.WriteString(strconv.Itoa(int(o.SourceNetmask)))
+	sb.WriteByte('/')
+	sb.WriteString(strconv.Itoa(int(o.SourceScope)))
+	return sb.String()
+}
+
+// The ESU option for ENUM Source-URI Extension.
+type ESU struct {
+	URI string
+}
+
+func (o *ESU) Len() int { return tlv + len(o.URI) }
+func (o *ESU) String() string {
+	sb := sprintOptionHeader(o)
+	sb.WriteString(o.URI)
+	return sb.String()
+}
+
 // Extended DNS Error Codes (RFC 8914).
 const (
 	ExtendedErrorOther uint16 = iota
@@ -350,6 +393,10 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *TCPKEEPALIVE:
 		return x.unpack(s)
+	case *SUBNET:
+		return x.unpack(s)
+	case *ESU:
+		return x.unpack(s)
 	}
 	return fmt.Errorf("dns: no option unpack defined")
 }
@@ -377,6 +424,10 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *N3U:
 		return x.pack(msg, off)
 	case *TCPKEEPALIVE:
+		return x.pack(msg, off)
+	case *SUBNET:
+		return x.pack(msg, off)
+	case *ESU:
 		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?

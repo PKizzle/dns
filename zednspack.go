@@ -1,7 +1,10 @@
 package dns
 
 import (
+	"encoding/binary"
 	"encoding/hex"
+	"errors"
+	"net"
 
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -197,4 +200,54 @@ func (o *TCPKEEPALIVE) unpack(s *cryptobyte.String) error {
 		return ErrUnpackOverflow
 	}
 	return nil
+}
+
+func (o *SUBNET) pack(msg []byte, off int) (int, error) {
+	binary.BigEndian.PutUint16(msg[off:], o.Family)
+	off += 2
+	msg[off] = o.SourceNetmask
+	off++
+	msg[off] = o.SourceScope
+	off++
+	switch o.Family {
+	case 1:
+		msg[off] = 32
+	case 2:
+		msg[off] = 128
+	default:
+		return off, errors.New("bad address family")
+	}
+	return off, nil
+}
+
+func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
+	if !s.ReadUint16(&o.Family) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint8(&o.SourceNetmask) {
+		return ErrUnpackOverflow
+	}
+	if !s.ReadUint8(&o.SourceScope) {
+		return ErrUnpackOverflow
+	}
+	switch o.Family {
+	case 0:
+		o.Address = net.IPv4(0, 0, 0, 0)
+	case 1:
+		o.Address, err = unpackA(s)
+	case 2:
+		o.Address, err = unpackAAAA(s)
+	default:
+		return errors.New("bad address family")
+	}
+	return nil
+}
+
+func (o *ESU) pack(msg []byte, off int) (int, error) {
+	return packOctetString(o.URI, msg, off)
+}
+
+func (o *ESU) unpack(s *cryptobyte.String) (err error) {
+	o.URI, err = unpackStringOctet(s)
+	return err
 }
