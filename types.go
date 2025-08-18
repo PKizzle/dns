@@ -150,10 +150,10 @@ const (
 
 // Used in ZONEMD, RFC 8976.
 const (
-	ZoneMDSchemeSimple = 1
+	ZONEMDSchemeSimple = 1
 
-	ZoneMDHashAlgSHA384 = 1
-	ZoneMDHashAlgSHA512 = 2
+	ZONEMDHashSHA384 = 1
+	ZONEMDHashSHA512 = 2
 )
 
 // Used in IPSEC, RFC 4025, Section 2.3.
@@ -197,11 +197,11 @@ const (
 
 // Various constants used in the LOC RR. See RFC 1876.
 const (
-	LOC_EQUATOR       = 1 << 31 // RFC 1876, Section 2.
-	LOC_PRIMEMERIDIAN = 1 << 31 // RFC 1876, Section 2.
-	LOC_HOURS         = 60 * 1000
-	LOC_DEGREES       = 60 * LOC_HOURS
-	LOC_ALTITUDEBASE  = 100000
+	LOCEquator       = 1 << 31 // RFC 1876, Section 2.
+	LOCPrimemeridian = 1 << 31 // RFC 1876, Section 2.
+	LOCHours         = 60 * 1000
+	LOCDegrees       = 60 * LOCHours
+	LOCAltitudebase  = 100000
 )
 
 // Different Certificate Types, see RFC 4398, Section 2.1
@@ -722,36 +722,36 @@ func (rr *LOC) String() string {
 
 	lat := rr.Latitude
 	ns := "N"
-	if lat > LOC_EQUATOR {
-		lat = lat - LOC_EQUATOR
+	if lat > LOCEquator {
+		lat = lat - LOCEquator
 	} else {
 		ns = "S"
-		lat = LOC_EQUATOR - lat
+		lat = LOCEquator - lat
 	}
-	h := lat / LOC_DEGREES
-	lat = lat % LOC_DEGREES
-	m := lat / LOC_HOURS
-	lat = lat % LOC_HOURS
+	h := lat / LOCDegrees
+	lat = lat % LOCDegrees
+	m := lat / LOCHours
+	lat = lat % LOCHours
 
 	sb.WriteString(fmt.Sprintf("%02d %02d %0.3f %s ", h, m, float64(lat)/1000, ns))
 
 	lon := rr.Longitude
 	ew := "E"
-	if lon > LOC_PRIMEMERIDIAN {
-		lon = lon - LOC_PRIMEMERIDIAN
+	if lon > LOCPrimemeridian {
+		lon = lon - LOCPrimemeridian
 	} else {
 		ew = "W"
-		lon = LOC_PRIMEMERIDIAN - lon
+		lon = LOCPrimemeridian - lon
 	}
-	h = lon / LOC_DEGREES
-	lon = lon % LOC_DEGREES
-	m = lon / LOC_HOURS
-	lon = lon % LOC_HOURS
+	h = lon / LOCDegrees
+	lon = lon % LOCDegrees
+	m = lon / LOCHours
+	lon = lon % LOCHours
 
 	sb.WriteString(fmt.Sprintf("%02d %02d %0.3f %s ", h, m, float64(lon)/1000, ew))
 
 	alt := float64(rr.Altitude) / 100
-	alt -= LOC_ALTITUDEBASE
+	alt -= LOCAltitudebase
 	if rr.Altitude%100 != 0 {
 		sb.WriteString(fmt.Sprintf("%.2fm ", alt))
 	} else {
