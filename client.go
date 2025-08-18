@@ -24,6 +24,9 @@ type Transport struct {
 	// TLSClientConfig specifies the TLS configuration to use with tls.Client.
 	// If nil, the default configuration is used.
 	TLSClientConfig *tls.Config
+
+	TSIGSigner
+	TSIGVerifier
 }
 
 // DefaultTransport is the default transport in client, when none is set.
@@ -95,6 +98,9 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
 	}
+
+	// write deadline, from transport
+	// read deadline
 
 	r = new(Msg)
 	r.Data = m.Data
