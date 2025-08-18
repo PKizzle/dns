@@ -486,11 +486,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	dh.Qdcount = uint16(len(m.Question))
 	dh.Ancount = uint16(len(m.Answer))
 	dh.Nscount = uint16(len(m.Ns))
-	ps := 0
-	if len(m.Pseudo) > 0 {
-		ps = 1
-	}
-	dh.Arcount = uint16(len(m.Extra) + ps)
+	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
 	println(dh.Arcount)
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
@@ -522,7 +518,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	}
 
 	// Add an OPT RR if we see any of these.
-	if m.isPeudo() {
+	if m.isPseudo() > 0 {
 		opt := &OPT{Hdr: Header{Name: "."}}
 		if m.UDPSize > MinMsgSize {
 			opt.SetUDPSize(m.UDPSize)
@@ -675,7 +671,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	// remove the option
 	m.Extra = m.Extra[:len(m.Extra)-j]
 
-	m.ps = 0 // unless TSIG, SIG(0)
+	m.ps = 0 // unless TSIG, SIG(0) TODO
 
 	if !s.Empty() {
 		return &Error{err: "trailing message data"}
@@ -811,9 +807,13 @@ func (m *Msg) isCompressible() bool {
 		len(m.Ns) > 0 || len(m.Extra) > 0
 }
 
-// isPeudo returns true of we should have a pseudo section in this message.
-func (m *Msg) isPeudo() bool {
-	return len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF
+// isPseudo returns (1) true of we should have a pseudo section in this message, or not (0). It returns an
+// int becuse we need that number of the Extra section sizing.
+func (m *Msg) isPseudo() int {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
+		return 1
+	}
+	return 0
 }
 
 // Len returns the message length when in uncompressed wire format.
@@ -839,7 +839,7 @@ func (m *Msg) Len() int {
 
 	const minHeaderSize = 11 // smallest possible RR header where the name is the root label.
 
-	if m.isPseudo() {
+	if m.isPseudo() > 0 {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
 		l += minHeaderSize
 	}
