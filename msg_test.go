@@ -102,8 +102,6 @@ func TestMsgExtendedRcode(t *testing.T) {
 
 	fmt.Printf("%s\n", m)
 	m.Pack()
-	m.Rcode = 0
-
 	t.Logf("\n%s\n", bin.Dump(m.Data))
 
 	m.Unpack()

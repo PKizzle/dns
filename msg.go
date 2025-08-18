@@ -487,7 +487,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	dh.Ancount = uint16(len(m.Answer))
 	dh.Nscount = uint16(len(m.Ns))
 	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
-	println(dh.Arcount)
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
@@ -642,19 +641,13 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option code and put those in the Pseudo
 	// section. Any TSIG and SIG0 records will also be put in the pseudo section, but after the options.
 
-	println("K", len(m.Extra), "dds")
 	j := 0
 	for i := 0; i < len(m.Extra)-j; i++ {
 		rr := m.Extra[i]
-		println("HAVE OTP?")
 		if opt, ok := rr.(*OPT); ok {
-			println("*OPT")
 			// move to end, so it can be removed latter and unpack the opt for the settings.
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
-			println("DDS")
-			println(m.Rcode)
-			println("opt", opt.Rcode())
 			m.Rcode += opt.Rcode() // TODO: test this
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
