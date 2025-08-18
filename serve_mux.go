@@ -7,7 +7,7 @@ import (
 )
 
 // Handler is implemented by any value that implements ServeDNS. The message r is minimally decoded, only up
-// to the question section (mostly first 20-ish bytes) are decoded. The rest of the message is available in
+// to the question section (mostly first 20-ish bytes) are decoded, see [Msg.Options]. The rest of the message is available in
 // r.Data, so if a message is deemed worthwhile a:
 //
 //	r.Unpack()
@@ -15,7 +15,7 @@ import (
 // to get the entire message.
 //
 // The context is cancelled when the server exits. The context carries the pattern of the handler (this is
-// commonly the DNS zone) in it. You can retrieve it with [Zone].
+// commonly the DNS zone) that was used to invoke it. You can retrieve that pattern with [Zone].
 type Handler interface {
 	ServeDNS(ctx context.Context, w ResponseWriter, r *Msg)
 }
@@ -33,10 +33,8 @@ type contextKey string
 
 var contextKeyZone = contextKey("zone")
 
-// The HandlerFunc type is an adapter to allow the use of
-// ordinary functions as DNS handlers.  If f is a function
-// with the appropriate signature, HandlerFunc(f) is a
-// Handler object that calls f.
+// The HandlerFunc type is an adapter to allow the use of ordinary functions as DNS handlers.  If f is a function
+// with the appropriate signature, HandlerFunc(f) is a Handler object that calls f.
 type HandlerFunc func(context.Context, ResponseWriter, *Msg)
 
 // ServeDNS calls f(w, r).

@@ -1,5 +1,13 @@
 # Even more alternative approach to a DNS library (version 2)
 
+# Status
+
+- All basics work.
+- Simpler.
+- Faster.
+
+See [open issues](https://codeberg.org/miekg/dns/issues) on the remaining work.
+
 (Previous version is https://github.com/miekg/dns)
 
 > Less is more.

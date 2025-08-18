@@ -184,6 +184,7 @@ type Msg struct {
 	Answer   []RR // Holds the RR(s) of the answer section.
 	Ns       []RR // Holds the RR(s) of the authority section.
 	Extra    []RR // Holds the RR(s) of the additional section, except records that go into the pseudo section.
+
 	// The Pseudo section is a virtual (doesn't exist on the wire) section in this package. It holds the OPT
 	// EDNS0 option codes, that are interpreted (and shown) as RRs. If a TSIG or SIG(0) record is present it also sits in this
 	// section. This package takes care of hidding the OPT RR, it will never be visible in Extra, nor in the Pseudo section.
@@ -198,6 +199,7 @@ type Msg struct {
 	// Data is the data of the message that was either received from the wire or is about to be send
 	// over the wire. Note that this data is a snapshot of the Msg as it was packed or unpacked.
 	Data []byte
+
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
 	Options Option
 }
