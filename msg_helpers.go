@@ -111,10 +111,13 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	if err != nil {
 		return len(msg), err
 	}
+	println("packing", h.TTL, off)
 	off, err = packUint32(h.TTL, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
+	println("paced", h.TTL, off)
+	println("OK")
 	off, err = packUint16(0, msg, off) // The RDLENGTH field will be set later in packRR.
 	if err != nil {
 		return len(msg), err

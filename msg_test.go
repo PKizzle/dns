@@ -32,34 +32,35 @@ func ExampleMsg_Pseudo_nsid() {
 	// Output: [0 3 1 0 0 1 0 0 0 0 0 1 4 109 105 101 107 2 110 108 0 0 15 0 1 0 0 41 0 0 0 0 0 0 0 4 0 3 0 0]
 }
 
-func TestReadMsgBinary(t *testing.T) {
+func TestMsgBinary(t *testing.T) {
 	// TODO: turn into test
 	binaries := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
 	for i, binary := range binaries {
 		t.Run(fmt.Sprintf("test %d: %s", i, binary), func(t *testing.T) {
 			buf, _ := os.ReadFile("testdata/" + binary)
-			msg := &dns.Msg{Data: buf}
-			if err := msg.Unpack(); err != nil {
+			m := &dns.Msg{Data: buf}
+			if err := m.Unpack(); err != nil {
 				t.Errorf("%s", err)
-				t.Logf("%v\n", msg.Data)
+				t.Logf("%v\n", m.Data)
 			}
-			t.Logf("%s\n", msg)
-			t.Logf("%s\n", bin.Dump(msg.Data))
+			t.Logf("%s\n", m)
+			t.Logf("%s\n", bin.Dump(m.Data))
 		})
 	}
 }
 
-func TestPackPackBinary(t *testing.T) {
-	msg := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]dns.RR, 2)}
+func TestMsgPackBinary(t *testing.T) {
+	// TODO: turn into test
+	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]dns.RR, 2)}
 	a := &dns.A{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
-	msg.Question = []dns.RR{a}
-	msg.Pseudo = []dns.RR{&dns.NSID{Nsid: "6770"}}
-	msg.Answer[0], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.215")
-	msg.Answer[1], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.216")
+	m.Question = []dns.RR{a}
+	m.Pseudo = []dns.RR{&dns.NSID{Nsid: "6770"}}
+	m.Answer[0], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.215")
+	m.Answer[1], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.216")
 
-	t.Logf("%s\n", msg)
-	msg.Pack()
-	t.Logf("%s\n", msg)
+	t.Logf("%s\n", m)
+	m.Pack()
+	t.Logf("%s\n", m)
 }
 
 func TestUnpackName(t *testing.T) {
@@ -89,4 +90,20 @@ func TestUnpackName(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMsgExtendedRcode(t *testing.T) {
+	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3}}
+	m.Question = []dns.RR{&dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}}
+	m.Rcode = dns.RcodeFormatError
+
+	fmt.Printf("%s\n", m)
+
+	m.Rcode = dns.RcodeBadCookie
+
+	fmt.Printf("%s\n", m)
+
+	m.Pack()
+	t.Logf("%s\n", bin.Dump(m.Data))
+
 }

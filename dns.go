@@ -158,7 +158,7 @@ type MsgHeader struct {
 	AuthenticatedData  bool
 	CheckingDisabled   bool
 
-	Rcode uint16 // Rcode is the message response code, extended rcodes can be set on this value.
+	Rcode uint16 // Rcode is the message response code, extended rcodes can be set here as well.
 
 	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
 	// putting the bits in the right places and creating an OPT RR if needed.

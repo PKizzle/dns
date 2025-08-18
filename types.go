@@ -1479,7 +1479,7 @@ type OPT struct {
 
 // See opt.go for other methods.
 
-func (rr *OPT) String() string { return "" }
+func (rr *OPT) String() string { return rr.Hdr.String() }
 
 /* XXX(miek): leave here if we know for sure the generated one is OK.
 func (rr *OPT) Data() []Field {

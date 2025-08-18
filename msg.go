@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"codeberg.org/miekg/dns/internal/bin"
 	"codeberg.org/miekg/dns/internal/ddd"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -366,10 +367,12 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	}
 
 	rrtype := RRToType(rr)
+	println("RRTYPE", rrtype)
 	headerEnd, err = rr.Header().packHeader(msg, off, rrtype, compression)
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
+	println(bin.Dump(msg[:headerEnd]))
 
 	off1, err = pack(rr, msg, headerEnd, compression)
 	if err != nil {
@@ -542,9 +545,9 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 				opt.Options = append(opt.Options, edns0)
 			}
 		}
-		// pack here, so we dont increase m.Extra - which is weird for the caller, Arcount already updated
-		// above.
-		if _, off, err = packRR(opt, m.Data, off, compression); err != nil {
+		println("packing new OPT", off, opt.String())
+		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
+		if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 			return err
 		}
 	}
@@ -805,8 +808,6 @@ func (m *Msg) isCompressible() bool {
 		len(m.Ns) > 0 || len(m.Extra) > 0
 }
 
-const minHeaderSize = 11 // smallest possible RR header where the name is the root label.
-
 // Len returns the message length when in uncompressed wire format.
 func (m *Msg) Len() int {
 	l := MsgHeaderSize
@@ -824,14 +825,13 @@ func (m *Msg) Len() int {
 		l += r.Len()
 	}
 
-	pseudo := false
 	for _, r := range m.Pseudo {
-		if _, ok := r.(EDNS0); ok {
-			pseudo = true
-		}
 		l += r.Len()
 	}
-	if pseudo {
+
+	const minHeaderSize = 11 // smallest possible RR header where the name is the root label.
+	// See line 524, same 'if'.
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
 		l += minHeaderSize
 	}
