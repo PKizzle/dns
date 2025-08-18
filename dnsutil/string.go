@@ -25,10 +25,7 @@ func RcodeToString(r uint16) string {
 // ClassToString converts the class to the text presentation, or to "CLASS"+value if the class is unknown.
 func ClassToString(c uint16) string {
 	if c1, ok := dns.ClassToString[c]; ok {
-		// Only emit mnemonics when they are unambiguous, specially ANY is in both.
-		if _, ok := dns.StringToType[c1]; !ok {
-			return c1
-		}
+		return c1
 	}
 	return "CLASS" + strconv.Itoa(int(c))
 }
