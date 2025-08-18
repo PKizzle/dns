@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/codeberg.org/miekg/dns)](https://goreportcard.com/report/codeberg.org/miekg/dns)
+[![](https://godoc.org/coreberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
+
 # Even more alternative approach to a DNS library (version 2)
 
 # Status
@@ -5,6 +8,8 @@
 - All basics work.
 - Simpler.
 - Faster.
+- CoreDNS convenience functions included in `dns` or otherwise in `dnsutils`.
+- Example programs included _and_ benchmarked in `cmd/`.
 
 See [open issues](https://codeberg.org/miekg/dns/issues) on the remaining work.
 
@@ -17,7 +22,7 @@ lean and mean philosophy. Server side and client side programming is supported, 
 resolvers with it.
 
 We try to keep the "main" branch as sane as possible and at the bleeding edge of standards, avoiding breaking
-changes wherever reasonable.
+changes wherever reasonable. but because this version is young, we allow ourselves some more headroom.
 
 The naming of types follows the RFCs. EDNS0 types are similarly named, for instance, DHU (Ds Hash Understood).
 If there is a clash between an actual RR's and an EDNS0 one, the EDNS0 type will get an 'E' as prefix, e.g.
@@ -43,10 +48,13 @@ wins.
 - `Msg` has a pseudo section that holds all EDNS0 Options as (faked) resource records.
 - Everything is a resource record:
 
-  - question section: hold an RR
-  - pseudo section: holds RRs
+  - question section: holds `[]RR`
+  - pseudo section: holds `[]RR`
 
   This will be extended (later/TODO) to allow reading from a text presentation format.
+
+  There will probably also be a `Stateful` section in the message that holds DNS Stateful Operation (DSO)
+  records, these records will also be _RRs_.
 
 - `New` will return an RR, `NewRR` will be gone.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
@@ -54,7 +62,7 @@ wins.
   - msg is a io.Writer.
   - msg.Data is re-used between request and reply in Exchange.
   - private RRs are easier.
-  - private EDNS0 are almost implementatable.
+  - private EDNS0 are almost implementable.
 
 ### Setting EDNS0
 
