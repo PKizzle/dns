@@ -25,7 +25,7 @@ func Dump(p []byte, off ...int) string {
 		return ""
 	}
 
-	const space = "   "
+	const space = "..."
 	left := func(s string) string {
 		switch l := len(s); l {
 		case 0, 1, 2, 3:
