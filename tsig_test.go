@@ -40,7 +40,7 @@ func TestTSIG(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m := newMsgWithTSIG()
 			if err := TSIGSign(m, HMAC(tc.alg), tc.option); err != nil {
-				t.Fatalf("failed to sign: %s", m.String())
+				t.Fatalf("failed to sign: %s", err)
 			}
 
 			if tc.transformFn != nil {

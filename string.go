@@ -194,10 +194,7 @@ func sprintCode(t uint16) string {
 
 func sprintClass(c uint16) string {
 	if s, ok := ClassToString[uint16(c)]; ok {
-		// Only emit mnemonics when they are unambiguous, specially ANY is in both.
-		if _, ok := StringToType[s]; !ok {
-			return s
-		}
+		return s
 	}
 	return "CLASS" + strconv.Itoa(int(c))
 }
