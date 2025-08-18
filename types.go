@@ -598,7 +598,7 @@ func (rr *CERT) String() string {
 	sb.WriteByte(' ')
 
 	if algorithm, ok := AlgorithmToString[rr.Algorithm]; !ok {
-		algorithm = strconv.Itoa(int(rr.Algorithm))
+		sb.WriteString(strconv.Itoa(int(rr.Algorithm)))
 	} else {
 		sb.WriteString(algorithm)
 	}

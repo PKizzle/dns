@@ -316,7 +316,8 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				*s = cs
 			}
 			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
-			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior occurance".
+			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
+			// occurrence".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
 			if int(off) >= offset(cs, msgBuf)-2 {
 				return "", &Error{err: "pointer not to prior occurrence of name"}

@@ -17,7 +17,7 @@ import (
 //	16  | 107 002 110 108 000 000 015 000 001 192 012 000 015 000 001 000
 //	32  | 000 084 096 000 025 000 010 006 097 115 112 109 120 050 010 103
 //
-// Usally called as: t.Logf("\n%s\n", bin.Dump(buf))
+// Usually called as: t.Logf("\n%s\n", bin.Dump(buf))
 func Dump(p []byte, off ...int) string {
 	if len(p) == 0 {
 		return ""
