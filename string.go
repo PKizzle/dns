@@ -202,10 +202,24 @@ func sprintClass(c uint16) string {
 	return "CLASS" + strconv.Itoa(int(c))
 }
 
+func sprintRcode(r uint16) string {
+	if r1, ok := RcodeToString[r]; ok {
+		return r1
+	}
+	return "RCODE" + strconv.Itoa(int(r))
+}
+
+func sprintOpcode(o uint8) string {
+	if o1, ok := OpcodeToString[o]; ok {
+		return o1
+	}
+	return "OPCODE" + strconv.Itoa(int(o))
+}
+
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
-func TimeToString(t uint32) string {
+func timeToString(t uint32) string {
 	mod := (int64(t)-time.Now().Unix())/year68 - 1
 	if mod < 0 {
 		mod = 0
@@ -214,10 +228,10 @@ func TimeToString(t uint32) string {
 	return ti.Format("20060102150405")
 }
 
-// StringToTime translates the RRSIG's incep. and expir. times from
+// stringToTime translates the RRSIG's incep. and expir. times from
 // string values like "20110403154150" to an 32 bit integer.
 // It takes serial arithmetic (RFC 1982) into account.
-func StringToTime(s string) (uint32, error) {
+func stringToTime(s string) (uint32, error) {
 	t, err := time.Parse("20060102150405", s)
 	if err != nil {
 		return 0, err
