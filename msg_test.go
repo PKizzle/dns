@@ -93,17 +93,17 @@ func TestUnpackName(t *testing.T) {
 }
 
 func TestMsgExtendedRcode(t *testing.T) {
+	// set extended rcode, pack the message, unpack it, could should still be there. This tests _a lot_ as and OPT rr is allocated
+	// and packed. Also during unpack the opposite is done.
 	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3}}
 	m.Question = []dns.RR{&dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}}
-	m.Rcode = dns.RcodeFormatError
-
-	//m.Rcode = dns.RcodeBadCookie
 	m.Rcode = dns.RcodeBadTime
 
-	fmt.Printf("%s\n", m)
 	m.Pack()
-	t.Logf("\n%s\n", bin.Dump(m.Data))
-
-	m.Unpack()
-	t.Logf("%s\n%s\n", m, bin.Dump(m.Data))
+	r := new(dns.Msg)
+	r.Data = m.Data
+	r.Unpack()
+	if r.Rcode != dns.RcodeBadTime {
+		t.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
+	}
 }

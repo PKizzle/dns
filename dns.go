@@ -219,14 +219,14 @@ const (
 
 // Convert a MsgHeader to a string, with dig-like headers:
 //
-//	;; QUERY, status: NOERROR, id: 51664, flags: qr rd ra do co
+//	;; QUERY, rcode: NOERROR, id: 51664, flags: qr rd ra do co
 //	;; EDNS, version: 0, udp: 512
 //	;; QUESTION: 1, PSEUDO: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0
 func (h *MsgHeader) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(";; ")
 	sb.WriteString(sprintOpcode(h.Opcode))
-	sb.WriteString(", status: ")
+	sb.WriteString(", rcode: ")
 	sb.WriteString(sprintRcode(h.Rcode))
 	sb.WriteString(", id: ")
 	sb.WriteString(strconv.Itoa(int(h.ID)))
