@@ -597,10 +597,10 @@ func (rr *CERT) String() string {
 	sb.WriteString(strconv.Itoa(int(rr.KeyTag)))
 	sb.WriteByte(' ')
 
-	if algorithm, ok := AlgorithmToString[rr.Algorithm]; !ok {
-		sb.WriteString(strconv.Itoa(int(rr.Algorithm)))
-	} else {
+	if algorithm, ok := AlgorithmToString[rr.Algorithm]; ok {
 		sb.WriteString(algorithm)
+	} else {
+		sb.WriteString(strconv.Itoa(int(rr.Algorithm)))
 	}
 	sb.WriteByte(' ')
 
