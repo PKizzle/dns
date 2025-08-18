@@ -1,5 +1,6 @@
 //go:build ignore
 
+// TODO: make use of Msg.Data
 package dns
 
 import (
