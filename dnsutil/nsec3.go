@@ -6,6 +6,8 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"strings"
+
+	"codeberg.org/miekg/dns"
 )
 
 // hashName hashes a string (label) according to RFC 5155. It returns the hashed string in uppercase.
@@ -46,7 +48,7 @@ func hashName(label string, ha uint8, iter uint16, salt string) string {
 }
 
 // Cover returns true if a name is covered by the NSEC3 record.
-func (rr *NSEC3) Cover(name string) bool {
+func NSEC3Cover(rr *dns.NSEC3, name string) bool {
 	nameHash := hashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
 	labelIndices := Split(owner)
@@ -78,7 +80,7 @@ func (rr *NSEC3) Cover(name string) bool {
 }
 
 // Match returns true if a name matches the NSEC3 record
-func (rr *NSEC3) Match(name string) bool {
+func NSEC3Match(rr, name string) bool {
 	nameHash := hashName(name, rr.Hash, rr.Iterations, rr.Salt)
 	owner := strings.ToUpper(rr.Hdr.Name)
 	labelIndices := Split(owner)

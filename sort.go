@@ -9,6 +9,7 @@ import "sort"
 // DO NOT use yet
 func Compare(a, b RR) int {
 	// Name
+	// hooks into commonSuffix.
 
 	// Type
 	at := RRToType(a)
