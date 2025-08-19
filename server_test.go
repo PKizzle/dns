@@ -108,13 +108,13 @@ func TestServerZFlag(t *testing.T) {
 
 	c := new(dns.Client)
 	m := new(dns.Msg)
-	txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+	txt := &dns.TXT{Hdr: dns.Header{Name: "example.com.", Class: dns.ClassINET}}
 	m.Question = []dns.RR{txt}
 	m.Zero = true
 
 	r, _, err := c.Exchange(context.TODO(), m, "udp", addrstr)
 	if err != nil {
-		t.Fatal("failed to exchange example.com with +zflag", err)
+		t.Fatal("failed to exchange example.com. with +zflag", err)
 	}
 	if r.Zero {
 		t.Error("the response should not have Z flag set - even for a query which does")
@@ -126,7 +126,6 @@ func TestServerZFlag(t *testing.T) {
 
 // Verify that the server responds to a query with unsupported Opcode with a NotImplemented error and that Opcode is unchanged.
 func TestServeNotImplemented(t *testing.T) {
-	t.Skip() // TODO:miek fix!
 	dns.HandleFunc("example.com.", AnotherHelloHandler)
 	opcode := uint8(15)
 
@@ -140,7 +139,7 @@ func TestServeNotImplemented(t *testing.T) {
 	m := new(dns.Msg)
 
 	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemented
-	txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+	txt := &dns.TXT{Hdr: dns.Header{Name: "example.com.", Class: dns.ClassINET}}
 	m.Question = []dns.RR{txt}
 	m.Opcode = opcode
 	r, _, err := c.Exchange(context.TODO(), m, "udp", addrstr)

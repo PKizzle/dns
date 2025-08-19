@@ -329,6 +329,12 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		srv.MsgInvalidFunc(r, &Error{err: "r.Response is set"})
 		return
 	}
+	_, ok := OpcodeToString[r.Opcode]
+	if !ok {
+		srv.MsgInvalidFunc(r, &Error{err: "r.Opcode is invalid"})
+		return
+	}
+
 	r.Options = 0
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()

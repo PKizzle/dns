@@ -13,7 +13,7 @@ import (
 
 // Server returns a pointer to a new dns.Server.
 func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	srv := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Hour}
+	srv := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Second}
 
 	srv.Init()
 	waitLock := sync.Mutex{}
