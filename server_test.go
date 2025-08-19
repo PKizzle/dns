@@ -18,6 +18,7 @@ func TestServer(t *testing.T) {
 	}{
 		{"udp", "udp", dnstest.UDPServer},
 		{"tcp", "tcp", dnstest.TCPServer},
+		//{"tcp-tls", "tcp", dnstest.TLSServer}, #broken
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dns.HandleFunc("miek.nl.", HelloHandler)
@@ -30,6 +31,11 @@ func TestServer(t *testing.T) {
 			defer s.Shutdown(context.TODO())
 
 			c := &dns.Client{}
+			if tc.name == "tcp-tls" {
+				c.Transport = dns.DefaultTransport
+				c.TLSConfig = dnstest.TLSConfig()
+			}
+
 			txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
 			m := new(dns.Msg)
 			m.Question = []dns.RR{txt}
@@ -37,12 +43,12 @@ func TestServer(t *testing.T) {
 			m.Pack()
 
 			r, _, err := c.Exchange(context.TODO(), m, tc.network, addrstr)
-			if err != nil || len(r.Extra) == 0 {
-				t.Fatal("failed to exchange miek.nl", err)
+			if err != nil {
+				t.Fatal("failed to exchange miek.nl.", err)
 			}
 			str := r.Extra[0].(*dns.TXT).Txt[0]
 			if str != "Hello world" {
-				t.Error("unexpected result for miek.nl", str, "!= Hello world")
+				t.Error("unexpected result for miek.nl.", str, "!= Hello world")
 			}
 
 			txt = &dns.TXT{Hdr: dns.Header{Name: "example.com.", Class: dns.ClassINET}}
@@ -52,11 +58,11 @@ func TestServer(t *testing.T) {
 
 			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
 			if err != nil {
-				t.Fatal("failed to exchange example.com", err)
+				t.Fatal("failed to exchange example.com.", err)
 			}
 			str = r.Extra[0].(*dns.TXT).Txt[0]
 			if str != "Hello example" {
-				t.Error("unexpected result for example.com", str, "!= Hello example")
+				t.Error("unexpected result for example.com.", str, "!= Hello example")
 			}
 
 			// Test Mixes cased as noticed by Ask.
@@ -67,11 +73,11 @@ func TestServer(t *testing.T) {
 
 			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
 			if err != nil {
-				t.Error("failed to exchange eXaMplE.cOm", err)
+				t.Error("failed to exchange eXaMplE.cOm.", err)
 			}
 			str = r.Extra[0].(*dns.TXT).Txt[0]
 			if str != "Hello example" {
-				t.Error("unexpected result for example.com", str, "!= Hello example")
+				t.Error("unexpected result for example.com.", str, "!= Hello example")
 			}
 		})
 	}
@@ -81,7 +87,7 @@ func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}}
-	m.Pack()
+	println("sEINING", len(m.Data))
 	io.Copy(w, m)
 }
 
@@ -89,6 +95,65 @@ func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}}
-	m.Pack()
+	println("sEINING", len(m.Data))
 	io.Copy(w, m)
 }
+
+/*
+// Verify that the server responds to a query with Z flag on, ignoring the flag, and does not echoes it back
+func TestServeIgnoresZFlag(t *testing.T) {
+	HandleFunc("example.com.", AnotherHelloServer)
+
+	s, addrstr, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := new(Client)
+	m := new(Msg)
+
+	// Test the Z flag is not echoed
+	m.SetQuestion("example.com.", TypeTXT)
+	m.Zero = true
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange example.com with +zflag", err)
+	}
+	if r.Zero {
+		t.Error("the response should not have Z flag set - even for a query which does")
+	}
+	if r.Rcode != RcodeSuccess {
+		t.Errorf("expected rcode %v, got %v", RcodeSuccess, r.Rcode)
+	}
+}
+
+// Verify that the server responds to a query with unsupported Opcode with a NotImplemented error and that Opcode is unchanged.
+func TestServeNotImplemented(t *testing.T) {
+	HandleFunc("example.com.", AnotherHelloServer)
+	opcode := 15
+
+	s, addrstr, _, err := RunLocalUDPServer(":0")
+	if err != nil {
+		t.Fatalf("unable to run test server: %v", err)
+	}
+	defer s.Shutdown()
+
+	c := new(Client)
+	m := new(Msg)
+
+	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemented
+	m.SetQuestion("example.com.", TypeTXT)
+	m.Opcode = opcode
+	r, _, err := c.Exchange(m, addrstr)
+	if err != nil {
+		t.Fatal("failed to exchange example.com with +zflag", err)
+	}
+	if r.Opcode != opcode {
+		t.Errorf("expected opcode %v, got %v", opcode, r.Opcode)
+	}
+	if r.Rcode != RcodeNotImplemented {
+		t.Errorf("expected rcode %v, got %v", RcodeNotImplemented, r.Rcode)
+	}
+}
+*/

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -37,7 +36,7 @@ func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
 
 	server := &Server{
 		Addr:      addr,
-		Net:       "tcp-tls",
+		Net:       "tcp",
 		TLSConfig: &config,
 		Handler:   handler,
 	}
@@ -62,13 +61,14 @@ func DefaultMsgInvalidFunc(m *Msg, err error) {}
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
-	// Address to listen on, ":dns" if empty.
+	// Address to listen on, ":domain" if empty.
 	Addr string
-	// If "tcp" or "tcp-tls" (DNS over TLS) it will invoke a TCP listener, otherwise an UDP one.
+	// If "tcp" it will invoke a TCP listener, otherwise an UDP one. If TLSConfig is not nil to TLS server is
+	// started.
 	Net string
 	// TCP Listener to use, this is to aid in systemd's socket activation.
 	Listener net.Listener
-	// TLS connection configuration
+	// TLS connection configuration.
 	TLSConfig *tls.Config
 	// UDP "Listener" to use, this is to aid in systemd's socket activation.
 	PacketConn net.PacketConn
@@ -101,8 +101,8 @@ type Server struct {
 	shutdown chan bool
 }
 
-// init sets some default values in Server.
-func (srv *Server) init() {
+// Init sets some default values in Server.
+func (srv *Server) Init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
@@ -130,7 +130,7 @@ func (srv *Server) ListenAndServe() error {
 		addr = ":domain"
 	}
 
-	srv.init()
+	srv.Init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -138,19 +138,10 @@ func (srv *Server) ListenAndServe() error {
 		if err != nil {
 			return err
 		}
+		if srv.TLSConfig != nil {
+			l = tls.NewListener(l, srv.TLSConfig)
+		}
 		srv.Listener = l
-		srv.listenTCP(l)
-		return nil
-	case "tcp-tls", "tcp4-tls", "tcp6-tls":
-		if srv.TLSConfig == nil || (len(srv.TLSConfig.Certificates) == 0 && srv.TLSConfig.GetCertificate == nil) {
-			return errors.New("dns: neither Certificates nor GetCertificate set")
-		}
-		network := strings.TrimSuffix(srv.Net, "-tls")
-		l, err := listenTCP(network, addr, srv.ReusePort, srv.ReuseAddr)
-		if err != nil {
-			return err
-		}
-		l = tls.NewListener(l, srv.TLSConfig)
 		srv.listenTCP(l)
 		return nil
 	case "udp", "udp4", "udp6":

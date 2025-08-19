@@ -1017,6 +1017,8 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 		m.Data = m.Data[:li]
 	}
 	n, err := io.ReadFull(r, m.Data)
-	m.Data = m.Data[:n]
+	if err != nil {
+		m.Data = m.Data[:n]
+	}
 	return int64(n), err
 }

@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"context"
 	"crypto/tls"
 	"net"
 	"time"
@@ -9,14 +8,12 @@ import (
 
 // Transport is the transport used in [Client], it deals with all the networking.
 type Transport struct {
-	// 	Do the RoundTripper interface?
+	// Dialer is used used to set local address and timeouts.
+	Dialer *net.Dialer
 
-	// DialContext specifies the dial function for creating unencrypted TCP or UDP connections.
-	DialContext func(ctx context.Context, network, addr string) (net.Conn, error)
-
-	// TLSClientConfig specifies the TLS configuration to use with tls.Client.
-	// If nil, the default configuration is used.
-	TLSClientConfig *tls.Config
+	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
+	// be used to dial.
+	TLSConfig *tls.Config
 
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
@@ -28,12 +25,10 @@ type Transport struct {
 
 // DefaultTransport is the default transport in client, when none is set.
 var DefaultTransport = &Transport{
-	DialContext: defaultTransportDialContext(&net.Dialer{
+	Dialer: &net.Dialer{
 		Timeout:   5 * time.Second,
 		KeepAlive: 3 * time.Second,
-	}),
-}
-
-func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {
-	return dialer.DialContext
+	},
+	ReadTimeout:  2 * time.Second,
+	WriteTimeout: 2 * time.Second,
 }

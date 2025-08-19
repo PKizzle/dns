@@ -2,6 +2,7 @@ package dns
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
 )
@@ -17,8 +18,7 @@ type Transfer struct {
 	*Transport
 }
 
-// In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls
-// m.Pack().
+// In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().
 func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env chan *Envelope, err error) {
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)
@@ -32,12 +32,16 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 		}
 	}
 
-	// check udp ones, need tcp or stream
-	var conn net.Conn
 	if t.Transport == nil {
-		conn, err = DefaultTransport.DialContext(ctx, network, address)
+		t.Transport = DefaultTransport
+	}
+
+	var conn net.Conn
+	if t.TLSConfig != nil {
+		dialer := tls.Dialer{NetDialer: t.Transport.Dialer, Config: t.TLSConfig}
+		conn, err = dialer.DialContext(ctx, network, address)
 	} else {
-		conn, err = t.Transport.DialContext(ctx, network, address)
+		conn, err = t.Transport.Dialer.DialContext(ctx, network, address)
 	}
 	if err != nil {
 		return nil, err

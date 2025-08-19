@@ -4,6 +4,7 @@ package dns
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net"
 	"time"
@@ -35,6 +36,8 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // Exchange does not retry a failed query, nor will it fall back to TCP in case of truncation when UDP is
 // used.
 //
+// If the TLS config is set in the transport a TCP connection with TLS is attempted.
+//
 // It is up to the caller to create a message that allows for larger responses to be returned. Specifically
 // this means setting [Msg.Bufsize] that will advertise a larger buffer. Messages without an Bufsize will
 // fall back to the historic limit of 512 octets (bytes).
@@ -44,11 +47,17 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 //
 // It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
-	var conn net.Conn
 	if c.Transport == nil {
-		conn, err = DefaultTransport.DialContext(ctx, network, address)
+		c.Transport = DefaultTransport
+	}
+
+	var conn net.Conn
+	if c.TLSConfig != nil {
+		println(network, address, "TLS")
+		dialer := tls.Dialer{NetDialer: c.Transport.Dialer, Config: c.TLSConfig}
+		conn, err = dialer.DialContext(ctx, network, address)
 	} else {
-		conn, err = c.Transport.DialContext(ctx, network, address)
+		conn, err = c.Transport.Dialer.DialContext(ctx, network, address)
 	}
 	if err != nil {
 		return nil, 0, err
