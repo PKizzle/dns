@@ -79,7 +79,7 @@ pkg: codeberg.org/miekg/dns
 		}
 
 		nsPerOp := 1e9 / qps
-		fmt.Printf("%s-%d\t%d\t\t\t%.1f ns/op\n", name, runtime.NumCPU(), int(qps), nsPerOp)
+		fmt.Printf("%s%s-%d\t%d\t\t\t%.1f ns/op\n", name, network, runtime.NumCPU(), int(qps), nsPerOp)
 	}
 	return nil
 }

@@ -11,27 +11,33 @@ import (
 	"codeberg.org/miekg/dns/internal/dnsperf"
 )
 
-// TestReflect tests reflect's performance
+// TestReflect tests reflect's performance.
 func TestReflect(t *testing.T) {
-	const count = 10
-	timeout := count*2*time.Second + 5*time.Second // run reflect for longer than the test.
+	const count = 8
+	for _, network := range []string{"udp", "tcp"} {
+		t.Run("reflect-"+network, func(t *testing.T) {
+			timeout := count*2*time.Second + 5*time.Second // run reflect for longer than the test.
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			if _, err := os.Stat("./reflect"); err != nil {
+				t.Skip("no reflect binary found in .")
+			}
 
-	if _, err := os.Stat("./reflect"); err != nil {
-		t.Skip("no reflect binary found in .")
+			cmd := exec.CommandContext(ctx, "./reflect")
+			go func() {
+				if err := cmd.Run(); err != nil {
+					if _, ok := err.(*exec.ExitError); !ok {
+						panic(err)
+					}
+				}
+			}()
+
+			queries := strings.NewReader("whoami.miek.nl. A")
+			if err := dnsperf.Run(t, queries, "127.0.0.1:8053", network, 2*time.Second, count); err != nil {
+				t.Fatal(err)
+			}
+			cancel()
+			time.Sleep(2 * time.Second)
+		})
 	}
-
-	cmd := exec.CommandContext(ctx, "./reflect")
-	go func() {
-		if err := cmd.Run(); err != nil {
-			panic(err)
-		}
-	}()
-
-	queries := strings.NewReader("whoami.miek.nl. A")
-	if err := dnsperf.Run(t, queries, "127.0.0.1:8053", "udp", 2*time.Second, count); err != nil {
-		t.Fatal(err)
-	}
-	cancel()
 }
