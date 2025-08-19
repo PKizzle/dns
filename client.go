@@ -16,6 +16,7 @@ type Client struct {
 	*Transport
 }
 
+// Transport is the transport used in [Client], it deals with all the networking.
 type Transport struct {
 	// DialContext specifies the dial function for creating unencrypted TCP or UDP connections.
 	DialContext func(ctx context.Context, network, addr string) (net.Conn, error)
@@ -23,8 +24,12 @@ type Transport struct {
 	// TLSClientConfig specifies the TLS configuration to use with tls.Client.
 	// If nil, the default configuration is used.
 	TLSClientConfig *tls.Config
+
+	TSIGSigner
+	TSIGVerifier
 }
 
+// DefaultTransport is the default transport in client, when none is set.
 var DefaultTransport = &Transport{
 	DialContext: defaultTransportDialContext(&net.Dialer{
 		Timeout:   5 * time.Second,
@@ -37,8 +42,8 @@ func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, strin
 }
 
 // Exchange performs a synchronous query over "network". It sends the message m to the address
-// contained in a and waits for a reply. Exchange does not retry a failed query, nor
-// will it fall back to TCP in case of truncation. If the Data buffer in m is empty, Exchange call m.Pack().
+// and waits for a reply. Exchange does not retry a failed query, nor
+// will it fall back to TCP in case of truncation. If the Data buffer in m is empty, Exchange calls m.Pack().
 //
 // See [client.Exchange] for more information on setting larger buffer sizes.
 func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err error) {
@@ -62,7 +67,9 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // fall back to the historic limit of 512 octets (bytes).
 //
 // The full binary data is included in the (decoded) message as r.Data. If the Data buffer in m is empty
-// client.Exchange call m.Pack().
+// client.Exchange calls m.Pack().
+//
+// It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	var conn net.Conn
 	if c.Transport == nil {
@@ -91,6 +98,9 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
 	}
+
+	// write deadline, from transport
+	// read deadline
 
 	r = new(Msg)
 	r.Data = m.Data

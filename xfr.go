@@ -1,11 +1,9 @@
-//go:build ignore
-
 package dns
 
 import (
-	"crypto/tls"
-	"fmt"
-	"time"
+	"context"
+	"io"
+	"net"
 )
 
 // Envelope is used when doing a zone transfer with a remote server.
@@ -16,129 +14,129 @@ type Envelope struct {
 
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
-	*Conn
-	DialTimeout    time.Duration     // net.DialTimeout, defaults to 2 seconds
-	ReadTimeout    time.Duration     // net.Conn.SetReadTimeout value for connections, defaults to 2 seconds
-	WriteTimeout   time.Duration     // net.Conn.SetWriteTimeout value for connections, defaults to 2 seconds
-	TsigProvider   TsigProvider      // An implementation of the TsigProvider interface. If defined it replaces TsigSecret and is used for all TSIG operations.
-	TsigSecret     map[string]string // Secret(s) for Tsig map[<zonename>]<base64 secret>, zonename must be in canonical form (lowercase, fqdn, see RFC 4034 Section 6.2)
-	tsigTimersOnly bool
-	TLS            *tls.Config // TLS config. If Xfr over TLS will be attempted
+	*Transport
 }
 
-func (t *Transfer) tsigProvider() TsigProvider {
-	if t.TsigProvider != nil {
-		return t.TsigProvider
-	}
-	if t.TsigSecret != nil {
-		return tsigSecretProvider(t.TsigSecret)
-	}
-	return nil
-}
-
-// TODO: Think we need to away to stop the transfer
-
-// In performs an incoming transfer with the server in a.
-// If you would like to set the source IP, or some other attribute
-// of a Dialer for a Transfer, you can do so by specifying the attributes
-// in the Transfer.Conn:
-//
-//	d := net.Dialer{LocalAddr: transfer_source}
-//	con, err := d.Dial("tcp", master)
-//	dnscon := &dns.Conn{Conn:con}
-//	transfer = &dns.Transfer{Conn: dnscon}
-//	channel, err := transfer.In(message, master)
-func (t *Transfer) In(q *Msg, a string) (env chan *Envelope, err error) {
-	switch q.Question[0].Qtype {
-	case TypeAXFR, TypeIXFR:
-	default:
-		return nil, &Error{"unsupported question type"}
+// In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls
+// m.Pack().
+func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env chan *Envelope, err error) {
+	_, axfr := m.Question[0].(*AXFR)
+	_, ixfr := m.Question[0].(*IXFR)
+	if !axfr && !ixfr {
+		return nil, &Error{"unsupported transfer type"}
 	}
 
-	timeout := dnsTimeout
-	if t.DialTimeout != 0 {
-		timeout = t.DialTimeout
-	}
-
-	if t.Conn == nil {
-		if t.TLS != nil {
-			t.Conn, err = DialTimeoutWithTLS("tcp-tls", a, t.TLS, timeout)
-		} else {
-			t.Conn, err = DialTimeout("tcp", a, timeout)
-		}
-		if err != nil {
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := t.WriteMsg(q); err != nil {
+	// check udp ones, need tcp or stream
+	var conn net.Conn
+	if t.Transport == nil {
+		conn, err = DefaultTransport.DialContext(ctx, network, address)
+	} else {
+		conn, err = t.Transport.DialContext(ctx, network, address)
+	}
+	if err != nil {
 		return nil, err
 	}
 
 	env = make(chan *Envelope)
-	switch q.Question[0].Qtype {
-	case TypeAXFR:
-		go t.inAxfr(q, env)
-	case TypeIXFR:
-		go t.inIxfr(q, env)
+	switch {
+	case axfr:
+		go t.inAXFR(ctx, m, env, conn)
+	case ixfr:
+		//		go t.inIXFR(ctx, m, env, conn)
 	}
 
 	return env, nil
 }
 
-func (t *Transfer) inAxfr(q *Msg, c chan *Envelope) {
-	first := true
+func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn net.Conn) {
 	defer func() {
-		// First close the connection, then the channel. This allows functions blocked on
-		// the channel to assume that the connection is closed and no further operations are
-		// pending when they resume.
-		t.Close()
-		close(c)
+		// First close the connection, then the channel. This allows functions blocked on the channel to
+		// assume that the connection is closed and no further operations are pending when they resume.
+		conn.Close()
+		close(env)
 	}()
-	timeout := dnsTimeout
-	if t.ReadTimeout != 0 {
-		timeout = t.ReadTimeout
+
+	options := TSIGOption{}
+
+	if t.TSIGSigner != nil {
+		for _, rr := range m.Pseudo {
+			if _, ok := rr.(*TSIG); ok {
+				if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
+					env <- &Envelope{Error: err}
+					return
+				}
+				break
+			}
+		}
 	}
+
+	remote := &response{conn: conn} // for Session() call in msg.go#L926
+	if _, err := io.Copy(remote, m); err != nil {
+		env <- &Envelope{Error: err}
+		return
+	}
+
+	r := new(Msg)
+	r.Data = m.Data
 	for {
-		t.Conn.SetReadDeadline(time.Now().Add(timeout))
-		in, err := t.ReadMsg()
-		if err != nil {
-			c <- &Envelope{nil, err}
+		if err := ctx.Err(); err != nil {
+			env <- &Envelope{Error: err}
 			return
 		}
-		if q.Id != in.Id {
-			c <- &Envelope{in.Answer, ErrId}
+
+		//		conn.SetReadDeadline(t.Transport.)
+		if _, err := io.Copy(r, conn); err != nil {
+			env <- &Envelope{Error: err}
 			return
 		}
-		if first {
-			if in.Rcode != RcodeSuccess {
-				c <- &Envelope{in.Answer, &Error{err: fmt.Sprintf(errXFR, in.Rcode)}}
-				return
-			}
-			if !isSOAFirst(in) {
-				c <- &Envelope{in.Answer, ErrSOA}
-				return
-			}
-			first = !first
-			// only one answer that is SOA, receive more
-			if len(in.Answer) == 1 {
-				t.tsigTimersOnly = true
-				c <- &Envelope{in.Answer, nil}
-				continue
+		if m.ID != r.ID {
+			env <- &Envelope{r.Answer, ErrID}
+			return
+		}
+
+		if r.Rcode != RcodeSuccess {
+			env <- &Envelope{r.Answer, ErrRcode}
+			return
+		}
+		if !isSOAFirst(r) {
+			env <- &Envelope{r.Answer, ErrSOA}
+			return
+		}
+
+		if t.TSIGVerifier != nil {
+			for _, rr := range r.Pseudo {
+				if _, ok := rr.(*TSIG); ok {
+					if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
+						env <- &Envelope{Error: err}
+						return
+					}
+					break
+				}
 			}
 		}
 
-		if !first {
-			t.tsigTimersOnly = true // Subsequent envelopes use this.
-			if isSOALast(in) {
-				c <- &Envelope{in.Answer, nil}
-				return
-			}
-			c <- &Envelope{in.Answer, nil}
+		if len(r.Answer) == 1 {
+			options.TimersOnly = true
+			env <- &Envelope{RR: r.Answer}
+			continue
 		}
+
+		if isSOALast(r) {
+			env <- &Envelope{RR: r.Answer}
+			return
+		}
+		env <- &Envelope{RR: r.Answer}
+		options.TimersOnly = true
 	}
 }
 
+/*
 func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 	var serial uint32 // The first serial seen is the current server serial
 	axfr := true
@@ -278,15 +276,20 @@ func (t *Transfer) WriteMsg(m *Msg) (err error) {
 	_, err = t.Write(out)
 	return err
 }
+*/
 
-func isSOAFirst(in *Msg) bool {
-	return len(in.Answer) > 0 &&
-		in.Answer[0].Header().Rrtype == TypeSOA
+func isSOAFirst(m *Msg) bool {
+	if len(m.Answer) == 0 {
+		return false
+	}
+	_, ok := m.Answer[0].(*AXFR)
+	return ok
 }
 
-func isSOALast(in *Msg) bool {
-	return len(in.Answer) > 0 &&
-		in.Answer[len(in.Answer)-1].Header().Rrtype == TypeSOA
+func isSOALast(m *Msg) bool {
+	if len(m.Answer) == 0 {
+		return false
+	}
+	_, ok := m.Answer[len(m.Answer)-1].(*AXFR)
+	return ok
 }
-
-const errXFR = "bad xfr rcode: %d"

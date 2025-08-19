@@ -194,10 +194,7 @@ func sprintCode(t uint16) string {
 
 func sprintClass(c uint16) string {
 	if s, ok := ClassToString[uint16(c)]; ok {
-		// Only emit mnemonics when they are unambiguous, specially ANY is in both.
-		if _, ok := StringToType[s]; !ok {
-			return s
-		}
+		return s
 	}
 	return "CLASS" + strconv.Itoa(int(c))
 }
@@ -216,7 +213,7 @@ func sprintOpcode(o uint8) string {
 	return "OPCODE" + strconv.Itoa(int(o))
 }
 
-// timeToString translates the RRSIG's incep. and expir. times to the
+// TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record.
 // It takes serial arithmetic (RFC 1982) into account.
 func timeToString(t uint32) string {

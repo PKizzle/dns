@@ -42,6 +42,7 @@ wins.
 ## Difference with github.com/miekg/dns
 
 - Many functions (and new ones) are moved into dns/dnsutil.
+- `context.Context` is in the correct places.
 - `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern (usually) zone that lead to
   invocation of this Handler.
 - `internal/*` packages that hold code that used to be private, but was cluttering; also allowed for better

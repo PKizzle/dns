@@ -1632,3 +1632,31 @@ func (rr *IXFR) String() string { return rr.Hdr.String() }
 func (*IXFR) parse(c *zlexer, origin string) *ParseError {
 	return &ParseError{err: "IXFR records do not have a presentation format"}
 }
+
+// TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
+// A TSIG RR when created must the [ClassANY], algorithm, timesigned, and optianal fudge factor.
+type TSIG struct {
+	Hdr        Header
+	Algorithm  string `dns:"domain-name"` // Algorithm is encoded as a name.
+	TimeSigned uint64 `dns:"uint48"`
+	Fudge      uint16
+	MACSize    uint16
+	MAC        string `dns:"size-hex:MACSize"`
+	OrigID     uint16 // OrigID is the original message ID, when creating a TSIG this should be set to the message ID.
+	Error      uint16
+	OtherLen   uint16
+	OtherData  string `dns:"size-hex:OtherLen"`
+}
+
+func (rr *TSIG) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, rr.Algorithm, tsigTimeToString(rr.TimeSigned),
+		strconv.Itoa(int(rr.Fudge)), strconv.Itoa(int(rr.MACSize)),
+		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigID)),
+		strconv.Itoa(int(rr.Error)), strconv.Itoa(int(rr.OtherLen)), rr.OtherData)
+	return sb.String()
+}
+
+func (*TSIG) parse(c *zlexer, origin string) *ParseError {
+	return &ParseError{err: "TSIG records do not have a presentation format"}
+}
