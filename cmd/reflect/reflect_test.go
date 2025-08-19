@@ -13,7 +13,7 @@ import (
 
 // TestReflect tests reflect's performance.
 func TestReflect(t *testing.T) {
-	const count = 2
+	const count = 8
 	for _, network := range []string{"udp", "tcp"} {
 		t.Run("reflect-"+network, func(t *testing.T) {
 			timeout := count*2*time.Second + 5*time.Second // run reflect for longer than the test.
