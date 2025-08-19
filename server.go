@@ -68,7 +68,7 @@ type Server struct {
 	Net string
 	// TCP Listener to use, this is to aid in systemd's socket activation.
 	Listener net.Listener
-	// TLS connection configuration
+	// TLS connection configuration.
 	TLSConfig *tls.Config
 	// UDP "Listener" to use, this is to aid in systemd's socket activation.
 	PacketConn net.PacketConn
