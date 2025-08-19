@@ -35,9 +35,9 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 	// check udp ones, need tcp or stream
 	var conn net.Conn
 	if t.Transport == nil {
-		conn, err = DefaultTransport.DialContext(ctx, network, address)
+		conn, err = DefaultTransport.Dial(ctx, network, address)
 	} else {
-		conn, err = t.Transport.DialContext(ctx, network, address)
+		conn, err = t.Transport.Dial(ctx, network, address)
 	}
 	if err != nil {
 		return nil, err
