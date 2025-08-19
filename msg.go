@@ -371,7 +371,6 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
-
 	off1, err = pack(rr, msg, headerEnd, compression)
 	if err != nil {
 		return headerEnd, len(msg), err
@@ -389,15 +388,9 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	if off < 0 || off > len(msg) {
+	if off < 0 || off >= len(msg) {
 		return nil, off, &Error{err: "bad offset"}
 	}
-	if off == len(msg) {
-		// Preserve this somewhat strange existing corner case of not
-		// returning an error when given nothing to unpack.
-		return nil, len(msg), nil
-	}
-
 	s := cryptobyte.String(msg[off:])
 	rr, err = unpackRR(&s, msg)
 	return rr, offset(s, msg), err
@@ -519,37 +512,62 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 
 	// Add an OPT RR if we see any of these.
 	if m.isPseudo() > 0 {
-		opt := &OPT{Hdr: Header{Name: "."}}
+		opt := &OPT{} // hack, empty name, that gets filled if we did something
 		if m.UDPSize > MinMsgSize {
+			opt.Hdr.Name = "."
 			opt.SetUDPSize(m.UDPSize)
 		}
 		if m.Rcode > 0xF {
-			// 12 bits go in OPT.
-			opt.SetRcode(m.Rcode)
-			// we leave m.Rcode as packing/unpacking will take the correct bits there.
+			opt.Hdr.Name = "."
+			opt.SetRcode(m.Rcode) // we leave m.Rcode as packing/unpacking will set the correct bits there.
 		}
 		if m.Security {
+			opt.Hdr.Name = "."
 			opt.SetSecurity(true)
 		}
 		if m.CompactAnswers {
+			opt.Hdr.Name = "."
 			opt.SetCompactAnswers(true)
 		}
 		for _, option := range m.Pseudo {
 			if edns0, ok := option.(EDNS0); ok {
+				opt.Hdr.Name = "."
 				opt.Options = append(opt.Options, edns0)
 			}
 		}
+		// Only pack opt if something has been put into it, otherwise we may a TSIG/SIG0.
 		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
-		if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
-			return err
+		// Also OPT may be anywhere in m.Extra, here it will be first.
+		if opt.Hdr.Name == "." {
+			if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
+				return err
+			}
 		}
 	}
+	m.ps = 0
 
 	for _, r := range m.Extra {
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
 		}
 	}
+
+	// records that really need to be last, TSIG or SGI0
+	for _, r := range m.Pseudo {
+		if _, ok := r.(*TSIG); ok {
+			if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+				return err
+			}
+			m.ps++
+		}
+		if _, ok := r.(*SIG); ok {
+			if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+				return err
+			}
+			m.ps++
+		}
+	}
+
 	m.Data = m.Data[:off]
 	return nil
 }
@@ -639,17 +657,17 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 		return err
 	}
 
-	// Check for the OPT RR and remove it entirely, unpack the OPT for option code and put those in the Pseudo
+	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
 	// section. Any TSIG and SIG0 records will also be put in the pseudo section, but after the options.
 
 	j := 0
 	for i := 0; i < len(m.Extra)-j; i++ {
 		rr := m.Extra[i]
 		if opt, ok := rr.(*OPT); ok {
-			// move to end, so it can be removed latter and unpack the opt for the settings.
+			// move to end, so it can be removed later and unpack the opt for the settings.
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
-			m.Rcode += opt.Rcode() // TODO: test this
+			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
 
@@ -662,10 +680,18 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 			j++
 		}
 	}
-	// remove the option
+	// remove the OPT RR
 	m.Extra = m.Extra[:len(m.Extra)-j]
+	m.ps = 0
 
-	m.ps = 0 // unless TSIG, SIG(0) TODO
+	for _, r := range m.Extra {
+		if _, ok := r.(*TSIG); ok {
+			m.ps++
+		}
+		if _, ok := r.(*SIG); ok {
+			m.ps++
+		}
+	}
 
 	if !s.Empty() {
 		return &Error{err: "trailing message data"}

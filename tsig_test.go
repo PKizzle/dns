@@ -30,10 +30,11 @@ func TestTSIG(t *testing.T) {
 		alg         string
 		option      TSIGOption
 		transformFn func(m *Msg)
+		err         error
 	}{
-		{"signverify", tsigSecret, TSIGOption{}, nil},
-		{"signverify-id", tsigSecret, TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }},
-		{"signverify-upper", strings.ToUpper(tsigSecret), TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }},
+		{"signverify", tsigSecret, TSIGOption{}, nil, nil},
+		{"signverify-changed-id", tsigSecret, TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify-upper", strings.ToUpper(tsigSecret), TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
 	for _, tc := range testcases {
@@ -47,8 +48,9 @@ func TestTSIG(t *testing.T) {
 				tc.transformFn(m)
 			}
 
-			if err := TSIGVerify(m, HMAC(tc.alg), tc.option); err != nil {
-				t.Fatalf("failed to verify: %s", err)
+			err := TSIGVerify(m, HMAC(tc.alg), tc.option)
+			if err != tc.err {
+				t.Fatalf("execpted %v error, got: %s", tc.err, err)
 			}
 		})
 	}

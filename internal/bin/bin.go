@@ -4,6 +4,8 @@ package bin
 import (
 	"fmt"
 	"strings"
+
+	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 // Dump dumps the slice p in a way to help debugging DNS binary code.
@@ -12,20 +14,32 @@ import (
 //
 // Output looks like:
 //
-//	        0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-//	0   | 098 024 129 128 000 001 000 005 000 000 000 001 004 109 105 101
-//	16  | 107 002 110 108 000 000 015 000 001 192 012 000 015 000 001 000
-//	32  | 000 084 096 000 025 000 010 006 097 115 112 109 120 050 010 103
+//	    80
+//		        0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15       0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+//
+//		 0   | 007 101 120 097 109 112 108 101 000 000 250 000 255 000 000 000  |  007   e   x   a   m   p   l   e 000 000 250 000 255 000 000 000
+//		16   | 000 000 061 011 104 109 097 099 045 115 104 097 050 053 054 000  |  000 000 061 011   h   m   a   c 045   s   h   a   2   5   6 000
+//		32   | 000 000 104 164 006 221 000 255 000 032 005 003 084 048 105 165  |  000 000   h 164 006 221 000 255 000 032 005 003   T   0   i 165
+//		48   | 027 037 157 115 234 167 019 146 176 044 217 119 200 195 242 213  |  027 037 157   s 234 167 019 146 176 044 217   w 200 195 242 213
+//		64   | 186 251 188 127 016 138 199 028 029 021 000 003 000 000 000 000  |  186 251 188 127 016 138 199 028 029 021 000 003 000 000 000 000
 //
 // Usually called as: t.Logf("\n%s\n", bin.Dump(buf))
 func Dump(p []byte, off ...int) string {
 	if len(p) == 0 {
 		return ""
 	}
+	of := 0
+	if len(off) > 0 {
+		of = off[0]
+	}
 
 	const N = 16
 	dump := strings.Builder{}
-	dump.WriteString("     \t")
+	dump.WriteString(fmt.Sprintf("% 5d\t", len(p[of:])))
+	for i := range N {
+		dump.WriteString(fmt.Sprintf("% 4d", i))
+	}
+	dump.WriteString("    ")
 	for i := range N {
 		dump.WriteString(fmt.Sprintf("% 4d", i))
 	}
@@ -34,8 +48,8 @@ func Dump(p []byte, off ...int) string {
 
 	row := 0
 	plus := 0
-	if len(off) > 0 {
-		plus = (off[0] / N) * N
+	if of > 0 {
+		plus = (of / N) * N
 	}
 
 	sb := strings.Builder{}
@@ -48,8 +62,26 @@ func Dump(p []byte, off ...int) string {
 		line := p[a:b]
 		sb.Reset()
 		for j := range line {
+			c := line[j]
 			sb.WriteByte(' ')
-			sb.WriteString(fmt.Sprintf("%03d", line[j]))
+			sb.WriteString(fmt.Sprintf("%03d", c))
+		}
+		if len(line) < N { // pad out so the printable are aligned
+			for range N - len(line) {
+				sb.WriteByte(' ')
+				sb.WriteString("   ")
+			}
+		}
+		sb.WriteString("  | ")
+		// printables
+		for j := range line {
+			c := line[j]
+			sb.WriteByte(' ')
+			if ddd.IsLetter(c) || ddd.IsDigit(c) {
+				sb.WriteString(fmt.Sprintf("%3s", string(c)))
+			} else {
+				sb.WriteString(fmt.Sprintf("%03d", c))
+			}
 		}
 
 		dump.WriteString(fmt.Sprintf("%5d\t|%s\n", row*N+plus, sb.String()))

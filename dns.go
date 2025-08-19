@@ -105,7 +105,7 @@ type Header struct {
 	// rdlength has no use for user of RRs in this library.
 }
 
-func (h *Header) Len() int        { return len(h.Name) + 10 }
+func (h *Header) Len() int        { return len(h.Name) + 1 + 10 } // +1 because miek.nl. is actually .miek.nl.
 func (h *Header) Data() []Field   { return nil }
 func (h *Header) Header() *Header { return h }
 

@@ -17,6 +17,10 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
+// This needs functions that we have for TSIG
+// SIGSign and SIGVerify, the current method is nice, but as this works on a Msg, the TSIG naming is better.
+// for dnssec SIgn as a method works better, because it is on a RRset.
+
 // Sign signs a dns.Msg. It fills the signature with the appropriate data.
 // The SIG record should have the SignerName, KeyTag, Algorithm, Inception
 // and Expiration set.

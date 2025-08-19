@@ -14,7 +14,10 @@ import (
 type HMAC string
 
 func (h HMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
-	secret := []byte(h)
+	secret, err := fromBase64([]byte(h))
+	if err != nil {
+		return nil, err
+	}
 
 	var hs hash.Hash
 	switch t.Algorithm {
@@ -29,7 +32,7 @@ func (h HMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
 	case HmacSHA512:
 		hs = hmac.New(sha512.New, secret)
 	default:
-		return nil, ErrKeyAlg
+		return nil, ErrKeyAlg.Fmt(": HMAC sign")
 	}
 	hs.Write(p)
 	return hs.Sum(nil), nil
@@ -45,7 +48,7 @@ func (h HMAC) Verify(t *TSIG, p []byte, options TSIGOption) error {
 		return err
 	}
 	if !hmac.Equal(buf, mac) {
-		return ErrSig
+		return ErrSig.Fmt(": HMAC verify")
 	}
 	return nil
 }
@@ -96,7 +99,6 @@ func (rr *TSIG) mac(m *Msg, options TSIGOption) ([]byte, error) {
 		buf = append(buf, tsigvar...)
 		return buf, nil
 	}
-
 	return append(m.Data, tsigvar...), nil
 }
 
