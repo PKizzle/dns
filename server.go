@@ -57,8 +57,7 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 // Every message that is read by a Reader will eventually be provided to the Handler, or passed to this function.
 type InvalidMsgFunc func(m *Msg, err error)
 
-// DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a
-// noop.
+// DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a noop.
 func DefaultMsgInvalidFunc(m *Msg, err error) {}
 
 // A Server defines parameters for running an DNS server.
@@ -80,11 +79,7 @@ type Server struct {
 	// The read timeout vaule for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
-	IdleTimeout func() time.Duration
-	// If NotifyStartedFunc is set it is called once the server has started listening.
-	NotifyStartedFunc func()
-	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
-	MsgInvalidFunc InvalidMsgFunc
+	IdleTimeout time.Duration
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
@@ -95,14 +90,19 @@ type Server struct {
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReuseAddr bool
 
+	// If NotifyStartedFunc is set it is called once the server has started listening.
+	NotifyStartedFunc func()
+	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
+	MsgInvalidFunc InvalidMsgFunc
+
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
 	exited   chan struct{}
 	shutdown chan bool
 }
 
-// Init sets some default values in Server.
-func (srv *Server) Init() {
+// init sets some default values in Server.
+func (srv *Server) init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
@@ -111,6 +111,12 @@ func (srv *Server) Init() {
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
+	}
+	if srv.ReadTimeout == 0 {
+		srv.ReadTimeout = 2 * time.Second
+	}
+	if srv.IdleTimeout == 0 {
+		srv.IdleTimeout = 8 * time.Second
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
@@ -124,7 +130,7 @@ func (srv *Server) ListenAndServe() error {
 		addr = ":domain"
 	}
 
-	srv.Init()
+	srv.init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -194,21 +200,11 @@ func (srv *Server) Shutdown(ctx context.Context) {
 	<-srv.exited
 }
 
-// getReadTimeout is a helper func to use system timeout if server did not intend to change it.
-func (srv *Server) getReadTimeout() time.Duration {
-	if srv.ReadTimeout != 0 {
-		return srv.ReadTimeout
-	}
-	return 2 * time.Second
-}
-
 // listenTCP starts a TCP listener for the server.
 func (srv *Server) listenTCP(ln net.Listener) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
-	timeout := srv.getReadTimeout()
-
 	var wg sync.WaitGroup
 
 	for {
@@ -223,7 +219,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 			if err != nil {
 				continue
 			}
-			conn.SetReadDeadline(time.Now().Add(timeout))
+			conn.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 			go srv.serveTCP(&wg, conn)
 		}
 	}
@@ -240,7 +236,6 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 	if srv.NotifyStartedFunc != nil {
 		srv.NotifyStartedFunc()
 	}
-	timeout := srv.getReadTimeout()
 
 	var wg sync.WaitGroup
 	// suspect this somehow works on Linux, but not other OSes.
@@ -261,7 +256,8 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 				msgs[i].Buffers = [][]byte{bufs[i]}
 				msgs[i].OOB = make([]byte, oobSize)
 			}
-			xpc.SetReadDeadline(time.Now().Add(timeout))
+
+			xpc.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 			n, err := xpc.ReadBatch(msgs, 0)
 			if err != nil {
 				continue
@@ -289,19 +285,15 @@ func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
 func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	w := &response{conn: conn, hijacked: new(atomic.Bool)}
 
-	idleTimeout := 2 * time.Second
-	if srv.IdleTimeout != nil {
-		idleTimeout = srv.IdleTimeout()
-	}
-	timeout := srv.getReadTimeout()
-
 	limit := srv.MaxTCPQueries
 	if limit == 0 {
 		limit = maxTCPQueries
 	}
 
+	readtimeout := srv.ReadTimeout
+
 	for q := 0; q < limit || limit == -1; q++ {
-		conn.SetReadDeadline(time.Now().Add(timeout))
+		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
@@ -323,7 +315,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			break     // client will call Close() themselves
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
-		timeout = idleTimeout
+		readtimeout = srv.IdleTimeout
 	}
 
 	if !w.hijacked.Load() {
