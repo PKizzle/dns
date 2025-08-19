@@ -371,7 +371,6 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
-
 	off1, err = pack(rr, msg, headerEnd, compression)
 	if err != nil {
 		return headerEnd, len(msg), err
@@ -389,15 +388,9 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	if off < 0 || off > len(msg) {
+	if off < 0 || off >= len(msg) {
 		return nil, off, &Error{err: "bad offset"}
 	}
-	if off == len(msg) {
-		// Preserve this somewhat strange existing corner case of not
-		// returning an error when given nothing to unpack.
-		return nil, len(msg), nil
-	}
-
 	s := cryptobyte.String(msg[off:])
 	rr, err = unpackRR(&s, msg)
 	return rr, offset(s, msg), err

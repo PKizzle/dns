@@ -20,7 +20,7 @@ func (rr *NXNAME) Len() int {
 
 func (rr *CNAME) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Target)
+	l += len(rr.Target) + 1
 	return l
 }
 
@@ -33,52 +33,52 @@ func (rr *HINFO) Len() int {
 
 func (rr *MB) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Mb)
+	l += len(rr.Mb) + 1
 	return l
 }
 
 func (rr *MG) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Mg)
+	l += len(rr.Mg) + 1
 	return l
 }
 
 func (rr *MINFO) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Rmail)
-	l += len(rr.Email)
+	l += len(rr.Rmail) + 1
+	l += len(rr.Email) + 1
 	return l
 }
 
 func (rr *MR) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Mr)
+	l += len(rr.Mr) + 1
 	return l
 }
 
 func (rr *MF) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Mf)
+	l += len(rr.Mf) + 1
 	return l
 }
 
 func (rr *MD) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Md)
+	l += len(rr.Md) + 1
 	return l
 }
 
 func (rr *MX) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
-	l += len(rr.Mx)
+	l += len(rr.Mx) + 1
 	return l
 }
 
 func (rr *AFSDB) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Subtype
-	l += len(rr.Hostname)
+	l += len(rr.Hostname) + 1
 	return l
 }
 
@@ -98,33 +98,33 @@ func (rr *ISDN) Len() int {
 func (rr *RT) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
-	l += len(rr.Host)
+	l += len(rr.Host) + 1
 	return l
 }
 
 func (rr *NS) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Ns)
+	l += len(rr.Ns) + 1
 	return l
 }
 
 func (rr *PTR) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Ptr)
+	l += len(rr.Ptr) + 1
 	return l
 }
 
 func (rr *RP) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Mbox)
-	l += len(rr.Txt)
+	l += len(rr.Mbox) + 1
+	l += len(rr.Txt) + 1
 	return l
 }
 
 func (rr *SOA) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Ns)
-	l += len(rr.Mbox)
+	l += len(rr.Ns) + 1
+	l += len(rr.Mbox) + 1
 	l += 4 // Serial
 	l += 4 // Refresh
 	l += 4 // Retry
@@ -162,7 +162,7 @@ func (rr *SRV) Len() int {
 	l += 2 // Priority
 	l += 2 // Weight
 	l += 2 // Port
-	l += len(rr.Target)
+	l += len(rr.Target) + 1
 	return l
 }
 
@@ -173,7 +173,7 @@ func (rr *NAPTR) Len() int {
 	l += len(rr.Flags) + 1
 	l += len(rr.Service) + 1
 	l += len(rr.Regexp) + 1
-	l += len(rr.Replacement)
+	l += len(rr.Replacement) + 1
 	return l
 }
 
@@ -188,7 +188,7 @@ func (rr *CERT) Len() int {
 
 func (rr *DNAME) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Target)
+	l += len(rr.Target) + 1
 	return l
 }
 
@@ -211,8 +211,8 @@ func (rr *AAAA) Len() int {
 func (rr *PX) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
-	l += len(rr.Map822)
-	l += len(rr.Mapx400)
+	l += len(rr.Map822) + 1
+	l += len(rr.Mapx400) + 1
 	return l
 }
 
@@ -250,7 +250,7 @@ func (rr *RRSIG) Len() int {
 	l += 4 // Expiration
 	l += 4 // Inception
 	l += 2 // KeyTag
-	l += len(rr.SignerName)
+	l += len(rr.SignerName) + 1
 	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
 	return l
 }
@@ -282,7 +282,7 @@ func (rr *DS) Len() int {
 func (rr *KX) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
-	l += len(rr.Exchanger)
+	l += len(rr.Exchanger) + 1
 	return l
 }
 
@@ -297,8 +297,8 @@ func (rr *TA) Len() int {
 
 func (rr *TALINK) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.PreviousName)
-	l += len(rr.NextName)
+	l += len(rr.PreviousName) + 1
+	l += len(rr.NextName) + 1
 	return l
 }
 
@@ -372,7 +372,7 @@ func (rr *RKEY) Len() int {
 
 func (rr *NSAPPTR) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Ptr)
+	l += len(rr.Ptr) + 1
 	return l
 }
 
@@ -388,7 +388,7 @@ func (rr *NSEC3PARAM) Len() int {
 
 func (rr *TKEY) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Algorithm)
+	l += len(rr.Algorithm) + 1
 	l += 4 // Inception
 	l += 4 // Expiration
 	l += 2 // Mode
@@ -446,7 +446,7 @@ func (rr *HIP) Len() int {
 	l += len(rr.Hit) / 2
 	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
 	for _, x := range rr.RendezvousServers {
-		l += len(x)
+		l += len(x) + 1
 	}
 	return l
 }
@@ -485,7 +485,7 @@ func (rr *L64) Len() int {
 func (rr *LP) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
-	l += len(rr.Fqdn)
+	l += len(rr.Fqdn) + 1
 	return l
 }
 
@@ -587,7 +587,7 @@ func (rr *IXFR) Len() int {
 
 func (rr *TSIG) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Algorithm)
+	l += len(rr.Algorithm) + 1
 	l += 6 // TimeSigned
 	l += 2 // Fudge
 	l += 2 // MACSize

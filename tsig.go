@@ -78,6 +78,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 	}
 	if tsig.Fudge == 0 {
 		tsig.Fudge = 300 // Standard (RFC) default.
+		tsig.Fudge = 255
 	}
 
 	t := make([]byte, tsig.Len())
