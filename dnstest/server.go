@@ -76,7 +76,9 @@ func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 }
 
 func TLSServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	return TCPServer(laddr, func(srv *dns.Server) { srv.Listener = tls.NewListener(srv.Listener, TLSConfig()) })
+	return TCPServer(laddr,
+		func(srv *dns.Server) { srv.Listener = tls.NewListener(srv.Listener, TLSConfig()) },
+	)
 }
 
 // TLSConfig returns the testing TLS config.

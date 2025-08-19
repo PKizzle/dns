@@ -134,19 +134,12 @@ func (srv *Server) ListenAndServe() error {
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		if srv.TLSConfig != nil {
-			l, err := listenTCP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
-			if err != nil {
-				return err
-			}
-			l = tls.NewListener(l, srv.TLSConfig)
-			srv.listenTCP(l)
-			return nil
-		}
-
 		l, err := listenTCP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
 			return err
+		}
+		if srv.TLSConfig != nil {
+			l = tls.NewListener(l, srv.TLSConfig)
 		}
 		srv.Listener = l
 		srv.listenTCP(l)
