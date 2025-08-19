@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	"codeberg.org/miekg/dns/internal/bin"
 	"codeberg.org/miekg/dns/internal/jump"
 )
 
@@ -39,33 +38,23 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 		return ErrNoTSIG
 	}
 
-	println(m.String())
-	println(bin.Dump(m.Data))
-	lastrr := len(m.Ns) + len(m.Answer) + len(m.Extra) + int(m.ps) - 1 // skip question as 0th, is the first after question
-	if lastrr < 1 {
-		println("BO")
+	last := len(m.Ns) + len(m.Answer) + len(m.Extra) + int(m.ps) - 1 // skip question as 0th, is the first after question
+	if last < 0 {
 		return ErrNoTSIG
 	}
-	last := jump.To(lastrr, m.Data)
-	if last == 0 {
-		println("BO")
+	off := jump.To(last, m.Data)
+	if off == 0 {
 		return ErrNoTSIG
 	}
-	println("HALLO 1")
+	m.Data = m.Data[:off]
+	// decrease additional section count, because we removed the TSIG
+	binary.BigEndian.PutUint16(m.Data[10:], uint16(len(m.Extra)+int(m.ps-1)))
 
-	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
-	binary.BigEndian.PutUint16(m.Data[0:2], tsig.OrigID)
-	defer func() {
-		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
-	}()
-
-	m.Data = m.Data[:last]
 	macbuf, err := tsig.mac(m, options)
 	if err != nil {
 		return err
 	}
 
-	println("HALLO")
 	mac, err := k.Sign(tsig, macbuf)
 	if err != nil {
 		return err
@@ -76,14 +65,9 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 	if tsig.TimeSigned == 0 {
 		tsig.TimeSigned = uint64(time.Now().Unix())
 	}
-	if tsig.Fudge == 0 {
-		tsig.Fudge = 300 // Standard (RFC) default.
-		tsig.Fudge = 255
-	}
 
 	t := make([]byte, tsig.Len())
-	off, err := PackRR(tsig, t, 0, nil)
-	if err != nil {
+	if off, err = PackRR(tsig, t, 0, nil); err != nil {
 		return err
 	}
 	t = t[:off]
@@ -95,7 +79,6 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
 // from m.Data, but left in the unpacked message m.
 func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
-	println("VERIFY")
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
 	}
@@ -111,14 +94,15 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
 		return ErrNoTSIG
 	}
 
-	lastrr := len(m.Question) + len(m.Answer) + len(m.Extra) + int(m.ps) - 1
-	if lastrr < 1 {
+	last := len(m.Answer) + len(m.Ns) + len(m.Extra) + int(m.ps) - 1
+	if last < 0 {
 		return ErrNoTSIG
 	}
-	last := jump.To(lastrr, m.Data)
-	if last == 0 {
+	off := jump.To(last, m.Data)
+	if off == 0 {
 		return ErrNoTSIG
 	}
+	m.Data = m.Data[:off]
 
 	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
 	binary.BigEndian.PutUint16(m.Data[0:2], tsig.OrigID)
@@ -126,7 +110,6 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
 		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
 	}()
 
-	m.Data = m.Data[:last]
 	macbuf, err := tsig.mac(m, options)
 	if err != nil {
 		return err

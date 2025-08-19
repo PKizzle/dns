@@ -544,6 +544,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 			}
 		}
 	}
+	m.ps = 0
 
 	for _, r := range m.Extra {
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
@@ -557,11 +558,13 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 			if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 				return err
 			}
+			m.ps++
 		}
 		if _, ok := r.(*SIG); ok {
 			if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 				return err
 			}
+			m.ps++
 		}
 	}
 
