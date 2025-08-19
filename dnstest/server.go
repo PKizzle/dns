@@ -1,6 +1,7 @@
 package dnstest
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
@@ -57,6 +58,13 @@ func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 	return Server(pc, nil, opts...)
 }
 
+func PacketConnServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
+	return UDPServer(laddr, append(opts, func(srv *dns.Server) {
+		// Make srv.PacketConn opaque to trigger the generic code paths.
+		srv.PacketConn = struct{ net.PacketConn }{srv.PacketConn}
+	})...)
+}
+
 func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
@@ -65,13 +73,11 @@ func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 	return Server(nil, l, opts...)
 }
 
-/*
-func RunLocalTLSServer(laddr string, config *tls.Config) (*dns.Server, string, chan error, error) {
-	return RunLocalTCPServer(laddr, func(srv *dns.Server) {
-		srv.Listener = tls.NewListener(srv.Listener, config)
-	})
+func TLSServer(laddr string, config *tls.Config) (*dns.Server, string, chan error, error) {
+	return TCPServer(laddr, func(srv *dns.Server) { srv.Listener = tls.NewListener(srv.Listener, config) })
 }
 
+/*
 
 func RunLocalUnixGramServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
 	pc, err := net.ListenPacket("unixgram", laddr)

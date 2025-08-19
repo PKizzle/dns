@@ -32,6 +32,8 @@ var DefaultTransport = &Transport{
 		Timeout:   5 * time.Second,
 		KeepAlive: 3 * time.Second,
 	}),
+	ReadTimeout:  2 * time.Second,
+	WriteTimeout: 2 * time.Second,
 }
 
 func defaultTransportDialContext(dialer *net.Dialer) func(context.Context, string, string) (net.Conn, error) {

@@ -18,6 +18,7 @@ func TestServer(t *testing.T) {
 	}{
 		{"udp", "udp", dnstest.UDPServer},
 		{"tcp", "tcp", dnstest.TCPServer},
+		{"PacketConn", "udp", dnstest.PacketConnServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dns.HandleFunc("miek.nl.", HelloHandler)

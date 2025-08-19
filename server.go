@@ -101,8 +101,8 @@ type Server struct {
 	shutdown chan bool
 }
 
-// init sets some default values in Server.
-func (srv *Server) init() {
+// Init sets some default values in Server.
+func (srv *Server) Init() {
 	if srv.UDPSize == 0 {
 		srv.UDPSize = MinMsgSize
 	}
@@ -130,7 +130,7 @@ func (srv *Server) ListenAndServe() error {
 		addr = ":domain"
 	}
 
-	srv.init()
+	srv.Init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
