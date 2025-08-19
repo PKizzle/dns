@@ -44,12 +44,10 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 //
 // It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
-	var conn net.Conn
 	if c.Transport == nil {
-		conn, err = DefaultTransport.DialContext(ctx, network, address)
-	} else {
-		conn, err = c.Transport.DialContext(ctx, network, address)
+		c.Transport = DefaultTransport
 	}
+	conn, err := c.Transport.DialContext(ctx, network, address)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -66,9 +64,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	}
 
 	t := time.Now()
-	if c.WriteTimeout > 0 {
-		conn.SetWriteDeadline(t.Add(c.WriteTimeout))
-	}
+	conn.SetWriteDeadline(t.Add(c.WriteTimeout))
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
@@ -83,7 +79,6 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		r.Data = append(r.Data, make([]byte, MinMsgSize-len(r.Data))...)
 	}
 
-	if
 	conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 	if _, err := io.Copy(r, conn); err != nil {
 		return nil, time.Since(t), err
