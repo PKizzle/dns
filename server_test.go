@@ -87,7 +87,6 @@ func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}}
-	println("sEINING", len(m.Data))
 	io.Copy(w, m)
 }
 
@@ -95,65 +94,63 @@ func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}}
-	println("sEINING", len(m.Data))
 	io.Copy(w, m)
 }
 
-/*
-// Verify that the server responds to a query with Z flag on, ignoring the flag, and does not echoes it back
-func TestServeIgnoresZFlag(t *testing.T) {
-	HandleFunc("example.com.", AnotherHelloServer)
-
-	s, addrstr, _, err := RunLocalUDPServer(":0")
+// Verify that the server responds to a query with Z flag on, ignoring the flag, and does not echoes it back.
+func TestServerZFlag(t *testing.T) {
+	dns.HandleFunc("example.com.", HelloHandler)
+	s, addrstr, _, err := dnstest.UDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer s.Shutdown(context.TODO())
 
-	c := new(Client)
-	m := new(Msg)
-
-	// Test the Z flag is not echoed
-	m.SetQuestion("example.com.", TypeTXT)
+	c := new(dns.Client)
+	m := new(dns.Msg)
+	txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+	m.Question = []dns.RR{txt}
 	m.Zero = true
-	r, _, err := c.Exchange(m, addrstr)
+
+	r, _, err := c.Exchange(context.TODO(), m, "udp", addrstr)
 	if err != nil {
 		t.Fatal("failed to exchange example.com with +zflag", err)
 	}
 	if r.Zero {
 		t.Error("the response should not have Z flag set - even for a query which does")
 	}
-	if r.Rcode != RcodeSuccess {
-		t.Errorf("expected rcode %v, got %v", RcodeSuccess, r.Rcode)
+	if r.Rcode != dns.RcodeSuccess {
+		t.Errorf("expected rcode %v, got %v", dns.RcodeSuccess, r.Rcode)
 	}
 }
 
 // Verify that the server responds to a query with unsupported Opcode with a NotImplemented error and that Opcode is unchanged.
 func TestServeNotImplemented(t *testing.T) {
-	HandleFunc("example.com.", AnotherHelloServer)
-	opcode := 15
+	t.Skip() // TODO:miek fix!
+	dns.HandleFunc("example.com.", AnotherHelloHandler)
+	opcode := uint8(15)
 
-	s, addrstr, _, err := RunLocalUDPServer(":0")
+	s, addrstr, _, err := dnstest.UDPServer(":0")
 	if err != nil {
 		t.Fatalf("unable to run test server: %v", err)
 	}
-	defer s.Shutdown()
+	defer s.Shutdown(context.TODO())
 
-	c := new(Client)
-	m := new(Msg)
+	c := new(dns.Client)
+	m := new(dns.Msg)
 
 	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemented
-	m.SetQuestion("example.com.", TypeTXT)
+	txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
+	m.Question = []dns.RR{txt}
 	m.Opcode = opcode
-	r, _, err := c.Exchange(m, addrstr)
+	r, _, err := c.Exchange(context.TODO(), m, "udp", addrstr)
 	if err != nil {
-		t.Fatal("failed to exchange example.com with +zflag", err)
+		t.Fatal("failed to exchange example.com with unknown opcode", err)
 	}
 	if r.Opcode != opcode {
 		t.Errorf("expected opcode %v, got %v", opcode, r.Opcode)
 	}
-	if r.Rcode != RcodeNotImplemented {
-		t.Errorf("expected rcode %v, got %v", RcodeNotImplemented, r.Rcode)
+	if r.Rcode != dns.RcodeNotImplemented {
+		t.Errorf("expected rcode %v, got %v", dns.RcodeNotImplemented, r.Rcode)
 	}
 }
-*/
