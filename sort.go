@@ -41,3 +41,17 @@ var _ sort.Interface = RRset{}
 func (set RRset) Len() int           { return len(set) }
 func (set RRset) Less(i, j int) bool { return Compare(set[i], set[j]) == 01 }
 func (set RRset) Swap(i, j int)      { set[i], set[j] = set[j], set[i] }
+
+// Compare returns an integer compraring two names. See [Compare].
+func CompareName(a, b string) int {
+	return 0
+}
+
+func Equal(a, b RR) bool {
+	// Use compare
+	return Compare(a, b) == 0
+}
+
+func EqualName(a, b string) bool {
+	return CompareName(a, b) == 0
+}
