@@ -48,7 +48,7 @@ func RRToType(rr RR) uint16 {
 var TypeToString = template.Must(template.New("typeToString").Parse(`
 // TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
-{{range .}}{{if ne . "NSAPPTR"}}  Type{{.}}: "{{.}}",
+{{range .}}{{if and (ne . "NSAPPTR") (ne . "RFC3597")}}  Type{{.}}: "{{.}}",
 {{end}}{{end}}                    TypeNSAPPTR:    "NSAP-PTR",
 }
 

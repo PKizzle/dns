@@ -15,7 +15,7 @@ import (
 	"slices"
 )
 
-var exclude = []string{"APLPrefix", "RFC3597"}
+var exclude = []string{"APLPrefix"}
 
 var FlagDebug = flag.Bool("debug", false, "Emit the non-formatted code to standard output and do not write it to a file.")
 

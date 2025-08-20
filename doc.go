@@ -6,7 +6,8 @@ The package allows complete control over what is sent out to the DNS. The API fo
 It supports (asynchronous) querying/replying, incoming/outgoing zone transfers,
 TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 
-Resource records (RRs) are native types. They are not stored in wire format. Everything is modelled or made to look like an RR.
+Resource records (RRs) are native types. They are not stored in wire format, but every Msg holds the wire-format in its Data field.
+Everything is modelled or made to look like an RR.
 The question section holds an RR and the EDNS0 option codes are also RRs.
 
 Basic usage pattern for creating a new resource record:

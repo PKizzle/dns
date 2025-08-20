@@ -297,17 +297,14 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 
 	// Can't overflow uint16 as the length of Rdata is validated in (*RFC3597).parse.
 	// We can only get here when rr was constructed with that method.
-	hdr.t = uint16(hex.DecodedLen(len(rr.Rdata)))
-
-	if hdr.t == 0 {
-		return nil
-	}
 
 	// rr.pack requires an extra allocation and a copy so we just decode Rdata manually, it's simpler anyway.
 	msg, err := hex.DecodeString(rr.Rdata)
 	if err != nil {
 		return err
 	}
-
+	if len(msg) == 0 { // no rdata
+		return nil
+	}
 	return unpack(r, msg, msg)
 }
