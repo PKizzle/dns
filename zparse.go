@@ -108,6 +108,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *TKEY:
 		return x.parse(c, o)
+	case *RFC3597:
+		return x.parse(c, o)
 	case *URI:
 		return x.parse(c, o)
 	case *DHCID:

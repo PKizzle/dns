@@ -1127,8 +1127,6 @@ type RFC3597 struct {
 	Rdata string `dns:"hex"`
 }
 
-func (rr *RFC3597) Header() *Header { return &rr.Hdr }
-
 func (rr *RFC3597) String() string {
 	sb := rfc3597Header(rr)
 

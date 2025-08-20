@@ -54,6 +54,7 @@ func (rr *NSAPPTR) Header() *Header    { return &rr.Hdr }
 func (rr *NSEC3) Header() *Header      { return &rr.Hdr }
 func (rr *NSEC3PARAM) Header() *Header { return &rr.Hdr }
 func (rr *TKEY) Header() *Header       { return &rr.Hdr }
+func (rr *RFC3597) Header() *Header    { return &rr.Hdr }
 func (rr *URI) Header() *Header        { return &rr.Hdr }
 func (rr *DHCID) Header() *Header      { return &rr.Hdr }
 func (rr *TLSA) Header() *Header       { return &rr.Hdr }
