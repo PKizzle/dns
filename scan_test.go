@@ -50,10 +50,7 @@ func TestZoneParserGenerate(t *testing.T) {
 }
 
 func TestZoneParserInclude(t *testing.T) {
-	tmpfile, err := os.CreateTemp("", "dns")
-	if err != nil {
-		t.Fatalf("could not create tmpfile for test: %s", err)
-	}
+	tmpfile, _ := os.CreateTemp("", "dns")
 	defer os.Remove(tmpfile.Name())
 
 	if _, err := tmpfile.WriteString("foo\tIN\tA\t127.0.0.1"); err != nil {
@@ -328,13 +325,9 @@ func TestZoneParserKnownRRAsRFC3597(t *testing.T) {
 			t.Fatalf("failed to parse RFC3579 format: %v", err)
 		}
 
-		println("TYPE", rr.Header().t)
-		/*
-
-			if rr.Header().t != TypeA {
-				t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
-			}
-		*/
+		if rr.Header().t != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
+		}
 
 		a, ok := rr.(*A)
 		if !ok {
@@ -352,7 +345,6 @@ func TestZoneParserKnownRRAsRFC3597(t *testing.T) {
 			t.Fatalf("failed to parse RFC3579 format: %v", err)
 		}
 
-		println("TYPE", rr.Header().t)
 		if rr.Header().t != TypeA {
 			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
 		}

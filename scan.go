@@ -320,7 +320,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	// 6 possible beginnings of a line (_ is a space):
 	//
-	//   0. zRRTYPE                              -> all omitted until the rrtype
+	//   0. zRrtype                              -> all omitted until the rrtype
 	//   1. zOwner _ zRrtype                     -> class/ttl omitted
 	//   2. zOwner _ zString _ zRrtype           -> class omitted
 	//   3. zOwner _ zString _ zClass  _ zRrtype -> ttl/class
@@ -635,8 +635,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				rr             RR
 				parseAsRFC3597 bool
 			)
-			println("TYPE", h.t)
-			println(h.String())
 			if newFn, ok := TypeToRR[h.t]; ok {
 				rr = newFn()
 				*rr.Header() = *h
