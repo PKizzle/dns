@@ -52,7 +52,7 @@ var (
 
 const dom = "whoami.miek.nl."
 
-func handleReflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	var (
 		v4  bool
 		rr  dns.RR
@@ -94,7 +94,7 @@ func handleReflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if *printf {
-		fmt.Print(m.String())
+		log.Println(m.String())
 	}
 	io.Copy(w, m)
 }
@@ -102,7 +102,7 @@ func handleReflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 func serve(net string) {
 	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true, MaxTCPQueries: -1}
 	if err := server.ListenAndServe(); err != nil {
-		fmt.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
+		log.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
 	}
 }
 
@@ -117,7 +117,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	dns.HandleFunc("miek.nl.", handleReflect)
+	dns.HandleFunc("miek.nl.", reflect)
 	for range 10 {
 		go serve("tcp")
 		go serve("udp")
