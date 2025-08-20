@@ -53,7 +53,6 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 
 	var conn net.Conn
 	if c.TLSConfig != nil {
-		println(network, address, "TLS")
 		dialer := tls.Dialer{NetDialer: c.Transport.Dialer, Config: c.TLSConfig}
 		conn, err = dialer.DialContext(ctx, network, address)
 	} else {
