@@ -22,7 +22,6 @@ type ResponseWriter6 struct {
 	ResponseWriter
 }
 
-// LocalAddr returns the local address, always ::1, port 53 (UDP, TCP is t.TCP is true).
 func (t *ResponseWriter6) LocalAddr() net.Addr {
 	ip := net.ParseIP("::1")
 	if t.TCP {
