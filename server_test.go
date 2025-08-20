@@ -16,9 +16,9 @@ func TestServer(t *testing.T) {
 		network string
 		run     func(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error)
 	}{
-		{"udp", "udp", dnstest.UDPServer},
-		{"tcp", "tcp", dnstest.TCPServer},
-		//{"tcp-tls", "tcp", dnstest.TLSServer}, #broken
+		//		{"udp", "udp", dnstest.UDPServer},
+		//		{"tcp", "tcp", dnstest.TCPServer},
+		{"tcp-tls", "tcp", dnstest.TLSServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dns.HandleFunc("miek.nl.", HelloHandler)

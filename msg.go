@@ -1008,7 +1008,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	}
 	li := int(l)
 	if li < MsgHeaderSize {
-		return 0, fmt.Errorf("dns: TCP message size, can not be smaller than %d", MsgHeaderSize)
+		return 0, fmt.Errorf("dns: TCP message size %d, can not be smaller than %d", li, MsgHeaderSize)
 	}
 
 	if len(m.Data) < li {

@@ -53,9 +53,9 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 
 	var conn net.Conn
 	if c.TLSConfig != nil {
-		println(network, address, "TLS")
 		dialer := tls.Dialer{NetDialer: c.Transport.Dialer, Config: c.TLSConfig}
 		conn, err = dialer.DialContext(ctx, network, address)
+		println("GOT A CONN for TLS")
 	} else {
 		conn, err = c.Transport.Dialer.DialContext(ctx, network, address)
 	}
@@ -74,6 +74,9 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		}
 	}
 
+	println("WRITING", len(m.Data))
+	println("FDFD", m.String())
+
 	t := time.Now()
 	conn.SetWriteDeadline(t.Add(c.WriteTimeout))
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
@@ -89,6 +92,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	if len(r.Data) < MinMsgSize {
 		r.Data = append(r.Data, make([]byte, MinMsgSize-len(r.Data))...)
 	}
+	println("WROTE msg, waiting for reply", c.ReadTimeout.String())
 
 	conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 	if _, err := io.Copy(r, conn); err != nil {

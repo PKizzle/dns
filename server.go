@@ -23,27 +23,6 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 	return server.ListenAndServe()
 }
 
-// ListenAndServeTLS acts like [http.ListenAndServeTLS].
-func ListenAndServeTLS(addr, certFile, keyFile string, handler Handler) error {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return err
-	}
-
-	config := tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-
-	server := &Server{
-		Addr:      addr,
-		Net:       "tcp",
-		TLSConfig: &config,
-		Handler:   handler,
-	}
-
-	return server.ListenAndServe()
-}
-
 // ActivateAndServe activates a server with a listener from systemd, l and p should not both be non-nil.
 // If both l and p are not nil only p will be used. Invoke handler for incoming queries.
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
@@ -123,7 +102,8 @@ func (srv *Server) Init() {
 	srv.shutdown = make(chan bool)
 }
 
-// ListenAndServe starts a nameserver on the configured address in *Server.
+// ListenAndServe starts a nameserver on the configured address in *Server. If TLS config is available a TLS
+// listener will be started.
 func (srv *Server) ListenAndServe() error {
 	addr := srv.Addr
 	if addr == "" {
@@ -139,6 +119,7 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		if srv.TLSConfig != nil {
+			println("TLS LISTERENE")
 			l = tls.NewListener(l, srv.TLSConfig)
 		}
 		srv.Listener = l
@@ -210,6 +191,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 			if err != nil {
 				continue
 			}
+			println("GOT ONE")
 			conn.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 			go srv.serveTCP(&wg, conn)
 		}
@@ -283,11 +265,14 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 	readtimeout := srv.ReadTimeout
 
+	println("SERVEI TCP")
+
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
+			println("ERRR", err.Error())
 			if errors.Is(err, io.EOF) {
 				break
 			}
@@ -325,6 +310,8 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		wg.Done()
 		return
 	}
+
+	// Z flag! TODO(miek), also don't echo
 	if r.Response == true {
 		srv.MsgInvalidFunc(r, &Error{err: "r.Response is set"})
 		return
@@ -334,6 +321,8 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		srv.MsgInvalidFunc(r, &Error{err: "r.Opcode is invalid"})
 		return
 	}
+
+	println("CALLING HANDER with ", r.String())
 
 	r.Options = 0
 	srv.Handler.ServeDNS(srv.ctx, w, r)
