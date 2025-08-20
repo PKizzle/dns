@@ -32,7 +32,6 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	if l != nil {
 		addr = l.Addr().String()
 		closer = l
-		println("ADDR", addr)
 	} else {
 		addr = pc.LocalAddr().String()
 		closer = pc

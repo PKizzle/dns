@@ -33,8 +33,12 @@ func (r *Recorder) Session() *dns.Session { return nil }
 
 // Write is a wrapper that records the message that gets written to it.
 func (r *Recorder) Write(b []byte) (int, error) {
-	msg := &dns.Msg{Data: b}
-	msg.Unpack()
+	// See [Msg.WriteTo] that defaults to TCP
+	msg := &dns.Msg{Data: b[2:]}
+	err := msg.Unpack()
+	if err != nil {
+		return 0, err
+	}
 	r.Msgs = append(r.Msgs, msg)
 
 	if r.Discard {
