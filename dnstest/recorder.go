@@ -66,6 +66,13 @@ func (r *Recorder) Session() *dns.Session {
 	return nil
 }
 
+func (r *Recorder) Close() error {
+	if r.w != nil {
+		return r.w.Close()
+	}
+	return nil
+}
+
 func (r *Recorder) LocalAddr() net.Addr {
 	if r.w != nil {
 		return r.w.LocalAddr()

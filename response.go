@@ -17,7 +17,9 @@ type ResponseWriter interface {
 	// Conn returns the underlaying connection.
 	Conn() net.Conn
 	// ResponseWriter must also implement the io.Writer interface.
-	io.Writer
+	Write([]byte) (int, error)
+	// And the io.Closer interface.
+	Close() error
 	// Session returns the UDP oob session data to correctly route UDP packets.
 	Session() *Session
 	// Hijack lets the caller take over the TCP connection. For UDP this has no effect. The handler is then
