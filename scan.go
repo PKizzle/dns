@@ -635,6 +635,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				rr             RR
 				parseAsRFC3597 bool
 			)
+			println("TYPE", h.t)
+			println(h.String())
 			if newFn, ok := TypeToRR[h.t]; ok {
 				rr = newFn()
 				*rr.Header() = *h
