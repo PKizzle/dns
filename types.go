@@ -1128,15 +1128,6 @@ type RFC3597 struct {
 }
 
 func (rr *RFC3597) String() string {
-	sb := rfc3597Header(rr)
-
-	sb.WriteByte('\\')
-	sb.WriteByte('#')
-	sprintData(sb, strconv.Itoa(len(rr.Rdata)/2), rr.Rdata)
-	return sb.String()
-}
-
-func rfc3597Header(rr *RFC3597) *strings.Builder {
 	sb := strings.Builder{}
 
 	sb.WriteString(rr.Hdr.Name)
@@ -1147,7 +1138,11 @@ func rfc3597Header(rr *RFC3597) *strings.Builder {
 	sb.WriteByte('\t')
 	sb.WriteString("TYPE" + strconv.Itoa(int(rr.Hdr.t)))
 	sb.WriteByte('\t')
-	return &sb
+
+	sb.WriteByte('\\')
+	sb.WriteByte('#')
+	sprintData(&sb, strconv.Itoa(len(rr.Rdata)/2), rr.Rdata)
+	return sb.String()
 }
 
 // URI RR. See RFC 7553.
