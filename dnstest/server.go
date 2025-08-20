@@ -32,6 +32,7 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	if l != nil {
 		addr = l.Addr().String()
 		closer = l
+		println("ADDR", addr)
 	} else {
 		addr = pc.LocalAddr().String()
 		closer = pc
@@ -76,9 +77,11 @@ func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 }
 
 func TLSServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	return TCPServer(laddr,
-		func(srv *dns.Server) { srv.Listener = tls.NewListener(srv.Listener, TLSConfig()) },
-	)
+	l, err := net.Listen("tcp", laddr)
+	if err != nil {
+		return nil, "", nil, err
+	}
+	return Server(nil, tls.NewListener(l, TLSConfig()), opts...)
 }
 
 // TLSConfig returns the testing TLS config.

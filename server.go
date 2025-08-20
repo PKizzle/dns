@@ -119,7 +119,6 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		if srv.TLSConfig != nil {
-			println("TLS LISTERENE")
 			l = tls.NewListener(l, srv.TLSConfig)
 		}
 		srv.Listener = l
@@ -191,7 +190,6 @@ func (srv *Server) listenTCP(ln net.Listener) {
 			if err != nil {
 				continue
 			}
-			println("GOT ONE")
 			conn.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 			go srv.serveTCP(&wg, conn)
 		}
@@ -265,17 +263,15 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 	readtimeout := srv.ReadTimeout
 
-	println("SERVEI TCP")
-
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
-			println("ERRR", err.Error())
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			srv.MsgInvalidFunc(r, err)
 			continue
 		}
 
@@ -321,8 +317,6 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		srv.MsgInvalidFunc(r, &Error{err: "r.Opcode is invalid"})
 		return
 	}
-
-	println("CALLING HANDER with ", r.String())
 
 	r.Options = 0
 	srv.Handler.ServeDNS(srv.ctx, w, r)
