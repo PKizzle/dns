@@ -959,14 +959,6 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		}
 	}
 
-	if sock, ok := r.Conn().(*net.TCPConn); ok {
-		l := make([]byte, 2, 2)
-		binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
-		l = append(l, m.Data...)
-		n, err := sock.Write(l) // single write to supported tcp pipelining and be atomic
-		return int64(n), err
-	}
-
 	if sock, ok := r.Conn().(*net.UDPConn); ok {
 		sess := r.Session()
 		if sess != nil {
@@ -974,9 +966,16 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
 			return int64(n), err
 		}
-	}
 
-	n, err := r.Conn().Write(m.Data)
+		n, err := r.Conn().Write(m.Data)
+		return int64(n), err
+	}
+	// TODO(miek): isPacketConn back?
+
+	l := make([]byte, 2, 2)
+	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
+	l = append(l, m.Data...)
+	n, err := r.Write(l)
 	return int64(n), err
 }
 
@@ -1008,7 +1007,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	}
 	li := int(l)
 	if li < MsgHeaderSize {
-		return 0, fmt.Errorf("dns: TCP message size, can not be smaller than %d", MsgHeaderSize)
+		return 0, fmt.Errorf("dns: TCP message size %d, can not be smaller than %d", li, MsgHeaderSize)
 	}
 
 	if len(m.Data) < li {
