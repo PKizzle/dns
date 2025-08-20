@@ -7,7 +7,7 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-func TestRecord(t *testing.T) {
+func TestRecorder(t *testing.T) {
 	recorder := NewRecorder(nil)
 
 	m := new(dns.Msg)

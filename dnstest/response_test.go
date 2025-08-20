@@ -1,0 +1,44 @@
+package dnstest
+
+import (
+	"context"
+	"io"
+	"net"
+	"strconv"
+	"testing"
+
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
+)
+
+func TestResponseWriter(t *testing.T) {
+	m := new(dns.Msg)
+	m.Question = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}}}
+
+	rec := NewRecorder(&ResponseWriter{})
+	h := reflect{}
+
+	h.ServeDNS(context.TODO(), rec, m)
+	if x := rec.Msgs[0].Answer[0].(*dns.A).A.String(); x != "198.51.100.1" {
+		t.Errorf("expected %s in answer, got %s", "198.51.100.1", x)
+	}
+}
+
+type reflect struct{}
+
+func (h reflect) ServeDNS(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	r.Unpack()
+	m := new(dns.Msg)
+	dnsutil.SetReply(m, r)
+
+	ip := w.RemoteAddr().(*net.UDPAddr)
+	str := "Port: " + strconv.Itoa(ip.Port) + " (udp)"
+
+	a := &dns.A{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, A: ip.IP.To4()}
+	t := &dns.TXT{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, Txt: []string{str}}
+
+	m.Answer = append(m.Answer, a)
+	m.Extra = append(m.Extra, t)
+
+	io.Copy(w, m)
+}

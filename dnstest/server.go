@@ -85,7 +85,7 @@ func TLSServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 
 // TLSConfig returns the testing TLS config.
 func TLSConfig() *tls.Config {
-	cert, _ := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	cert, _ := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 }
 
@@ -117,8 +117,8 @@ func RunLocalUnixSeqPacketServer(laddr string) (chan interface{}, string, error)
 */
 
 var (
-	// CertPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
-	CertPEMBlock = []byte(`-----BEGIN CERTIFICATE-----
+	// certPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
+	certPEMBlock = []byte(`-----BEGIN CERTIFICATE-----
 MIIDAzCCAeugAwIBAgIRAJFYMkcn+b8dpU15wjf++GgwDQYJKoZIhvcNAQELBQAw
 EjEQMA4GA1UEChMHQWNtZSBDbzAeFw0xNjAxMDgxMjAzNTNaFw0xNzAxMDcxMjAz
 NTNaMBIxEDAOBgNVBAoTB0FjbWUgQ28wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
@@ -138,8 +138,8 @@ ahLIgUJ9l6HDguM17R7kGqxNvbElsMUHfTtXXP7UDQUiYXDakg8xDP6n9DCDhJ8Y
 bSt7OLB7NQ==
 -----END CERTIFICATE-----`)
 
-	// KeyPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
-	KeyPEMBlock = []byte(`-----BEGIN RSA PRIVATE KEY-----
+	// keyPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
+	keyPEMBlock = []byte(`-----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEA146jurJLz9N5OfAjY0IIHfRv5rflmvsUVPll4iggh7bWsDPM
 frJaucn7BwsMZcLBp+/R5iannDaoB29hlgVwL1VaJBQ03AtYVD+PoKdoLvTctu1B
 045S5jtJf8WeTDfLXysmJRcNfLV7t35Gj8h4/L/w9UQ5LqOAEXRbxknvE6orG4S5
