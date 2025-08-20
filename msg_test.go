@@ -63,7 +63,7 @@ func TestMsgPackBinary(t *testing.T) {
 	t.Logf("%s\n", m)
 }
 
-func TestUnpackName(t *testing.T) {
+func TestMsgUnpackName(t *testing.T) {
 	tcs := []struct {
 		buf   []byte
 		start int

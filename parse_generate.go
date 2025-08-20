@@ -23,9 +23,9 @@ package dns
 var parseFunc = template.Must(template.New("packFunc").Parse(`
 func parse(rr RR, c *zlexer, o string) *ParseError {
 	switch x := rr.(type) {
-{{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
+{{range .}}  case *{{.}}:
 	return x.parse(c, o)
-{{end}}{{end}} }
+{{end}} }
 	// If here we need to setup the channel and send the elements.
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 //	if x, ok := rr.(Packer); ok {

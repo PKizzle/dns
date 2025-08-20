@@ -2,7 +2,6 @@ package dns
 
 import (
 	"errors"
-	"io"
 	"io/fs"
 	"net"
 	"os"
@@ -234,9 +233,9 @@ func TestZoneParserTargetBad(t *testing.T) {
 		"bad.example.org. SRV 1 0 80 ; bad srv",
 	}
 
+	const expect = "bad "
 	for _, record := range records {
-		const expect = "bad "
-		if got, err := NeR(record); err == nil || !strings.Contains(err.Error(), expect) {
+		if got, err := New(record); err == nil || !strings.Contains(err.Error(), expect) {
 			t.Errorf("New(%v) = %v, want err to contain %q", record, got, expect)
 		}
 	}
@@ -257,16 +256,6 @@ func TestZoneParserAddressBad(t *testing.T) {
 	}
 }
 
-func TestParseTA(t *testing.T) {
-	rr, err := New(` Ta 0 0 0`)
-	if err != nil {
-		t.Fatalf("expected no error, but got %s", err)
-	}
-	if rr == nil {
-		t.Fatal(`expected a normal RR, but got nil`)
-	}
-}
-
 var errTestReadError = &Error{"test error"}
 
 type errReader struct{}
@@ -274,7 +263,7 @@ type errReader struct{}
 func (errReader) Read(p []byte) (int, error) { return 0, errTestReadError }
 
 func TestParseZoneReadError(t *testing.T) {
-	rr, err := ReadRR(errReader{}, "")
+	rr, err := readRR(errReader{}, "")
 	if err == nil || !strings.Contains(err.Error(), errTestReadError.Error()) {
 		t.Errorf("expected error to contain %q, but got %v", errTestReadError, err)
 	}
@@ -283,7 +272,7 @@ func TestParseZoneReadError(t *testing.T) {
 	}
 }
 
-func TestUnexpectedNewline(t *testing.T) {
+func TestZoneParserUnexpectedNewline(t *testing.T) {
 	zone := `
 example.com. 60 PX
 1000 TXT 1K
@@ -318,7 +307,7 @@ example.com. 60 PX (
 	}
 }
 
-func TestParseRFC3597InvalidLength(t *testing.T) {
+func TestZoneParserRFC3597InvalidLength(t *testing.T) {
 	// We need to space separate the 00s otherwise it will exceed the maximum token size
 	// of the zone lexer.
 	_, err := New("example. 3600 CLASS1 TYPE1 \\# 65536 " + strings.Repeat("00 ", 65536))
@@ -327,7 +316,7 @@ func TestParseRFC3597InvalidLength(t *testing.T) {
 	}
 }
 
-func TestParseKnownRRAsRFC3597(t *testing.T) {
+func TestZoneParserKnownRRAsRFC3597(t *testing.T) {
 	t.Run("with RDATA", func(t *testing.T) {
 		// This was found by oss-fuzz.
 		_, err := New("example. 3600 tYpe44 \\# 03 75  0100")
@@ -340,8 +329,8 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 			t.Fatalf("failed to parse RFC3579 format: %v", err)
 		}
 
-		if rr.Header().Rrtype != TypeA {
-			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().Rrtype)
+		if rr.Header().t != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
 		}
 
 		a, ok := rr.(*A)
@@ -360,8 +349,8 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 			t.Fatalf("failed to parse RFC3579 format: %v", err)
 		}
 
-		if rr.Header().Rrtype != TypeA {
-			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().Rrtype)
+		if rr.Header().t != TypeA {
+			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
 		}
 
 		a, ok := rr.(*A)
@@ -375,7 +364,7 @@ func TestParseKnownRRAsRFC3597(t *testing.T) {
 	})
 }
 
-func TestParseOpenEscape(t *testing.T) {
+func TestZoneParserOpenEscape(t *testing.T) {
 	if _, err := New("example.net IN CNAME example.net."); err != nil {
 		t.Fatalf("expected no error, but got: %s", err)
 	}
@@ -384,67 +373,7 @@ func TestParseOpenEscape(t *testing.T) {
 	}
 }
 
-func BenchmarkNew(b *testing.B) {
-	const name1 = "12345678901234567890123456789012345.12345678.123."
-	const s = name1 + " 3600 IN MX 10 " + name1
-
-	for n := 0; n < b.N; n++ {
-		_, err := New(s)
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
-}
-
-func BenchmarkReadRR(b *testing.B) {
-	const name1 = "12345678901234567890123456789012345.12345678.123."
-	const s = name1 + " 3600 IN MX 10 " + name1 + "\n"
-
-	for n := 0; n < b.N; n++ {
-		r := struct{ io.Reader }{strings.NewReader(s)}
-		// r is now only an io.Reader and won't benefit from the
-		// io.ByteReader special-case in zlexer.Next.
-
-		_, err := readRR(r, "")
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
-}
-
-const benchZone = `
-foo. IN A 10.0.0.1 ; this is comment 1
-foo. IN A (
-	10.0.0.2 ; this is comment 2
-)
-; this is comment 3
-foo. IN A 10.0.0.3
-foo. IN A ( 10.0.0.4 ); this is comment 4
-
-foo. IN A 10.0.0.5
-; this is comment 5
-
-foo. IN A 10.0.0.6
-
-foo. IN DNSKEY 256 3 5 AwEAAb+8l ; this is comment 6
-foo. IN NSEC miek.nl. TXT RRSIG NSEC; this is comment 7
-foo. IN TXT "THIS IS TEXT MAN"; this is comment 8
-`
-
-func BenchmarkZoneParser(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		zp := NewZoneParser(strings.NewReader(benchZone), "example.org.", "")
-
-		for _, ok := zp.Next(); ok; _, ok = zp.Next() {
-		}
-
-		if err := zp.Err(); err != nil {
-			b.Fatal(err)
-		}
-	}
-}
-
-func TestEscapedStringOffset(t *testing.T) {
+func TestZoneParserEscapedStringOffset(t *testing.T) {
 	cases := []struct {
 		input          string
 		inputOffset    int
