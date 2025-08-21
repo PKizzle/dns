@@ -265,7 +265,7 @@ func UnpackName(msg []byte, off int) (string, int, error) {
 }
 
 func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
-	name := make([]byte, 0, maxDomainNamePresentationLength)
+	name := make([]byte, 0, maxDomainNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
 	budget := maxDomainNameWireOctets
 	var ptrs bool
 
