@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -40,13 +39,11 @@ func main() {
 
 	mux := dns.NewServeMux()
 
-	stack := []Plugin{
-		Log,
-		Whoami,
-	}
+	p1 := []string{"log", "any", "whoami"} // logs both any and whoami queries
+	mux.HandleFunc("whoami.miek.nl.", Compile(p1))
 
-	empty := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { /*default mux does this*/ }
-	mux.HandleFunc("whoami.miek.nl.", Compile(empty, stack))
+	p2 := []string{"any", "log", "whoami"} // logs whoami, but not any queries
+	mux.HandleFunc("log.miek.nl.", Compile(p2))
 
 	srv := &dns.Server{
 		Handler:       mux,

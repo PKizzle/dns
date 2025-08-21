@@ -11,7 +11,9 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func Whoami(_ dns.HandlerFunc) dns.HandlerFunc {
+type Whoami int
+
+func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var (
 			v4  bool
