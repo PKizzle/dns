@@ -1,6 +1,11 @@
 package dnsutil
 
-import "testing"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+	"testing"
+)
 
 func TestJoin(t *testing.T) {
 	tests := []struct {
@@ -121,3 +126,46 @@ func TestCanonical(t *testing.T) {
 		}
 	}
 }
+
+func TestIsName(t *testing.T) {
+	names := map[string]bool{
+		".":                      true,
+		"..":                     false,
+		"double-dot..test":       false,
+		".leading-dot.test":      false,
+		"@.":                     true,
+		"www.example.com":        true,
+		"www.e%ample.com":        true,
+		"www.example.com.":       true,
+		"mi\\k.nl.":              true,
+		"mi\\k.nl":               true,
+		longestDomain:            true,
+		longestUnprintableDomain: true,
+	}
+	for d, ok := range names {
+		ok1 := IsName(d)
+		if ok != ok1 {
+			t.Errorf("have %v for %s ", ok, d)
+		}
+	}
+}
+
+const maxPrintableLabel = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789x"
+
+var (
+	longDomain = maxPrintableLabel[:53] + strings.TrimSuffix(
+		strings.Join([]string{".", ".", ".", ".", "."}, maxPrintableLabel[:49]), ".")
+
+	reChar              = regexp.MustCompile(`.`)
+	i                   = -1
+	maxUnprintableLabel = reChar.ReplaceAllStringFunc(maxPrintableLabel, func(ch string) string {
+		if i++; i >= 32 {
+			i = 0
+		}
+		return fmt.Sprintf("\\%03d", i)
+	})
+
+	// These are the longest possible domain names in presentation format.
+	longestDomain            = maxPrintableLabel[:61] + strings.Join([]string{".", ".", ".", "."}, maxPrintableLabel)
+	longestUnprintableDomain = maxUnprintableLabel[:61*4] + strings.Join([]string{".", ".", ".", "."}, maxUnprintableLabel)
+)

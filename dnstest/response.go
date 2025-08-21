@@ -55,6 +55,7 @@ func (t *ResponseWriter) RemoteAddr() net.Addr {
 }
 
 func (t *ResponseWriter) Write(buf []byte) (int, error) { return len(buf), nil }
-func (t *ResponseWriter) Hijack()                       {}
 func (t *ResponseWriter) Conn() net.Conn                { return nil }
 func (t *ResponseWriter) Session() *dns.Session         { return nil }
+func (t *ResponseWriter) Close() error                  { return nil }
+func (t *ResponseWriter) Hijack()                       {}

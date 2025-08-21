@@ -94,7 +94,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			return
 		}
 
-		//		conn.SetReadDeadline(t.Transport.)
+		//		conn.SetReadDeadline(t.Transport.) ??
 		if _, err := io.Copy(r, conn); err != nil {
 			env <- &Envelope{Error: err}
 			return
@@ -206,9 +206,9 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 		c <- &Envelope{in.Answer, nil}
 	}
 }
+*/
 
-// Out performs an outgoing transfer with the client connecting in w.
-// Basic use pattern:
+// Out performs an outgoing transfer with the client connecting in w. Basic use pattern:
 //
 //	ch := make(chan *dns.Envelope)
 //	tr := new(dns.Transfer)
@@ -225,62 +225,21 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 //
 // The server is responsible for sending the correct sequence of RRs through the channel ch.
 func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
-	for x := range ch {
+	timersonly := false
+	for env := range ch {
 		r := new(Msg)
-		// Compress?
-		r.SetReply(q)
+		dnsutilSetReply(r, q)
 		r.Authoritative = true
-		// assume it fits TODO(miek): fix
-		r.Answer = append(r.Answer, x.RR...)
-		if tsig := q.IsTsig(); tsig != nil && w.TsigStatus() == nil {
-			r.SetTsig(tsig.Hdr.Name, tsig.Algorithm, tsig.Fudge, time.Now().Unix())
-		}
-		if err := w.WriteMsg(r); err != nil {
+		r.Answer = env.RR
+		// TSIG TODO
+		if _, err := io.Copy(w, r); err != nil {
 			return err
 		}
-		w.TsigTimersOnly(true)
+		timersonly = true
 	}
+	timersonly = timersonly
 	return nil
 }
-
-// ReadMsg reads a message from the transfer connection t.
-func (t *Transfer) ReadMsg() (*Msg, error) {
-	m := new(Msg)
-	p := make([]byte, MaxMsgSize)
-	n, err := t.Read(p)
-	if err != nil && n == 0 {
-		return nil, err
-	}
-	p = p[:n]
-	if err := m.Unpack(p); err != nil {
-		return nil, err
-	}
-
-	if tp := t.tsigProvider(); tp != nil {
-		// Need to work on the original message p, as that was used to calculate the tsig.
-		err = TsigVerifyWithProvider(p, tp, t.tsigRequestMAC, t.tsigTimersOnly)
-		if ts := m.IsTsig(); ts != nil {
-			t.tsigRequestMAC = ts.MAC
-		}
-	}
-	return m, err
-}
-
-// WriteMsg writes a message through the transfer connection t.
-func (t *Transfer) WriteMsg(m *Msg) (err error) {
-	var out []byte
-	if ts, tp := m.IsTsig(), t.tsigProvider(); ts != nil && tp != nil {
-		out, t.tsigRequestMAC, err = TsigGenerateWithProvider(m, tp, t.tsigRequestMAC, t.tsigTimersOnly)
-	} else {
-		out, err = m.Pack()
-	}
-	if err != nil {
-		return err
-	}
-	_, err = t.Write(out)
-	return err
-}
-*/
 
 func isSOAFirst(m *Msg) bool {
 	if len(m.Answer) == 0 {

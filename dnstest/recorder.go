@@ -12,8 +12,9 @@ import (
 // If Discard is true, this effectively a dns.DiscardWriter.
 type Recorder struct {
 	w       dns.ResponseWriter
-	Discard bool // When true the message is recorded, but not written to the underlaying connection.
-	Msgs    []*dns.Msg
+	Discard bool       // When true the message is recorded, but not written to the underlaying connection.
+	Msgs    []*dns.Msg // All messages written to it.
+	Msg     *dns.Msg   // Msg contains the last message written.
 	Start   time.Time
 }
 
@@ -35,6 +36,7 @@ func (r *Recorder) Write(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	r.Msg = msg
 	r.Msgs = append(r.Msgs, msg)
 
 	if r.Discard {
@@ -62,6 +64,13 @@ func (r *Recorder) Hijack() {
 func (r *Recorder) Session() *dns.Session {
 	if r.w != nil {
 		return r.w.Session()
+	}
+	return nil
+}
+
+func (r *Recorder) Close() error {
+	if r.w != nil {
+		return r.w.Close()
 	}
 	return nil
 }
