@@ -20,3 +20,10 @@ func SetQuestion(m *dns.Msg, z string, t uint16) *dns.Msg {
 	m.Question = []dns.RR{rr}
 	return m
 }
+
+// Question return the question namd and the type from the message m.
+func Question(m *dns.Msg) (z string, t uint16) {
+	z = m.Question[0].Header().Name
+	t = dns.RRToType(m.Question[0])
+	return z, t
+}
