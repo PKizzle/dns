@@ -9,6 +9,7 @@ func TestCompareName(t *testing.T) {
 		expected int
 	}{
 		{"www.miek.nl.", "miek.nl.", 1},
+		{"example.org.", "EXAMPLE.ORG.", 0},
 	}
 	for _, tc := range testcases {
 		x := CompareName(tc.a, tc.b)
