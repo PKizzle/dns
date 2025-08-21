@@ -47,6 +47,7 @@ func CommonSuffix(a, b string) (n int) {
 
 // equal compares a and b while ignoring case. It returns true when equal otherwise false.
 func equal(a, b string) bool {
+	// See ../sort.go where the offical version hangs out.
 	la := len(a)
 	lb := len(b)
 	if la != lb {

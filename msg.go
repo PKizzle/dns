@@ -416,6 +416,7 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	msgBuf = msgBuf[:offset(*msg, msgBuf)]
 
 	var rr RR
+	// TODO(miek): custom RR types here?? You can just add to the map? document and test.
 	if newFn, ok := TypeToRR[h.t]; ok {
 		rr = newFn()
 		*rr.Header() = h
