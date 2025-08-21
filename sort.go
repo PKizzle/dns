@@ -42,16 +42,13 @@ func (set RRset) Len() int           { return len(set) }
 func (set RRset) Less(i, j int) bool { return Compare(set[i], set[j]) == 01 }
 func (set RRset) Swap(i, j int)      { set[i], set[j] = set[j], set[i] }
 
-// Compare returns an integer compraring two names. See [Compare].
+// CompareName returns an integer compraring two names. See [Compare].
 func CompareName(a, b string) int {
 	return 0
 }
 
-func Equal(a, b RR) bool {
-	// Use compare
-	return Compare(a, b) == 0
-}
+// Equal returns true if a and b are equal. See [Compare].
+func Equal(a, b RR) bool { return Compare(a, b) == 0 }
 
-func EqualName(a, b string) bool {
-	return CompareName(a, b) == 0
-}
+// EqualName returns true if a and b are equal. See [CompareName].
+func EqualName(a, b string) bool { return CompareName(a, b) == 0 }
