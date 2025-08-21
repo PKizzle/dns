@@ -188,6 +188,26 @@ func IsName(s string) bool {
 	return true
 }
 
+// Split splits a name s into its label indexes, s must be a syntactically valid domain name.
+// www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
+// The root name (.) returns the empty slice.
+func Split(s string) []int {
+	if s == "." {
+		return nil
+	}
+	idx := make([]int, 1, 3)
+	off := 0
+	end := false
+
+	for {
+		off, end = Next(s, off)
+		if end {
+			return idx
+		}
+		idx = append(idx, off)
+	}
+}
+
 // SetReply creates a reply message from r. It copies the ID, opcode, rcode and question and sets query
 // response bit to true.
 func SetReply(m, r *dns.Msg) *dns.Msg {
