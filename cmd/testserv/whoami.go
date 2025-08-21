@@ -24,7 +24,7 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		if err := r.Unpack(); err != nil {
 			log.Fatalf("%s", err.Error())
 		}
-		m := new(dns.Msg)
+		m := &dns.Msg{Data: r.Data} // reuse buffer
 		dnsutil.SetReply(m, r)
 
 		if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
@@ -55,6 +55,7 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 			m.Extra = append(m.Extra, t)
 		}
 
+		m.Pack()
 		io.Copy(w, m)
 	})
 }

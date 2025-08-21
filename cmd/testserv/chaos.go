@@ -30,7 +30,7 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		qname := r.Question[0].Header().Name
-		m := new(dns.Msg)
+		m := &dns.Msg{Data: r.Data} // reuse buffer
 		dnsutil.SetReply(m, r)
 
 		hdr := dns.Header{Name: qname, Class: dns.ClassCHAOS}
@@ -53,6 +53,7 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			}
 			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{hostname}}}
 		}
+		m.Pack()
 		io.Copy(w, m)
 	})
 }

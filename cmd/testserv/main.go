@@ -40,10 +40,13 @@ func main() {
 	mux := dns.NewServeMux()
 
 	p1 := []string{"log", "any", "whoami"} // logs both any and whoami queries
-	mux.HandleFunc("whoami.miek.nl.", Compile(p1))
+	mux.HandleFunc("any.miek.nl.", Compile(p1))
 
-	p2 := []string{"any", "log", "whoami"} // logs whoami, but not any queries
+	p2 := []string{"log", "any", "whoami"} // logs whoami, but not any queries
 	mux.HandleFunc("log.miek.nl.", Compile(p2))
+
+	p3 := []string{"whoami"} // logs whoami, but not any queries
+	mux.HandleFunc("whoami.miek.nl.", Compile(p3))
 
 	srv := &dns.Server{
 		Handler:       mux,

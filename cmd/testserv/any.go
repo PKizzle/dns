@@ -16,10 +16,11 @@ func (a *Any) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			next.ServeDNS(ctx, w, r)
 		}
 
-		m := new(dns.Msg)
+		m := &dns.Msg{Data: r.Data} // reuse buffer
 		dnsutil.SetReply(m, r)
 		hdr := dns.Header{Name: r.Question[0].Header().Name, TTL: 8482, Class: dns.ClassINET}
 		m.Answer = []dns.RR{&dns.HINFO{Hdr: hdr, Cpu: "ANY obsoleted", Os: "See RFC 8482"}}
+		m.Pack()
 
 		io.Copy(w, m)
 	})
