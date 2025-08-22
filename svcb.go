@@ -370,7 +370,7 @@ func (s *SVCBAlpn) String() string {
 		for j := 0; j < len(alpn); j++ {
 			e := alpn[j]
 			if ' ' > e || e > '~' {
-				str.WriteString(escapeByte(e))
+				str.WriteString(ddd.Escape(e))
 				continue
 			}
 			switch e {
@@ -934,7 +934,7 @@ func svcbParamToStr(s []byte) string {
 				str.WriteByte(e)
 			}
 		} else {
-			str.WriteString(escapeByte(e))
+			str.WriteString(ddd.Escape(e))
 		}
 	}
 	return str.String()

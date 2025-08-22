@@ -223,7 +223,7 @@ func unpackString(s *cryptobyte.String) (string, error) {
 				sb.Grow(len(txt) * 2)
 			}
 			sb.Write(txt[consumed:i])
-			sb.WriteString(escapeByte(b))
+			sb.WriteString(ddd.Escape(b))
 			consumed = i + 1
 		}
 	}

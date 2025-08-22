@@ -300,7 +300,7 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				if isLabelSpecial(b) {
 					name = append(name, '\\', b)
 				} else if b < ' ' || b > '~' {
-					name = append(name, escapeByte(b)...)
+					name = append(name, ddd.Escape(b)...)
 				} else {
 					name = append(name, b)
 				}
