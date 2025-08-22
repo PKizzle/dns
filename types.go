@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"net"
-	"slices"
 	"strconv"
 	"strings"
+
+	"codeberg.org/miekg/dns/svcb"
 )
 
 // Packet formats
@@ -1568,14 +1569,6 @@ func (a *APLPrefix) equals(b *APLPrefix) bool {
 		bytes.Equal(a.Network.Mask, b.Network.Mask)
 }
 
-// copy returns a copy of the APL prefix.
-func (a *APLPrefix) copy() APLPrefix {
-	return APLPrefix{
-		Negation: a.Negation,
-		Network:  copyNet(a.Network),
-	}
-}
-
 // len returns size of the prefix in wire format.
 func (a *APLPrefix) len() int {
 	// 4-byte header and the network address prefix (see Section 4 of RFC 3123)
@@ -1583,12 +1576,32 @@ func (a *APLPrefix) len() int {
 	return 4 + (prefix+7)/8
 }
 
-// copyNet returns a copy of a subnet.
-func copyNet(n net.IPNet) net.IPNet {
-	return net.IPNet{
-		IP:   slices.Clone(n.IP),
-		Mask: slices.Clone(n.Mask),
+// SVCB RR. See RFC 9460.
+type SVCB struct {
+	Hdr      Header
+	Priority uint16      // If zero, Value must be empty or discarded by the user of this library.
+	Target   string      `dns:"domain-name"`
+	Value    []svcb.Pair `dns:"pairs"`
+}
+
+func (rr *SVCB) String() string {
+	s := rr.Hdr.String() +
+		strconv.Itoa(int(rr.Priority)) + " " +
+		sprintName(rr.Target)
+	for _, e := range rr.Value {
+		s += " " + e.Key().String() + "=\"" + e.String() + "\""
 	}
+	return s
+}
+
+// HTTPS RR. See RFC 9460. Everything valid for SVCB applies to HTTPS as well.
+// Except that the HTTPS record is intended for use with the HTTP and HTTPS protocols.
+type HTTPS struct {
+	SVCB
+}
+
+func (rr *HTTPS) String() string {
+	return rr.SVCB.String()
 }
 
 // Meta RRs
