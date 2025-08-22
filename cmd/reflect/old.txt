@@ -1,0 +1,30 @@
+=== RUN   TestReflect
+=== RUN   TestReflect/reflect-udp
+goos: linux
+goarch: arm64
+pkg: codeberg.org/miekg/dns
+BenchmarkDNSPerfudp-8	304675			3282.2 ns/op
+BenchmarkDNSPerfudp-8	335573			2980.0 ns/op
+BenchmarkDNSPerfudp-8	327056			3057.6 ns/op
+BenchmarkDNSPerfudp-8	340704			2935.1 ns/op
+BenchmarkDNSPerfudp-8	337498			2963.0 ns/op
+BenchmarkDNSPerfudp-8	335568			2980.0 ns/op
+BenchmarkDNSPerfudp-8	338678			2952.7 ns/op
+BenchmarkDNSPerfudp-8	338355			2955.5 ns/op
+=== RUN   TestReflect/reflect-tcp
+goos: linux
+goarch: arm64
+pkg: codeberg.org/miekg/dns
+BenchmarkDNSPerftcp-8	318480			3139.9 ns/op
+BenchmarkDNSPerftcp-8	316325			3161.3 ns/op
+BenchmarkDNSPerftcp-8	315986			3164.7 ns/op
+BenchmarkDNSPerftcp-8	316052			3164.0 ns/op
+BenchmarkDNSPerftcp-8	314016			3184.5 ns/op
+BenchmarkDNSPerftcp-8	317139			3153.2 ns/op
+BenchmarkDNSPerftcp-8	315534			3169.2 ns/op
+BenchmarkDNSPerftcp-8	315970			3164.8 ns/op
+--- PASS: TestReflect (36.17s)
+    --- PASS: TestReflect/reflect-udp (18.08s)
+    --- PASS: TestReflect/reflect-tcp (18.09s)
+PASS
+ok  	codeberg.org/miekg/dns/cmd/reflect	36.174s
