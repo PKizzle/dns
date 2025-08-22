@@ -2265,6 +2265,53 @@ func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 	return nil
 }
 
+func (rr *SVCB) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = packUint16(rr.Priority, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = packName(rr.Target, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	off, err = packSVCB(rr.Value, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Priority) {
+		return ErrUnpackOverflow
+	}
+	rr.Target, err = unpackName(&s, msgBuf)
+	if err != nil {
+		return err
+	}
+	rr.Value, err = unpackSVCB(&s)
+	if err != nil {
+		return err
+	}
+	if !s.Empty() {
+		return ErrTrailingData.Fmt(": %s", "SVCB")
+	}
+	return nil
+}
+
+func (rr *HTTPS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.Empty() {
+		return ErrTrailingData.Fmt(": %s", "HTTPS")
+	}
+	return nil
+}
+
 func (rr *ANY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	return off, nil
 }

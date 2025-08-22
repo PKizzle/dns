@@ -160,6 +160,10 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 		return x.pack(msg, off, compression)
 	case *APL:
 		return x.pack(msg, off, compression)
+	case *SVCB:
+		return x.pack(msg, off, compression)
+	case *HTTPS:
+		return x.pack(msg, off, compression)
 	case *ANY:
 		return x.pack(msg, off, compression)
 	case *AXFR:
@@ -329,6 +333,10 @@ func unpack(rr RR, data, msgBuf []byte) error {
 	case *RESINFO:
 		return x.unpack(data, msgBuf)
 	case *APL:
+		return x.unpack(data, msgBuf)
+	case *SVCB:
+		return x.unpack(data, msgBuf)
+	case *HTTPS:
 		return x.unpack(data, msgBuf)
 	case *ANY:
 		return x.unpack(data, msgBuf)

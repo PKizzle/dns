@@ -1,38 +1,30 @@
 package svcb
 
 import (
-	"encoding/binary"
-	"errors"
-	"fmt"
+	"encoding/base64"
 	"net"
-	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
-	"golang.org/x/crypto/cryptobyte"
 )
 
-// Key is the type of the keys used in the SVCB RR.
-type Key uint16
-
-// Keys defined in rfc9460
+// Keys defined in RFC 9460.
 const (
-	KeyMandatory Key = iota
+	KeyMandatory uint16 = iota
 	KeyAlpn
 	KeyNoDefaultALPN
 	KeyPort
 	KeyIPv4Hint
 	KeyEchConfig
 	KeyIPv6Hint
-	KeyDohPath // rfc9461 Section 5
-	KeyOhttp   // rfc9540 Section 8
+	KeyDohPath // See RFC 9461 Section 5.
+	KeyOhttp   // See RFC 9540 Section 8.
 
-	KeyReserved Key = 65535
+	KeyReserved uint16 = 65535
 )
 
-var KeyToString = map[Key]string{
+var KeyToString = map[uint16]string{
 	KeyMandatory:     "mandatory",
 	KeyAlpn:          "alpn",
 	KeyNoDefaultALPN: "no-default-alpn",
@@ -47,7 +39,7 @@ var KeyToString = map[Key]string{
 var StringToKey = reverse(KeyToString)
 
 // KeyToPair is a map of constructors for each key type.
-var KeyToPair = map[Key]func() Pair{
+var KeyToPair = map[uint16]func() Pair{
 	KeyMandatory:     func() Pair { return new(MANDATORY) },
 	KeyAlpn:          func() Pair { return new(ALPN) },
 	KeyNoDefaultALPN: func() Pair { return new(NODEFAULTALPN) },
@@ -68,8 +60,8 @@ var KeyToPair = map[Key]func() Pair{
 	}
 */
 
-// PairToKey is the opposite of KeyToPair.
-func PairToKey(p Pair) Key {
+// PairToKey is the reverse of KeyToPair.
+func PairToKey(p Pair) uint16 {
 	switch p.(type) {
 	case *MANDATORY:
 		return KeyMandatory
@@ -95,7 +87,7 @@ func PairToKey(p Pair) Key {
 
 // Pair defines a key=value pair for the SVCB RR type.
 // An SVCB RR can have multiple Pairs appended to it.
-// The numerical key code is derived from the type.
+// The numerical key code is derived from the type, see [PairToKey].
 type Pair interface {
 	String() string // String returns the string representation of the value.
 	Len() int       // Len returns the length of value in the wire format.
@@ -114,66 +106,25 @@ type Pair interface {
 // - escape sequences are not used in mandatory
 // - mandatory, when present, lists at least one key
 //
-// Basic use pattern for creating a mandatory option:
+// Basic use pattern for creating a mandatory option in a SVCB RR.
 //
-//	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
-//	e := new(dns.MANDATORY)
-//	e.Code = []uint16{dns.SVCB_ALPN}
-//	s.Value = append(s.Value, e)
-//	t := new(dns.ALPN)
-//	t.Alpn = []string{"xmpp-client"}
+//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	s.Value = append(s.Value, &svcb.MANDATORY{})
+//	t := &svcb.ALPN{Alpn: []string{"xmpp-client"}}
 //	s.Value = append(s.Value, t)
 type MANDATORY struct {
-	Code []Key
+	Key []uint16
 }
 
 func (s *MANDATORY) String() string {
-	str := make([]string, len(s.Code))
-	for i, e := range s.Code {
+	str := make([]string, len(s.Key))
+	for i, e := range s.Key {
 		str[i] = KeyToString[e]
 	}
 	return strings.Join(str, ",")
 }
 
-func (s *MANDATORY) pack() ([]byte, error) {
-	codes := slices.Clone(s.Code)
-	sort.Slice(codes, func(i, j int) bool {
-		return codes[i] < codes[j]
-	})
-	b := make([]byte, 2*len(codes))
-	for i, e := range codes {
-		binary.BigEndian.PutUint16(b[2*i:], uint16(e))
-	}
-	return b, nil
-}
-
-func (s *MANDATORY) unpack(b []byte) error {
-	if len(b)%2 != 0 {
-		return errors.New("dns: svcbmandatory: value length is not a multiple of 2")
-	}
-	codes := make([]Key, 0, len(b)/2)
-	for i := 0; i < len(b); i += 2 {
-		// We assume strictly increasing order.
-		codes = append(codes, Key(binary.BigEndian.Uint16(b[i:])))
-	}
-	s.Code = codes
-	return nil
-}
-
-func (s *MANDATORY) parse(b string) error {
-	codes := make([]Key, 0, strings.Count(b, ",")+1)
-	for len(b) > 0 {
-		var key string
-		key, b, _ = strings.Cut(b, ",")
-		codes = append(codes, svcbStringToKey(key))
-	}
-	s.Code = codes
-	return nil
-}
-
-func (s *MANDATORY) Len() int {
-	return 2 * len(s.Code)
-}
+func (s *MANDATORY) Len() int { return 2 * len(s.Key) }
 
 // ALPN pair is used to list supported connection protocols.
 // The user of this library must ensure that at least one protocol is listed when alpn is present.
@@ -181,10 +132,8 @@ func (s *MANDATORY) Len() int {
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
 // Basic use pattern for creating an alpn option:
 //
-//	h := new(dns.HTTPS)
-//	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
-//	e := new(dns.ALPN)
-//	e.Alpn = []string{"h2", "http/1.1"}
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	e := svcb.ALPN{Alpn: []string{"h2", "http/1.1"}}
 //	h.Value = append(h.Value, e)
 type ALPN struct {
 	Alpn []string
@@ -235,81 +184,6 @@ func (s *ALPN) String() string {
 	return str.String()
 }
 
-func (s *ALPN) pack() ([]byte, error) {
-	// Liberally estimate the size of an alpn as 10 octets
-	b := make([]byte, 0, 10*len(s.Alpn))
-	for _, e := range s.Alpn {
-		if e == "" {
-			return nil, errors.New("dns: svcbalpn: empty alpn-id")
-		}
-		if len(e) > 255 {
-			return nil, errors.New("dns: svcbalpn: alpn-id too long")
-		}
-		b = append(b, byte(len(e)))
-		b = append(b, e...)
-	}
-	return b, nil
-}
-
-func (s *ALPN) unpack(b []byte) error {
-	sc := cryptobyte.String(b)
-	var alpn []string
-	for !sc.Empty() {
-		var data cryptobyte.String
-		if !sc.ReadUint8LengthPrefixed(&data) {
-			return ErrUnpackOverflow
-		}
-		alpn = append(alpn, string(data))
-	}
-	s.Alpn = alpn
-	return nil
-}
-
-func (s *ALPN) parse(b string) error {
-	if len(b) == 0 {
-		s.Alpn = []string{}
-		return nil
-	}
-
-	alpn := []string{}
-	a := []byte{}
-	for p := 0; p < len(b); {
-		c, q := nextByte(b, p)
-		if q == 0 {
-			return errors.New("dns: svcbalpn: unterminated escape")
-		}
-		p += q
-		// If we find a comma, we have finished reading an alpn.
-		if c == ',' {
-			if len(a) == 0 {
-				return errors.New("dns: svcbalpn: empty protocol identifier")
-			}
-			alpn = append(alpn, string(a))
-			a = []byte{}
-			continue
-		}
-		// If it's a backslash, we need to handle a comma-separated list.
-		if c == '\\' {
-			dc, dq := nextByte(b, p)
-			if dq == 0 {
-				return errors.New("dns: svcbalpn: unterminated escape decoding comma-separated list")
-			}
-			if dc != '\\' && dc != ',' {
-				return errors.New("dns: svcbalpn: bad escaped character decoding comma-separated list")
-			}
-			p += dq
-			c = dc
-		}
-		a = append(a, c)
-	}
-	// Add the final alpn.
-	if len(a) == 0 {
-		return errors.New("dns: svcbalpn: last protocol identifier empty")
-	}
-	s.Alpn = append(alpn, string(a))
-	return nil
-}
-
 func (s *ALPN) Len() int {
 	var l int
 	for _, e := range s.Alpn {
@@ -333,20 +207,6 @@ type NODEFAULTALPN struct{}
 func (*NODEFAULTALPN) String() string { return "" }
 func (*NODEFAULTALPN) Len() int       { return 0 }
 
-func (*NODEFAULTALPN) unpack(b []byte) error {
-	if len(b) != 0 {
-		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
-	}
-	return nil
-}
-
-func (*NODEFAULTALPN) parse(b string) error {
-	if b != "" {
-		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
-	}
-	return nil
-}
-
 // PORT pair defines the port for connection.
 // Basic use pattern for creating a port option:
 //
@@ -360,29 +220,6 @@ type PORT struct {
 
 func (*PORT) Len() int         { return 2 }
 func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
-
-func (s *PORT) unpack(b []byte) error {
-	if len(b) != 2 {
-		return errors.New("dns: svcbport: port length is not exactly 2 octets")
-	}
-	s.Port = binary.BigEndian.Uint16(b)
-	return nil
-}
-
-func (s *PORT) pack() ([]byte, error) {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, s.Port)
-	return b, nil
-}
-
-func (s *PORT) parse(b string) error {
-	port, err := strconv.ParseUint(b, 10, 16)
-	if err != nil {
-		return errors.New("dns: svcbport: port out of range")
-	}
-	s.Port = uint16(port)
-	return nil
-}
 
 // IPV4HINT pair suggests an IPv4 address which may be used to open connections
 // if A and AAAA record responses for SVCB's Target domain haven't been received.
@@ -405,31 +242,6 @@ type IPV4HINT struct {
 
 func (s *IPV4HINT) Len() int { return 4 * len(s.Hint) }
 
-func (s *IPV4HINT) pack() ([]byte, error) {
-	b := make([]byte, 0, 4*len(s.Hint))
-	for _, e := range s.Hint {
-		x := e.To4()
-		if x == nil {
-			return nil, errors.New("dns: svcbipv4hint: expected ipv4, hint is ipv6")
-		}
-		b = append(b, x...)
-	}
-	return b, nil
-}
-
-func (s *IPV4HINT) unpack(b []byte) error {
-	if len(b) == 0 || len(b)%4 != 0 {
-		return errors.New("dns: svcbipv4hint: ipv4 address byte array length is not a multiple of 4")
-	}
-	b = slices.Clone(b)
-	x := make([]net.IP, 0, len(b)/4)
-	for i := 0; i < len(b); i += 4 {
-		x = append(x, net.IP(b[i:i+4]))
-	}
-	s.Hint = x
-	return nil
-}
-
 func (s *IPV4HINT) String() string {
 	str := make([]string, len(s.Hint))
 	for i, e := range s.Hint {
@@ -440,28 +252,6 @@ func (s *IPV4HINT) String() string {
 		str[i] = x.String()
 	}
 	return strings.Join(str, ",")
-}
-
-func (s *IPV4HINT) parse(b string) error {
-	if b == "" {
-		return errors.New("dns: svcbipv4hint: empty hint")
-	}
-	if strings.Contains(b, ":") {
-		return errors.New("dns: svcbipv4hint: expected ipv4, got ipv6")
-	}
-
-	hint := make([]net.IP, 0, strings.Count(b, ",")+1)
-	for len(b) > 0 {
-		var e string
-		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e).To4()
-		if ip == nil {
-			return errors.New("dns: svcbipv4hint: bad ip")
-		}
-		hint = append(hint, ip)
-	}
-	s.Hint = hint
-	return nil
 }
 
 // ECHCONFIG pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
@@ -476,21 +266,8 @@ type ECHCONFIG struct {
 	ECH []byte // Specifically ECHConfigList including the redundant length prefix
 }
 
-func (s *ECHCONFIG) String() string { return toBase64(s.ECH) }
+func (s *ECHCONFIG) String() string { return base64.StdEncoding.EncodeToString(s.ECH) }
 func (s *ECHCONFIG) Len() int       { return len(s.ECH) }
-
-func (s *ECHCONFIG) pack() ([]byte, error) {
-	return slices.Clone(s.ECH), nil
-}
-
-func (s *ECHCONFIG) parse(b string) error {
-	x, err := fromBase64([]byte(b)) // tODO
-	if err != nil {
-		return errors.New("dns: svcbech: bad base64 ech")
-	}
-	s.ECH = x
-	return nil
-}
 
 // IPV6HINT pair suggests an IPv6 address which may be used to open connections
 // if A and AAAA record responses for SVCB's Target domain haven't been received.
@@ -509,34 +286,6 @@ type IPV6HINT struct {
 
 func (s *IPV6HINT) Len() int { return 16 * len(s.Hint) }
 
-func (s *IPV6HINT) pack() ([]byte, error) {
-	b := make([]byte, 0, 16*len(s.Hint))
-	for _, e := range s.Hint {
-		if len(e) != net.IPv6len || e.To4() != nil {
-			return nil, errors.New("dns: svcbipv6hint: expected ipv6, hint is ipv4")
-		}
-		b = append(b, e...)
-	}
-	return b, nil
-}
-
-func (s *IPV6HINT) unpack(b []byte) error {
-	if len(b) == 0 || len(b)%16 != 0 {
-		return errors.New("dns: svcbipv6hint: ipv6 address byte array length not a multiple of 16")
-	}
-	b = slices.Clone(b)
-	x := make([]net.IP, 0, len(b)/16)
-	for i := 0; i < len(b); i += 16 {
-		ip := net.IP(b[i : i+16])
-		if ip.To4() != nil {
-			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
-		}
-		x = append(x, ip)
-	}
-	s.Hint = x
-	return nil
-}
-
 func (s *IPV6HINT) String() string {
 	str := make([]string, len(s.Hint))
 	for i, e := range s.Hint {
@@ -546,28 +295,6 @@ func (s *IPV6HINT) String() string {
 		str[i] = e.String()
 	}
 	return strings.Join(str, ",")
-}
-
-func (s *IPV6HINT) parse(b string) error {
-	if b == "" {
-		return errors.New("dns: svcbipv6hint: empty hint")
-	}
-
-	hint := make([]net.IP, 0, strings.Count(b, ",")+1)
-	for len(b) > 0 {
-		var e string
-		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e)
-		if ip == nil {
-			return errors.New("dns: svcbipv6hint: bad ip")
-		}
-		if ip.To4() != nil {
-			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4-mapped-ipv6")
-		}
-		hint = append(hint, ip)
-	}
-	s.Hint = hint
-	return nil
 }
 
 // DOHPATH pair is used to indicate the URI template that the
@@ -593,23 +320,8 @@ type DOHPATH struct {
 	Template string
 }
 
-func (s *DOHPATH) String() string        { return svcbParamToStr([]byte(s.Template)) }
-func (s *DOHPATH) Len() int              { return len(s.Template) }
-func (s *DOHPATH) pack() ([]byte, error) { return []byte(s.Template), nil }
-
-func (s *DOHPATH) unpack(b []byte) error {
-	s.Template = string(b)
-	return nil
-}
-
-func (s *DOHPATH) parse(b string) error {
-	template, err := svcbParseParam(b)
-	if err != nil {
-		return fmt.Errorf("dns: svcbdohpath: %w", err)
-	}
-	s.Template = string(template)
-	return nil
-}
+func (s *DOHPATH) String() string { return svcbParamToStr([]byte(s.Template)) }
+func (s *DOHPATH) Len() int       { return len(s.Template) }
 
 // The "ohttp" SvcParamKey is used to indicate that a service described in a SVCB RR
 // can be accessed as a target using an associated gateway.
@@ -629,23 +341,8 @@ func (s *DOHPATH) parse(b string) error {
 //	s.Value = append(s.Value, e, p)
 type OHTTP struct{}
 
-func (*OHTTP) pack() ([]byte, error) { return []byte{}, nil }
-func (*OHTTP) String() string        { return "" }
-func (*OHTTP) Len() int              { return 0 }
-
-func (*OHTTP) unpack(b []byte) error {
-	if len(b) != 0 {
-		return errors.New("dns: svcbotthp: svcbotthp must have no value")
-	}
-	return nil
-}
-
-func (*OHTTP) parse(b string) error {
-	if b != "" {
-		return errors.New("dns: svcbotthp: svcbotthp must have no value")
-	}
-	return nil
-}
+func (*OHTTP) String() string { return "" }
+func (*OHTTP) Len() int       { return 0 }
 
 // LOCAL pair is intended for experimental/private use. The key is recommended
 // to be in the range [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
@@ -663,75 +360,10 @@ type LOCAL struct {
 
 func (s *LOCAL) String() string { return svcbParamToStr(s.Data) }
 
-// func (s *LOCAL) pack() ([]byte, error) { return slices.Clone(s.Data), nil }
 func (s *LOCAL) Len() int { return len(s.Data) }
 
-func (s *LOCAL) unpack(b []byte) error {
-	s.Data = slices.Clone(b)
-	return nil
-}
-
-func (s *LOCAL) parse(b string) error {
-	data, err := svcbParseParam(b)
-	if err != nil {
-		return fmt.Errorf("dns: svcblocal: svcb private/experimental key %w", err)
-	}
-	s.Data = data
-	return nil
-}
-
-// svcbParamStr converts the value of an SVCB parameter into a DNS presentation-format string.
-func svcbParamToStr(s []byte) string {
-	var str strings.Builder
-	str.Grow(4 * len(s))
-	for _, e := range s {
-		if ' ' <= e && e <= '~' {
-			switch e {
-			case '"', ';', ' ', '\\':
-				str.WriteByte('\\')
-				str.WriteByte(e)
-			default:
-				str.WriteByte(e)
-			}
-		} else {
-			str.WriteString(ddd.Escape(e))
-		}
-	}
-	return str.String()
-}
-
-// svcbParseParam parses a DNS presentation-format string into an SVCB parameter value.
-func svcbParseParam(b string) ([]byte, error) {
-	data := make([]byte, 0, len(b))
-	for i := 0; i < len(b); {
-		if b[i] != '\\' {
-			data = append(data, b[i])
-			i++
-			continue
-		}
-		if i+1 == len(b) {
-			return nil, errors.New("escape unterminated")
-		}
-		if ddd.IsDigit(b[i+1]) {
-			if i+3 < len(b) && ddd.IsDigit(b[i+2]) && ddd.IsDigit(b[i+3]) {
-				a, err := strconv.ParseUint(b[i+1:i+4], 10, 8)
-				if err == nil {
-					i += 4
-					data = append(data, byte(a))
-					continue
-				}
-			}
-			return nil, errors.New("bad escaped octet")
-		} else {
-			data = append(data, b[i+1])
-			i += 2
-		}
-	}
-	return data, nil
-}
-
-func reverse(m map[Key]string) map[string]Key {
-	n := make(map[string]Key, len(m))
+func reverse(m map[uint16]string) map[string]uint16 {
+	n := make(map[string]uint16, len(m))
 	for u, s := range m {
 		n[s] = u
 	}

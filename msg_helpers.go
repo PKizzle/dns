@@ -8,8 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"slices"
-	"sort"
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -489,61 +487,6 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 		lastwindow, lastlength = window, length
 	}
 	off += int(lastlength) + 2
-	return off, nil
-}
-
-func unpackSVCB(s *cryptobyte.String) ([]SVCBKeyValue, error) {
-	var kvs []SVCBKeyValue
-	for !s.Empty() {
-		var (
-			code uint16
-			data cryptobyte.String
-		)
-		if !s.ReadUint16(&code) ||
-			!s.ReadUint16LengthPrefixed(&data) {
-			return nil, ErrUnpackOverflow
-		}
-		kv := makeSVCBKeyValue(SVCBKey(code))
-		if kv == nil {
-			return nil, &Error{err: "bad SVCB key"}
-		}
-		if err := kv.unpack(data); err != nil {
-			return nil, err
-		}
-		if len(kvs) > 0 && kv.Key() <= kvs[len(kvs)-1].Key() {
-			return nil, &Error{err: "SVCB keys not in strictly increasing order"}
-		}
-		kvs = append(kvs, kv)
-	}
-	return kvs, nil
-}
-
-func packSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
-	pairs = slices.Clone(pairs)
-	sort.Slice(pairs, func(i, j int) bool {
-		return pairs[i].Key() < pairs[j].Key()
-	})
-	prev := svcb_RESERVED
-	for _, el := range pairs {
-		if el.Key() == prev {
-			return len(msg), &Error{err: "repeated SVCB keys are not allowed"}
-		}
-		prev = el.Key()
-		packed, err := el.pack()
-		if err != nil {
-			return len(msg), err
-		}
-		off, err = packUint16(uint16(el.Key()), msg, off)
-		if err != nil {
-			return len(msg), &Error{err: "overflow packing SVCB"}
-		}
-		off, err = packUint16(uint16(len(packed)), msg, off)
-		if err != nil || off+len(packed) > len(msg) {
-			return len(msg), &Error{err: "overflow packing SVCB"}
-		}
-		copy(msg[off:off+len(packed)], packed)
-		off += len(packed)
-	}
 	return off, nil
 }
 

@@ -74,6 +74,7 @@ wins.
   - msg.Data is re-used between request and reply in Exchange.
   - private RRs are easier.
   - private EDNS0 are almost implementable.
+- SVCB record got its own package dns/svcb where all the key-values (called `svcb.Pair`) now reside.
 
 ### Setting EDNS0
 

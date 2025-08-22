@@ -122,27 +122,6 @@ func isLabelSpecial(b byte) bool {
 	return false
 }
 
-func nextByte(s string, offset int) (byte, int) {
-	if offset >= len(s) {
-		return 0, 0
-	}
-	if s[offset] != '\\' {
-		// not an escape sequence
-		return s[offset], 1
-	}
-	switch len(s) - offset {
-	case 1: // dangling escape
-		return 0, 0
-	case 2, 3: // too short to be \ddd
-	default: // maybe \ddd
-		if ddd.Is(s[offset+1:]) {
-			return ddd.ToByte(s[offset+1:]), 4
-		}
-	}
-	// not \ddd, just an RFC 1035 "quoted" character
-	return s[offset+1], 2
-}
-
 func sprintType(t uint16) string {
 	if t1, ok := TypeToString[uint16(t)]; ok {
 		return t1
