@@ -95,19 +95,3 @@ var CodeToString = map[uint16]string{
 	CodeSUBNET:       "SUBNET",
 	CodeESU:          "ESU",
 }
-
-func (rr *COOKIE) Data() []Field    { return []Field{rr.Cookie} }
-func (rr *DAU) Data() []Field       { return []Field{rr.AlgCode} }
-func (rr *DHU) Data() []Field       { return []Field{rr.AlgCode} }
-func (rr *EDE) Data() []Field       { return []Field{rr.InfoCode, rr.ExtraText} }
-func (rr *ESU) Data() []Field       { return []Field{rr.URI} }
-func (rr *EXPIRE) Data() []Field    { return []Field{rr.Expire} }
-func (rr *LLQ) Data() []Field       { return []Field{rr.Version, rr.Opcode, rr.Error, rr.ID, rr.LeaseLife} }
-func (rr *N3U) Data() []Field       { return []Field{rr.AlgCode} }
-func (rr *NSID) Data() []Field      { return []Field{rr.Nsid} }
-func (rr *PADDING) Data() []Field   { return []Field{rr.Padding} }
-func (rr *REPORTING) Data() []Field { return []Field{rr.AgentDomain} }
-func (rr *SUBNET) Data() []Field {
-	return []Field{rr.Family, rr.SourceNetmask, rr.SourceScope, rr.Address}
-}
-func (rr *TCPKEEPALIVE) Data() []Field { return []Field{rr.Timeout, rr.Length} }

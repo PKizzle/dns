@@ -6,13 +6,11 @@ import "sort"
 // RFC 4034 Section 6. Note the TTL is skipped when comparing.
 // The result will be 0 if a == b, -1 if a < b, and +1 if a > b.
 func Compare(a, b RR) int {
-	// Name
 	x := CompareName(a.Header().Name, b.Header().Name)
 	if x != 0 {
 		return x
 	}
 
-	// Type
 	at := RRToType(a)
 	bt := RRToType(b)
 
@@ -23,7 +21,6 @@ func Compare(a, b RR) int {
 		return +1
 	}
 
-	// Class
 	if a.Header().Class < b.Header().Class {
 		return -1
 	}
@@ -31,9 +28,7 @@ func Compare(a, b RR) int {
 		return 1
 	}
 
-	// use a.Data() and b.Data() to compare the rdata without packing
-	// RDATA chedck todo
-	return 0
+	return compare(a, b)
 }
 
 var _ sort.Interface = RRset{}
@@ -62,7 +57,6 @@ func CompareName(a, b string) int {
 	x := compareLabel(a[l1[j1]:], b[l2[j2]:])
 	if x != 0 {
 		return x
-
 	}
 	for {
 		if i1 < 0 || i2 < 0 {

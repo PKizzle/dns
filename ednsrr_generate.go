@@ -7,7 +7,6 @@ import (
 	"flag"
 	"html/template"
 	"log"
-	"strings"
 
 	"codeberg.org/miekg/dns/internal/generate"
 )
@@ -55,16 +54,6 @@ func (rr *{{.}}) Pseudo() bool { return true }
 
 `))
 
-var funcMap = template.FuncMap{
-	"join": strings.Join,
-}
-
-var fieldFunc = template.Must(template.New("fieldFunc").Funcs(funcMap).Parse(`
-{{range $t, $fs := .}}  func (rr *{{$t}}) Data() []Field { return []Field{ {{join $fs ","}} }}
-{{end}}
-
-`))
-
 const out = "zednsrr.go"
 
 func main() {
@@ -86,14 +75,6 @@ func main() {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
 	if err := CodeToString.Execute(source, types); err != nil {
-		log.Fatalf("Failed to generate %s: %v", out, err)
-	}
-
-	fields, err := generate.Fields("edns_types.go")
-	if err != nil {
-		log.Fatalf("Failed to generate %s: %v", out, err)
-	}
-	if err := fieldFunc.Execute(source, fields); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
 

@@ -15,6 +15,7 @@ import (
 //go:generate go run len_generate.go
 //go:generate go run dsolen_generate.go
 //go:generate go run dnsutil_generate.go
+//go:generate go run compare_generate.go
 
 const (
 	// DefaultMsgSize is the standard default for messages larger than 512 bytes.
@@ -97,7 +98,6 @@ type Header struct {
 }
 
 func (h *Header) Len() int        { return len(h.Name) + 1 + 10 } // +1 because miek.nl. is actually .miek.nl.
-func (h *Header) Data() []Field   { return nil }
 func (h *Header) Header() *Header { return h }
 
 // String returns the string representation of h.
