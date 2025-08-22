@@ -172,13 +172,15 @@ Send pull request if you want to be listed here.
 - UDP/TCP queries, TCP query-pipelining, IPv4 and IPv6.
 - RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE - for _all_ record types) is supported.
 - Fast.
-- Server side programming (mimicking the net/http package).
+- Server side programming (mimicking the net/http package), with `dns.Handle` and `dns.HandleFunc` allowing
+  for middleware servers.
 - Client side programming.
 - DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA and Ed25519.
 - EDNS0, NSID, Cookies, etc.
 - AXFR/IXFR.
 - TSIG, SIG(0).
 - DNS over TLS (DoT): encrypted connection between client and server over TCP.
+- Examples included the cmd/ directory.
 
 Have fun!
 

@@ -87,7 +87,7 @@ bit to a request.
 When sending a message [Msg.Pack] is called, this takes care of allocating an OPT RR and setting the DO bit and the
 UDPSize in there.
 
-Signature generation, signature verification (See [RRSIG] and key generation are all supported.
+Signature generation, signature verification (See [RRSIG]) and key generation are all supported.
 
 # EDNS0
 
@@ -97,7 +97,7 @@ the [OPT] RR, which is then completely abused.
 In this package all EDNS0 options are implemented as RRs, doing basic "EDNS0" things, like
 setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you and these can be set directly on the message as shown above.
 
-The data of an OPT RR sits in the [Msg.Pseudo] section consists out of a slice of EDNS0 (RFC 6891) interfaces.
+The data of an OPT RR sits in the [Msg] Pseudo section consists out of a slice of EDNS0 (RFC 6891) interfaces.
 These are just RRs with an extra Pseudo() method.
 
 Basic use pattern for a server to check if (and which) options are set, which is simular to how to deal with RRs.
@@ -113,6 +113,6 @@ Basic use pattern for a server to check if (and which) options are set, which is
 
 # Further reading
 
-All functionality and types are documented in their respecitive types and function.
+All functionality and types are documented in their respecitive types and functions.
 */
 package dns
