@@ -309,7 +309,6 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		return
 	}
 
-	// Z flag! TODO(miek), also don't echo
 	if r.Response == true {
 		srv.MsgInvalidFunc(r, &Error{err: "r.Response is set"})
 		return

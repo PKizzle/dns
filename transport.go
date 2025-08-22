@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"crypto/tls"
 	"net"
 	"time"
 )
@@ -11,16 +10,8 @@ type Transport struct {
 	// Dialer is used used to set local address and timeouts.
 	Dialer *net.Dialer
 
-	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
-	// be used to dial.
-	TLSConfig *tls.Config
-
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
-
-	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
-	TSIGSigner
-	TSIGVerifier
 }
 
 // DefaultTransport is the default transport in client, when none is set.
