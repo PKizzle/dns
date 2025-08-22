@@ -97,8 +97,8 @@ type RRset []RR
 // Header is the header in a DNS resource record. It implements the RR interface, as a header is the RR
 // without any data.
 type Header struct {
-	Name  string `dns:"cdomain-name"`
-	Class uint16 // Class is the class of the RR, this is almost always [ClassINET], if left zero, ClassINET is assumed when sending a message.
+	Name  string `dns:"cdomain-name"` // Name is the owner name of the RR.
+	Class uint16 // Class is the class of the RR, this is almost always [ClassINET].
 	TTL   uint32 // TTL is the time-to-live of the RR.
 
 	t uint16 // type is inferred from the Go type, and not exported, it is mostly used in RFC3597, as the type does not carry its actual type
