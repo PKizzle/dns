@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -22,20 +21,22 @@ func Pack(p Pair, msg []byte, off int) (int, error) {
 		return x.pack(msg, off)
 	case *ALPN:
 		return x.pack(msg, off)
-	case *NODEFAULTALPN:
-		return x.pack(msg, off)
-	case *PORT:
-		return x.pack(msg, off)
-	case *IPV4HINT:
-		return x.pack(msg, off)
-	case *ECHCONFIG:
-		return x.pack(msg, off)
-	case *IPV6HINT:
-		return x.pack(msg, off)
-	case *DOHPATH:
-		return x.pack(msg, off)
-	case *OHTTP:
-		return x.pack(msg, off)
+		/*
+			case *NODEFAULTALPN:
+				return x.pack(msg, off)
+			case *PORT:
+				return x.pack(msg, off)
+			case *IPV4HINT:
+				return x.pack(msg, off)
+			case *ECHCONFIG:
+				return x.pack(msg, off)
+			case *IPV6HINT:
+				return x.pack(msg, off)
+			case *DOHPATH:
+				return x.pack(msg, off)
+			case *OHTTP:
+				return x.pack(msg, off)
+		*/
 	}
 	return 0, fmt.Errorf("dns: no pair pack defined")
 }
@@ -48,29 +49,28 @@ func Unpack(p Pair, data []byte) error {
 		return x.unpack(data)
 	case *NODEFAULTALPN:
 		return x.unpack(data)
-	case *PORT:
-		return x.unpack(data)
-	case *IPV4HINT:
-		return x.unpack(data)
-	case *ECHCONFIG:
-		return x.unpack(data)
-	case *IPV6HINT:
-		return x.unpack(data)
-	case *DOHPATH:
-		return x.unpack(data)
-	case *OHTTP:
+		/*
+			case *PORT:
+				return x.unpack(data)
+			case *IPV4HINT:
+				return x.unpack(data)
+			case *ECHCONFIG:
+				return x.unpack(data)
+			case *IPV6HINT:
+				return x.unpack(data)
+			case *DOHPATH:
+				return x.unpack(data)
+			case *OHTTP:
+		*/
 	}
 	return fmt.Errorf("dns: no pair unpack defined")
 }
 
-func (s *MANDATORY) pack() ([]byte, error) {
-	keys := slices.Clone(s.Key)
-	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-	b := make([]byte, s.Len())
-	for i, e := range keys {
-		binary.BigEndian.PutUint16(b[2*i:], e)
+func (s *MANDATORY) pack(msg []byte, off int) (off1 int, err error) {
+	for _, k := range s.Key {
+		off, err = packUint16(k, msg, off)
 	}
-	return b, nil
+	return off, nil
 }
 
 func (s *MANDATORY) unpack(b []byte) error {
