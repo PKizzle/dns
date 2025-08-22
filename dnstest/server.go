@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 // Server returns a pointer to a new dns.Server.
@@ -19,7 +20,9 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
 	srv.NotifyStartedFunc = waitLock.Unlock
-	srv.MsgInvalidFunc = func(m *dns.Msg, err error) { fmt.Printf("invalid message: %s - %T\n", err, err) }
+	srv.MsgInvalidFunc = func(m *dns.Msg, err error) {
+		fmt.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
+	}
 
 	for _, opt := range opts {
 		opt(srv)
@@ -58,15 +61,6 @@ func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, ch
 	return Server(pc, nil, opts...)
 }
 
-/*
-func PacketConnServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	return UDPServer(laddr, append(opts, func(srv *dns.Server) {
-		// Make srv.PacketConn opaque to trigger the generic code paths.
-		srv.PacketConn = struct{ net.PacketConn }{srv.PacketConn}
-	})...)
-}
-*/
-
 func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
 	l, err := net.Listen("tcp", laddr)
 	if err != nil {
@@ -88,33 +82,6 @@ func TLSConfig() *tls.Config {
 	cert, _ := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 }
-
-/*
-
-func RunLocalUnixGramServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	pc, err := net.ListenPacket("unixgram", laddr)
-	if err != nil {
-		return nil, "", nil, err
-	}
-
-	return RunLocalServer(pc, nil, opts...)
-}
-
-func RunLocalUnixSeqPacketServer(laddr string) (chan interface{}, string, error) {
-	pc, err := net.Listen("unixpacket", laddr)
-	if err != nil {
-		return nil, "", err
-	}
-
-	shutdownChan := make(chan interface{})
-	go func() {
-		pc.Accept()
-		<-shutdownChan
-	}()
-
-	return shutdownChan, pc.Addr().String(), nil
-}
-*/
 
 var (
 	// certPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)

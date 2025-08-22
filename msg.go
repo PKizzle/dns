@@ -976,7 +976,6 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		n, err := r.Conn().Write(m.Data)
 		return int64(n), err
 	}
-	// TODO(miek): isPacketConn back?
 
 	l := make([]byte, 2, 2)
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))

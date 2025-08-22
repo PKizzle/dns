@@ -209,9 +209,9 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 	}
 
 	var wg sync.WaitGroup
-	// suspect this somehow works on Linux, but not other OSes.
-	xpc := ipv4.NewPacketConn(pc)
+	xpc := ipv4.NewPacketConn(pc) // suspect this somehow works on Linux, but not other OSes.
 
+Read:
 	for {
 		select {
 		case <-srv.shutdown:
@@ -228,10 +228,12 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 				msgs[i].OOB = make([]byte, oobSize)
 			}
 
-			xpc.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
+			// if we set the read deadline is will timeout every ReadTimeout and reallocate the msgs, we are
+			// also a server, so just wait for incoming messages.
+
 			n, err := xpc.ReadBatch(msgs, 0)
 			if err != nil {
-				continue
+				continue Read
 			}
 			for i := range n {
 				msg := msgs[i]
