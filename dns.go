@@ -81,6 +81,11 @@ type Copier interface {
 	Copy() RR
 }
 
+// Comparer interface defines a compare function that returns -1, 0, or +1.
+type Comparer interface {
+	Compare(b RR) int
+}
+
 // RRset is a just list of RRs. There is no guarantee that this is an official RRset as defined in
 // RFC 7719, Section 4 "RRset", use [dnsutil.IsRRset] to make that determination.
 // The type is defined here to implement the [sort.Interface].
