@@ -98,7 +98,6 @@ func TestServer(t *testing.T) {
 func TestServerZFlag(t *testing.T) {
 	dns.HandleFunc("example.com.", HelloHandler)
 	s, addrstr, _, _ := dnstest.UDPServer(":0")
-	println(addrstr)
 	defer s.Shutdown(context.TODO())
 
 	m := new(dns.Msg)
