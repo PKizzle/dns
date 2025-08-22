@@ -239,8 +239,8 @@ func pairToString(s []byte) string {
 	return str.String()
 }
 
-// svcbParseParam parses a DNS presentation-format string into an SVCB parameter value.
-func svcbParseParam(b string) ([]byte, error) {
+// stringToPair parses a DNS presentation-format string into an SVCB parameter value.
+func stringToPair(b string) ([]byte, error) {
 	data := make([]byte, 0, len(b))
 	for i := 0; i < len(b); {
 		if b[i] != '\\' {

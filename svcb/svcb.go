@@ -86,7 +86,7 @@ func PairToKey(p Pair) uint16 {
 }
 
 // Pair defines a key=value pair for the SVCB RR type.
-// An SVCB RR can have multiple Pairs appended to it.
+// An SVCB RR can have multiple pairs appended to it.
 // The numerical key code is derived from the type, see [PairToKey].
 type Pair interface {
 	String() string // String returns the string representation of the value.
@@ -196,7 +196,7 @@ func (s *ALPN) Len() int {
 // Should be used in conjunction with alpn.
 // Basic use pattern for creating a no-default-alpn option:
 //
-//	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
+//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	t := new(dns.ALPN)
 //	t.Alpn = []string{"xmpp-client"}
 //	s.Value = append(s.Value, t)
@@ -210,7 +210,7 @@ func (*NODEFAULTALPN) Len() int       { return 0 }
 // PORT pair defines the port for connection.
 // Basic use pattern for creating a port option:
 //
-//	s := &dns.SVCB{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}}
+//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := new(dns.PORT)
 //	e.Port = 80
 //	s.Value = append(s.Value, e)
@@ -228,7 +228,7 @@ func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 // Basic use pattern for creating an ipv4hint option:
 //
 //		h := new(dns.HTTPS)
-//		h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
+//		h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
 //		e := new(dns.IPV4HINT)
 //		e.Hint = []net.IP{net.IPv4(1,1,1,1).To4()}
 //
@@ -258,7 +258,7 @@ func (s *IPV4HINT) String() string {
 // Basic use pattern for creating an ech option:
 //
 //	h := new(dns.HTTPS)
-//	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
+//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
 //	e := new(dns.ECHCONFIG)
 //	e.ECH = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
@@ -275,8 +275,7 @@ func (s *ECHCONFIG) Len() int       { return len(s.ECH) }
 // connection to the hinted IP address may be terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv6hint option:
 //
-//	h := new(dns.HTTPS)
-//	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := new(dns.IPV6HINT)
 //	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
 //	h.Value = append(h.Value, e)
@@ -307,20 +306,17 @@ func (s *IPV6HINT) String() string {
 // option to indicate support for DNS over HTTPS on a certain path:
 //
 //	s := new(dns.SVCB)
-//	s.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}
-//	e := new(dns.ALPN)
-//	e.Alpn = []string{"h2", "h3"}
-//	p := new(dns.DOHPATH)
-//	p.Template = "/dns-query{?dns}"
+//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
+//	p := &dns.DOHPATH{Template: "/dns-query{?dns}"}
 //	s.Value = append(s.Value, e, p)
 //
-// The parsing currently doesn't validate that Template is a valid
-// RFC 6570 URI template.
+// The parsing currently doesn't validate that Template is a valid RFC 6570 URI template.
 type DOHPATH struct {
 	Template string
 }
 
-func (s *DOHPATH) String() string { return svcbParamToStr([]byte(s.Template)) }
+func (s *DOHPATH) String() string { return pairToString([]byte(s.Template)) }
 func (s *DOHPATH) Len() int       { return len(s.Template) }
 
 // The "ohttp" SvcParamKey is used to indicate that a service described in a SVCB RR
@@ -334,10 +330,9 @@ func (s *DOHPATH) Len() int       { return len(s.Template) }
 // option to indicate support for DNS over HTTPS on a certain path:
 //
 //	s := new(dns.SVCB)
-//	s.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeSVCB, Class: dns.ClassINET}
-//	e := new(dns.ALPN)
-//	e.Alpn = []string{"h2", "h3"}
-//	p := new(dns.OHTTP)
+//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
+//	p := &dns.OHTTP{}
 //	s.Value = append(s.Value, e, p)
 type OHTTP struct{}
 
@@ -349,16 +344,17 @@ func (*OHTTP) Len() int       { return 0 }
 // Basic use pattern for creating a keyNNNNN option:
 //
 //	h := new(dns.HTTPS)
-//	h.Hdr = dns.RR_Header{Name: ".", Rrtype: dns.TypeHTTPS, Class: dns.ClassINET}
-//	e := new(dns.LOCAL)
+//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := new(svcb.LOCAL)
 //	e.KeyCode = 65400
 //	e.Data = []byte("abc")
 //	h.Value = append(h.Value, e)
 type LOCAL struct {
-	Data []byte // All byte sequences are allowed.
+	KeyCode uint16 // just like RFC5559
+	Data    []byte // All byte sequences are allowed.
 }
 
-func (s *LOCAL) String() string { return svcbParamToStr(s.Data) }
+func (s *LOCAL) String() string { return pairToString(s.Data) }
 
 func (s *LOCAL) Len() int { return len(s.Data) }
 
