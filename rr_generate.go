@@ -9,7 +9,6 @@ import (
 	"flag"
 	"html/template"
 	"log"
-	"strings"
 
 	"codeberg.org/miekg/dns/internal/generate"
 )
@@ -60,16 +59,6 @@ var headerFunc = template.Must(template.New("headerFunc").Parse(`
 
 `))
 
-var funcMap = template.FuncMap{
-	"join": strings.Join,
-}
-
-var fieldFunc = template.Must(template.New("fieldFunc").Funcs(funcMap).Parse(`
-{{range $t, $fs := .}}  func (rr *{{$t}}) Data() []Field { return []Field{ {{join $fs ","}} }}
-{{end}}
-
-`))
-
 const out = "zrr.go"
 
 func main() {
@@ -91,14 +80,6 @@ func main() {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
 	if err := TypeToString.Execute(source, types); err != nil {
-		log.Fatalf("Failed to generate %s: %v", out, err)
-	}
-
-	fields, err := generate.Fields("types.go")
-	if err != nil {
-		log.Fatalf("Failed to generate %s: %v", out, err)
-	}
-	if err := fieldFunc.Execute(source, fields); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
 
