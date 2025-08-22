@@ -13,6 +13,10 @@ import (
 // A Client is a DNS client. It is safe to use a client from multiple goroutines.
 type Client struct {
 	*Transport
+
+	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
+	// be used to dial.
+	TLSConfig *tls.Config
 }
 
 // Exchange performs a synchronous query over "network". It sends the message m to the address
@@ -21,7 +25,7 @@ type Client struct {
 //
 // See [client.Exchange] for more information on setting larger buffer sizes.
 func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err error) {
-	client := Client{Transport: DefaultTransport}
+	client := &Client{}
 	r, _, err = client.Exchange(ctx, m, network, address)
 	return r, err
 }

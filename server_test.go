@@ -32,7 +32,7 @@ func TestServer(t *testing.T) {
 	}{
 		{"udp", "udp", dnstest.UDPServer},
 		{"tcp", "tcp", dnstest.TCPServer},
-		{"tcp-tls", "tcp", dnstest.TLSServer}, // only here is tcp-tls relavent.
+		{"tcp-tls", "tcp", dnstest.TLSServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dns.HandleFunc("miek.nl.", HelloHandler)
@@ -43,14 +43,11 @@ func TestServer(t *testing.T) {
 
 			c := &dns.Client{}
 			if tc.name == "tcp-tls" {
-				c.Transport = dns.DefaultTransport
 				c.TLSConfig = dnstest.TLSConfig()
 			}
 
-			txt := &dns.TXT{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
 			m := new(dns.Msg)
-			m.Question = []dns.RR{txt}
-
+			dnsutil.SetQuestion(m, "miek.nl.", dns.TypeTXT)
 			m.Pack()
 
 			r, _, err := c.Exchange(context.TODO(), m, tc.network, addrstr)
@@ -62,9 +59,7 @@ func TestServer(t *testing.T) {
 				t.Error("unexpected result for miek.nl.", str, "!= Hello world")
 			}
 
-			txt = &dns.TXT{Hdr: dns.Header{Name: "example.com.", Class: dns.ClassINET}}
-			m.Question = []dns.RR{txt}
-
+			dnsutil.SetQuestion(m, "example.com.", dns.TypeTXT)
 			m.Pack()
 
 			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
@@ -77,9 +72,7 @@ func TestServer(t *testing.T) {
 			}
 
 			// Test Mixes cased as noticed by Ask.
-			txt = &dns.TXT{Hdr: dns.Header{Name: "eXaMPlE.cOm.", Class: dns.ClassINET}}
-			m.Question = []dns.RR{txt}
-
+			dnsutil.SetQuestion(m, "eXaMPlE.cOm.", dns.TypeTXT)
 			m.Pack()
 
 			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
@@ -105,7 +98,7 @@ func TestServerZFlag(t *testing.T) {
 	m.Zero = true
 	m.Pack()
 
-	r, err := dns.Exchange(context.TODO(), m, "udp4", addrstr)
+	r, err := dns.Exchange(context.TODO(), m, "udp", addrstr)
 	if err != nil {
 		t.Fatal("failed to exchange example.com. with +zflag", err)
 	}
@@ -116,30 +109,3 @@ func TestServerZFlag(t *testing.T) {
 		t.Errorf("expected rcode %v, got %v", dns.RcodeSuccess, r.Rcode)
 	}
 }
-
-/*
-// Verify that the server responds to a query with unsupported Opcode with a NotImplemented error and that Opcode is unchanged.
-func TestServeNotImplemented(t *testing.T) {
-	dns.HandleFunc("example.com.", AnotherHelloHandler)
-	opcode := uint8(77)
-
-	s, addrstr, _, _ := dnstest.UDPServer(":0")
-	defer s.Shutdown(context.TODO())
-
-	m := new(dns.Msg)
-	dnsutil.SetQuestion(m, "example.com.", dns.TypeTXT)
-	// Test that Opcode is like the unchanged from request Opcode and that Rcode is set to NotImplemented
-	m.Opcode = opcode
-
-	r, err := dns.Exchange(context.TODO(), m, "udp", addrstr)
-	if err != nil {
-		t.Fatal("failed to exchange example.com with unknown opcode", err)
-	}
-	if r.Opcode != opcode {
-		t.Errorf("expected opcode %v, got %v", opcode, r.Opcode)
-	}
-	if r.Rcode != dns.RcodeNotImplemented {
-		t.Errorf("expected rcode %v, got %v", dns.RcodeNotImplemented, r.Rcode)
-	}
-}
-*/
