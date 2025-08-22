@@ -1446,7 +1446,7 @@ func (rr *CSYNC) Len() int {
 	return l
 }
 
-// ZONEMD RR, from draft-ietf-dnsop-dns-zone-digest
+// ZONEMD RR, RFC 8976.
 type ZONEMD struct {
 	Hdr    Header
 	Serial uint32

@@ -20,7 +20,7 @@ func TestTrim(t *testing.T) {
 	for i, tc := range tests {
 		got := Trim(Fqdn(tc.qname), Fqdn(tc.zone))
 		if got != tc.expected {
-			t.Errorf("Test %d, expected %s, got %s", i, tc.expected, got)
+			t.Errorf("test %d, expected %s, got %s", i, tc.expected, got)
 		}
 	}
 }
@@ -39,7 +39,7 @@ func TestIsFqdn(t *testing.T) {
 	for i, tc := range tests {
 		got := IsFqdn(tc.in)
 		if got != tc.expected {
-			t.Errorf("Test %d, %s, expected %t, got %t", i, tc.in, tc.expected, got)
+			t.Errorf("test %d, %s, expected %t, got %t", i, tc.in, tc.expected, got)
 		}
 	}
 }

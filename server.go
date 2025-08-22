@@ -42,7 +42,7 @@ func DefaultMsgInvalidFunc(m *Msg, err error) {}
 type Server struct {
 	// Address to listen on, ":domain" if empty.
 	Addr string
-	// If "tcp" it will invoke a TCP listener, otherwise an UDP one. If TLSConfig is not nil to TLS server is
+	// If "tcp" it will invoke a TCP listener, otherwise an UDP one. If TLSConfig is not nil and Net is "tcp" a TLS server is
 	// started.
 	Net string
 	// TCP Listener to use, this is to aid in systemd's socket activation.

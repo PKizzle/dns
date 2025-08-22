@@ -7,7 +7,7 @@ import (
 )
 
 // Handler is implemented by any value that implements ServeDNS. The message r is minimally decoded, only up
-// to the question section (mostly first 20-ish bytes) are decoded, see [Msg.Options]. The rest of the message is available in
+// to the question section (mostly first 20-ish bytes) are decoded, see [Option]. The rest of the message is available in
 // r.Data, so if a message is deemed worthwhile a:
 //
 //	r.Unpack()

@@ -20,7 +20,7 @@ func TestJoin(t *testing.T) {
 
 	for i, tc := range tests {
 		if x := Join(tc.in...); x != tc.out {
-			t.Errorf("Test %d, expected %s, got %s", i, tc.out, x)
+			t.Errorf("test %d, expected %s, got %s", i, tc.out, x)
 		}
 	}
 }
@@ -104,7 +104,7 @@ func TestCount(t *testing.T) {
 	for s, i := range splitter {
 		x := Count(s)
 		if x != i {
-			t.Errorf("Count should have %d, got %d", i, x)
+			t.Errorf("count should have %d, got %d", i, x)
 		}
 	}
 }

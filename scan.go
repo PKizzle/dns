@@ -25,7 +25,7 @@ const maxIncludeDepth = 7
 // * Handle comments: ;
 // * Handle braces - anywhere.
 const (
-	// Zonefile
+	// Zone file
 	zEOF = iota
 	zString
 	zBlank
@@ -130,7 +130,7 @@ func readRR(r io.Reader, file string) (RR, error) {
 	return rr, zp.Err()
 }
 
-// ZoneParser is a parser for an RFC 1035 style zonefile.
+// ZoneParser is a parser for an RFC 1035 style zone file.
 //
 // Each parsed RR in the zone is returned sequentially from Next. An
 // optional comment can be retrieved with Comment.
@@ -188,7 +188,7 @@ type ZoneParser struct {
 	generateDisallowed bool
 }
 
-// NewZoneParser returns an RFC 1035 style zonefile parser that reads
+// NewZoneParser returns an RFC 1035 style zone file parser that reads
 // from r.
 //
 // The string file is used in error reporting and to resolve relative
@@ -222,7 +222,7 @@ func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
 // allowed. $INCLUDE directives are not supported by default.
 //
 // The $INCLUDE directive will open and read from a user controlled
-// file on the system. Even if the file is not a valid zonefile, the
+// file on the system. Even if the file is not a valid zone file, the
 // contents of the file may be revealed in error messages, such as:
 //
 //	/etc/passwd: dns: not a TTL: "root:x:0:0:root:/root:/bin/bash" at line: 1:31
@@ -305,7 +305,7 @@ func (zp *ZoneParser) subNext() (RR, bool) {
 	return zp.Next()
 }
 
-// Next advances the parser to the next RR in the zonefile and
+// Next advances the parser to the next RR in the zone file and
 // returns the (RR, true). It will return (nil, false) when the
 // parsing stops, either by reaching the end of the input or an
 // error. After Next returns (nil, false), the Err method will return
