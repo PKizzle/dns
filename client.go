@@ -80,6 +80,10 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		return nil, time.Since(t), err
 	}
 
+	if err := ctx.Err(); err != nil {
+		return nil, time.Since(t), err
+	}
+
 	r = new(Msg)
 	r.Data = m.Data
 	if len(r.Data) < int(m.UDPSize) {
@@ -91,6 +95,10 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 
 	conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 	if _, err := io.Copy(r, conn); err != nil {
+		return nil, time.Since(t), err
+	}
+
+	if err := ctx.Err(); err != nil {
 		return nil, time.Since(t), err
 	}
 
