@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/internal/pack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -41,74 +42,76 @@ func Pack(p Pair, msg []byte, off int) (int, error) {
 	return 0, fmt.Errorf("dns: no pair pack defined")
 }
 
-func Unpack(p Pair, data []byte) error {
+func Unpack(p Pair, data *cryptobyte.String) error {
 	switch x := p.(type) {
 	case *MANDATORY:
 		return x.unpack(data)
 	case *ALPN:
 		return x.unpack(data)
-	case *NODEFAULTALPN:
-		return x.unpack(data)
 		/*
-			case *PORT:
+			case *NODEFAULTALPN:
 				return x.unpack(data)
-			case *IPV4HINT:
-				return x.unpack(data)
-			case *ECHCONFIG:
-				return x.unpack(data)
-			case *IPV6HINT:
-				return x.unpack(data)
-			case *DOHPATH:
-				return x.unpack(data)
-			case *OHTTP:
+					case *PORT:
+						return x.unpack(data)
+					case *IPV4HINT:
+						return x.unpack(data)
+					case *ECHCONFIG:
+						return x.unpack(data)
+					case *IPV6HINT:
+						return x.unpack(data)
+					case *DOHPATH:
+						return x.unpack(data)
+					case *OHTTP:
 		*/
 	}
 	return fmt.Errorf("dns: no pair unpack defined")
 }
 
 func (s *MANDATORY) pack(msg []byte, off int) (off1 int, err error) {
+	// type, length needs to be pack here as well, and Len should reflect that.
 	for _, k := range s.Key {
-		off, err = packUint16(k, msg, off)
+		off, err = pack.Uint16(k, msg, off)
 	}
 	return off, nil
 }
 
-func (s *MANDATORY) unpack(b []byte) error {
-	if len(b)%2 != 0 {
-		return errors.New("dns: svcbmandatory: value length is not a multiple of 2")
+func (s *MANDATORY) unpack(sc *cryptobyte.String) error {
+	s.Key = []uint16{}
+	for !sc.Empty() {
+		var key uint16
+		if !sc.ReadUint16(&key) {
+			return errors.New("dns: svcbmandatory: value length is not a multiple of 2")
+		}
+		s.Key = append(s.Key, key)
 	}
-	keys := make([]uint16, 0, len(b)/2)
-	for i := 0; i < len(b); i += 2 {
-		// We assume strictly increasing order.
-		keys = append(keys, binary.BigEndian.Uint16(b[i:]))
-	}
-	s.Key = keys
 	return nil
 }
 
-func (s *ALPN) pack() ([]byte, error) {
-	// Liberally estimate the size of an alpn as 10 octets
-	b := make([]byte, 0, 10*len(s.Alpn))
+func (s *ALPN) pack(msg []byte, off int) (off1 int, err error) {
 	for _, e := range s.Alpn {
 		if e == "" {
-			return nil, errors.New("dns: svcbalpn: empty alpn-id")
+			return len(msg), errors.New("dns: svcbalpn: empty alpn-id")
 		}
 		if len(e) > 255 {
-			return nil, errors.New("dns: svcbalpn: alpn-id too long")
+			return len(msg), errors.New("dns: svcbalpn: alpn-id too long")
 		}
-		b = append(b, byte(len(e)))
-		b = append(b, e...)
+
+		if off, err = pack.Uint8(byte(len(e)), msg, off); err != nil {
+			return len(msg), err
+		}
+		if off, err = pack.StringAny(e, msg, off); err != nil {
+			return len(msg), err
+		}
 	}
-	return b, nil
+	return off, nil
 }
 
-func (s *ALPN) unpack(b []byte) error {
-	sc := cryptobyte.String(b)
+func (s *ALPN) unpack(sc *cryptobyte.String) error {
 	var alpn []string
 	for !sc.Empty() {
 		var data cryptobyte.String
 		if !sc.ReadUint8LengthPrefixed(&data) {
-			return ErrUnpackOverflow
+			return fmt.Errorf("dns: overflow unpacking data")
 		}
 		alpn = append(alpn, string(data))
 	}

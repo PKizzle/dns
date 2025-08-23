@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
+func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
 	switch x := rr.(type) {
 	case *NULL:
 		return x.pack(msg, off, compression)
@@ -180,7 +180,7 @@ func pack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error
 	return 0, fmt.Errorf("dns: no pack defined")
 }
 
-func unpack(rr RR, data, msgBuf []byte) error {
+func zunpack(rr RR, data, msgBuf []byte) error {
 	switch x := rr.(type) {
 	case *NULL:
 		return x.unpack(data, msgBuf)

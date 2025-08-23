@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/internal/pack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -342,12 +343,12 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 		return len(msg), err
 	}
 	rrtype := RRToType(rr)
-	off, err = packUint16(rrtype, msg, off)
+	off, err = pack.Uint16(rrtype, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
 
-	off, err = packUint16(rr.Header().Class, msg, off)
+	off, err = pack.Uint16(rr.Header().Class, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
@@ -371,7 +372,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
-	off1, err = pack(rr, msg, headerEnd, compression)
+	off1, err = zpack(rr, msg, headerEnd, compression)
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
@@ -428,7 +429,7 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 		return rr, nil
 	}
 
-	if err := unpack(rr, data, msgBuf); err != nil {
+	if err := zunpack(rr, data, msgBuf); err != nil {
 		return rr, err
 	}
 
@@ -869,27 +870,27 @@ func (m *Msg) Len() int {
 }
 
 func (dh *header) pack(msg []byte, off int) (int, error) {
-	off, err := packUint16(dh.ID, msg, off)
+	off, err := pack.Uint16(dh.ID, msg, off)
 	if err != nil {
 		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.ID")
 	}
-	off, err = packUint16(dh.Bits, msg, off)
+	off, err = pack.Uint16(dh.Bits, msg, off)
 	if err != nil {
 		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Bits")
 	}
-	off, err = packUint16(dh.Qdcount, msg, off)
+	off, err = pack.Uint16(dh.Qdcount, msg, off)
 	if err != nil {
 		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Qdcount")
 	}
-	off, err = packUint16(dh.Ancount, msg, off)
+	off, err = pack.Uint16(dh.Ancount, msg, off)
 	if err != nil {
 		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Ancount")
 	}
-	off, err = packUint16(dh.Nscount, msg, off)
+	off, err = pack.Uint16(dh.Nscount, msg, off)
 	if err != nil {
 		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Nscount")
 	}
-	off, err = packUint16(dh.Arcount, msg, off)
+	off, err = pack.Uint16(dh.Arcount, msg, off)
 	if err != nil {
 		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Arcount")
 	}

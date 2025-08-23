@@ -1585,13 +1585,18 @@ type SVCB struct {
 }
 
 func (rr *SVCB) String() string {
-	s := rr.Hdr.String() +
-		strconv.Itoa(int(rr.Priority)) + " " +
-		sprintName(rr.Target)
-	for _, e := range rr.Value {
-		s += " " + e.Key().String() + "=\"" + e.String() + "\""
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.Priority)), sprintName(rr.Target))
+	for _, p := range rr.Value {
+		sb.WriteByte(' ')
+		k := svcb.PairToKey(p)
+		sb.WriteString(svcb.KeyToString[k]) // better for unknown see dnsutils
+		sb.WriteByte('=')
+		sb.WriteByte('"')
+		sb.WriteString(p.String())
+		sb.WriteByte('"')
 	}
-	return s
+	return sb.String()
 }
 
 // HTTPS RR. See RFC 9460. Everything valid for SVCB applies to HTTPS as well.

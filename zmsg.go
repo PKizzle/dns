@@ -2,10 +2,13 @@
 
 package dns
 
-import "golang.org/x/crypto/cryptobyte"
+import (
+	"codeberg.org/miekg/dns/internal/pack"
+	"golang.org/x/crypto/cryptobyte"
+)
 
 func (rr *NULL) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringAny(rr.Null, msg, off)
+	off, err = pack.StringAny(rr.Null, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -213,7 +216,7 @@ func (rr *MD) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *MX) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -240,7 +243,7 @@ func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *AFSDB) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Subtype, msg, off)
+	off, err = pack.Uint16(rr.Subtype, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -315,7 +318,7 @@ func (rr *ISDN) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *RT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -418,23 +421,23 @@ func (rr *SOA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Serial, msg, off)
+	off, err = pack.Uint32(rr.Serial, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Refresh, msg, off)
+	off, err = pack.Uint32(rr.Refresh, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Retry, msg, off)
+	off, err = pack.Uint32(rr.Retry, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Expire, msg, off)
+	off, err = pack.Uint32(rr.Expire, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Minttl, msg, off)
+	off, err = pack.Uint32(rr.Minttl, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -533,15 +536,15 @@ func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SRV) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Priority, msg, off)
+	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Weight, msg, off)
+	off, err = pack.Uint16(rr.Weight, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Port, msg, off)
+	off, err = pack.Uint16(rr.Port, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -574,11 +577,11 @@ func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NAPTR) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Order, msg, off)
+	off, err = pack.Uint16(rr.Order, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -632,15 +635,15 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *CERT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Type, msg, off)
+	off, err = pack.Uint16(rr.Type, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.KeyTag, msg, off)
+	off, err = pack.Uint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -733,7 +736,7 @@ func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *PX) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -804,31 +807,31 @@ func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *LOC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Version, msg, off)
+	off, err = pack.Uint8(rr.Version, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Size, msg, off)
+	off, err = pack.Uint8(rr.Size, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.HorizPre, msg, off)
+	off, err = pack.Uint8(rr.HorizPre, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.VertPre, msg, off)
+	off, err = pack.Uint8(rr.VertPre, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Latitude, msg, off)
+	off, err = pack.Uint32(rr.Latitude, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Longitude, msg, off)
+	off, err = pack.Uint32(rr.Longitude, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Altitude, msg, off)
+	off, err = pack.Uint32(rr.Altitude, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -877,31 +880,31 @@ func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *RRSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.TypeCovered, msg, off)
+	off, err = pack.Uint16(rr.TypeCovered, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Labels, msg, off)
+	off, err = pack.Uint8(rr.Labels, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.OrigTTL, msg, off)
+	off, err = pack.Uint32(rr.OrigTTL, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Expiration, msg, off)
+	off, err = pack.Uint32(rr.Expiration, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Inception, msg, off)
+	off, err = pack.Uint32(rr.Inception, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.KeyTag, msg, off)
+	off, err = pack.Uint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1018,15 +1021,15 @@ func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.KeyTag, msg, off)
+	off, err = pack.Uint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.DigestType, msg, off)
+	off, err = pack.Uint8(rr.DigestType, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1059,7 +1062,7 @@ func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *KX) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1086,15 +1089,15 @@ func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *TA) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.KeyTag, msg, off)
+	off, err = pack.Uint16(rr.KeyTag, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.DigestType, msg, off)
+	off, err = pack.Uint8(rr.DigestType, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1155,11 +1158,11 @@ func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SSHFP) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Type, msg, off)
+	off, err = pack.Uint8(rr.Type, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1213,15 +1216,15 @@ func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Flags, msg, off)
+	off, err = pack.Uint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Protocol, msg, off)
+	off, err = pack.Uint8(rr.Protocol, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1254,15 +1257,15 @@ func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *IPSECKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Precedence, msg, off)
+	off, err = pack.Uint8(rr.Precedence, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.GatewayType, msg, off)
+	off, err = pack.Uint8(rr.GatewayType, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1303,11 +1306,11 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *AMTRELAY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Precedence, msg, off)
+	off, err = pack.Uint8(rr.Precedence, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.GatewayType, msg, off)
+	off, err = pack.Uint8(rr.GatewayType, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1337,15 +1340,15 @@ func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *RKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Flags, msg, off)
+	off, err = pack.Uint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Protocol, msg, off)
+	off, err = pack.Uint8(rr.Protocol, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Algorithm, msg, off)
+	off, err = pack.Uint8(rr.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1398,19 +1401,19 @@ func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Hash, msg, off)
+	off, err = pack.Uint8(rr.Hash, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Flags, msg, off)
+	off, err = pack.Uint8(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Iterations, msg, off)
+	off, err = pack.Uint16(rr.Iterations, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.SaltLength, msg, off)
+	off, err = pack.Uint8(rr.SaltLength, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1421,7 +1424,7 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 
 			return off, err
 		}
 	}
-	off, err = packUint8(rr.HashLength, msg, off)
+	off, err = pack.Uint8(rr.HashLength, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1472,19 +1475,19 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NSEC3PARAM) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Hash, msg, off)
+	off, err = pack.Uint8(rr.Hash, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Flags, msg, off)
+	off, err = pack.Uint8(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Iterations, msg, off)
+	off, err = pack.Uint16(rr.Iterations, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.SaltLength, msg, off)
+	off, err = pack.Uint8(rr.SaltLength, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1527,23 +1530,23 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Inception, msg, off)
+	off, err = pack.Uint32(rr.Inception, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(rr.Expiration, msg, off)
+	off, err = pack.Uint32(rr.Expiration, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Mode, msg, off)
+	off, err = pack.Uint16(rr.Mode, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Error, msg, off)
+	off, err = pack.Uint16(rr.Error, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.KeySize, msg, off)
+	off, err = pack.Uint16(rr.KeySize, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1551,7 +1554,7 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.OtherLen, msg, off)
+	off, err = pack.Uint16(rr.OtherLen, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1621,11 +1624,11 @@ func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *URI) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Priority, msg, off)
+	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Weight, msg, off)
+	off, err = pack.Uint16(rr.Weight, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1675,15 +1678,15 @@ func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *TLSA) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Usage, msg, off)
+	off, err = pack.Uint8(rr.Usage, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Selector, msg, off)
+	off, err = pack.Uint8(rr.Selector, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.MatchingType, msg, off)
+	off, err = pack.Uint8(rr.MatchingType, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1716,15 +1719,15 @@ func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SMIMEA) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Usage, msg, off)
+	off, err = pack.Uint8(rr.Usage, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Selector, msg, off)
+	off, err = pack.Uint8(rr.Selector, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.MatchingType, msg, off)
+	off, err = pack.Uint8(rr.MatchingType, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1757,15 +1760,15 @@ func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *HIP) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.HitLength, msg, off)
+	off, err = pack.Uint8(rr.HitLength, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.PublicKeyAlgorithm, msg, off)
+	off, err = pack.Uint8(rr.PublicKeyAlgorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.PublicKeyLength, msg, off)
+	off, err = pack.Uint16(rr.PublicKeyLength, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1834,11 +1837,11 @@ func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NID) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint64(rr.NodeID, msg, off)
+	off, err = pack.Uint64(rr.NodeID, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1860,7 +1863,7 @@ func (rr *NID) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *L32) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1887,11 +1890,11 @@ func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *L64) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint64(rr.Locator64, msg, off)
+	off, err = pack.Uint64(rr.Locator64, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1913,7 +1916,7 @@ func (rr *L64) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *LP) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Preference, msg, off)
+	off, err = pack.Uint16(rr.Preference, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1959,7 +1962,7 @@ func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *EUI64) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint64(rr.Address, msg, off)
+	off, err = pack.Uint64(rr.Address, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1978,7 +1981,7 @@ func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *CAA) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint8(rr.Flag, msg, off)
+	off, err = pack.Uint8(rr.Flag, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2013,7 +2016,7 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *UID) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint32(rr.Uid, msg, off)
+	off, err = pack.Uint32(rr.Uid, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2032,7 +2035,7 @@ func (rr *UID) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *GID) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint32(rr.Gid, msg, off)
+	off, err = pack.Uint32(rr.Gid, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2131,11 +2134,11 @@ func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *CSYNC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint32(rr.Serial, msg, off)
+	off, err = pack.Uint32(rr.Serial, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Flags, msg, off)
+	off, err = pack.Uint16(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2165,15 +2168,15 @@ func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *ZONEMD) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint32(rr.Serial, msg, off)
+	off, err = pack.Uint32(rr.Serial, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Scheme, msg, off)
+	off, err = pack.Uint8(rr.Scheme, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(rr.Hash, msg, off)
+	off, err = pack.Uint8(rr.Hash, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2266,7 +2269,7 @@ func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SVCB) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint16(rr.Priority, msg, off)
+	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2357,11 +2360,11 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Fudge, msg, off)
+	off, err = pack.Uint16(rr.Fudge, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.MACSize, msg, off)
+	off, err = pack.Uint16(rr.MACSize, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2369,15 +2372,15 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.OrigID, msg, off)
+	off, err = pack.Uint16(rr.OrigID, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.Error, msg, off)
+	off, err = pack.Uint16(rr.Error, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(rr.OtherLen, msg, off)
+	off, err = pack.Uint16(rr.OtherLen, msg, off)
 	if err != nil {
 		return off, err
 	}

@@ -6,7 +6,19 @@ import (
 	"net"
 	"strconv"
 	"strings"
+
+	"codeberg.org/miekg/dns/internal/ddd"
 )
+
+func Parse(p Pair, b string) error {
+	switch x := p.(type) {
+	case *MANDATORY:
+		return x.parse(b)
+	case *ALPN:
+		return x.parse(b)
+	}
+	return nil
+}
 
 // should all be generated
 
@@ -46,7 +58,7 @@ func (s *ALPN) parse(b string) error {
 		}
 		// If it's a backslash, we need to handle a comma-separated list.
 		if c == '\\' {
-			dc, dq := ddd.Nex(b, p)
+			dc, dq := ddd.Next(b, p)
 			if dq == 0 {
 				return errors.New("dns: svcbalpn: unterminated escape decoding comma-separated list")
 			}
@@ -136,7 +148,7 @@ func (s *IPV6HINT) parse(b string) error {
 }
 
 func (s *DOHPATH) parse(b string) error {
-	template, err := svcbParseParam(b)
+	template, err := stringToPair(b)
 	if err != nil {
 		return fmt.Errorf("dns: svcbdohpath: %w", err)
 	}
@@ -152,7 +164,7 @@ func (*OHTTP) parse(b string) error {
 }
 
 func (s *LOCAL) parse(b string) error {
-	data, err := svcbParseParam(b)
+	data, err := stringToPair(b)
 	if err != nil {
 		return fmt.Errorf("dns: svcblocal: svcb private/experimental key %w", err)
 	}

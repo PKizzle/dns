@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"hash"
 	"time"
+
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 // HMAC is the secret used to create the TSIG.
@@ -109,7 +111,7 @@ type macWireFmt struct {
 }
 
 func (mw *macWireFmt) pack(buf []byte) (int, error) {
-	off, err := packUint16(mw.MACSize, buf, 0)
+	off, err := pack.Uint16(mw.MACSize, buf, 0)
 	if err != nil {
 		return off, err
 	}
@@ -131,7 +133,7 @@ func (tw *timerWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(tw.Fudge, buf, off)
+	off, err = pack.Uint16(tw.Fudge, buf, off)
 	if err != nil {
 		return off, err
 	}
@@ -161,11 +163,11 @@ func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(tw.Class, buf, off)
+	off, err = pack.Uint16(tw.Class, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(tw.TTL, buf, off)
+	off, err = pack.Uint32(tw.TTL, buf, off)
 	if err != nil {
 		return off, err
 	}
@@ -178,16 +180,16 @@ func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(tw.Fudge, buf, off)
+	off, err = pack.Uint16(tw.Fudge, buf, off)
 	if err != nil {
 		return off, err
 	}
 
-	off, err = packUint16(tw.Error, buf, off)
+	off, err = pack.Uint16(tw.Error, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(tw.OtherLen, buf, off)
+	off, err = pack.Uint16(tw.OtherLen, buf, off)
 	if err != nil {
 		return off, err
 	}

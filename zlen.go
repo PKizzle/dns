@@ -575,7 +575,7 @@ func (rr *SVCB) Len() int {
 	l += 2 // Priority
 	l += len(rr.Target) + 1
 	for _, x := range rr.Value {
-		l += 4 + int(x.len())
+		l += 4 + int(x.Len())
 	}
 	return l
 }

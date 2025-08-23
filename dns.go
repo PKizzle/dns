@@ -307,5 +307,5 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	if len(msg) == 0 { // no rdata
 		return nil
 	}
-	return unpack(r, msg, msg)
+	return zunpack(r, msg, msg)
 }

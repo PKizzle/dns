@@ -21,7 +21,7 @@ func sprintName(s string) string {
 			continue
 		}
 
-		b, n := nextByte(s, i)
+		b, n := ddd.Next(s, i)
 		if n == 0 {
 			// Drop "dangling" incomplete escapes.
 			if sb.Len() == 0 {
@@ -66,7 +66,7 @@ func sprintTxtOctet(s string) string {
 			continue
 		}
 
-		b, n := nextByte(s, i)
+		b, n := ddd.Next(s, i)
 		if n == 0 {
 			i++ // dangling back slash
 		} else {
@@ -88,7 +88,7 @@ func sprintTxt(txt []string) string {
 			sb.WriteByte('"')
 		}
 		for j := 0; j < len(s); {
-			b, n := nextByte(s, j)
+			b, n := ddd.Next(s, j)
 			if n == 0 {
 				break
 			}

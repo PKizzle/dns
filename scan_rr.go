@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/svcb"
 )
 
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
@@ -1951,7 +1952,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 
 	// Values (if any)
 	l, _ = c.Next()
-	var xs []SVCBKeyValue
+	var xs []svcb.Pair
 	// Helps require whitespace between pairs.
 	// Prevents key1000="a"key1001=...
 	canHaveNextKey := true
@@ -2004,14 +2005,15 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 			}
-			kv := makeSVCBKeyValue(svcbStringToKey(key))
-			if kv == nil {
+			pairFn := svcb.KeyToPair[svcb.StringToKey[key]]
+			if pairFn == nil {
 				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
 			}
-			if err := kv.parse(value); err != nil {
+			pair := pairFn()
+			if err := svcb.Parse(pair, value); err != nil {
 				return &ParseError{file: l.token, wrappedErr: err, lex: l}
 			}
-			xs = append(xs, kv)
+			xs = append(xs, pair)
 		case zQuote:
 			return &ParseError{file: l.token, err: "SVCB key can't contain double quotes", lex: l}
 		case zBlank:
