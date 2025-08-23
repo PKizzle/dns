@@ -75,7 +75,6 @@ func (s *MANDATORY) pack(msg []byte, off int) (off1 int, err error) {
 }
 
 func (s *MANDATORY) unpack(sc *cryptobyte.String) error {
-	s.Key = []uint16{}
 	for !sc.Empty() {
 		var key uint16
 		if !sc.ReadUint16(&key) {
@@ -107,15 +106,13 @@ func (s *ALPN) pack(msg []byte, off int) (off1 int, err error) {
 }
 
 func (s *ALPN) unpack(sc *cryptobyte.String) error {
-	var alpn []string
 	for !sc.Empty() {
 		var data cryptobyte.String
 		if !sc.ReadUint8LengthPrefixed(&data) {
 			return fmt.Errorf("dns: overflow unpacking data")
 		}
-		alpn = append(alpn, string(data))
+		s.Alpn = append(s.Alpn, string(data))
 	}
-	s.Alpn = alpn
 	return nil
 }
 
