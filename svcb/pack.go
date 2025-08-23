@@ -3,7 +3,6 @@ package svcb
 import (
 	"errors"
 	"fmt"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -35,6 +34,8 @@ func Pack(p Pair, msg []byte, off int) (int, error) {
 		return x.pack(msg, off)
 	case *OHTTP:
 		return x.pack(msg, off)
+	case *LOCAL:
+		return x.pack(msg, off)
 	}
 	return 0, fmt.Errorf("dns: no svcb pack defined")
 }
@@ -58,6 +59,8 @@ func Unpack(p Pair, data *cryptobyte.String) error {
 	case *DOHPATH:
 		return x.unpack(data)
 	case *OHTTP:
+		return x.unpack(data)
+	case *LOCAL:
 		return x.unpack(data)
 	}
 	return fmt.Errorf("dns: no svcb unpack defined")
@@ -199,7 +202,6 @@ func (s *IPV6HINT) pack(msg []byte, off int) (int, error) {
 		if err != nil {
 			return off, err
 		}
-
 	}
 	return off, nil
 }
@@ -220,8 +222,7 @@ func (s *DOHPATH) pack(msg []byte, off int) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.StringAny(s.Template, msg, off)
-	return off, err
+	return pack.StringAny(s.Template, msg, off)
 }
 
 func (s *DOHPATH) unpack(sc *cryptobyte.String) (err error) {
@@ -241,17 +242,24 @@ func (*OHTTP) unpack(sc *cryptobyte.String) error {
 	return nil
 }
 
-func (s *LOCAL) pack() ([]byte, error) {
-	// packTLD
-	// custom beuse of the keycode
-	return slices.Clone(s.Data), nil
+func (s *LOCAL) pack(msg []byte, off int) (int, error) {
+	off, err := pack.Uint16(s.KeyCode, msg, off)
+	if err != nil {
+		return len(msg), fmt.Errorf("dns: svcblocal: overflow packing keycode")
+	}
+	off, err = pack.Uint16(uint16(len(s.Data)), msg, off)
+	if err != nil {
+		return len(msg), fmt.Errorf("dns: svcblocal: overflow packing length")
+	}
+	n := copy(msg[off:], s.Data)
+	return off + n, nil
 }
 
 func (s *LOCAL) unpack(sc *cryptobyte.String) error {
 	// keys also, custom TLV
 	s.Data = make([]byte, len(*sc))
 	if !sc.CopyBytes(s.Data) {
-		errors.New("dns: svcblocal overflow unpacking")
+		return errors.New("dns: svcblocal overflow unpacking")
 	}
 	return nil
 }

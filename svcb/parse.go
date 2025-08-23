@@ -30,6 +30,8 @@ func Parse(p Pair, b string) error {
 		return x.parse(b)
 	case *OHTTP:
 		return x.parse(b)
+	case *LOCAL:
+		return x.parse(b)
 	}
 	return fmt.Errorf("dns: no svcb parse defined")
 }

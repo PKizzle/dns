@@ -62,27 +62,32 @@ func StringToKey(s string) uint16 {
 
 var stringToKey = reverse(keyToString)
 
-// KeyToPair is a map of constructors for each key type.
-var KeyToPair = map[uint16]func() Pair{
-	KeyMandatory:     func() Pair { return new(MANDATORY) },
-	KeyAlpn:          func() Pair { return new(ALPN) },
-	KeyNoDefaultALPN: func() Pair { return new(NODEFAULTALPN) },
-	KeyPort:          func() Pair { return new(PORT) },
-	KeyIPv4Hint:      func() Pair { return new(IPV4HINT) },
-	KeyEchConfig:     func() Pair { return new(ECHCONFIG) },
-	KeyIPv6Hint:      func() Pair { return new(IPV6HINT) },
-	KeyDohPath:       func() Pair { return new(DOHPATH) },
-	KeyOhttp:         func() Pair { return new(OHTTP) },
-}
-
-// LOCAL ones TODO
-/*
+func KeyToPair(k uint16) func() Pair {
+	switch k {
+	case KeyMandatory:
+		return func() Pair { return new(MANDATORY) }
+	case KeyAlpn:
+		return func() Pair { return new(ALPN) }
+	case KeyNoDefaultALPN:
+		return func() Pair { return new(NODEFAULTALPN) }
+	case KeyPort:
+		return func() Pair { return new(PORT) }
+	case KeyIPv4Hint:
+		return func() Pair { return new(IPV4HINT) }
+	case KeyEchConfig:
+		return func() Pair { return new(ECHCONFIG) }
+	case KeyIPv6Hint:
+		return func() Pair { return new(IPV6HINT) }
+	case KeyDohPath:
+		return func() Pair { return new(DOHPATH) }
+	case KeyOhttp:
+		return func() Pair { return new(OHTTP) }
+	case KeyReserved:
+		return func() Pair { return nil }
 	default:
-		e := new(LOCAL)
-		e.KeyCode = key
-		return e
+		return func() Pair { return &LOCAL{KeyCode: k} }
 	}
-*/
+}
 
 // PairToKey is the reverse of KeyToPair.
 func PairToKey(p Pair) uint16 {
@@ -105,6 +110,8 @@ func PairToKey(p Pair) uint16 {
 		return KeyDohPath
 	case *OHTTP:
 		return KeyOhttp
+	case *LOCAL:
+		return p.(*LOCAL).KeyCode
 	}
 	return KeyReserved
 }

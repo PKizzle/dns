@@ -24,18 +24,16 @@ func TestSVCB(t *testing.T) {
 		{`ech`, `YUdWc2JHOD0=`},
 		{`dohpath`, `/dns-query{?dns}`},
 		{`ohttp`, ``},
-		/*
-			{`key65000`, `4\ 3`}, // local?
-				{`key65001`, `\"\ `},
-				{`key65002`, ``},
-				{`key65003`, `=\"\"`},
-				{`key65004`, `\254\ \ \030\000`},
-		*/
+		{`key65000`, `4\ 3`},
+		{`key65001`, `\"\ `},
+		{`key65002`, ``},
+		{`key65003`, `=\"\"`},
+		{`key65004`, `\254\ \ \030\000`},
 	}
 
 	for _, o := range svcbs {
 		keyCode := svcb.StringToKey(o.key)
-		pairFn := svcb.KeyToPair[keyCode]
+		pairFn := svcb.KeyToPair(keyCode)
 		if pairFn == nil {
 			t.Error("failed to lookup svc key: ", o.key)
 			continue
