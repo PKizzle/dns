@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/svcb"
 )
 
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
@@ -1929,6 +1930,112 @@ func (rr *APL) parse(c *zlexer, o string) *ParseError {
 
 	rr.Prefixes = prefixes
 	return nil
+}
+
+func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	i, e := strconv.ParseUint(l.token, 10, 16)
+	if e != nil || l.err {
+		return &ParseError{file: l.token, err: "bad SVCB priority", lex: l}
+	}
+	rr.Priority = uint16(i)
+
+	c.Next()        // zBlank
+	l, _ = c.Next() // zString
+	rr.Target = l.token
+
+	name, nameOk := toAbsoluteName(l.token, o)
+	if l.err || !nameOk {
+		return &ParseError{file: l.token, err: "bad SVCB Target", lex: l}
+	}
+	rr.Target = name
+
+	// Values (if any)
+	l, _ = c.Next()
+	var xs []svcb.Pair
+	// Helps require whitespace between pairs.
+	// Prevents key1000="a"key1001=...
+	canHaveNextKey := true
+	for l.value != zNewline && l.value != zEOF {
+		switch l.value {
+		case zString:
+			if !canHaveNextKey {
+				// The key we can now read was probably meant to be
+				// a part of the last value.
+				return &ParseError{file: l.token, err: "bad SVCB value quotation", lex: l}
+			}
+
+			// In key=value pairs, value does not have to be quoted unless value
+			// contains whitespace. And keys don't need to have values.
+			// Similarly, keys with an equality signs after them don't need values.
+			// l.token includes at least up to the first equality sign.
+			idx := strings.IndexByte(l.token, '=')
+			var key, value string
+			if idx < 0 {
+				// Key with no value and no equality sign
+				key = l.token
+			} else if idx == 0 {
+				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
+			} else {
+				key, value = l.token[:idx], l.token[idx+1:]
+
+				if value == "" {
+					// We have a key and an equality sign. Maybe we have nothing
+					// after "=" or we have a double quote.
+					l, _ = c.Next()
+					if l.value == zQuote {
+						// Only needed when value ends with double quotes.
+						// Any value starting with zQuote ends with it.
+						canHaveNextKey = false
+
+						l, _ = c.Next()
+						switch l.value {
+						case zString:
+							// We have a value in double quotes.
+							value = l.token
+							l, _ = c.Next()
+							if l.value != zQuote {
+								return &ParseError{file: l.token, err: "SVCB unterminated value", lex: l}
+							}
+						case zQuote:
+							// There's nothing in double quotes.
+						default:
+							return &ParseError{file: l.token, err: "bad SVCB value", lex: l}
+						}
+					}
+				}
+			}
+			pairFn := svcb.KeyToPair[svcb.StringToKey[key]]
+			if pairFn == nil {
+				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
+			}
+			pair := pairFn()
+			if err := svcb.Parse(pair, value); err != nil {
+				return &ParseError{file: l.token, wrappedErr: err, lex: l}
+			}
+			xs = append(xs, pair)
+		case zQuote:
+			return &ParseError{file: l.token, err: "SVCB key can't contain double quotes", lex: l}
+		case zBlank:
+			canHaveNextKey = true
+		default:
+			return &ParseError{file: l.token, err: "bad SVCB values", lex: l}
+		}
+		l, _ = c.Next()
+	}
+
+	// "In AliasMode, records SHOULD NOT include any SvcParams, and recipients MUST
+	// ignore any SvcParams that are present."
+	// However, we don't check rr.Priority == 0 && len(xs) > 0 here
+	// It is the responsibility of the user of the library to check this.
+	// This is to encourage the fixing of the source of this error.
+
+	rr.Value = xs
+	return nil
+}
+
+func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
+	return rr.SVCB.parse(c, o)
 }
 
 // escapedStringOffset finds the offset within a string (which may contain escape

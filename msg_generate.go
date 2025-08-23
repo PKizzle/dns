@@ -18,7 +18,10 @@ var hdr = `
 
 package dns
 
-import "golang.org/x/crypto/cryptobyte"
+import (
+	"golang.org/x/crypto/cryptobyte"
+	"codeberg.org/miekg/dns/internal/pack"
+)
 
 `
 
@@ -142,7 +145,7 @@ if rr.%s != "-" {
 			case tag == `dns:"hex"`:
 				o("off, err = packStringHex(rr.%s, msg, off)\n")
 			case tag == `dns:"any"`:
-				o("off, err = packStringAny(rr.%s, msg, off)\n")
+				o("off, err = pack.StringAny(rr.%s, msg, off)\n")
 			case tag == `dns:"octet"`:
 				o("off, err = packStringOctet(rr.%s, msg, off)\n")
 			case tag == `dns:"ipsechost"` || tag == `dns:"amtrelayhost"`:
@@ -150,13 +153,13 @@ if rr.%s != "-" {
 			case tag == "":
 				switch fieldtype {
 				case "uint8":
-					o("off, err = packUint8(rr.%s, msg, off)\n")
+					o("off, err = pack.Uint8(rr.%s, msg, off)\n")
 				case "uint16":
-					o("off, err = packUint16(rr.%s, msg, off)\n")
+					o("off, err = pack.Uint16(rr.%s, msg, off)\n")
 				case "uint32":
-					o("off, err = packUint32(rr.%s, msg, off)\n")
+					o("off, err = pack.Uint32(rr.%s, msg, off)\n")
 				case "uint64":
-					o("off, err = packUint64(rr.%s, msg, off)\n")
+					o("off, err = pack.Uint64(rr.%s, msg, off)\n")
 				case "string":
 					o("off, err = packString(rr.%s, msg, off)\n")
 				default:

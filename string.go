@@ -21,7 +21,7 @@ func sprintName(s string) string {
 			continue
 		}
 
-		b, n := nextByte(s, i)
+		b, n := ddd.Next(s, i)
 		if n == 0 {
 			// Drop "dangling" incomplete escapes.
 			if sb.Len() == 0 {
@@ -66,7 +66,7 @@ func sprintTxtOctet(s string) string {
 			continue
 		}
 
-		b, n := nextByte(s, i)
+		b, n := ddd.Next(s, i)
 		if n == 0 {
 			i++ // dangling back slash
 		} else {
@@ -88,7 +88,7 @@ func sprintTxt(txt []string) string {
 			sb.WriteByte('"')
 		}
 		for j := 0; j < len(s); {
-			b, n := nextByte(s, j)
+			b, n := ddd.Next(s, j)
 			if n == 0 {
 				break
 			}
@@ -120,27 +120,6 @@ func isLabelSpecial(b byte) bool {
 		return true
 	}
 	return false
-}
-
-func nextByte(s string, offset int) (byte, int) {
-	if offset >= len(s) {
-		return 0, 0
-	}
-	if s[offset] != '\\' {
-		// not an escape sequence
-		return s[offset], 1
-	}
-	switch len(s) - offset {
-	case 1: // dangling escape
-		return 0, 0
-	case 2, 3: // too short to be \ddd
-	default: // maybe \ddd
-		if ddd.Is(s[offset+1:]) {
-			return ddd.ToByte(s[offset+1:]), 4
-		}
-	}
-	// not \ddd, just an RFC 1035 "quoted" character
-	return s[offset+1], 2
 }
 
 func sprintType(t uint16) string {

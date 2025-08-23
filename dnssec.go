@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -692,31 +694,31 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 
 func packSigWire(sw *rrsigWireFmt, msg []byte) (int, error) {
 	// copied from zmsg.go RRSIG packing
-	off, err := packUint16(sw.TypeCovered, msg, 0)
+	off, err := pack.Uint16(sw.TypeCovered, msg, 0)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(sw.Algorithm, msg, off)
+	off, err = pack.Uint8(sw.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(sw.Labels, msg, off)
+	off, err = pack.Uint8(sw.Labels, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(sw.OrigTTL, msg, off)
+	off, err = pack.Uint32(sw.OrigTTL, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(sw.Expiration, msg, off)
+	off, err = pack.Uint32(sw.Expiration, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(sw.Inception, msg, off)
+	off, err = pack.Uint32(sw.Inception, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(sw.KeyTag, msg, off)
+	off, err = pack.Uint16(sw.KeyTag, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -729,15 +731,15 @@ func packSigWire(sw *rrsigWireFmt, msg []byte) (int, error) {
 
 func packKeyWire(dw *dnskeyWireFmt, msg []byte) (int, error) {
 	// copied from zmsg.go DNSKEY packing
-	off, err := packUint16(dw.Flags, msg, 0)
+	off, err := pack.Uint16(dw.Flags, msg, 0)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(dw.Protocol, msg, off)
+	off, err = pack.Uint8(dw.Protocol, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint8(dw.Algorithm, msg, off)
+	off, err = pack.Uint8(dw.Algorithm, msg, off)
 	if err != nil {
 		return off, err
 	}

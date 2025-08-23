@@ -6,27 +6,28 @@ import (
 	"errors"
 	"net"
 
+	"codeberg.org/miekg/dns/internal/pack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
 func (o *LLQ) pack(msg []byte, off int) (off1 int, err error) {
-	off, err = packUint16(o.Version, msg, off)
+	off, err = pack.Uint16(o.Version, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(o.Opcode, msg, off)
+	off, err = pack.Uint16(o.Opcode, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint16(o.Error, msg, off)
+	off, err = pack.Uint16(o.Error, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint64(o.ID, msg, off)
+	off, err = pack.Uint64(o.ID, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint32(o.LeaseLife, msg, off)
+	off, err = pack.Uint32(o.LeaseLife, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -80,7 +81,7 @@ func (o *PADDING) pack(msg []byte, off int) (int, error) {
 
 func (o *DAU) pack(msg []byte, off int) (off1 int, err error) {
 	for i := range o.AlgCode {
-		if off, err = packUint8(o.AlgCode[i], msg, off); err != nil {
+		if off, err = pack.Uint8(o.AlgCode[i], msg, off); err != nil {
 			return off, err
 		}
 	}
@@ -98,7 +99,7 @@ func (o *DAU) unpack(s *cryptobyte.String) error {
 
 func (o *DHU) pack(msg []byte, off int) (off1 int, err error) {
 	for i := range o.AlgCode {
-		if off, err = packUint8(o.AlgCode[i], msg, off); err != nil {
+		if off, err = pack.Uint8(o.AlgCode[i], msg, off); err != nil {
 			return off, err
 		}
 	}
@@ -116,7 +117,7 @@ func (o *DHU) unpack(s *cryptobyte.String) error {
 
 func (o *N3U) pack(msg []byte, off int) (off1 int, err error) {
 	for i := range o.AlgCode {
-		if off, err = packUint8(o.AlgCode[i], msg, off); err != nil {
+		if off, err = pack.Uint8(o.AlgCode[i], msg, off); err != nil {
 			return off, err
 		}
 	}
@@ -143,7 +144,7 @@ func (o *EDE) unpack(s *cryptobyte.String) (err error) {
 }
 
 func (o *EDE) pack(msg []byte, off int) (int, error) {
-	off, err := packUint16(o.InfoCode, msg, off)
+	off, err := pack.Uint16(o.InfoCode, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -171,7 +172,7 @@ func (o *EXPIRE) pack(msg []byte, off int) (int, error) {
 	if o.Expire == 0 {
 		return off, nil
 	}
-	return packUint32(o.Expire, msg, off)
+	return pack.Uint32(o.Expire, msg, off)
 }
 
 func (o *EXPIRE) unpack(s *cryptobyte.String) error {
@@ -187,7 +188,7 @@ func (o *EXPIRE) unpack(s *cryptobyte.String) error {
 
 func (o *TCPKEEPALIVE) pack(msg []byte, off int) (int, error) {
 	if o.Timeout > 0 {
-		return packUint16(o.Timeout, msg, off)
+		return pack.Uint16(o.Timeout, msg, off)
 	}
 	return off, nil
 }

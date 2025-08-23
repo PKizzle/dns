@@ -1,0 +1,367 @@
+package svcb
+
+import (
+	"encoding/base64"
+	"net"
+	"strconv"
+	"strings"
+
+	"codeberg.org/miekg/dns/internal/ddd"
+)
+
+// Keys defined in RFC 9460.
+const (
+	KeyMandatory uint16 = iota
+	KeyAlpn
+	KeyNoDefaultALPN
+	KeyPort
+	KeyIPv4Hint
+	KeyEchConfig
+	KeyIPv6Hint
+	KeyDohPath // See RFC 9461 Section 5.
+	KeyOhttp   // See RFC 9540 Section 8.
+
+	KeyReserved uint16 = 65535
+)
+
+var KeyToString = map[uint16]string{
+	KeyMandatory:     "mandatory",
+	KeyAlpn:          "alpn",
+	KeyNoDefaultALPN: "no-default-alpn",
+	KeyPort:          "port",
+	KeyIPv4Hint:      "ipv4hint",
+	KeyEchConfig:     "ech",
+	KeyIPv6Hint:      "ipv6hint",
+	KeyDohPath:       "dohpath",
+	KeyOhttp:         "ohttp",
+}
+
+var StringToKey = reverse(KeyToString)
+
+// KeyToPair is a map of constructors for each key type.
+var KeyToPair = map[uint16]func() Pair{
+	KeyMandatory:     func() Pair { return new(MANDATORY) },
+	KeyAlpn:          func() Pair { return new(ALPN) },
+	KeyNoDefaultALPN: func() Pair { return new(NODEFAULTALPN) },
+	KeyPort:          func() Pair { return new(PORT) },
+	KeyIPv4Hint:      func() Pair { return new(IPV4HINT) },
+	KeyEchConfig:     func() Pair { return new(ECHCONFIG) },
+	KeyIPv6Hint:      func() Pair { return new(IPV6HINT) },
+	KeyDohPath:       func() Pair { return new(DOHPATH) },
+	KeyOhttp:         func() Pair { return new(OHTTP) },
+}
+
+// LOCAL ones
+/*
+	default:
+		e := new(LOCAL)
+		e.KeyCode = key
+		return e
+	}
+*/
+
+// PairToKey is the reverse of KeyToPair.
+func PairToKey(p Pair) uint16 {
+	switch p.(type) {
+	case *MANDATORY:
+		return KeyMandatory
+	case *ALPN:
+		return KeyAlpn
+	case *NODEFAULTALPN:
+		return KeyNoDefaultALPN
+	case *PORT:
+		return KeyPort
+	case *IPV4HINT:
+		return KeyIPv4Hint
+	case *ECHCONFIG:
+		return KeyEchConfig
+	case *IPV6HINT:
+		return KeyIPv6Hint
+	case *DOHPATH:
+		return KeyDohPath
+	case *OHTTP:
+		return KeyOhttp
+	}
+	return KeyReserved
+}
+
+// Pair defines a key=value pair for the SVCB RR type.
+// An SVCB RR can have multiple pairs appended to it.
+// The numerical key code is derived from the type, see [PairToKey].
+type Pair interface {
+	String() string // String returns the string representation of the value.
+	Len() int       // Len returns the length of value in the wire format.
+}
+
+// MANDATORY pair adds to required keys that must be interpreted for the RR
+// to be functional. If ignored, the whole RRSet must be ignored.
+// "port" and "no-default-alpn" are mandatory by default if present,
+// so they shouldn't be included here.
+//
+// It is incumbent upon the user of this library to reject the RRSet if
+// or avoid constructing such an RRSet that:
+// - "mandatory" is included as one of the keys of mandatory
+// - no key is listed multiple times in mandatory
+// - all keys listed in mandatory are present
+// - escape sequences are not used in mandatory
+// - mandatory, when present, lists at least one key
+//
+// Basic use pattern for creating a mandatory option in a SVCB RR.
+//
+//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	s.Value = append(s.Value, &svcb.MANDATORY{})
+//	t := &svcb.ALPN{Alpn: []string{"xmpp-client"}}
+//	s.Value = append(s.Value, t)
+type MANDATORY struct {
+	Key []uint16
+}
+
+func (s *MANDATORY) String() string {
+	str := make([]string, len(s.Key))
+	for i, e := range s.Key {
+		str[i] = KeyToString[e]
+	}
+	return strings.Join(str, ",")
+}
+
+func (s *MANDATORY) Len() int { return 2 * len(s.Key) }
+
+// ALPN pair is used to list supported connection protocols.
+// The user of this library must ensure that at least one protocol is listed when alpn is present.
+// Protocol IDs can be found at:
+// https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
+// Basic use pattern for creating an alpn option:
+//
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	e := svcb.ALPN{Alpn: []string{"h2", "http/1.1"}}
+//	h.Value = append(h.Value, e)
+type ALPN struct {
+	Alpn []string
+}
+
+func (s *ALPN) String() string {
+	// An ALPN value is a comma-separated list of values, each of which can be
+	// an arbitrary binary value. In order to allow parsing, the comma and
+	// backslash characters are themselves escaped.
+	//
+	// However, this escaping is done in addition to the normal escaping which
+	// happens in zone files, meaning that these values must be
+	// double-escaped. This looks terrible, so if you see a never-ending
+	// sequence of backslash in a zone file this may be why.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-svcb-https-08#appendix-A.1
+	var str strings.Builder
+	for i, alpn := range s.Alpn {
+		// 4*len(alpn) is the worst case where we escape every character in the alpn as \123, plus 1 byte for the ',' separating the alpn from others
+		str.Grow(4*len(alpn) + 1)
+		if i > 0 {
+			str.WriteByte(',')
+		}
+		for j := 0; j < len(alpn); j++ {
+			e := alpn[j]
+			if ' ' > e || e > '~' {
+				str.WriteString(ddd.Escape(e))
+				continue
+			}
+			switch e {
+			// We escape a few characters which may confuse humans or parsers.
+			case '"', ';', ' ':
+				str.WriteByte('\\')
+				str.WriteByte(e)
+			// The comma and backslash characters themselves must be
+			// doubly-escaped. We use `\\` for the first backslash and
+			// the escaped numeric value for the other value. We especially
+			// don't want a comma in the output.
+			case ',':
+				str.WriteString(`\\\044`)
+			case '\\':
+				str.WriteString(`\\\092`)
+			default:
+				str.WriteByte(e)
+			}
+		}
+	}
+	return str.String()
+}
+
+func (s *ALPN) Len() int {
+	var l int
+	for _, e := range s.Alpn {
+		l += 1 + len(e)
+	}
+	return l
+}
+
+// NODEFAULTALPN pair signifies no support for default connection protocols.
+// Should be used in conjunction with alpn.
+// Basic use pattern for creating a no-default-alpn option:
+//
+//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	t := new(dns.ALPN)
+//	t.Alpn = []string{"xmpp-client"}
+//	s.Value = append(s.Value, t)
+//	e := new(dns.NODEFAULTALPN)
+//	s.Value = append(s.Value, e)
+type NODEFAULTALPN struct{}
+
+func (*NODEFAULTALPN) String() string { return "" }
+func (*NODEFAULTALPN) Len() int       { return 0 }
+
+// PORT pair defines the port for connection.
+// Basic use pattern for creating a port option:
+//
+//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	e := new(dns.PORT)
+//	e.Port = 80
+//	s.Value = append(s.Value, e)
+type PORT struct {
+	Port uint16
+}
+
+func (*PORT) Len() int         { return 2 }
+func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
+
+// IPV4HINT pair suggests an IPv4 address which may be used to open connections
+// if A and AAAA record responses for SVCB's Target domain haven't been received.
+// In that case, optionally, A and AAAA requests can be made, after which the connection
+// to the hinted IP address may be terminated and a new connection may be opened.
+// Basic use pattern for creating an ipv4hint option:
+//
+//		h := new(dns.HTTPS)
+//		h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//		e := new(dns.IPV4HINT)
+//		e.Hint = []net.IP{net.IPv4(1,1,1,1).To4()}
+//
+//	 Or
+//
+//		e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
+//		h.Value = append(h.Value, e)
+type IPV4HINT struct {
+	Hint []net.IP
+}
+
+func (s *IPV4HINT) Len() int { return 4 * len(s.Hint) }
+
+func (s *IPV4HINT) String() string {
+	str := make([]string, len(s.Hint))
+	for i, e := range s.Hint {
+		x := e.To4()
+		if x == nil {
+			return "<nil>"
+		}
+		str[i] = x.String()
+	}
+	return strings.Join(str, ",")
+}
+
+// ECHCONFIG pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
+// Basic use pattern for creating an ech option:
+//
+//	h := new(dns.HTTPS)
+//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := new(dns.ECHCONFIG)
+//	e.ECH = []byte{0xfe, 0x08, ...}
+//	h.Value = append(h.Value, e)
+type ECHCONFIG struct {
+	ECH []byte // Specifically ECHConfigList including the redundant length prefix
+}
+
+func (s *ECHCONFIG) String() string { return base64.StdEncoding.EncodeToString(s.ECH) }
+func (s *ECHCONFIG) Len() int       { return len(s.ECH) }
+
+// IPV6HINT pair suggests an IPv6 address which may be used to open connections
+// if A and AAAA record responses for SVCB's Target domain haven't been received.
+// In that case, optionally, A and AAAA requests can be made, after which the
+// connection to the hinted IP address may be terminated and a new connection may be opened.
+// Basic use pattern for creating an ipv6hint option:
+//
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	e := new(dns.IPV6HINT)
+//	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
+//	h.Value = append(h.Value, e)
+type IPV6HINT struct {
+	Hint []net.IP
+}
+
+func (s *IPV6HINT) Len() int { return 16 * len(s.Hint) }
+
+func (s *IPV6HINT) String() string {
+	str := make([]string, len(s.Hint))
+	for i, e := range s.Hint {
+		if x := e.To4(); x != nil {
+			return "<nil>"
+		}
+		str[i] = e.String()
+	}
+	return strings.Join(str, ",")
+}
+
+// DOHPATH pair is used to indicate the URI template that the
+// clients may use to construct a DNS over HTTPS URI.
+//
+// See RFC 9461 (https://datatracker.ietf.org/doc/html/rfc9461)
+// and RFC 9462 (https://datatracker.ietf.org/doc/html/rfc9462).
+//
+// A basic example of using the dohpath option together with the alpn
+// option to indicate support for DNS over HTTPS on a certain path:
+//
+//	s := new(dns.SVCB)
+//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
+//	p := &dns.DOHPATH{Template: "/dns-query{?dns}"}
+//	s.Value = append(s.Value, e, p)
+//
+// The parsing currently doesn't validate that Template is a valid RFC 6570 URI template.
+type DOHPATH struct {
+	Template string
+}
+
+func (s *DOHPATH) String() string { return pairToString([]byte(s.Template)) }
+func (s *DOHPATH) Len() int       { return len(s.Template) }
+
+// The "ohttp" SvcParamKey is used to indicate that a service described in a SVCB RR
+// can be accessed as a target using an associated gateway.
+// Both the presentation and wire-format values for the "ohttp" parameter MUST be empty.
+//
+// See RFC 9460 (https://datatracker.ietf.org/doc/html/rfc9460/)
+// and RFC 9230 (https://datatracker.ietf.org/doc/html/rfc9230/)
+//
+// A basic example of using the dohpath option together with the alpn
+// option to indicate support for DNS over HTTPS on a certain path:
+//
+//	s := new(dns.SVCB)
+//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
+//	p := &dns.OHTTP{}
+//	s.Value = append(s.Value, e, p)
+type OHTTP struct{}
+
+func (*OHTTP) String() string { return "" }
+func (*OHTTP) Len() int       { return 0 }
+
+// LOCAL pair is intended for experimental/private use. The key is recommended
+// to be in the range [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
+// Basic use pattern for creating a keyNNNNN option:
+//
+//	h := new(dns.HTTPS)
+//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	e := new(svcb.LOCAL)
+//	e.KeyCode = 65400
+//	e.Data = []byte("abc")
+//	h.Value = append(h.Value, e)
+type LOCAL struct {
+	KeyCode uint16 // just like RFC5559
+	Data    []byte // All byte sequences are allowed.
+}
+
+func (s *LOCAL) String() string { return pairToString(s.Data) }
+
+func (s *LOCAL) Len() int { return len(s.Data) }
+
+func reverse(m map[uint16]string) map[string]uint16 {
+	n := make(map[string]uint16, len(m))
+	for u, s := range m {
+		n[s] = u
+	}
+	return n
+}

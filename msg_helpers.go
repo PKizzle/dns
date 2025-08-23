@@ -3,16 +3,14 @@ package dns
 import (
 	"encoding/base32"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
-	"slices"
-	"sort"
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/internal/pack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -102,19 +100,19 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	if err != nil {
 		return len(msg), err
 	}
-	off, err = packUint16(rrtype, msg, off)
+	off, err = pack.Uint16(rrtype, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
-	off, err = packUint16(h.Class, msg, off)
+	off, err = pack.Uint16(h.Class, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
-	off, err = packUint32(h.TTL, msg, off)
+	off, err = pack.Uint32(h.TTL, msg, off)
 	if err != nil {
 		return len(msg), err
 	}
-	off, err = packUint16(0, msg, off) // The RDLENGTH field will be set later in packRR.
+	off, err = pack.Uint16(0, msg, off) // The RDLENGTH field will be set later in packRR.
 	if err != nil {
 		return len(msg), err
 	}
@@ -154,30 +152,6 @@ func toBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
-	if off+1 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint8"}
-	}
-	msg[off] = i
-	return off + 1, nil
-}
-
-func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
-	if off+2 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint16"}
-	}
-	binary.BigEndian.PutUint16(msg[off:], i)
-	return off + 2, nil
-}
-
-func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
-	if off+4 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint32"}
-	}
-	binary.BigEndian.PutUint32(msg[off:], i)
-	return off + 4, nil
-}
-
 func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+6 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
@@ -189,15 +163,6 @@ func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	msg[off+4] = byte(i >> 8)
 	msg[off+5] = byte(i)
 	off += 6
-	return off, nil
-}
-
-func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
-	if off+8 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint64"}
-	}
-	binary.BigEndian.PutUint64(msg[off:], i)
-	off += 8
 	return off, nil
 }
 
@@ -313,15 +278,6 @@ func unpackStringAny(s *cryptobyte.String, len int) (string, error) {
 	return string(b), nil
 }
 
-func packStringAny(s string, msg []byte, off int) (int, error) {
-	if off+len(s) > len(msg) {
-		return len(msg), &Error{err: "overflow packing anything"}
-	}
-	copy(msg[off:off+len(s)], s)
-	off += len(s)
-	return off, nil
-}
-
 func unpackStringTxt(s *cryptobyte.String) ([]string, error) {
 	return unpackTxt(s)
 }
@@ -366,8 +322,8 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 		}
 		code := RRToCode(option) // TODO(miek): unknown codes, caught later
 
-		packUint16(code, msg, off)
-		packUint16(uint16(l-tlv), msg, off+2)
+		pack.Uint16(code, msg, off)
+		pack.Uint16(uint16(l-tlv), msg, off+2)
 		optionoff, err := packOptionCode(option, msg, off+4)
 		if err != nil {
 			return off, err
@@ -492,61 +448,6 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackSVCB(s *cryptobyte.String) ([]SVCBKeyValue, error) {
-	var kvs []SVCBKeyValue
-	for !s.Empty() {
-		var (
-			code uint16
-			data cryptobyte.String
-		)
-		if !s.ReadUint16(&code) ||
-			!s.ReadUint16LengthPrefixed(&data) {
-			return nil, ErrUnpackOverflow
-		}
-		kv := makeSVCBKeyValue(SVCBKey(code))
-		if kv == nil {
-			return nil, &Error{err: "bad SVCB key"}
-		}
-		if err := kv.unpack(data); err != nil {
-			return nil, err
-		}
-		if len(kvs) > 0 && kv.Key() <= kvs[len(kvs)-1].Key() {
-			return nil, &Error{err: "SVCB keys not in strictly increasing order"}
-		}
-		kvs = append(kvs, kv)
-	}
-	return kvs, nil
-}
-
-func packSVCB(pairs []SVCBKeyValue, msg []byte, off int) (int, error) {
-	pairs = slices.Clone(pairs)
-	sort.Slice(pairs, func(i, j int) bool {
-		return pairs[i].Key() < pairs[j].Key()
-	})
-	prev := svcb_RESERVED
-	for _, el := range pairs {
-		if el.Key() == prev {
-			return len(msg), &Error{err: "repeated SVCB keys are not allowed"}
-		}
-		prev = el.Key()
-		packed, err := el.pack()
-		if err != nil {
-			return len(msg), err
-		}
-		off, err = packUint16(uint16(el.Key()), msg, off)
-		if err != nil {
-			return len(msg), &Error{err: "overflow packing SVCB"}
-		}
-		off, err = packUint16(uint16(len(packed)), msg, off)
-		if err != nil || off+len(packed) > len(msg) {
-			return len(msg), &Error{err: "overflow packing SVCB"}
-		}
-		copy(msg[off:off+len(packed)], packed)
-		off += len(packed)
-	}
-	return off, nil
-}
-
 func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	var names []string
 	for !s.Empty() {
@@ -592,9 +493,9 @@ func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 
 	switch len(p.Network.IP) {
 	case net.IPv4len:
-		off, err = packUint16(1, msg, off)
+		off, err = pack.Uint16(1, msg, off)
 	case net.IPv6len:
-		off, err = packUint16(2, msg, off)
+		off, err = pack.Uint16(2, msg, off)
 	default:
 		err = &Error{err: "unrecognized address family"}
 	}
@@ -602,7 +503,7 @@ func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 
-	off, err = packUint8(uint8(prefix), msg, off)
+	off, err = pack.Uint8(uint8(prefix), msg, off)
 	if err != nil {
 		return len(msg), err
 	}
@@ -619,7 +520,7 @@ func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	addr = addr[:i+1]
 
 	adflen := uint8(len(addr)) & 0x7f
-	off, err = packUint8(n|adflen, msg, off)
+	off, err = pack.Uint8(n|adflen, msg, off)
 	if err != nil {
 		return len(msg), err
 	}

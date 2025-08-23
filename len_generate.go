@@ -88,7 +88,7 @@ func main() {
 				case `dns:"apl"`:
 					o("for _, x := range rr.%s { l += x.len() }\n")
 				case `dns:"pairs"`:
-					o("for _, x := range rr.%s { l += 4 + int(x.len()) }\n")
+					o("for _, x := range rr.%s { l += 4 + int(x.Len()) }\n")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}

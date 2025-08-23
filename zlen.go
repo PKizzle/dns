@@ -570,6 +570,21 @@ func (rr *APL) Len() int {
 	return l
 }
 
+func (rr *SVCB) Len() int {
+	l := rr.Hdr.Len()
+	l += 2 // Priority
+	l += len(rr.Target) + 1
+	for _, x := range rr.Value {
+		l += 4 + int(x.Len())
+	}
+	return l
+}
+
+func (rr *HTTPS) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
 func (rr *ANY) Len() int {
 	l := rr.Hdr.Len()
 	return l

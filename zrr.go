@@ -79,6 +79,8 @@ func (rr *ZONEMD) Header() *Header     { return &rr.Hdr }
 func (rr *OPT) Header() *Header        { return &rr.Hdr }
 func (rr *RESINFO) Header() *Header    { return &rr.Hdr }
 func (rr *APL) Header() *Header        { return &rr.Hdr }
+func (rr *SVCB) Header() *Header       { return &rr.Hdr }
+func (rr *HTTPS) Header() *Header      { return &rr.Hdr }
 func (rr *ANY) Header() *Header        { return &rr.Hdr }
 func (rr *AXFR) Header() *Header       { return &rr.Hdr }
 func (rr *IXFR) Header() *Header       { return &rr.Hdr }
@@ -162,6 +164,8 @@ var TypeToRR = map[uint16]func() RR{
 	TypeOPT:        func() RR { return new(OPT) },
 	TypeRESINFO:    func() RR { return new(RESINFO) },
 	TypeAPL:        func() RR { return new(APL) },
+	TypeSVCB:       func() RR { return new(SVCB) },
+	TypeHTTPS:      func() RR { return new(HTTPS) },
 	TypeANY:        func() RR { return new(ANY) },
 	TypeAXFR:       func() RR { return new(AXFR) },
 	TypeIXFR:       func() RR { return new(IXFR) },
@@ -323,6 +327,10 @@ func RRToType(rr RR) uint16 {
 		return TypeRESINFO
 	case *APL:
 		return TypeAPL
+	case *SVCB:
+		return TypeSVCB
+	case *HTTPS:
+		return TypeHTTPS
 	case *ANY:
 		return TypeANY
 	case *AXFR:
@@ -416,6 +424,8 @@ var TypeToString = map[uint16]string{
 	TypeOPT:        "OPT",
 	TypeRESINFO:    "RESINFO",
 	TypeAPL:        "APL",
+	TypeSVCB:       "SVCB",
+	TypeHTTPS:      "HTTPS",
 	TypeANY:        "ANY",
 	TypeAXFR:       "AXFR",
 	TypeIXFR:       "IXFR",
@@ -454,6 +464,7 @@ func (rr *HINFO) Data() []Field     { return []Field{rr.Cpu, rr.Os} }
 func (rr *HIP) Data() []Field {
 	return []Field{rr.HitLength, rr.PublicKeyAlgorithm, rr.PublicKeyLength, rr.Hit, rr.PublicKey, rr.RendezvousServers}
 }
+func (rr *HTTPS) Data() []Field { return []Field{} }
 func (rr *IPSECKEY) Data() []Field {
 	return []Field{rr.Precedence, rr.GatewayType, rr.Algorithm, rr.GatewayAddr, rr.GatewayHost, rr.PublicKey}
 }
@@ -514,6 +525,7 @@ func (rr *SOA) Data() []Field {
 func (rr *SPF) Data() []Field    { return []Field{rr.Txt} }
 func (rr *SRV) Data() []Field    { return []Field{rr.Priority, rr.Weight, rr.Port, rr.Target} }
 func (rr *SSHFP) Data() []Field  { return []Field{rr.Algorithm, rr.Type, rr.FingerPrint} }
+func (rr *SVCB) Data() []Field   { return []Field{rr.Priority, rr.Target, rr.Value} }
 func (rr *TA) Data() []Field     { return []Field{rr.KeyTag, rr.Algorithm, rr.DigestType, rr.Digest} }
 func (rr *TALINK) Data() []Field { return []Field{rr.PreviousName, rr.NextName} }
 func (rr *TKEY) Data() []Field {
