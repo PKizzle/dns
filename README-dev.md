@@ -12,7 +12,11 @@ be capitalized, as-if it is an RR. The public API for these sub-types should mat
 - String() string
 - Len() int
 
+There are opt-in interface types that should be implemented or code-generated.
+
 Due to cyclic dependencies this creates some friction, but in the end it will be easier for end-users.
+
+The sub-types in that RR should all capitial letters as their name, as-if they are (also) RRs.
 
 ## Custom Types for uint8/16, etc
 
