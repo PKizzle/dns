@@ -124,7 +124,7 @@ func (s *MANDATORY) String() string {
 	return strings.Join(str, ",")
 }
 
-func (s *MANDATORY) Len() int { return 2 * len(s.Key) }
+func (s *MANDATORY) Len() int { return tlv + 2*len(s.Key) }
 
 // ALPN pair is used to list supported connection protocols.
 // The user of this library must ensure that at least one protocol is listed when alpn is present.
@@ -189,7 +189,7 @@ func (s *ALPN) Len() int {
 	for _, e := range s.Alpn {
 		l += 1 + len(e)
 	}
-	return l
+	return l + tlv
 }
 
 // NODEFAULTALPN pair signifies no support for default connection protocols.
@@ -205,7 +205,7 @@ func (s *ALPN) Len() int {
 type NODEFAULTALPN struct{}
 
 func (*NODEFAULTALPN) String() string { return "" }
-func (*NODEFAULTALPN) Len() int       { return 0 }
+func (*NODEFAULTALPN) Len() int       { return tlv + 0 }
 
 // PORT pair defines the port for connection.
 // Basic use pattern for creating a port option:
@@ -218,7 +218,7 @@ type PORT struct {
 	Port uint16
 }
 
-func (*PORT) Len() int         { return 2 }
+func (*PORT) Len() int         { return tlv + 2 }
 func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 
 // IPV4HINT pair suggests an IPv4 address which may be used to open connections
@@ -240,7 +240,7 @@ type IPV4HINT struct {
 	Hint []net.IP
 }
 
-func (s *IPV4HINT) Len() int { return 4 * len(s.Hint) }
+func (s *IPV4HINT) Len() int { return tlv + 4*len(s.Hint) }
 
 func (s *IPV4HINT) String() string {
 	str := make([]string, len(s.Hint))
@@ -267,7 +267,7 @@ type ECHCONFIG struct {
 }
 
 func (s *ECHCONFIG) String() string { return base64.StdEncoding.EncodeToString(s.ECH) }
-func (s *ECHCONFIG) Len() int       { return len(s.ECH) }
+func (s *ECHCONFIG) Len() int       { return tlv + len(s.ECH) }
 
 // IPV6HINT pair suggests an IPv6 address which may be used to open connections
 // if A and AAAA record responses for SVCB's Target domain haven't been received.
@@ -283,7 +283,7 @@ type IPV6HINT struct {
 	Hint []net.IP
 }
 
-func (s *IPV6HINT) Len() int { return 16 * len(s.Hint) }
+func (s *IPV6HINT) Len() int { return tlv + 16*len(s.Hint) }
 
 func (s *IPV6HINT) String() string {
 	str := make([]string, len(s.Hint))
@@ -317,7 +317,7 @@ type DOHPATH struct {
 }
 
 func (s *DOHPATH) String() string { return pairToString([]byte(s.Template)) }
-func (s *DOHPATH) Len() int       { return len(s.Template) }
+func (s *DOHPATH) Len() int       { return tlv + len(s.Template) }
 
 // The "ohttp" SvcParamKey is used to indicate that a service described in a SVCB RR
 // can be accessed as a target using an associated gateway.
@@ -337,7 +337,7 @@ func (s *DOHPATH) Len() int       { return len(s.Template) }
 type OHTTP struct{}
 
 func (*OHTTP) String() string { return "" }
-func (*OHTTP) Len() int       { return 0 }
+func (*OHTTP) Len() int       { return tlv + 0 }
 
 // LOCAL pair is intended for experimental/private use. The key is recommended
 // to be in the range [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
@@ -356,7 +356,7 @@ type LOCAL struct {
 
 func (s *LOCAL) String() string { return pairToString(s.Data) }
 
-func (s *LOCAL) Len() int { return len(s.Data) }
+func (s *LOCAL) Len() int { return tlv + len(s.Data) }
 
 func reverse(m map[uint16]string) map[string]uint16 {
 	n := make(map[string]uint16, len(m))
@@ -365,3 +365,5 @@ func reverse(m map[uint16]string) map[string]uint16 {
 	}
 	return n
 }
+
+const tlv = 4

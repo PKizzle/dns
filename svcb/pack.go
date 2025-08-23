@@ -68,7 +68,10 @@ func Unpack(p Pair, data *cryptobyte.String) error {
 }
 
 func (s *MANDATORY) pack(msg []byte, off int) (off1 int, err error) {
-	// type, length needs to be pack here as well, and Len should reflect that.
+	off, err = packTLV(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
 	for _, k := range s.Key {
 		off, err = pack.Uint16(k, msg, off)
 	}
@@ -88,6 +91,7 @@ func (s *MANDATORY) unpack(sc *cryptobyte.String) error {
 }
 
 func (s *ALPN) pack(msg []byte, off int) (off1 int, err error) {
+	off, err = packTLV(s, msg, off)
 	for _, e := range s.Alpn {
 		if e == "" {
 			return len(msg), errors.New("dns: svcbalpn: empty alpn-id")
@@ -220,6 +224,20 @@ func (s *LOCAL) pack() ([]byte, error) { return slices.Clone(s.Data), nil }
 func (s *LOCAL) unpack(b []byte) error {
 	s.Data = slices.Clone(b)
 	return nil
+}
+
+func packTLV(p Pair, msg []byte, off int) (off1 int, err error) {
+	key := PairToKey(p)
+	length := uint16(p.Len()) - tlv // now here we do the rdata length, not the 4 octets we encoding here
+	off, err = pack.Uint16(key, msg, off)
+	if err != nil {
+		return len(msg), fmt.Errorf("dns: overflow packing SVCB")
+	}
+	off, err = pack.Uint16(length, msg, off)
+	if err != nil {
+		return len(msg), fmt.Errorf("dns: overflow packing SVCB")
+	}
+	return off, err
 }
 
 // pairToString converts the value of an SVCB parameter into a DNS presentation-format string.

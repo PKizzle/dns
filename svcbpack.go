@@ -31,9 +31,6 @@ func unpackSVCB(s *cryptobyte.String) ([]svcb.Pair, error) {
 
 func packSVCB(pairs []svcb.Pair, msg []byte, off int) (off1 int, err error) {
 	pairs = slices.Clone(pairs)
-	//	sort.Slice(pairs, func(i, j int) bool {
-	//		return pairs[i].Key() < pairs[j].Key()
-	//	})
 	prev := svcb.KeyReserved
 	for _, pair := range pairs {
 		key := svcb.PairToKey(pair)
@@ -45,19 +42,6 @@ func packSVCB(pairs []svcb.Pair, msg []byte, off int) (off1 int, err error) {
 		if err != nil {
 			return len(msg), err
 		}
-		/*
-
-			off, err = pack.Uint16(uint16(el.Key()), msg, off)
-			if err != nil {
-				return len(msg), &Error{err: "overflow packing SVCB"}
-			}
-			off, err = pack.Uint16(uint16(len(packed)), msg, off)
-			if err != nil || off+len(packed) > len(msg) {
-				return len(msg), &Error{err: "overflow packing SVCB"}
-			}
-			copy(msg[off:off+len(packed)], packed)
-			off += len(packed)
-		*/
 	}
 	return off, nil
 }
