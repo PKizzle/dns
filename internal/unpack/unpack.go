@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
+// unpack error
+
 var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
 
 func fromBase32(s []byte) (buf []byte, err error) {

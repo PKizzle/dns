@@ -5,11 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
-	"strings"
-
-	"codeberg.org/miekg/dns/internal/ddd"
-	"golang.org/x/crypto/cryptobyte"
 )
+
+// pack.Error
 
 var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
 
@@ -42,7 +40,7 @@ func toBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
+func Uint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	if off+1 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint8"}
 	}
@@ -50,7 +48,7 @@ func packUint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	return off + 1, nil
 }
 
-func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
+func Uint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint16"}
 	}
@@ -58,7 +56,7 @@ func packUint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	return off + 2, nil
 }
 
-func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
+func Uint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint32"}
 	}
@@ -66,7 +64,7 @@ func packUint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	return off + 4, nil
 }
 
-func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
+func Uint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+6 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
 	}
@@ -80,7 +78,7 @@ func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
+func Uint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+8 > len(msg) {
 		return len(msg), &Error{err: "overflow packing uint64"}
 	}
@@ -89,40 +87,7 @@ func packUint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-func unpackString(s *cryptobyte.String) (string, error) {
-	var txt cryptobyte.String
-	if !s.ReadUint8LengthPrefixed(&txt) {
-		return "", ErrUnpackOverflow
-	}
-	var sb strings.Builder
-	consumed := 0
-	for i, b := range txt {
-		switch {
-		case b == '"' || b == '\\':
-			if consumed == 0 {
-				sb.Grow(len(txt) * 2)
-			}
-			sb.Write(txt[consumed:i])
-			sb.WriteByte('\\')
-			sb.WriteByte(b)
-			consumed = i + 1
-		case b < ' ' || b > '~': // unprintable
-			if consumed == 0 {
-				sb.Grow(len(txt) * 2)
-			}
-			sb.Write(txt[consumed:i])
-			sb.WriteString(ddd.Escape(b))
-			consumed = i + 1
-		}
-	}
-	if consumed == 0 { // no escaping needed
-		return string(txt), nil
-	}
-	sb.Write(txt[consumed:])
-	return sb.String(), nil
-}
-
-func packString(s string, msg []byte, off int) (int, error) {
+func String(s string, msg []byte, off int) (int, error) {
 	off, err := packTxtString(s, msg, off)
 	if err != nil {
 		return len(msg), err
@@ -130,15 +95,7 @@ func packString(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase32(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
-	}
-	return toBase32(b), nil
-}
-
-func packStringBase32(s string, msg []byte, off int) (int, error) {
+func StringBase32(s string, msg []byte, off int) (int, error) {
 	b32, err := fromBase32([]byte(s))
 	if err != nil {
 		return len(msg), err
@@ -151,15 +108,7 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringBase64(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
-	}
-	return toBase64(b), nil
-}
-
-func packStringBase64(s string, msg []byte, off int) (int, error) {
+func StringBase64(s string, msg []byte, off int) (int, error) {
 	b64, err := fromBase64([]byte(s))
 	if err != nil {
 		return len(msg), err
@@ -172,15 +121,7 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringHex(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
-	}
-	return hex.EncodeToString(b), nil
-}
-
-func packStringHex(s string, msg []byte, off int) (int, error) {
+func StringHex(s string, msg []byte, off int) (int, error) {
 	h, err := hex.DecodeString(s)
 	if err != nil {
 		return len(msg), err
@@ -193,15 +134,7 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringAny(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
-	}
-	return string(b), nil
-}
-
-func packStringAny(s string, msg []byte, off int) (int, error) {
+func StringAny(s string, msg []byte, off int) (int, error) {
 	if off+len(s) > len(msg) {
 		return len(msg), &Error{err: "overflow packing anything"}
 	}
