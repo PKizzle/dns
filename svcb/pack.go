@@ -1,20 +1,19 @@
 package svcb
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"net"
 	"slices"
 	"strconv"
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// should all be generated
+// should all be generated...
 
 func Pack(p Pair, msg []byte, off int) (int, error) {
 	switch x := p.(type) {
@@ -22,24 +21,22 @@ func Pack(p Pair, msg []byte, off int) (int, error) {
 		return x.pack(msg, off)
 	case *ALPN:
 		return x.pack(msg, off)
-		/*
-			case *NODEFAULTALPN:
-				return x.pack(msg, off)
-			case *PORT:
-				return x.pack(msg, off)
-			case *IPV4HINT:
-				return x.pack(msg, off)
-			case *ECHCONFIG:
-				return x.pack(msg, off)
-			case *IPV6HINT:
-				return x.pack(msg, off)
-			case *DOHPATH:
-				return x.pack(msg, off)
-			case *OHTTP:
-				return x.pack(msg, off)
-		*/
+	case *NODEFAULTALPN:
+		return x.pack(msg, off)
+	case *PORT:
+		return x.pack(msg, off)
+	case *IPV4HINT:
+		return x.pack(msg, off)
+	case *ECHCONFIG:
+		return x.pack(msg, off)
+	case *IPV6HINT:
+		return x.pack(msg, off)
+	case *DOHPATH:
+		return x.pack(msg, off)
+	case *OHTTP:
+		return x.pack(msg, off)
 	}
-	return 0, fmt.Errorf("dns: no pair pack defined")
+	return 0, fmt.Errorf("dns: no svcb pack defined")
 }
 
 func Unpack(p Pair, data *cryptobyte.String) error {
@@ -48,27 +45,29 @@ func Unpack(p Pair, data *cryptobyte.String) error {
 		return x.unpack(data)
 	case *ALPN:
 		return x.unpack(data)
-		/*
-			case *NODEFAULTALPN:
-				return x.unpack(data)
-					case *PORT:
-						return x.unpack(data)
-					case *IPV4HINT:
-						return x.unpack(data)
-					case *ECHCONFIG:
-						return x.unpack(data)
-					case *IPV6HINT:
-						return x.unpack(data)
-					case *DOHPATH:
-						return x.unpack(data)
-					case *OHTTP:
-		*/
+	case *NODEFAULTALPN:
+		return x.unpack(data)
+	case *PORT:
+		return x.unpack(data)
+	case *IPV4HINT:
+		return x.unpack(data)
+	case *ECHCONFIG:
+		return x.unpack(data)
+	case *IPV6HINT:
+		return x.unpack(data)
+	case *DOHPATH:
+		return x.unpack(data)
+	case *OHTTP:
+		return x.unpack(data)
 	}
-	return fmt.Errorf("dns: no pair unpack defined")
+	return fmt.Errorf("dns: no svcb unpack defined")
 }
 
 func (s *MANDATORY) pack(msg []byte, off int) (off1 int, err error) {
-	// type, length needs to be pack here as well, and Len should reflect that.
+	off, err = packTLV(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
 	for _, k := range s.Key {
 		off, err = pack.Uint16(k, msg, off)
 	}
@@ -76,7 +75,6 @@ func (s *MANDATORY) pack(msg []byte, off int) (off1 int, err error) {
 }
 
 func (s *MANDATORY) unpack(sc *cryptobyte.String) error {
-	s.Key = []uint16{}
 	for !sc.Empty() {
 		var key uint16
 		if !sc.ReadUint16(&key) {
@@ -88,6 +86,7 @@ func (s *MANDATORY) unpack(sc *cryptobyte.String) error {
 }
 
 func (s *ALPN) pack(msg []byte, off int) (off1 int, err error) {
+	off, err = packTLV(s, msg, off)
 	for _, e := range s.Alpn {
 		if e == "" {
 			return len(msg), errors.New("dns: svcbalpn: empty alpn-id")
@@ -107,119 +106,168 @@ func (s *ALPN) pack(msg []byte, off int) (off1 int, err error) {
 }
 
 func (s *ALPN) unpack(sc *cryptobyte.String) error {
-	var alpn []string
 	for !sc.Empty() {
 		var data cryptobyte.String
 		if !sc.ReadUint8LengthPrefixed(&data) {
 			return fmt.Errorf("dns: overflow unpacking data")
 		}
-		alpn = append(alpn, string(data))
+		s.Alpn = append(s.Alpn, string(data))
 	}
-	s.Alpn = alpn
 	return nil
 }
 
-func (*NODEFAULTALPN) pack() ([]byte, error) { return []byte{}, nil }
+func (s *NODEFAULTALPN) pack(msg []byte, off int) (int, error) {
+	off, err := packTLV(s, msg, off)
+	return off, err
+}
 
-func (*NODEFAULTALPN) unpack(b []byte) error {
-	if len(b) != 0 {
+func (*NODEFAULTALPN) unpack(sc *cryptobyte.String) error {
+	if !sc.Empty() {
 		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
 	}
 	return nil
 }
 
-func (s *PORT) unpack(b []byte) error {
-	if len(b) != 2 {
+func (s *PORT) pack(msg []byte, off int) (off1 int, err error) {
+	off, err = packTLV(s, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = pack.Uint16(s.Port, msg, off)
+	return off, err
+}
+
+func (s *PORT) unpack(sc *cryptobyte.String) error {
+	if !sc.ReadUint16(&s.Port) {
 		return errors.New("dns: svcbport: port length is not exactly 2 octets")
 	}
-	s.Port = binary.BigEndian.Uint16(b)
 	return nil
 }
 
-func (s *PORT) pack() ([]byte, error) {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, s.Port)
-	return b, nil
-}
-
-func (s *IPV4HINT) pack() ([]byte, error) {
-	b := make([]byte, 0, 4*len(s.Hint))
-	for _, e := range s.Hint {
-		x := e.To4()
-		if x == nil {
-			return nil, errors.New("dns: svcbipv4hint: expected ipv4, hint is ipv6")
+func (s *IPV4HINT) pack(msg []byte, off int) (int, error) {
+	off, err := packTLV(s, msg, off)
+	if err != nil {
+		return off, err
+	}
+	for _, ip := range s.Hint {
+		off, err = pack.A(ip, msg, off)
+		if err != nil {
+			return off, err
 		}
-		b = append(b, x...)
 	}
-	return b, nil
+	return off, nil
 }
 
-func (s *IPV4HINT) unpack(b []byte) error {
-	if len(b) == 0 || len(b)%4 != 0 {
-		return errors.New("dns: svcbipv4hint: ipv4 address byte array length is not a multiple of 4")
+func (s *IPV4HINT) unpack(sc *cryptobyte.String) error {
+	for !sc.Empty() {
+		ip, err := unpack.A(sc)
+		if err != nil {
+			return errors.New("dns: svcbipv4hint: ipv4 address byte array length is not a multiple of 4")
+		}
+		s.Hint = append(s.Hint, ip)
 	}
-	b = slices.Clone(b)
-	x := make([]net.IP, 0, len(b)/4)
-	for i := 0; i < len(b); i += 4 {
-		x = append(x, net.IP(b[i:i+4]))
-	}
-	s.Hint = x
 	return nil
 }
 
-func (s *ECHCONFIG) pack() ([]byte, error) {
-	return slices.Clone(s.ECH), nil
+func (s *ECHCONFIG) pack(msg []byte, off int) (int, error) {
+	off, err := packTLV(s, msg, off)
+	if err != nil {
+		return off, err
+	}
+	if len(s.ECH) > len(msg) {
+		return off, errors.New("dns: svcbechconfig: overflow packing")
+	}
+	n := copy(msg[off:], s.ECH)
+	return off + n, nil
 }
 
-func (s *IPV6HINT) pack() ([]byte, error) {
-	b := make([]byte, 0, 16*len(s.Hint))
-	for _, e := range s.Hint {
-		if len(e) != net.IPv6len || e.To4() != nil {
-			return nil, errors.New("dns: svcbipv6hint: expected ipv6, hint is ipv4")
+func (s *ECHCONFIG) unpack(sc *cryptobyte.String) error {
+	s.ECH = make([]byte, len([]byte(*sc)))
+	if !sc.CopyBytes(s.ECH) {
+		return errors.New("dns: svcbechconfig overflow unpacking")
+	}
+	return nil
+}
+
+func (s *IPV6HINT) pack(msg []byte, off int) (int, error) {
+	off, err := packTLV(s, msg, off)
+	if err != nil {
+		return off, err
+	}
+	for _, ip := range s.Hint {
+		off, err = pack.AAAA(ip, msg, off)
+		if err != nil {
+			return off, err
 		}
-		b = append(b, e...)
+
 	}
-	return b, nil
+	return off, nil
 }
 
-func (s *IPV6HINT) unpack(b []byte) error {
-	if len(b) == 0 || len(b)%16 != 0 {
-		return errors.New("dns: svcbipv6hint: ipv6 address byte array length not a multiple of 16")
-	}
-	b = slices.Clone(b)
-	x := make([]net.IP, 0, len(b)/16)
-	for i := 0; i < len(b); i += 16 {
-		ip := net.IP(b[i : i+16])
-		if ip.To4() != nil {
+func (s *IPV6HINT) unpack(sc *cryptobyte.String) error {
+	for !sc.Empty() {
+		ip, err := unpack.AAAA(sc)
+		if err != nil {
 			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4")
 		}
-		x = append(x, ip)
+		s.Hint = append(s.Hint, ip)
 	}
-	s.Hint = x
 	return nil
 }
 
-func (s *DOHPATH) pack() ([]byte, error) { return []byte(s.Template), nil }
-
-func (s *DOHPATH) unpack(b []byte) error {
-	s.Template = string(b)
-	return nil
+func (s *DOHPATH) pack(msg []byte, off int) (int, error) {
+	off, err := packTLV(s, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = pack.StringAny(s.Template, msg, off)
+	return off, err
 }
 
-func (*OHTTP) pack() ([]byte, error) { return []byte{}, nil }
+func (s *DOHPATH) unpack(sc *cryptobyte.String) (err error) {
+	s.Template, err = unpack.StringAny(sc, len(*sc))
+	return err
+}
 
-func (*OHTTP) unpack(b []byte) error {
-	if len(b) != 0 {
+func (s *OHTTP) pack(msg []byte, off int) (int, error) {
+	off, err := packTLV(s, msg, off)
+	return off, err
+}
+
+func (*OHTTP) unpack(sc *cryptobyte.String) error {
+	if !sc.Empty() {
 		return errors.New("dns: svcbotthp: svcbotthp must have no value")
 	}
 	return nil
 }
 
-func (s *LOCAL) pack() ([]byte, error) { return slices.Clone(s.Data), nil }
+func (s *LOCAL) pack() ([]byte, error) {
+	// packTLD
+	// custom beuse of the keycode
+	return slices.Clone(s.Data), nil
+}
 
-func (s *LOCAL) unpack(b []byte) error {
-	s.Data = slices.Clone(b)
+func (s *LOCAL) unpack(sc *cryptobyte.String) error {
+	// keys also, custom TLV
+	s.Data = make([]byte, len(*sc))
+	if !sc.CopyBytes(s.Data) {
+		errors.New("dns: svcblocal overflow unpacking")
+	}
 	return nil
+}
+
+func packTLV(p Pair, msg []byte, off int) (off1 int, err error) {
+	key := PairToKey(p)
+	length := uint16(p.Len()) - tlv // now here we do the rdata length, not the 4 octets we encoding here
+	off, err = pack.Uint16(key, msg, off)
+	if err != nil {
+		return len(msg), fmt.Errorf("dns: overflow packing SVCB")
+	}
+	off, err = pack.Uint16(length, msg, off)
+	if err != nil {
+		return len(msg), fmt.Errorf("dns: overflow packing SVCB")
+	}
+	return off, err
 }
 
 // pairToString converts the value of an SVCB parameter into a DNS presentation-format string.
@@ -252,7 +300,7 @@ func stringToPair(b string) ([]byte, error) {
 			continue
 		}
 		if i+1 == len(b) {
-			return nil, errors.New("escape unterminated")
+			return nil, errors.New("dns: escape unterminated")
 		}
 		if ddd.IsDigit(b[i+1]) {
 			if i+3 < len(b) && ddd.IsDigit(b[i+2]) && ddd.IsDigit(b[i+3]) {
@@ -263,7 +311,7 @@ func stringToPair(b string) ([]byte, error) {
 					continue
 				}
 			}
-			return nil, errors.New("bad escaped octet")
+			return nil, errors.New("dns: bad escaped octet")
 		} else {
 			data = append(data, b[i+1])
 			i += 2

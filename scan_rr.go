@@ -2005,7 +2005,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 			}
-			pairFn := svcb.KeyToPair[svcb.StringToKey[key]]
+			pairFn := svcb.KeyToPair[svcb.StringToKey(key)]
 			if pairFn == nil {
 				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
 			}

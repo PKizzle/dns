@@ -24,7 +24,19 @@ const (
 	KeyReserved uint16 = 65535
 )
 
-var KeyToString = map[uint16]string{
+// KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
+// unknown keys "key"+value is returned, see section 2.1 of RFC 9460.
+func KeyToString(k uint16) string {
+	if k == KeyReserved {
+		return ""
+	}
+	if s, ok := keyToString[k]; ok {
+		return s
+	}
+	return "key" + strconv.Itoa(int(k))
+}
+
+var keyToString = map[uint16]string{
 	KeyMandatory:     "mandatory",
 	KeyAlpn:          "alpn",
 	KeyNoDefaultALPN: "no-default-alpn",
@@ -36,7 +48,19 @@ var KeyToString = map[uint16]string{
 	KeyOhttp:         "ohttp",
 }
 
-var StringToKey = reverse(KeyToString)
+// StringtoKey is the reverse of KeyToString and takes keyXXXX into account.
+func StringToKey(s string) uint16 {
+	if k, ok := stringToKey[s]; ok {
+		return k
+	}
+	if strings.HasPrefix(s, "key") {
+		k, _ := strconv.Atoi(s[3:])
+		return uint16(k)
+	}
+	return KeyReserved
+}
+
+var stringToKey = reverse(keyToString)
 
 // KeyToPair is a map of constructors for each key type.
 var KeyToPair = map[uint16]func() Pair{
@@ -51,7 +75,7 @@ var KeyToPair = map[uint16]func() Pair{
 	KeyOhttp:         func() Pair { return new(OHTTP) },
 }
 
-// LOCAL ones
+// LOCAL ones TODO
 /*
 	default:
 		e := new(LOCAL)
@@ -106,9 +130,8 @@ type Pair interface {
 // - escape sequences are not used in mandatory
 // - mandatory, when present, lists at least one key
 //
-// Basic use pattern for creating a mandatory option in a SVCB RR.
+// Basic use pattern for creating a mandatory option in a SVCB RR, called s:
 //
-//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	s.Value = append(s.Value, &svcb.MANDATORY{})
 //	t := &svcb.ALPN{Alpn: []string{"xmpp-client"}}
 //	s.Value = append(s.Value, t)
@@ -119,22 +142,21 @@ type MANDATORY struct {
 func (s *MANDATORY) String() string {
 	str := make([]string, len(s.Key))
 	for i, e := range s.Key {
-		str[i] = KeyToString[e]
+		str[i] = KeyToString(e)
 	}
 	return strings.Join(str, ",")
 }
 
-func (s *MANDATORY) Len() int { return 2 * len(s.Key) }
+func (s *MANDATORY) Len() int { return tlv + 2*len(s.Key) }
 
 // ALPN pair is used to list supported connection protocols.
 // The user of this library must ensure that at least one protocol is listed when alpn is present.
 // Protocol IDs can be found at:
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
-// Basic use pattern for creating an alpn option:
+// Basic use pattern for creating an ALPN option, in a SVCB RR called s:
 //
-//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := svcb.ALPN{Alpn: []string{"h2", "http/1.1"}}
-//	h.Value = append(h.Value, e)
+//	s.Value = append(h.Value, e)
 type ALPN struct {
 	Alpn []string
 }
@@ -189,14 +211,13 @@ func (s *ALPN) Len() int {
 	for _, e := range s.Alpn {
 		l += 1 + len(e)
 	}
-	return l
+	return l + tlv
 }
 
 // NODEFAULTALPN pair signifies no support for default connection protocols.
 // Should be used in conjunction with alpn.
 // Basic use pattern for creating a no-default-alpn option:
 //
-//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	t := new(dns.ALPN)
 //	t.Alpn = []string{"xmpp-client"}
 //	s.Value = append(s.Value, t)
@@ -205,20 +226,17 @@ func (s *ALPN) Len() int {
 type NODEFAULTALPN struct{}
 
 func (*NODEFAULTALPN) String() string { return "" }
-func (*NODEFAULTALPN) Len() int       { return 0 }
+func (*NODEFAULTALPN) Len() int       { return tlv + 0 }
 
 // PORT pair defines the port for connection.
 // Basic use pattern for creating a port option:
 //
-//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	e := new(dns.PORT)
-//	e.Port = 80
-//	s.Value = append(s.Value, e)
+//	s.Value = append(s.Value, &dns.PORT{Port: 80})
 type PORT struct {
 	Port uint16
 }
 
-func (*PORT) Len() int         { return 2 }
+func (*PORT) Len() int         { return tlv + 2 }
 func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 
 // IPV4HINT pair suggests an IPv4 address which may be used to open connections
@@ -227,10 +245,9 @@ func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 // to the hinted IP address may be terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv4hint option:
 //
-//		h := new(dns.HTTPS)
-//		h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//		h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //		e := new(dns.IPV4HINT)
-//		e.Hint = []net.IP{net.IPv4(1,1,1,1).To4()}
+//		e.Hint = []net.IP{net.IPv4(1,1,1,1)}
 //
 //	 Or
 //
@@ -240,7 +257,7 @@ type IPV4HINT struct {
 	Hint []net.IP
 }
 
-func (s *IPV4HINT) Len() int { return 4 * len(s.Hint) }
+func (s *IPV4HINT) Len() int { return tlv + 4*len(s.Hint) }
 
 func (s *IPV4HINT) String() string {
 	str := make([]string, len(s.Hint))
@@ -257,8 +274,7 @@ func (s *IPV4HINT) String() string {
 // ECHCONFIG pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
 // Basic use pattern for creating an ech option:
 //
-//	h := new(dns.HTTPS)
-//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := new(dns.ECHCONFIG)
 //	e.ECH = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
@@ -267,7 +283,7 @@ type ECHCONFIG struct {
 }
 
 func (s *ECHCONFIG) String() string { return base64.StdEncoding.EncodeToString(s.ECH) }
-func (s *ECHCONFIG) Len() int       { return len(s.ECH) }
+func (s *ECHCONFIG) Len() int       { return tlv + len(s.ECH) }
 
 // IPV6HINT pair suggests an IPv6 address which may be used to open connections
 // if A and AAAA record responses for SVCB's Target domain haven't been received.
@@ -283,7 +299,7 @@ type IPV6HINT struct {
 	Hint []net.IP
 }
 
-func (s *IPV6HINT) Len() int { return 16 * len(s.Hint) }
+func (s *IPV6HINT) Len() int { return tlv + 16*len(s.Hint) }
 
 func (s *IPV6HINT) String() string {
 	str := make([]string, len(s.Hint))
@@ -305,8 +321,6 @@ func (s *IPV6HINT) String() string {
 // A basic example of using the dohpath option together with the alpn
 // option to indicate support for DNS over HTTPS on a certain path:
 //
-//	s := new(dns.SVCB)
-//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
 //	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
 //	p := &dns.DOHPATH{Template: "/dns-query{?dns}"}
 //	s.Value = append(s.Value, e, p)
@@ -317,7 +331,7 @@ type DOHPATH struct {
 }
 
 func (s *DOHPATH) String() string { return pairToString([]byte(s.Template)) }
-func (s *DOHPATH) Len() int       { return len(s.Template) }
+func (s *DOHPATH) Len() int       { return tlv + len(s.Template) }
 
 // The "ohttp" SvcParamKey is used to indicate that a service described in a SVCB RR
 // can be accessed as a target using an associated gateway.
@@ -329,22 +343,19 @@ func (s *DOHPATH) Len() int       { return len(s.Template) }
 // A basic example of using the dohpath option together with the alpn
 // option to indicate support for DNS over HTTPS on a certain path:
 //
-//	s := new(dns.SVCB)
-//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
 //	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
 //	p := &dns.OHTTP{}
 //	s.Value = append(s.Value, e, p)
 type OHTTP struct{}
 
 func (*OHTTP) String() string { return "" }
-func (*OHTTP) Len() int       { return 0 }
+func (*OHTTP) Len() int       { return tlv + 0 }
 
 // LOCAL pair is intended for experimental/private use. The key is recommended
 // to be in the range [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
 // Basic use pattern for creating a keyNNNNN option:
 //
-//	h := new(dns.HTTPS)
-//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := new(svcb.LOCAL)
 //	e.KeyCode = 65400
 //	e.Data = []byte("abc")
@@ -356,7 +367,7 @@ type LOCAL struct {
 
 func (s *LOCAL) String() string { return pairToString(s.Data) }
 
-func (s *LOCAL) Len() int { return len(s.Data) }
+func (s *LOCAL) Len() int { return tlv + len(s.Data) }
 
 func reverse(m map[uint16]string) map[string]uint16 {
 	n := make(map[string]uint16, len(m))
@@ -365,3 +376,5 @@ func reverse(m map[uint16]string) map[string]uint16 {
 	}
 	return n
 }
+
+const tlv = 4

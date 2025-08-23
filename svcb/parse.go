@@ -16,18 +16,32 @@ func Parse(p Pair, b string) error {
 		return x.parse(b)
 	case *ALPN:
 		return x.parse(b)
+	case *NODEFAULTALPN:
+		return x.parse(b)
+	case *PORT:
+		return x.parse(b)
+	case *IPV4HINT:
+		return x.parse(b)
+	case *ECHCONFIG:
+		return x.parse(b)
+	case *IPV6HINT:
+		return x.parse(b)
+	case *DOHPATH:
+		return x.parse(b)
+	case *OHTTP:
+		return x.parse(b)
 	}
-	return nil
+	return fmt.Errorf("dns: no svcb parse defined")
 }
 
-// should all be generated
+// should all be generated, allthough the difference are huge...
 
 func (s *MANDATORY) parse(b string) error {
 	keys := make([]uint16, 0, strings.Count(b, ",")+1)
 	for len(b) > 0 {
 		var key string
 		key, b, _ = strings.Cut(b, ",")
-		keys = append(keys, StringToKey[key])
+		keys = append(keys, StringToKey(key))
 	}
 	s.Key = keys
 	return nil
@@ -79,7 +93,7 @@ func (s *ALPN) parse(b string) error {
 }
 
 func (*NODEFAULTALPN) parse(b string) error {
-	if b != "" {
+	if len(b) != 0 {
 		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
 	}
 	return nil
@@ -95,7 +109,7 @@ func (s *PORT) parse(b string) error {
 }
 
 func (s *IPV4HINT) parse(b string) error {
-	if b == "" {
+	if len(b) == 0 {
 		return errors.New("dns: svcbipv4hint: empty hint")
 	}
 	if strings.Contains(b, ":") {
@@ -117,7 +131,7 @@ func (s *IPV4HINT) parse(b string) error {
 }
 
 func (s *ECHCONFIG) parse(b string) error {
-	x, err := fromBase64([]byte(b)) // tODO
+	x, err := fromBase64([]byte(b)) // todo, move frombase64 somewhere...
 	if err != nil {
 		return errors.New("dns: svcbech: bad base64 ech")
 	}
@@ -126,7 +140,7 @@ func (s *ECHCONFIG) parse(b string) error {
 }
 
 func (s *IPV6HINT) parse(b string) error {
-	if b == "" {
+	if len(b) == 0 {
 		return errors.New("dns: svcbipv6hint: empty hint")
 	}
 
@@ -157,7 +171,7 @@ func (s *DOHPATH) parse(b string) error {
 }
 
 func (*OHTTP) parse(b string) error {
-	if b != "" {
+	if len(b) != 0 {
 		return errors.New("dns: svcbotthp: svcbotthp must have no value")
 	}
 	return nil

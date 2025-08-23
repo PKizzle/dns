@@ -1,5 +1,7 @@
 package dns
 
+// should be generated, it is not...
+
 import (
 	"encoding/binary"
 	"encoding/hex"
@@ -7,6 +9,7 @@ import (
 	"net"
 
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -137,7 +140,7 @@ func (o *EDE) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint16(&o.InfoCode) {
 		return ErrUnpackOverflow
 	}
-	if o.ExtraText, err = unpackStringAny(s, len(*s)); err != nil {
+	if o.ExtraText, err = unpack.StringAny(s, len(*s)); err != nil {
 		return ErrUnpackOverflow.Fmt(": %s", "EDE option")
 	}
 	return nil
@@ -216,7 +219,7 @@ func (o *SUBNET) pack(msg []byte, off int) (int, error) {
 	case 2:
 		msg[off] = 128
 	default:
-		return off, errors.New("bad address family")
+		return off, errors.New("dns: bad address family")
 	}
 	return off, nil
 }
@@ -235,11 +238,11 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	case 0:
 		o.Address = net.IPv4(0, 0, 0, 0)
 	case 1:
-		o.Address, err = unpackA(s)
+		o.Address, err = unpack.A(s)
 	case 2:
-		o.Address, err = unpackAAAA(s)
+		o.Address, err = unpack.AAAA(s)
 	default:
-		return errors.New("bad address family")
+		return errors.New("dns: bad address family")
 	}
 	return nil
 }

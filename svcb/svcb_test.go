@@ -5,6 +5,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/svcb"
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // This tests everything valid about SVCB but parsing.
@@ -22,19 +23,21 @@ func TestSVCB(t *testing.T) {
 		{`ipv6hint`, `1::4:4:4:4,1::3:3:3:3`},
 		{`ech`, `YUdWc2JHOD0=`},
 		{`dohpath`, `/dns-query{?dns}`},
-		{`key65000`, `4\ 3`},
-		{`key65001`, `\"\ `},
-		{`key65002`, ``},
-		{`key65003`, `=\"\"`},
-		{`key65004`, `\254\ \ \030\000`},
 		{`ohttp`, ``},
+		/*
+			{`key65000`, `4\ 3`}, // local?
+				{`key65001`, `\"\ `},
+				{`key65002`, ``},
+				{`key65003`, `=\"\"`},
+				{`key65004`, `\254\ \ \030\000`},
+		*/
 	}
 
 	for _, o := range svcbs {
-		keyCode := svcb.StringToKey[o.key]
+		keyCode := svcb.StringToKey(o.key)
 		pairFn := svcb.KeyToPair[keyCode]
 		if pairFn == nil {
-			t.Error("failed to parse svc key: ", o.key)
+			t.Error("failed to lookup svc key: ", o.key)
 			continue
 		}
 		pair := pairFn()
@@ -47,24 +50,26 @@ func TestSVCB(t *testing.T) {
 			t.Error("failed to parse svc pair: ", o.key)
 			continue
 		}
-		/*
-			b, err := kv.pack()
-			if err != nil {
-				t.Error("failed to pack value of svc pair: ", o.key, err)
-				continue
-			}
-			if len(b) != int(kv.len()) {
-				t.Errorf("expected packed svc value %s to be of length %d but got %d", o.key, int(kv.len()), len(b))
-			}
-			err = kv.unpack(b)
-			if err != nil {
-				t.Error("failed to unpack value of svc pair: ", o.key, err)
-				continue
-			}
-			if str := kv.String(); str != o.data {
-				t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", o.key, o.data, str)
-			}
-		*/
+
+		b := make([]byte, pair.Len())
+		off, err := svcb.Pack(pair, b, 0)
+		if err != nil {
+			t.Error("failed to pack value of svc pair: ", o.key, err)
+			continue
+		}
+		if pair.Len() != off {
+			t.Errorf("expected packed svc value %s to be of length %d but got %d", o.key, pair.Len(), off)
+		}
+
+		if str := pair.String(); str != o.data {
+			t.Errorf("`%s' should be equal to\n`%s', but is     `%s'", o.key, o.data, str)
+		}
+
+		sc := cryptobyte.String(b[4:]) // skip the TLV
+		err = svcb.Unpack(pair, &sc)
+		if err != nil {
+			t.Error("failed to unpack value of svc pair: ", o.key, err)
+		}
 	}
 }
 

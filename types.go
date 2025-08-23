@@ -1590,7 +1590,7 @@ func (rr *SVCB) String() string {
 	for _, p := range rr.Value {
 		sb.WriteByte(' ')
 		k := svcb.PairToKey(p)
-		sb.WriteString(svcb.KeyToString[k]) // better for unknown see dnsutils
+		sb.WriteString(svcb.KeyToString(k))
 		sb.WriteByte('=')
 		sb.WriteByte('"')
 		sb.WriteString(p.String())

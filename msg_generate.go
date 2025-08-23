@@ -21,6 +21,7 @@ package dns
 import (
 	"golang.org/x/crypto/cryptobyte"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 `
@@ -111,11 +112,11 @@ func main() {
 			case tag == `dns:"domain-name"`:
 				o("off, err = packName(rr.%s, msg, off, compression, false)\n")
 			case tag == `dns:"a"`:
-				o("off, err = packA(rr.%s, msg, off)\n")
+				o("off, err = pack.A(rr.%s, msg, off)\n")
 			case tag == `dns:"aaaa"`:
-				o("off, err = packAAAA(rr.%s, msg, off)\n")
+				o("off, err = pack.AAAA(rr.%s, msg, off)\n")
 			case tag == `dns:"uint48"`:
-				o("off, err = packUint48(rr.%s, msg, off)\n")
+				o("off, err = pack.Uint48(rr.%s, msg, off)\n")
 			case tag == `dns:"txt"`:
 				o("off, err = packString(rr.%s, msg, off)\n")
 
@@ -268,9 +269,9 @@ if rr.%s != "-" {
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
 				unpackFieldBuf("unpackName")
 			case `dns:"a"`:
-				unpackField("unpackA")
+				unpackField("unpack.A")
 			case `dns:"aaaa"`:
-				unpackField("unpackAAAA")
+				unpackField("unpack.AAAA")
 			case `dns:"uint48"`:
 				readInt("Uint48")
 			case `dns:"txt"`:
@@ -282,7 +283,7 @@ if rr.%s != "-" {
 			case `dns:"hex"`:
 				unpackFieldRest("unpackStringHex")
 			case `dns:"any"`:
-				unpackFieldRest("unpackStringAny")
+				unpackFieldRest("unpack.StringAny")
 			case `dns:"octet"`:
 				unpackField("unpackStringOctet")
 			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:

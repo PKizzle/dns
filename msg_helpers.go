@@ -11,6 +11,7 @@ import (
 
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -24,53 +25,7 @@ func offset(data, buf []byte) int {
 }
 
 // helper functions called from the generated zmsg.go - among others
-
-func unpackA(s *cryptobyte.String) (net.IP, error) {
-	ip := make(net.IP, net.IPv4len)
-	if !s.CopyBytes(ip) {
-		return nil, ErrUnpackOverflow
-	}
-	return ip, nil
-}
-
-func packA(a net.IP, msg []byte, off int) (int, error) {
-	switch len(a) {
-	case net.IPv4len, net.IPv6len:
-		// It must be a slice of 4, even if it is 16, we encode only the first 4
-		if off+net.IPv4len > len(msg) {
-			return len(msg), &Error{err: "overflow packing a"}
-		}
-
-		copy(msg[off:], a.To4())
-		off += net.IPv4len
-	default:
-		return len(msg), &Error{err: "overflow packing a"}
-	}
-	return off, nil
-}
-
-func unpackAAAA(s *cryptobyte.String) (net.IP, error) {
-	ip := make(net.IP, net.IPv6len)
-	if !s.CopyBytes(ip) {
-		return nil, ErrUnpackOverflow
-	}
-	return ip, nil
-}
-
-func packAAAA(aaaa net.IP, msg []byte, off int) (int, error) {
-	switch len(aaaa) {
-	case net.IPv6len:
-		if off+net.IPv6len > len(msg) {
-			return len(msg), &Error{err: "overflow packing aaaa"}
-		}
-
-		copy(msg[off:], aaaa)
-		off += net.IPv6len
-	default:
-		return len(msg), &Error{err: "overflow packing aaaa"}
-	}
-	return off, nil
-}
+// all need to move to internal/pack or internal/unpack
 
 // unpackRRHeader unpacks an RR header advancing msg.
 func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength uint16, err error) {
@@ -150,20 +105,6 @@ func fromBase64(s []byte) (buf []byte, err error) {
 
 func toBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
-}
-
-func packUint48(i uint64, msg []byte, off int) (off1 int, err error) {
-	if off+6 > len(msg) {
-		return len(msg), &Error{err: "overflow packing uint64 as uint48"}
-	}
-	msg[off] = byte(i >> 40)
-	msg[off+1] = byte(i >> 32)
-	msg[off+2] = byte(i >> 24)
-	msg[off+3] = byte(i >> 16)
-	msg[off+4] = byte(i >> 8)
-	msg[off+5] = byte(i)
-	off += 6
-	return off, nil
 }
 
 func unpackString(s *cryptobyte.String) (string, error) {
@@ -270,14 +211,6 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringAny(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
-	}
-	return string(b), nil
-}
-
 func unpackStringTxt(s *cryptobyte.String) ([]string, error) {
 	return unpackTxt(s)
 }
@@ -334,9 +267,7 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackStringOctet(s *cryptobyte.String) (string, error) {
-	return unpackStringAny(s, len(*s))
-}
+func unpackStringOctet(s *cryptobyte.String) (string, error) { return unpack.StringAny(s, len(*s)) }
 
 func packStringOctet(s string, msg []byte, off int) (int, error) {
 	off, err := packOctetString(s, msg, off)
@@ -599,9 +530,9 @@ func unpackIPSECGateway(s *cryptobyte.String, msgBuf []byte, gatewayType uint8) 
 	switch gatewayType {
 	case IPSECGatewayNone: // do nothing
 	case IPSECGatewayIPv4:
-		addr, err = unpackA(s)
+		addr, err = unpack.A(s)
 	case IPSECGatewayIPv6:
-		addr, err = unpackAAAA(s)
+		addr, err = unpack.AAAA(s)
 	case IPSECGatewayHost:
 		name, err = unpackName(s, msgBuf)
 	}
@@ -614,9 +545,9 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 	switch gatewayType {
 	case IPSECGatewayNone: // do nothing
 	case IPSECGatewayIPv4:
-		off, err = packA(gatewayAddr, msg, off)
+		off, err = pack.A(gatewayAddr, msg, off)
 	case IPSECGatewayIPv6:
-		off, err = packAAAA(gatewayAddr, msg, off)
+		off, err = pack.AAAA(gatewayAddr, msg, off)
 	case IPSECGatewayHost:
 		off, err = packName(gatewayString, msg, off, compression, compress)
 	}
