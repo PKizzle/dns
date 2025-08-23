@@ -15,6 +15,7 @@ import (
 //go:generate go run len_generate.go
 //go:generate go run dsolen_generate.go
 //go:generate go run dnsutil_generate.go
+//go:generate go run compare_generate.go
 
 const (
 	// DefaultMsgSize is the standard default for messages larger than 512 bytes.
@@ -36,11 +37,6 @@ type RR interface {
 	Header() *Header
 	// String returns the text representation of the resource record.
 	String() string
-	// Data returns all the rdata fields of the resource record.
-	Data() []Field
-
-	// SetData sets the rdata fields of the resource record. SetData([]Field) error??
-
 	// Len is the length of the RR when encoded in wire format, this is not a perfect metric and returning
 	// a slightly too large value is OK.
 	Len() int
@@ -53,11 +49,6 @@ type Typer interface {
 }
 
 // Type Coder Code() for option RR???
-
-// Field is a rdata element in a resource record. The string representation can be configured in various ways:
-//   - If a Field implements the Stringer interface it will be used to return the string presentation
-//   - Otherwise if the field is a basic Go type, it will be converted to a string will be used.
-type Field any
 
 // The Packer interface defines the Pack and Unpack methods that are used to convert RRs to and from wire format.
 type Packer interface {
@@ -90,6 +81,11 @@ type Copier interface {
 	Copy() RR
 }
 
+// Comparer interface defines a compare function that returns -1, 0, or +1.
+type Comparer interface {
+	Compare(b RR) int
+}
+
 // RRset is a just list of RRs. There is no guarantee that this is an official RRset as defined in
 // RFC 7719, Section 4 "RRset", use [dnsutil.IsRRset] to make that determination.
 // The type is defined here to implement the [sort.Interface].
@@ -107,7 +103,6 @@ type Header struct {
 }
 
 func (h *Header) Len() int        { return len(h.Name) + 1 + 10 } // +1 because miek.nl. is actually .miek.nl.
-func (h *Header) Data() []Field   { return nil }
 func (h *Header) Header() *Header { return h }
 
 // String returns the string representation of h.

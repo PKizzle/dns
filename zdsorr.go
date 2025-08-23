@@ -23,5 +23,3 @@ func RRToStateful(rr DSO) uint16 {
 var StatefulToString = map[uint16]string{
 	StatefulKEEPALIVE: "KEEPALIVE",
 }
-
-func (rr *KEEPALIVE) Data() []Field { return []Field{rr.InactivityTimeout, rr.KeepAliveInterval} }
