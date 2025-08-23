@@ -129,7 +129,7 @@ type timerWireFmt struct {
 }
 
 func (tw *timerWireFmt) pack(buf []byte) (int, error) {
-	off, err := packUint48(tw.TimeSigned, buf, 0)
+	off, err := pack.Uint48(tw.TimeSigned, buf, 0)
 	if err != nil {
 		return off, err
 	}
@@ -176,7 +176,7 @@ func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint48(tw.TimeSigned, buf, off)
+	off, err = pack.Uint48(tw.TimeSigned, buf, off)
 	if err != nil {
 		return off, err
 	}

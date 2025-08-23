@@ -25,3 +25,8 @@ uint16 is probably not the most important details of your new resource record.
 If you have a bunch of values that certain types can take the are named: `ValueThing` and will need a
 `ValueToString`/`StringToValue` map or function. `Thing` may or may not be capitalized. E.g. we have
 `RcodeScucces` and `ClassINET`.
+
+## Returning error from pack function
+
+Historically they returned `len(msg), err`, but nothing is done with that length, so slowly they are converted
+back into `return off, err`.

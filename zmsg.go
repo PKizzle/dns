@@ -4,6 +4,7 @@ package dns
 
 import (
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -17,7 +18,7 @@ func (rr *NULL) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Null, err = unpackStringAny(&s, len(s))
+	rr.Null, err = unpack.StringAny(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -696,7 +697,7 @@ func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *A) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packA(rr.A, msg, off)
+	off, err = pack.A(rr.A, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -705,7 +706,7 @@ func (rr *A) pack(msg []byte, off int, compression map[string]uint16) (off1 int,
 
 func (rr *A) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.A, err = unpackA(&s)
+	rr.A, err = unpack.A(&s)
 	if err != nil {
 		return err
 	}
@@ -716,7 +717,7 @@ func (rr *A) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *AAAA) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packAAAA(rr.AAAA, msg, off)
+	off, err = pack.AAAA(rr.AAAA, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -725,7 +726,7 @@ func (rr *AAAA) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.AAAA, err = unpackAAAA(&s)
+	rr.AAAA, err = unpack.AAAA(&s)
 	if err != nil {
 		return err
 	}
@@ -1867,7 +1868,7 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packA(rr.Locator32, msg, off)
+	off, err = pack.A(rr.Locator32, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1879,7 +1880,7 @@ func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Locator32, err = unpackA(&s)
+	rr.Locator32, err = unpack.A(&s)
 	if err != nil {
 		return err
 	}
@@ -1943,7 +1944,7 @@ func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *EUI48) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packUint48(rr.Address, msg, off)
+	off, err = pack.Uint48(rr.Address, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2356,7 +2357,7 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packUint48(rr.TimeSigned, msg, off)
+	off, err = pack.Uint48(rr.TimeSigned, msg, off)
 	if err != nil {
 		return off, err
 	}
