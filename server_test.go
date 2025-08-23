@@ -41,7 +41,7 @@ func TestServer(t *testing.T) {
 			s, addrstr, _, err := tc.run(":0")
 			defer s.Shutdown(context.TODO())
 
-			c := &dns.Client{}
+			c := &dns.Client{Transport: dns.NewDefaultTransport()}
 			if tc.name == "tcp-tls" {
 				c.TLSConfig = dnstest.TLSConfig()
 			}

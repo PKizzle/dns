@@ -15,15 +15,7 @@ type Envelope struct {
 
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
-	*Transport
-
-	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
-	// be used to dial.
-	TLSConfig *tls.Config
-
-	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
-	TSIGSigner
-	TSIGVerifier
+	*Transport // If Transport is nil it gets a copy of DefaultTransport.
 }
 
 // In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().
@@ -41,7 +33,7 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 	}
 
 	if t.Transport == nil {
-		t.Transport = DefaultTransport
+		t.Transport = NewDefaultTransport()
 	}
 
 	var conn net.Conn

@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto/tls"
 	"net"
 	"time"
 )
@@ -12,14 +13,29 @@ type Transport struct {
 
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+
+	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
+	// be used to dial.
+	TLSConfig *tls.Config
+
+	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
+	TSIGSigner
+	TSIGVerifier
 }
 
-// DefaultTransport is the default transport in client, when none is set.
-var DefaultTransport = &Transport{
+// DefaultTransport is the default transport in client, when none is set. Note changing this value how global
+// effects to future [Client]s and [Transfer]s.
+var DefaultTransport = Transport{
 	Dialer: &net.Dialer{
 		Timeout:   5 * time.Second,
 		KeepAlive: 3 * time.Second,
 	},
 	ReadTimeout:  2 * time.Second,
 	WriteTimeout: 2 * time.Second,
+}
+
+// NewDefaultTransport returns a copy of [DefaultTransport].
+func NewDefaultTransport() *Transport {
+	d := DefaultTransport
+	return &d
 }

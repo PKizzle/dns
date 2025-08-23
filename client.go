@@ -12,11 +12,7 @@ import (
 
 // A Client is a DNS client. It is safe to use a client from multiple goroutines.
 type Client struct {
-	*Transport
-
-	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
-	// be used to dial.
-	TLSConfig *tls.Config
+	*Transport // If Transport is nil it gets a copy of DefaultTransport.
 }
 
 // Exchange performs a synchronous query over "network". It sends the message m to the address
@@ -52,7 +48,7 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
-		c.Transport = DefaultTransport
+		c.Transport = NewDefaultTransport()
 	}
 
 	var conn net.Conn
