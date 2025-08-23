@@ -16,8 +16,22 @@ func Parse(p Pair, b string) error {
 		return x.parse(b)
 	case *ALPN:
 		return x.parse(b)
+	case *NODEFAULTALPN:
+		return x.parse(b)
+	case *PORT:
+		return x.parse(b)
+	case *IPV4HINT:
+		return x.parse(b)
+	case *ECHCONFIG:
+		return x.parse(b)
+	case *IPV6HINT:
+		return x.parse(b)
+	case *DOHPATH:
+		return x.parse(b)
+	case *OHTTP:
+		return x.parse(b)
 	}
-	return nil
+	return fmt.Errorf("dns: no svcb parse defined")
 }
 
 // should all be generated, allthough the difference are huge...
@@ -79,7 +93,7 @@ func (s *ALPN) parse(b string) error {
 }
 
 func (*NODEFAULTALPN) parse(b string) error {
-	if len(b) == 0 {
+	if len(b) != 0 {
 		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
 	}
 	return nil

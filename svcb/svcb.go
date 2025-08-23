@@ -75,7 +75,7 @@ var KeyToPair = map[uint16]func() Pair{
 	KeyOhttp:         func() Pair { return new(OHTTP) },
 }
 
-// LOCAL ones
+// LOCAL ones TODO
 /*
 	default:
 		e := new(LOCAL)
@@ -130,9 +130,8 @@ type Pair interface {
 // - escape sequences are not used in mandatory
 // - mandatory, when present, lists at least one key
 //
-// Basic use pattern for creating a mandatory option in a SVCB RR.
+// Basic use pattern for creating a mandatory option in a SVCB RR, called s:
 //
-//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	s.Value = append(s.Value, &svcb.MANDATORY{})
 //	t := &svcb.ALPN{Alpn: []string{"xmpp-client"}}
 //	s.Value = append(s.Value, t)
@@ -154,11 +153,10 @@ func (s *MANDATORY) Len() int { return tlv + 2*len(s.Key) }
 // The user of this library must ensure that at least one protocol is listed when alpn is present.
 // Protocol IDs can be found at:
 // https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids
-// Basic use pattern for creating an alpn option:
+// Basic use pattern for creating an ALPN option, in a SVCB RR called s:
 //
-//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := svcb.ALPN{Alpn: []string{"h2", "http/1.1"}}
-//	h.Value = append(h.Value, e)
+//	s.Value = append(h.Value, e)
 type ALPN struct {
 	Alpn []string
 }
@@ -220,7 +218,6 @@ func (s *ALPN) Len() int {
 // Should be used in conjunction with alpn.
 // Basic use pattern for creating a no-default-alpn option:
 //
-//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	t := new(dns.ALPN)
 //	t.Alpn = []string{"xmpp-client"}
 //	s.Value = append(s.Value, t)
@@ -234,10 +231,7 @@ func (*NODEFAULTALPN) Len() int       { return tlv + 0 }
 // PORT pair defines the port for connection.
 // Basic use pattern for creating a port option:
 //
-//	s := &dns.SVCB{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	e := new(dns.PORT)
-//	e.Port = 80
-//	s.Value = append(s.Value, e)
+//	s.Value = append(s.Value, &dns.PORT{Port: 80})
 type PORT struct {
 	Port uint16
 }
@@ -251,10 +245,9 @@ func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 // to the hinted IP address may be terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv4hint option:
 //
-//		h := new(dns.HTTPS)
-//		h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//		h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //		e := new(dns.IPV4HINT)
-//		e.Hint = []net.IP{net.IPv4(1,1,1,1).To4()}
+//		e.Hint = []net.IP{net.IPv4(1,1,1,1)}
 //
 //	 Or
 //
@@ -281,8 +274,7 @@ func (s *IPV4HINT) String() string {
 // ECHCONFIG pair contains the ECHConfig structure defined in draft-ietf-tls-esni [RFC xxxx].
 // Basic use pattern for creating an ech option:
 //
-//	h := new(dns.HTTPS)
-//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := new(dns.ECHCONFIG)
 //	e.ECH = []byte{0xfe, 0x08, ...}
 //	h.Value = append(h.Value, e)
@@ -329,8 +321,6 @@ func (s *IPV6HINT) String() string {
 // A basic example of using the dohpath option together with the alpn
 // option to indicate support for DNS over HTTPS on a certain path:
 //
-//	s := new(dns.SVCB)
-//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
 //	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
 //	p := &dns.DOHPATH{Template: "/dns-query{?dns}"}
 //	s.Value = append(s.Value, e, p)
@@ -353,8 +343,6 @@ func (s *DOHPATH) Len() int       { return tlv + len(s.Template) }
 // A basic example of using the dohpath option together with the alpn
 // option to indicate support for DNS over HTTPS on a certain path:
 //
-//	s := new(dns.SVCB)
-//	s.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
 //	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
 //	p := &dns.OHTTP{}
 //	s.Value = append(s.Value, e, p)
@@ -367,8 +355,7 @@ func (*OHTTP) Len() int       { return tlv + 0 }
 // to be in the range [SVCB_PRIVATE_LOWER, SVCB_PRIVATE_UPPER].
 // Basic use pattern for creating a keyNNNNN option:
 //
-//	h := new(dns.HTTPS)
-//	h.Hdr = dns.Header{Name: ".", Class: dns.ClassINET}
+//	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
 //	e := new(svcb.LOCAL)
 //	e.KeyCode = 65400
 //	e.Data = []byte("abc")

@@ -151,7 +151,7 @@ func (s *IPV4HINT) pack(msg []byte, off int) (int, error) {
 	}
 	for _, ip := range s.Hint {
 		off, err = pack.A(ip, msg, off)
-		if err == nil {
+		if err != nil {
 			return off, err
 		}
 	}
