@@ -13,12 +13,12 @@ import (
 
 // Config wraps the contents of the /etc/resolv.conf file.
 type Config struct {
-	Servers  []string // servers to use
-	Search   []string // suffixes to append to local name
-	Port     string   // what port to use
-	Ndots    int      // number of dots in name to trigger absolute lookup
-	Timeout  int      // seconds before giving up on packet
-	Attempts int      // lost packets before giving up on server, not used in the package dns
+	Servers  []string // Servers to use.
+	Search   []string // Suffixes to append to local name.
+	Port     string   // Port to use.
+	Ndots    int      // Number of dots in name to trigger absolute lookup.
+	Timeout  int      // Seconds before giving up on packet.
+	Attempts int      // Lost packets before giving up on server.
 }
 
 // FromFile parses a resolv.conf(5) like file and returns a *Config.
