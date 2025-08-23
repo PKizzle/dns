@@ -24,7 +24,19 @@ const (
 	KeyReserved uint16 = 65535
 )
 
-var KeyToString = map[uint16]string{
+// KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
+// unknown keys "KEY"+value is returned.
+func KeyToString(k uint16) string {
+	if k == KeyReserved {
+		return ""
+	}
+	if s, ok := keyToString[k]; ok {
+		return s
+	}
+	return "KEY" + strconv.Itoa(int(k))
+}
+
+var keyToString = map[uint16]string{
 	KeyMandatory:     "mandatory",
 	KeyAlpn:          "alpn",
 	KeyNoDefaultALPN: "no-default-alpn",
@@ -36,7 +48,19 @@ var KeyToString = map[uint16]string{
 	KeyOhttp:         "ohttp",
 }
 
-var StringToKey = reverse(KeyToString)
+// StringtoKey is the reverse of KeyToString and takes KEYXXXX into account.
+func StringToKey(s string) uint16 {
+	if k, ok := stringToKey[s]; ok {
+		return k
+	}
+	if strings.HasPrefix(s, "KEY") {
+		k, _ := strconv.Atoi(s[3:])
+		return uint16(k)
+	}
+	return KeyReserved
+}
+
+var stringToKey = reverse(keyToString)
 
 // KeyToPair is a map of constructors for each key type.
 var KeyToPair = map[uint16]func() Pair{
@@ -119,7 +143,7 @@ type MANDATORY struct {
 func (s *MANDATORY) String() string {
 	str := make([]string, len(s.Key))
 	for i, e := range s.Key {
-		str[i] = KeyToString[e]
+		str[i] = KeyToString(e)
 	}
 	return strings.Join(str, ",")
 }

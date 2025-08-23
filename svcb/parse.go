@@ -27,7 +27,7 @@ func (s *MANDATORY) parse(b string) error {
 	for len(b) > 0 {
 		var key string
 		key, b, _ = strings.Cut(b, ",")
-		keys = append(keys, StringToKey[key])
+		keys = append(keys, StringToKey(key))
 	}
 	s.Key = keys
 	return nil
