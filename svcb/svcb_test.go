@@ -33,7 +33,7 @@ func TestSVCB(t *testing.T) {
 	}
 
 	for _, o := range svcbs {
-		keyCode := svcb.StringToKey[o.key]
+		keyCode := svcb.StringToKey(o.key)
 		pairFn := svcb.KeyToPair[keyCode]
 		if pairFn == nil {
 			t.Error("failed to parse svc key: ", o.key)

@@ -25,7 +25,7 @@ const (
 )
 
 // KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
-// unknown keys "KEY"+value is returned.
+// unknown keys "key"+value is returned, see section 2.1 of RFC 9460.
 func KeyToString(k uint16) string {
 	if k == KeyReserved {
 		return ""
@@ -33,7 +33,7 @@ func KeyToString(k uint16) string {
 	if s, ok := keyToString[k]; ok {
 		return s
 	}
-	return "KEY" + strconv.Itoa(int(k))
+	return "key" + strconv.Itoa(int(k))
 }
 
 var keyToString = map[uint16]string{
@@ -48,12 +48,12 @@ var keyToString = map[uint16]string{
 	KeyOhttp:         "ohttp",
 }
 
-// StringtoKey is the reverse of KeyToString and takes KEYXXXX into account.
+// StringtoKey is the reverse of KeyToString and takes keyXXXX into account.
 func StringToKey(s string) uint16 {
 	if k, ok := stringToKey[s]; ok {
 		return k
 	}
-	if strings.HasPrefix(s, "KEY") {
+	if strings.HasPrefix(s, "key") {
 		k, _ := strconv.Atoi(s[3:])
 		return uint16(k)
 	}
