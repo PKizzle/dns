@@ -22,6 +22,8 @@ type Transport struct {
 	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
 	TSIGSigner
 	TSIGVerifier
+
+	// TODO sig0
 }
 
 // DefaultTransport is the default transport in client, when none is set. Note changing this value how global
