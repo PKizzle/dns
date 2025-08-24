@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"time"
 )
 
 // Envelope is used when doing a zone transfer with a remote server.
@@ -82,8 +83,14 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 		}
 	}
 
+	conn.SetWriteDeadline(time.Now().Add(t.WriteTimeout))
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
+		env <- &Envelope{Error: err}
+		return
+	}
+
+	if err := ctx.Err(); err != nil {
 		env <- &Envelope{Error: err}
 		return
 	}
@@ -93,12 +100,13 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 	r.Options = OptionUnpackHeader
 	first := true
 	for {
-		if err := ctx.Err(); err != nil {
+		conn.SetReadDeadline(time.Now().Add(t.ReadTimeout))
+		if _, err := io.Copy(r, conn); err != nil {
 			env <- &Envelope{Error: err}
 			return
 		}
 
-		if _, err := io.Copy(r, conn); err != nil {
+		if err := ctx.Err(); err != nil {
 			env <- &Envelope{Error: err}
 			return
 		}
