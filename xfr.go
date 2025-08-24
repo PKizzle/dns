@@ -73,6 +73,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 		close(env)
 	}()
 
+	// no op tsigigger?
 	options := TSIGOption{}
 
 	if t.TSIGSigner != nil {
@@ -86,8 +87,6 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			}
 		}
 	}
-
-	// check ctx.Err()
 
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
@@ -103,11 +102,16 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			return
 		}
 
-		//		conn.SetReadDeadline(t.Transport.) ??
 		if _, err := io.Copy(r, conn); err != nil {
 			env <- &Envelope{Error: err}
 			return
 		}
+
+		if err := r.Unpack(); err != nil {
+			env <- &Envelope{r.Answer, err}
+			return
+		}
+
 		if m.ID != r.ID {
 			env <- &Envelope{r.Answer, ErrID}
 			return
@@ -235,11 +239,18 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 // The server is responsible for sending the correct sequence of RRs through the channel ch.
 func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	timersonly := false
+
 	for env := range ch {
 		r := new(Msg)
 		dnsutilSetReply(r, q)
+
 		r.Authoritative = true
 		r.Answer = env.RR
+
+		if err := r.Pack(); err != nil {
+			return err
+		}
+
 		// TSIG TODO
 		if _, err := io.Copy(w, r); err != nil {
 			return err
@@ -254,7 +265,7 @@ func isSOAFirst(m *Msg) bool {
 	if len(m.Answer) == 0 {
 		return false
 	}
-	_, ok := m.Answer[0].(*AXFR)
+	_, ok := m.Answer[0].(*SOA)
 	return ok
 }
 
@@ -262,6 +273,6 @@ func isSOALast(m *Msg) bool {
 	if len(m.Answer) == 0 {
 		return false
 	}
-	_, ok := m.Answer[len(m.Answer)-1].(*AXFR)
+	_, ok := m.Answer[len(m.Answer)-1].(*SOA)
 	return ok
 }

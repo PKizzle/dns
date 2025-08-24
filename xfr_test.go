@@ -10,51 +10,29 @@ import (
 )
 
 var testXFRData = []dns.RR{
-	dnstest.New("miek.nl.	0	IN	SOA	linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
-	dnstest.New("x.miek.nl.	1792	IN	A	10.0.0.1"),
-	dnstest.New("miek.nl.	1800	IN	MX	1	x.miek.nl."),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
+	dnstest.New("x.miek.nl. IN A 10.0.0.1"),
+	dnstest.New("miek.nl. IN MX 1 x.miek.nl."),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
 }
+
+// TODO test incomplete SOA and the error we expect
 
 const testXFRZone = "miek.nl."
 
-func invalidXFRHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	ch := make(chan *dns.Envelope)
-	tr := new(dns.Transfer)
-
-	go func() {
-		tr.Out(w, req, ch)
-		w.Close()
-	}()
-	ch <- &dns.Envelope{RR: []dns.RR{}}
-	close(ch)
-	w.Hijack()
-}
-
-func singleEnvelopeXFRHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	ch := make(chan *dns.Envelope)
-	tr := new(dns.Transfer)
-
-	go tr.Out(w, req, ch)
-	ch <- &dns.Envelope{RR: testXFRData}
-	close(ch)
-	w.Hijack()
-}
-
-func multipleEnvelopeXFRHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	ch := make(chan *dns.Envelope)
-	tr := new(dns.Transfer)
-
-	go tr.Out(w, req, ch)
-
-	for _, rr := range testXFRData {
-		ch <- &dns.Envelope{RR: []dns.RR{rr}}
-	}
-	close(ch)
-	w.Hijack()
-}
-
 func TestXFRInvalid(t *testing.T) {
-	dns.HandleFunc(testXFRZone, invalidXFRHandler)
+	dns.HandleFunc(testXFRZone, func(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+		ch := make(chan *dns.Envelope)
+		tr := new(dns.Transfer)
+
+		go func() {
+			tr.Out(w, req, ch)
+			w.Close()
+		}()
+		ch <- &dns.Envelope{RR: []dns.RR{}}
+		close(ch)
+		w.Hijack()
+	})
 	defer dns.HandleRemove(testXFRZone)
 
 	s, addrstr, _ := dnstest.TCPServer(":0")
@@ -71,21 +49,25 @@ func TestXFRInvalid(t *testing.T) {
 
 	for env := range envc {
 		if env.Error == nil {
-			t.Fatal("failed to catch 'no SOA' error")
+			t.Fatalf("failed to catch %s error", dns.ErrSOA)
 		}
 	}
 }
 
 func TestXFRSingleEnvelope(t *testing.T) {
-	dns.HandleFunc(testXFRZone, singleEnvelopeXFRHandler)
+	dns.HandleFunc(testXFRZone,
+		func(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+			ch := make(chan *dns.Envelope)
+			tr := new(dns.Transfer)
+
+			go tr.Out(w, req, ch)
+			ch <- &dns.Envelope{RR: testXFRData}
+			close(ch)
+			w.Hijack() // ????
+		})
 	defer dns.HandleRemove(testXFRZone)
 
-	s, addrstr, err := dnstest.TCPServer(":0", func(srv *dns.Server) {
-		// setup tsig
-	})
-	if err != nil {
-		t.Fatalf("unable to run test server: %s", err)
-	}
+	s, addrstr, _ := dnstest.TCPServer(":0")
 	defer s.Shutdown(context.TODO())
 	axfr(t, addrstr)
 }
@@ -113,7 +95,19 @@ func TestSingleEnvelopeXfrTLS(t *testing.T) {
 }
 
 func TestMultiEnvelopeXfr(t *testing.T) {
-	HandleFunc("miek.nl.", MultipleEnvelopeXfrServer)
+	HandleFunc("miek.nl.", func (ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+	ch := make(chan *dns.Envelope)
+	tr := new(dns.Transfer)
+
+	go tr.Out(w, req, ch)
+
+	for _, rr := range testXFRData {
+		ch <- &dns.Envelope{RR: []dns.RR{rr}}
+	}
+	close(ch)
+	w.Hijack()
+})
+
 	defer HandleRemove("miek.nl.")
 
 	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
