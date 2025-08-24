@@ -18,7 +18,10 @@ type Transfer struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
 }
 
+// InWithConn ??
+
 // In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().
+// Network should always be "tcp".
 func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env chan *Envelope, err error) {
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)
@@ -45,6 +48,10 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
 	}
 
 	env = make(chan *Envelope)
@@ -79,6 +86,8 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			}
 		}
 	}
+
+	// check ctx.Err()
 
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
