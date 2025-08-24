@@ -953,7 +953,7 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 
 // WriteTo writes the message to w. W must be a [ResponseWriter], when w contains a *net.TCPConn, the write is prefixed with an uint16 with the
 // length of the buffer, otherwise the m.Data is written as-is. If w is a [ResponseController] a write timeout
-// is applied.
+// is applied. If W is also a [ResponseController] write timeouts are applied.
 func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	r, ok := w.(ResponseWriter)
 	if !ok {
@@ -991,7 +991,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 
 // ReadFrom reads from r. When r is a *net.TCPConn, first 2 bytes of length are read, then m.Data is *resized*
 // to this length and the data is read. Otherwise the data is read into m.Data. It is expected any deadlines
-// are set if there is an underlying socket.
+// are set if there is an underlying socket. No read timeouts are applied.
 func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
