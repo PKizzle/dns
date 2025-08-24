@@ -14,18 +14,18 @@ import (
 
 // Server returns a new running server. The caller must call s.Shutdown(...) when done.
 func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.Server, string, error) {
-	srv := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Second}
+	s := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Second}
 
-	srv.Init()
+	s.Init()
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
-	srv.NotifyStartedFunc = waitLock.Unlock
-	srv.MsgInvalidFunc = func(m *dns.Msg, err error) {
+	s.NotifyStartedFunc = waitLock.Unlock
+	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
 		fmt.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
 	}
 
 	for _, opt := range opts {
-		opt(srv)
+		opt(s)
 	}
 
 	var (
@@ -41,12 +41,12 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	}
 
 	go func() {
-		srv.ActivateAndServe()
+		s.ActivateAndServe()
 		closer.Close()
 	}()
 
 	waitLock.Lock()
-	return srv, addr, nil
+	return s, addr, nil
 }
 
 func UDPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {

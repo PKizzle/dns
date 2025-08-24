@@ -228,16 +228,17 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 
 // Out performs an outgoing transfer with the client connecting in w. Basic use pattern:
 //
-//	ch := make(chan *dns.Envelope)
+//	env := make(chan *dns.Envelope)
 //	tr := new(dns.Transfer)
 //	var wg sync.WaitGroup
+//	w.Hijack() // hijack the connection as we can close the connection when done
 //	wg.Add(1)
 //	go func() {
 //		tr.Out(w, r, ch)
 //		wg.Done()
 //	}()
-//	ch <- &dns.Envelope{RR: []dns.RR{soa, rr1, rr2, rr3, soa}}
-//	close(ch)
+//	env <- &dns.Envelope{RR: []dns.RR{SOA, rr1, rr2, rr3, SOA}}
+//	close(env)
 //	wg.Wait() // wait until everything is written out
 //	w.Close() // close connection
 //
