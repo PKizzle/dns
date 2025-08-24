@@ -191,7 +191,6 @@ func (srv *Server) listenTCP(ln net.Listener) {
 			if err != nil {
 				continue
 			}
-			conn.SetReadDeadline(time.Now().Add(srv.ReadTimeout))
 			go srv.serveTCP(&wg, conn)
 		}
 	}

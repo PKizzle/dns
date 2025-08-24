@@ -83,7 +83,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 		}
 	}
 
-	conn.SetWriteDeadline(time.Now().Add(t.WriteTimeout))
+	// conn.SetWriteDeadline(time.Now().Add(t.WriteTimeout))
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
 		env <- &Envelope{Error: err}
@@ -100,7 +100,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 	r.Options = OptionUnpackHeader
 	first := true
 	for {
-		conn.SetReadDeadline(time.Now().Add(t.ReadTimeout))
+		conn.SetReadDeadline(time.Now().Add(t.ReadTimeout)) // prolly not needed
 		if _, err := io.Copy(r, conn); err != nil {
 			env <- &Envelope{Error: err}
 			return

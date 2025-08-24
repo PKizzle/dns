@@ -125,7 +125,8 @@ func TestXFRTLS(t *testing.T) {
 	s, addr, _ := dnstest.TLSServer(":0")
 	defer s.Shutdown(context.TODO())
 
-	tr := &dns.Transfer{Transport: &dns.Transport{TLSConfig: dnstest.TLSConfig()}}
+	tr := &dns.Transfer{Transport: dns.NewDefaultTransport()}
+	tr.TLSConfig = dnstest.TLSConfig()
 	m := new(dns.Msg)
 	dnsutil.SetAXFR(m, testXFRZone)
 
