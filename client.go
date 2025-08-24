@@ -67,7 +67,6 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	}
 
 	t := time.Now()
-	conn.SetWriteDeadline(t.Add(c.WriteTimeout))
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
