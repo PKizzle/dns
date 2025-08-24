@@ -40,7 +40,7 @@ func TestTSIG(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := newMsgWithTSIG()
-			if err := TSIGSign(m, HMAC(tc.alg), tc.option); err != nil {
+			if err := TSIGSign(m, TSIGHMAC(tc.alg), tc.option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
 
@@ -48,7 +48,7 @@ func TestTSIG(t *testing.T) {
 				tc.transformFn(m)
 			}
 
-			err := TSIGVerify(m, HMAC(tc.alg), tc.option)
+			err := TSIGVerify(m, TSIGHMAC(tc.alg), tc.option)
 			if err != tc.err {
 				t.Fatalf("execpted %v error, got: %s", tc.err, err)
 			}
