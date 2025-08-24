@@ -36,10 +36,10 @@ type MsgAcceptAction int
 
 // Allowed returned values from a MsgAcceptFunc.
 const (
-	MsgAccept               MsgAcceptAction = iota // Accept the message
-	MsgReject                                      // Reject the message with a RcodeFormatError
-	MsgIgnore                                      // Ignore the error and send nothing back.
-	MsgRejectNotImplemented                        // Reject the message with a RcodeNotImplemented
+	MsgAccept               MsgAcceptAction = iota // Accept the message.
+	MsgReject                                      // Reject the message with a RcodeFormatError.
+	MsgRejectNotImplemented                        // Reject the message with a RcodeNotImplemented.
+	MsgIgnore                                      // Ignore the message and send nothing back.
 )
 
 // MsgAcceptFunc is used early in the server code to accept or reject a message with RcodeFormatError.
@@ -50,16 +50,20 @@ type MsgAcceptFunc func(m *Msg) MsgAcceptAction
 // DefaultMsgAcceptFunc checks the request and will reject if:
 //
 //   - isn't a request (don't respond in that case)
-//   - has more than a single "RR" in the question section
 //   - has an opcode that isn't recognized (also no response)
+//   - has more than a single "RR" in the question section
 var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
 
 func defaultMsgAcceptFunc(r *Msg) MsgAcceptAction {
 	if r.Response {
-		return MsgReject
+		return MsgIgnore
 	}
 
 	if _, ok := OpcodeToString[r.Opcode]; !ok {
+		return MsgRejectNotImplemented
+	}
+
+	if len(r.Question) != 1 {
 		return MsgReject
 	}
 	return MsgAccept
@@ -358,8 +362,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 	r.Options = OptionUnpackQuestion | OptionUnpackHeader
 
-	err := r.Unpack()
-	if err != nil {
+	if err := r.Unpack(); err != nil {
 		srv.MsgInvalidFunc(r, err)
 		wg.Done()
 		return
@@ -382,6 +385,7 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		r.Pack()
 
 		io.Copy(w, r)
+		wg.Done()
 		return
 	}
 
