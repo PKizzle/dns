@@ -27,7 +27,8 @@ type ResponseWriter interface {
 	// Session returns the UDP oob session data to correctly route UDP packets.
 	Session() *Session
 	// Hijack lets the caller take over the TCP connection. For UDP this has no effect. The handler is then
-	// responsible for the connection. This is also means that MaxTCPQueries will not have an effect.
+	// responsible for the connection. Packet will still be read and given to the handler, MaxTCPQueries will
+	// be ignored, and the client needs to call Close.
 	Hijack()
 }
 

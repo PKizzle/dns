@@ -4,7 +4,6 @@ package dns
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"net"
 	"time"
@@ -51,13 +50,7 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 		c.Transport = NewDefaultTransport()
 	}
 
-	var conn net.Conn
-	if c.TLSConfig != nil {
-		dialer := tls.Dialer{NetDialer: c.Transport.Dialer, Config: c.TLSConfig}
-		conn, err = dialer.DialContext(ctx, network, address)
-	} else {
-		conn, err = c.Transport.Dialer.DialContext(ctx, network, address)
-	}
+	conn, err := c.Transport.dial(ctx, network, address)
 	if err != nil {
 		return nil, 0, err
 	}

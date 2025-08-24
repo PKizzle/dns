@@ -2,7 +2,6 @@ package dns
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"net"
 )
@@ -39,13 +38,7 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 		t.Transport = NewDefaultTransport()
 	}
 
-	var conn net.Conn
-	if t.TLSConfig != nil {
-		dialer := tls.Dialer{NetDialer: t.Transport.Dialer, Config: t.TLSConfig}
-		conn, err = dialer.DialContext(ctx, network, address)
-	} else {
-		conn, err = t.Transport.Dialer.DialContext(ctx, network, address)
-	}
+	conn, err := t.Transport.dial(ctx, network, address)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +71,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 
 	if t.TSIGSigner != nil {
 		for _, rr := range m.Pseudo {
+			// SIG0
 			if _, ok := rr.(*TSIG); ok {
 				if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
 					env <- &Envelope{Error: err}
@@ -96,6 +90,8 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 
 	r := new(Msg)
 	r.Data = m.Data
+	r.Options = OptionUnpackHeader
+	first := true
 	for {
 		if err := ctx.Err(); err != nil {
 			env <- &Envelope{Error: err}
@@ -121,30 +117,39 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			env <- &Envelope{r.Answer, ErrRcode}
 			return
 		}
-		if !isSOAFirst(r) {
-			env <- &Envelope{r.Answer, ErrSOA}
-			return
+		r.Options = OptionUnpackAll
+		if err := r.Unpack(); err != nil {
+			env <- &Envelope{Error: err}
 		}
 
-		if t.TSIGVerifier != nil {
-			for _, rr := range r.Pseudo {
-				if _, ok := rr.(*TSIG); ok {
-					if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
-						env <- &Envelope{Error: err}
-						return
-					}
-					break
-				}
+		if first {
+			if !isSOAFirst(r) {
+				env <- &Envelope{r.Answer, ErrSOA}
+				return
+			}
+			first = !first
+			options.TimersOnly = true
+			if len(r.Answer) == 1 { // only one answer that is SOA, receive more
+				env <- &Envelope{r.Answer, nil}
+				continue
 			}
 		}
 
-		if len(r.Answer) == 1 {
-			options.TimersOnly = true
-			env <- &Envelope{RR: r.Answer}
-			continue
-		}
+		/*
+			if t.TSIGVerifier != nil {
+				for _, rr := range r.Pseudo {
+					if _, ok := rr.(*TSIG); ok {
+						if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
+							env <- &Envelope{Error: err}
+							return
+						}
+						break
+					}
+				}
+			}
+		*/
 
-		if isSOALast(r) {
+		if isSOALast(r) { // ends the transfer
 			env <- &Envelope{RR: r.Answer}
 			return
 		}

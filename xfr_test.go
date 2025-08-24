@@ -22,27 +22,27 @@ const testXFRZone = "miek.nl."
 
 func TestXFRInvalid(t *testing.T) {
 	dns.HandleFunc(testXFRZone, func(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+		w.Hijack()
 		ch := make(chan *dns.Envelope)
 		tr := new(dns.Transfer)
-
 		go func() {
 			tr.Out(w, req, ch)
 			w.Close()
 		}()
 		ch <- &dns.Envelope{RR: []dns.RR{}}
 		close(ch)
-		w.Hijack()
 	})
 	defer dns.HandleRemove(testXFRZone)
 
-	s, addrstr, _ := dnstest.TCPServer(":0")
+	s, addr, _ := dnstest.TCPServer(":0")
+	println(addr)
 	defer s.Shutdown(context.TODO())
 
 	tr := new(dns.Transfer)
 	m := new(dns.Msg)
 	dnsutil.SetAXFR(m, testXFRZone)
 
-	envc, err := tr.In(context.TODO(), m, "tcp", addrstr)
+	envc, err := tr.In(context.TODO(), m, "tcp", addr)
 	if err != nil {
 		t.Fatal("failed to zone transfer in", err)
 	}
@@ -54,71 +54,43 @@ func TestXFRInvalid(t *testing.T) {
 	}
 }
 
-func TestXFRSingleEnvelope(t *testing.T) {
+// TCP tcp max trans, and hijack
+
+func TestXFREnvelopeSingle(t *testing.T) {
 	dns.HandleFunc(testXFRZone,
 		func(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+			w.Hijack()
 			ch := make(chan *dns.Envelope)
 			tr := new(dns.Transfer)
-
 			go tr.Out(w, req, ch)
 			ch <- &dns.Envelope{RR: testXFRData}
 			close(ch)
-			w.Hijack() // ????
 		})
 	defer dns.HandleRemove(testXFRZone)
+
+	s, addr, _ := dnstest.TCPServer(":0")
+	println(addr)
+	defer s.Shutdown(context.TODO())
+	axfr(t, addr)
+}
+
+/*
+func TestXFREnvelope(t *testing.T) {
+	dns.HandleFunc("miek.nl.", func(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+		w.Hijack()
+		ch := make(chan *dns.Envelope)
+		tr := new(dns.Transfer)
+		go tr.Out(w, req, ch)
+		for _, rr := range testXFRData {
+			ch <- &dns.Envelope{RR: []dns.RR{rr}}
+		}
+		close(ch)
+	})
+	defer dns.HandleRemove("miek.nl.")
 
 	s, addrstr, _ := dnstest.TCPServer(":0")
 	defer s.Shutdown(context.TODO())
 	axfr(t, addrstr)
-}
-
-/*
-func TestSingleEnvelopeXfrTLS(t *testing.T) {
-	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
-	defer HandleRemove("miek.nl.")
-
-	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
-	if err != nil {
-		t.Fatalf("unable to build certificate: %v", err)
-	}
-
-	tlsConfig := tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-	s, addrstr, _, err := RunLocalTLSServer(":0", &tlsConfig)
-	if err != nil {
-		t.Fatalf("unable to run test server: %s", err)
-	}
-	defer s.Shutdown()
-
-	axfrTestingSuiteTLS(t, addrstr)
-}
-
-func TestMultiEnvelopeXfr(t *testing.T) {
-	HandleFunc("miek.nl.", func (ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	ch := make(chan *dns.Envelope)
-	tr := new(dns.Transfer)
-
-	go tr.Out(w, req, ch)
-
-	for _, rr := range testXFRData {
-		ch <- &dns.Envelope{RR: []dns.RR{rr}}
-	}
-	close(ch)
-	w.Hijack()
-})
-
-	defer HandleRemove("miek.nl.")
-
-	s, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
-		srv.TsigSecret = tsigSecret
-	})
-	if err != nil {
-		t.Fatalf("unable to run test server: %s", err)
-	}
-	defer s.Shutdown()
-
-	axfrTestingSuite(t, addrstr)
 }
 */
 
@@ -264,4 +236,27 @@ func TestTSIGNotSigned(t *testing.T) {
 
 	axfrTestingSuiteWithMsgNotSigned(t, addrstr, tsigSecretProvider(tsigSecret))
 }
+
+func TestSingleEnvelopeXfrTLS(t *testing.T) {
+	HandleFunc("miek.nl.", SingleEnvelopeXfrServer)
+	defer HandleRemove("miek.nl.")
+
+	cert, err := tls.X509KeyPair(CertPEMBlock, KeyPEMBlock)
+	if err != nil {
+		t.Fatalf("unable to build certificate: %v", err)
+	}
+
+	tlsConfig := tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+	s, addrstr, _, err := RunLocalTLSServer(":0", &tlsConfig)
+	if err != nil {
+		t.Fatalf("unable to run test server: %s", err)
+	}
+	defer s.Shutdown()
+
+	axfrTestingSuiteTLS(t, addrstr)
+}
+
+
 */

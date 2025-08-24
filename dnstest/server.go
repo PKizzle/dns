@@ -49,24 +49,24 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	return srv, addr, nil
 }
 
-func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
-	pc, err := net.ListenPacket("udp", laddr)
+func UDPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	pc, err := net.ListenPacket("udp", addr)
 	if err != nil {
 		return nil, "", err
 	}
 	return Server(pc, nil, opts...)
 }
 
-func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
-	l, err := net.Listen("tcp", laddr)
+func TCPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, "", err
 	}
 	return Server(nil, l, opts...)
 }
 
-func TLSServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
-	l, err := net.Listen("tcp", laddr)
+func TLSServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, "", err
 	}

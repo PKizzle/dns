@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -273,7 +274,13 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			if errors.Is(err, io.EOF) {
 				break
 			}
+			if _, ok := err.(*net.OpError); ok {
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					break
+				}
+			}
 			srv.MsgInvalidFunc(r, err)
+			// when hijack jump out here???
 			continue
 		}
 
@@ -285,8 +292,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		}()
 
 		if w.hijacked.Load() {
-			wg.Done() // call done because hijack has been called in the handler
-			break     // client will call Close() themselves
+			limit = -1 // also disregard any limits
+			wg.Done()  // call done because hijack has been called in the handler
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
 		readtimeout = srv.IdleTimeout
