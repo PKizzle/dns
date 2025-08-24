@@ -27,3 +27,15 @@ func Question(m *dns.Msg) (z string, t uint16) {
 	t = dns.RRToType(m.Question[0])
 	return z, t
 }
+
+// SetIXFR creates message for requesting an IXFR.
+func SetIXFR(m *dns.Msg, z string, serial uint32, ns, mbox string) *dns.Msg {
+	m.ID = dns.ID()
+	m = SetQuestion(m, z, dns.TypeIXFR)
+	s := &dns.SOA{Hdr: dns.Header{Name: z, Class: dns.ClassINET}, Serial: serial, Ns: ns, Mbox: mbox}
+	m.Ns = []dns.RR{s}
+	return m
+}
+
+// SetAXFR creates message for requesting an AXFR.
+func SetAXFR(m *dns.Msg, z string) *dns.Msg { return SetQuestion(m, z, dns.TypeAXFR) }

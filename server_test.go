@@ -10,14 +10,14 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func HelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+func helloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}}
 	io.Copy(w, m)
 }
 
-func AnotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
+func anotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
 	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}}
@@ -28,17 +28,19 @@ func TestServer(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		network string
-		run     func(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error)
+		run     func(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, error)
 	}{
 		{"udp", "udp", dnstest.UDPServer},
 		{"tcp", "tcp", dnstest.TCPServer},
 		{"tcp-tls", "tcp", dnstest.TLSServer},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			dns.HandleFunc("miek.nl.", HelloHandler)
-			dns.HandleFunc("example.com.", AnotherHelloHandler)
+			dns.HandleFunc("miek.nl.", helloHandler)
+			dns.HandleFunc("example.com.", anotherHelloHandler)
+			defer dns.HandleRemove("miek.nl.")
+			defer dns.HandleRemove("example.nl.")
 
-			s, addrstr, _, err := tc.run(":0")
+			s, addrstr, err := tc.run(":0")
 			defer s.Shutdown(context.TODO())
 
 			c := &dns.Client{Transport: dns.NewDefaultTransport()}
@@ -89,8 +91,9 @@ func TestServer(t *testing.T) {
 
 // Verify that the server responds to a query with Z flag on, ignoring the flag, and does not echoes it back.
 func TestServerZFlag(t *testing.T) {
-	dns.HandleFunc("example.com.", HelloHandler)
-	s, addrstr, _, _ := dnstest.UDPServer(":0")
+	dns.HandleFunc("example.com.", helloHandler)
+	defer dns.HandleRemove("example.com.")
+	s, addrstr, _ := dnstest.UDPServer(":0")
 	defer s.Shutdown(context.TODO())
 
 	m := new(dns.Msg)

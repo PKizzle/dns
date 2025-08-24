@@ -114,7 +114,7 @@ type ttlState struct {
 //
 // instead of:
 //
-// mx := New("miek.nl. 0 IN MX 10 mx.miek.nl.")
+//	mx := New("miek.nl. 0 IN MX 10 mx.miek.nl.")
 func New(s string) (RR, error) {
 	if len(s) > 0 && s[len(s)-1] != '\n' { // We need a closing newline
 		return readRR(strings.NewReader(s+"\n"), "")

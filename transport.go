@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"context"
 	"crypto/tls"
 	"net"
 	"time"
@@ -38,4 +39,13 @@ var DefaultTransport = Transport{
 func NewDefaultTransport() *Transport {
 	d := DefaultTransport
 	return &d
+}
+
+// dial dials address via network. If tls config is set, a tls dialer is used.
+func (t *Transport) dial(ctx context.Context, network, address string) (net.Conn, error) {
+	if t.TLSConfig != nil {
+		dialer := tls.Dialer{NetDialer: t.Dialer, Config: t.TLSConfig}
+		return dialer.DialContext(ctx, network, address)
+	}
+	return t.Dialer.DialContext(ctx, network, address)
 }

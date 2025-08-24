@@ -12,20 +12,20 @@ import (
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
-// Server returns a pointer to a new dns.Server.
-func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	srv := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Second}
+// Server returns a new running server. The caller must call s.Shutdown(...) when done.
+func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	s := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Second}
 
-	srv.Init()
+	s.Init()
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
-	srv.NotifyStartedFunc = waitLock.Unlock
-	srv.MsgInvalidFunc = func(m *dns.Msg, err error) {
+	s.NotifyStartedFunc = waitLock.Unlock
+	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
 		fmt.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
 	}
 
 	for _, opt := range opts {
-		opt(srv)
+		opt(s)
 	}
 
 	var (
@@ -40,39 +40,35 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 		closer = pc
 	}
 
-	// fin must be buffered so the goroutine below won't block forever if fin is never read from. This always happens
-	// if the channel is discarded.
-	fin := make(chan error, 1)
-
 	go func() {
-		fin <- srv.ActivateAndServe()
+		s.ActivateAndServe()
 		closer.Close()
 	}()
 
 	waitLock.Lock()
-	return srv, addr, fin, nil
+	return s, addr, nil
 }
 
-func UDPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	pc, err := net.ListenPacket("udp", laddr)
+func UDPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	pc, err := net.ListenPacket("udp", addr)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", err
 	}
 	return Server(pc, nil, opts...)
 }
 
-func TCPServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	l, err := net.Listen("tcp", laddr)
+func TCPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", err
 	}
 	return Server(nil, l, opts...)
 }
 
-func TLSServer(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, chan error, error) {
-	l, err := net.Listen("tcp", laddr)
+func TLSServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+	l, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", err
 	}
 	return Server(nil, tls.NewListener(l, TLSConfig()), opts...)
 }

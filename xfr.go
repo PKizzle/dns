@@ -2,9 +2,9 @@ package dns
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"net"
+	"time"
 )
 
 // Envelope is used when doing a zone transfer with a remote server.
@@ -18,7 +18,10 @@ type Transfer struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
 }
 
+// InWithConn ??
+
 // In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().
+// Network should always be "tcp".
 func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env chan *Envelope, err error) {
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)
@@ -36,15 +39,13 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 		t.Transport = NewDefaultTransport()
 	}
 
-	var conn net.Conn
-	if t.TLSConfig != nil {
-		dialer := tls.Dialer{NetDialer: t.Transport.Dialer, Config: t.TLSConfig}
-		conn, err = dialer.DialContext(ctx, network, address)
-	} else {
-		conn, err = t.Transport.Dialer.DialContext(ctx, network, address)
-	}
+	conn, err := t.Transport.dial(ctx, network, address)
 	if err != nil {
 		return nil, err
+	}
+
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
 	}
 
 	env = make(chan *Envelope)
@@ -66,10 +67,12 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 		close(env)
 	}()
 
+	// no op tsigigger?
 	options := TSIGOption{}
 
 	if t.TSIGSigner != nil {
 		for _, rr := range m.Pseudo {
+			// SIG0
 			if _, ok := rr.(*TSIG); ok {
 				if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
 					env <- &Envelope{Error: err}
@@ -80,25 +83,39 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 		}
 	}
 
+	// conn.SetWriteDeadline(time.Now().Add(t.WriteTimeout))
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
 		env <- &Envelope{Error: err}
 		return
 	}
 
+	if err := ctx.Err(); err != nil {
+		env <- &Envelope{Error: err}
+		return
+	}
+
 	r := new(Msg)
 	r.Data = m.Data
+	r.Options = OptionUnpackHeader
+	first := true
 	for {
+		conn.SetReadDeadline(time.Now().Add(t.ReadTimeout)) // prolly not needed
+		if _, err := io.Copy(r, conn); err != nil {
+			env <- &Envelope{Error: err}
+			return
+		}
+
 		if err := ctx.Err(); err != nil {
 			env <- &Envelope{Error: err}
 			return
 		}
 
-		//		conn.SetReadDeadline(t.Transport.) ??
-		if _, err := io.Copy(r, conn); err != nil {
-			env <- &Envelope{Error: err}
+		if err := r.Unpack(); err != nil {
+			env <- &Envelope{r.Answer, err}
 			return
 		}
+
 		if m.ID != r.ID {
 			env <- &Envelope{r.Answer, ErrID}
 			return
@@ -108,30 +125,39 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			env <- &Envelope{r.Answer, ErrRcode}
 			return
 		}
-		if !isSOAFirst(r) {
-			env <- &Envelope{r.Answer, ErrSOA}
-			return
+		r.Options = OptionUnpackAll
+		if err := r.Unpack(); err != nil {
+			env <- &Envelope{Error: err}
 		}
 
-		if t.TSIGVerifier != nil {
-			for _, rr := range r.Pseudo {
-				if _, ok := rr.(*TSIG); ok {
-					if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
-						env <- &Envelope{Error: err}
-						return
-					}
-					break
-				}
+		if first {
+			if !isSOAFirst(r) {
+				env <- &Envelope{r.Answer, ErrSOA}
+				return
+			}
+			first = !first
+			options.TimersOnly = true
+			if len(r.Answer) == 1 { // only one answer that is SOA, receive more
+				env <- &Envelope{r.Answer, nil}
+				continue
 			}
 		}
 
-		if len(r.Answer) == 1 {
-			options.TimersOnly = true
-			env <- &Envelope{RR: r.Answer}
-			continue
-		}
+		/*
+			if t.TSIGVerifier != nil {
+				for _, rr := range r.Pseudo {
+					if _, ok := rr.(*TSIG); ok {
+						if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
+							env <- &Envelope{Error: err}
+							return
+						}
+						break
+					}
+				}
+			}
+		*/
 
-		if isSOALast(r) {
+		if isSOALast(r) { // ends the transfer
 			env <- &Envelope{RR: r.Answer}
 			return
 		}
@@ -210,27 +236,35 @@ func (t *Transfer) inIxfr(q *Msg, c chan *Envelope) {
 
 // Out performs an outgoing transfer with the client connecting in w. Basic use pattern:
 //
-//	ch := make(chan *dns.Envelope)
+//	env := make(chan *dns.Envelope)
 //	tr := new(dns.Transfer)
 //	var wg sync.WaitGroup
+//	w.Hijack() // hijack the connection as we can close the connection when done
 //	wg.Add(1)
 //	go func() {
 //		tr.Out(w, r, ch)
 //		wg.Done()
 //	}()
-//	ch <- &dns.Envelope{RR: []dns.RR{soa, rr1, rr2, rr3, soa}}
-//	close(ch)
+//	env <- &dns.Envelope{RR: []dns.RR{SOA, rr1, rr2, rr3, SOA}}
+//	close(env)
 //	wg.Wait() // wait until everything is written out
 //	w.Close() // close connection
 //
 // The server is responsible for sending the correct sequence of RRs through the channel ch.
 func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	timersonly := false
+
 	for env := range ch {
 		r := new(Msg)
 		dnsutilSetReply(r, q)
+
 		r.Authoritative = true
 		r.Answer = env.RR
+
+		if err := r.Pack(); err != nil {
+			return err
+		}
+
 		// TSIG TODO
 		if _, err := io.Copy(w, r); err != nil {
 			return err
@@ -245,7 +279,7 @@ func isSOAFirst(m *Msg) bool {
 	if len(m.Answer) == 0 {
 		return false
 	}
-	_, ok := m.Answer[0].(*AXFR)
+	_, ok := m.Answer[0].(*SOA)
 	return ok
 }
 
@@ -253,6 +287,6 @@ func isSOALast(m *Msg) bool {
 	if len(m.Answer) == 0 {
 		return false
 	}
-	_, ok := m.Answer[len(m.Answer)-1].(*AXFR)
+	_, ok := m.Answer[len(m.Answer)-1].(*SOA)
 	return ok
 }

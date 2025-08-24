@@ -866,6 +866,10 @@ func (m *Msg) Len() int {
 		l += minHeaderSize
 	}
 
+	if l > MaxMsgSize {
+		return MaxMsgSize
+	}
+
 	return l
 }
 
