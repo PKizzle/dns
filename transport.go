@@ -22,6 +22,9 @@ type Transport struct {
 	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
 	TSIGSigner
 	TSIGVerifier
+
+	// MsgSecretFunc is used to retrieve secrets. Used to TSIG and SIG(0).
+	MsgSecretFunc SecretMsgFunc
 }
 
 // DefaultTransport is the default transport in client, when none is set. Note changing this value how global

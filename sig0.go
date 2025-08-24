@@ -24,7 +24,7 @@ import (
 // Sign signs a dns.Msg. It fills the signature with the appropriate data.
 // The SIG record should have the SignerName, KeyTag, Algorithm, Inception
 // and Expiration set.
-func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
+func SIG0Sign(m *Msg, k crypto.Signer) error {
 	if k == nil {
 		return nil, ErrPrivKey
 	}
@@ -83,8 +83,7 @@ func (rr *SIG) Sign(k crypto.Signer, m *Msg) ([]byte, error) {
 }
 
 // Verify validates the message buf using the key k.
-// It's assumed that buf is a valid message from which rr was unpacked.
-func (rr *SIG) Verify(k *KEY, buf []byte) error {
+func SIG0Verify(m *Msg, k *KEY) error {
 	if k == nil {
 		return ErrKey
 	}

@@ -24,6 +24,7 @@ var (
 	ErrKeySize          = &Error{err: "bad key size"}
 	ErrLongDomain       = &Error{err: fmt.Sprintf("domain name exceeded %d wire-format octets", maxDomainNameWireOctets)}
 	ErrNoTSIG           = &Error{err: "no TSIG signature found"}
+	ErrNoSIG0           = &Error{err: "no SIG(0) signature found"}
 	ErrPrivKey          = &Error{err: "bad private key"}
 	ErrRcode            = &Error{err: "bad rcode"}
 	ErrRRset            = &Error{err: "bad rrset"}

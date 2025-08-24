@@ -31,6 +31,44 @@ func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	return server.ActivateAndServe()
 }
 
+// MsgAcceptAction represents the action to be taken.
+type MsgAcceptAction int
+
+// Allowed returned values from a MsgAcceptFunc.
+const (
+	MsgAccept               MsgAcceptAction = iota // Accept the message.
+	MsgReject                                      // Reject the message with a RcodeFormatError.
+	MsgRejectNotImplemented                        // Reject the message with a RcodeNotImplemented.
+	MsgIgnore                                      // Ignore the message and send nothing back.
+)
+
+// MsgAcceptFunc is used early in the server code to accept or reject a message with RcodeFormatError.
+// It returns a MsgAcceptAction to indicate what should happen with the message. Only the header of the
+// message is unpacked when this function is called.
+type MsgAcceptFunc func(m *Msg) MsgAcceptAction
+
+// DefaultMsgAcceptFunc checks the request and will reject if:
+//
+//   - isn't a request (don't respond in that case)
+//   - has an opcode that isn't recognized (also no response)
+//   - has more than a single "RR" in the question section
+var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
+
+func defaultMsgAcceptFunc(r *Msg) MsgAcceptAction {
+	if r.Response {
+		return MsgIgnore
+	}
+
+	if _, ok := OpcodeToString[r.Opcode]; !ok {
+		return MsgRejectNotImplemented
+	}
+
+	if len(r.Question) != 1 {
+		return MsgReject
+	}
+	return MsgAccept
+}
+
 // InvalidMsgFunc is a listener hook for observing incoming messages that were discarded
 // because they could not be parsed or an eariler error in the server.
 // Every message that is read by a Reader will eventually be provided to the Handler, or passed to this function.
@@ -38,6 +76,10 @@ type InvalidMsgFunc func(m *Msg, err error)
 
 // DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a noop.
 func DefaultMsgInvalidFunc(m *Msg, err error) {}
+
+// SecretMsgFunc is a function that is used to retrieve secret applicable to the current message. Most of its
+// use is for [TSIG]. There is no default.
+type SecretMsgFunc func(m *Msg) error
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
@@ -69,11 +111,20 @@ type Server struct {
 	// Crucially this allows binding when an existing server is listening on `0.0.0.0` or `::`.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReuseAddr bool
+	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
+	// Also see [Transport].
+	TSIGSigner
+	TSIGVerifier
 
+	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
+	// By default DefaultMsgAcceptFunc will be used.
+	MsgAcceptFunc MsgAcceptFunc
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
+	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
+	MsgSecretFunc SecretMsgFunc
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
@@ -88,6 +139,9 @@ func (srv *Server) Init() {
 	}
 	if srv.MsgInvalidFunc == nil {
 		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
+	}
+	if srv.MsgAcceptFunc == nil {
+		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
 	}
 	if srv.Handler == nil {
 		srv.Handler = DefaultServeMux
@@ -308,20 +362,30 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 	r.Options = OptionUnpackQuestion | OptionUnpackHeader
 
-	err := r.Unpack()
-	if err != nil {
+	if err := r.Unpack(); err != nil {
 		srv.MsgInvalidFunc(r, err)
 		wg.Done()
 		return
 	}
 
-	if r.Response == true {
-		srv.MsgInvalidFunc(r, &Error{err: "r.Response is set"})
+	switch action := srv.MsgAcceptFunc(r); action {
+	case MsgIgnore:
 		return
-	}
-	_, ok := OpcodeToString[r.Opcode]
-	if !ok {
-		srv.MsgInvalidFunc(r, &Error{err: "r.Opcode is invalid"})
+
+	case MsgReject, MsgRejectNotImplemented:
+		r.Opcode = OpcodeQuery
+		r.Rcode = RcodeFormatError
+		if action == MsgRejectNotImplemented {
+			r.Rcode = RcodeNotImplemented
+		}
+		r.Authoritative = false
+		r.Response = true
+		r.Zero = false
+		r.Ns, r.Answer, r.Extra = nil, nil, nil // make as small as possible
+		r.Pack()
+
+		io.Copy(w, r)
+		wg.Done()
 		return
 	}
 
