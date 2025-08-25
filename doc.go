@@ -50,7 +50,7 @@ When this functions returns you will get DNS message back. A DNS message consist
   - The additional section: in.Extra.
   - And the extra and new fifth the pseudo section: in.Pseudo, see [Msg].
 
-The later was added to make it easier to deal with EDNS0 option codes, which become more and more prevalent.
+The latter was added to make it easier to deal with EDNS0 option codes, which become more and more prevalent.
 
 Each of these sections contain a []RR. Basic use pattern for accessing the rdata of a TXT RR as the first RR in
 the Answer section:
@@ -100,7 +100,7 @@ setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you and the
 The data of an OPT RR sits in the [Msg] Pseudo section consists out of a slice of EDNS0 (RFC 6891) interfaces.
 These are just RRs with an extra Pseudo() method.
 
-Basic use pattern for a server to check if (and which) options are set, which is simular to how to deal with RRs.
+Basic use pattern for a server to check if (and which) options are set, which is similar to how to deal with RRs.
 
 	for _, o := range m.Pseudo {
 		switch x := o.(type) {
@@ -113,6 +113,6 @@ Basic use pattern for a server to check if (and which) options are set, which is
 
 # Further reading
 
-All functionality and types are documented in their respecitive types and functions.
+All functionality and types are documented in their respective types and functions.
 */
 package dns
