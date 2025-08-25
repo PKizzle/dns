@@ -51,11 +51,10 @@ wins.
   - builtin perf testing with internal/dnsperf
 
 - Interfaces do not have private methods.
-- `Msg` contains a buffer named Data that holds the binary data for this message. This pulls TSIG/SIG(0)
+- `Msg` contains a buffer named `Data` that holds the binary data for this message. This pulls TSIG/SIG(0)
   handling out of the client, simplifying it enormously as we can get rid of `dns.Conn`.
-- `Msg` includes all the ENDS0 OPT RR bits, as this almost was a real message header; in this package it now
-  is.
 - `Msg` includes `Options` that control on how you want it packed/unpacked.
+- `Msg` includes all the ENDS0 OPT RR bits, as this almost was a real message header; in this package it now is.
 - `Msg` has a pseudo section that holds all EDNS0 Options as (faked) resource records.
 - Everything is a resource record:
 
@@ -64,7 +63,7 @@ wins.
 
   This will be extended (later/TODO) to allow reading from a text presentation format.
 
-  There will probably also be a `Stateful` section in the message that holds DNS Stateful Operation (DSO)
+  There is also a `Stateful` section in the message that holds DNS Stateful Operation (DSO)
   records, these records will also be _RRs_.
 
 - `New` will return an RR, `NewRR` will be gone.
@@ -75,6 +74,11 @@ wins.
   - private RRs are easier.
   - private EDNS0 are almost implementable.
 - SVCB record got its own package dns/svcb where all the key-values (called `svcb.Pair`) now reside.
+- IsDuplicate is gone in favor of Compare and a full support for the `sort.Interface`, so you can just
+  sort RRs in an RRset.
+- Copy is gone... I think this was only use the message level and can be emulated by copying the buffer and
+  calling `Unpack`.
+- Copied and sanitized all the tests that accumulated over 16 years of development.
 
 ### Setting EDNS0
 
@@ -138,7 +142,7 @@ and can also be created with `dns.New`.
 ```
 OLD                                                                  | NEW
                                                                      |
-;; opcode: QUERY, status: NOERROR, id: 62167                         | ;; QUERY, status: NOERROR, id: 3, flags: rd do
+;; opcode: QUERY, status: NOERROR, id: 62167                         | ;; QUERY, rcode: NOERROR, id: 3, flags: rd do
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0 | ;; EDNS, version: 0, udp: 1024
                                                                      | ;; QUESTION: 1, PSEUDO: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
 ;; OPT PSEUDOSECTION:                                                |
@@ -148,6 +152,15 @@ OLD                                                                  | NEW
 ;; QUESTION SECTION:                                                 |
 ;miek.nl.       IN       MX                                          | ;; QUESTION SECTION:
                                                                      | miek.nl.                IN      A
+```
+
+### Copy
+
+```
+OLD                   | NEW
+                      |
+r := m.Copy()         | r := &dns.Msg{Data: m.Data}
+                      | r.Unpack()
 ```
 
 ### Server
@@ -171,15 +184,16 @@ Send pull request if you want to be listed here.
 # Features
 
 - UDP/TCP queries, TCP query-pipelining, IPv4 and IPv6.
+- Fast(er).
 - RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE - for _all_ record types) is supported.
-- Fast.
 - Server side programming (mimicking the net/http package), with `dns.Handle` and `dns.HandleFunc` allowing
   for middleware servers.
 - Client side programming.
 - DNSSEC: signing, validating and key generation for DSA, RSA, ECDSA and Ed25519.
-- EDNS0, NSID, Cookies, etc.
+- EDNS0, NSID, Cookies, etc, as pseudo RRs in the (fake) pseudo section.
 - AXFR/IXFR.
 - TSIG, SIG(0).
+- Dynamic updates.
 - DNS over TLS (DoT): encrypted connection between client and server over TCP.
 - Examples included the cmd/ directory.
 
