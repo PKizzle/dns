@@ -12,6 +12,9 @@ import (
 // A Client is a DNS client. It is safe to use a client from multiple goroutines.
 type Client struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
+
+	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
+	MsgSecretFunc SecretMsgFunc
 }
 
 // Exchange performs a synchronous query over "network". It sends the message m to the address
@@ -25,17 +28,16 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 	return r, err
 }
 
-// Exchange performs a synchronous query. It sends the message m to the address
-// contained in a and waits for a reply. Basic use pattern with a *dns.Client:
+// Exchange performs a synchronous query. It sends the message m to the address contained in a and waits for
+// a reply. Basic use pattern with a *dns.Client:
 //
 //	c := new(dns.Client)
-//	resp, rtt, err := c.Exchange(ctx, m, "tcp", "127.0.0.1:53")
+//	resp, rtt, err := c.Exchange(ctx, m, "udp", "127.0.0.1:53")
 //
-// If client does not have a transport set [DefaultTransport] is used.
-// Exchange does not retry a failed query, nor will it fall back to TCP in case of truncation when UDP is
-// used.
+// If client does not have a transport set [DefaultTransport] is used. Exchange does not retry a failed query,
+// nor will it fall back to TCP in case of truncation when UDP is used.
 //
-// If the TLS config is set in the transport a TCP connection with TLS is attempted.
+// If the TLS config is set in the transport a (TCP) connection with TLS is attempted.
 //
 // It is up to the caller to create a message that allows for larger responses to be returned. Specifically
 // this means setting [Msg.Bufsize] that will advertise a larger buffer. Messages without an Bufsize will
@@ -45,6 +47,10 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // client.Exchange calls m.Pack().
 //
 // It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
+//
+// If the message m contains a stub [TSIG] record (also see [TSIGSIGN]) and the client as a non-nill
+// MsgSecretFunc, the TSIG record will be generated before the message is send. The reply is then also checked
+// that it holds the correct TSIG.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()

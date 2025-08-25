@@ -20,11 +20,19 @@ const (
 )
 
 // TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
-// (owner name of the RR), time fudge (defaults to 300 seconds, if zero) The TSIG MAC is saved in that RR.
+// (owner name of the RR), time fudge (defaults to 300 seconds, if zero). The TSIG MAC is saved in that RR.
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
-func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
+// If this is the case options.RequestMAC will be filled by this function.
+//
+// The secret is pulled in via the SecretMsgFunc.
+func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error {
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
+	}
+
+	secret, err := fn(m)
+	if err != nil {
+		return err
 	}
 
 	var tsig *TSIG
@@ -50,12 +58,12 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 	// decrease additional section count, because we removed the TSIG
 	binary.BigEndian.PutUint16(m.Data[10:], uint16(len(m.Extra)+int(m.ps-1)))
 
-	macbuf, err := tsig.mac(m, options)
+	macbuf, err := tsig.mac(m, *options)
 	if err != nil {
 		return err
 	}
 
-	mac, err := k.Sign(tsig, macbuf)
+	mac, err := k.Sign(tsig, secret, macbuf)
 	if err != nil {
 		return err
 	}
@@ -73,14 +81,23 @@ func TSIGSign(m *Msg, k TSIGSigner, options TSIGOption) error {
 	t = t[:off]
 
 	m.Data = append(m.Data, t...)
+	// TODO: consider setting this.
+	//	options.RequestMAC = tsig.MAC
 	return nil
 }
 
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
 // from m.Data, but left in the unpacked message m.
-func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
+//
+// The secret is pulled in via the SecretMsgFunc.
+func TSIGVerify(m *Msg, fn SecretMsgFunc, k TSIGVerifier, options *TSIGOption) error {
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
+	}
+
+	secret, err := fn(m)
+	if err != nil {
+		return err
 	}
 
 	var tsig *TSIG
@@ -92,6 +109,14 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
 	}
 	if tsig == nil {
 		return ErrNoTSIG
+	}
+
+	// Sign unless there is a key or MAC validation error (RFC 8945 5.3.2).
+	if tsig.Error == RcodeBadKey {
+		return ErrKey
+	}
+	if tsig.Error == RcodeBadSig {
+		return ErrSig
 	}
 
 	last := len(m.Answer) + len(m.Ns) + len(m.Extra) + int(m.ps) - 1
@@ -110,11 +135,11 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options TSIGOption) error {
 		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
 	}()
 
-	macbuf, err := tsig.mac(m, options)
+	macbuf, err := tsig.mac(m, *options)
 	if err != nil {
 		return err
 	}
-	if err := k.Verify(tsig, macbuf, options); err != nil {
+	if err := k.Verify(tsig, secret, macbuf, *options); err != nil {
 		return err
 	}
 
@@ -139,13 +164,13 @@ type TSIGOption struct {
 
 type (
 	TSIGSigner interface {
-		// Sign is passed the to-be-signed binary data extracted from the DNS message in. It should return
+		// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return
 		// signature or an error.
-		Sign(t *TSIG, p []byte) ([]byte, error)
+		Sign(t *TSIG, secret, p []byte) ([]byte, error)
 	}
 
 	TSIGVerifier interface {
 		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
-		Verify(t *TSIG, p []byte, options TSIGOption) error
+		Verify(t *TSIG, secret, p []byte, options TSIGOption) error
 	}
 )

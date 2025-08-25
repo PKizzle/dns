@@ -12,16 +12,12 @@ import (
 	"codeberg.org/miekg/dns/internal/pack"
 )
 
-// TSIGHMAC is TSIGSigner and TSIGVerifier that does the default HMAC for TSIG, see RFC 8945. The string is
-// the secret used for both.
-type TSIGHMAC string
+type tsigHMAC int
 
-func (h TSIGHMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
-	secret, err := fromBase64([]byte(h))
-	if err != nil {
-		return nil, err
-	}
+// TSIGHMAC is TSIGSigner and TSIGVerifier that does the default HMAC for TSIG, see RFC 8945.
+var TSIGHMAC = tsigHMAC(0)
 
+func (h tsigHMAC) Sign(t *TSIG, secret, p []byte) ([]byte, error) {
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
@@ -41,8 +37,8 @@ func (h TSIGHMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
 	return hs.Sum(nil), nil
 }
 
-func (h TSIGHMAC) Verify(t *TSIG, p []byte, options TSIGOption) error {
-	buf, err := h.Sign(t, p)
+func (h tsigHMAC) Verify(t *TSIG, secret, p []byte, options TSIGOption) error {
+	buf, err := h.Sign(t, secret, p)
 	if err != nil {
 		return err
 	}
