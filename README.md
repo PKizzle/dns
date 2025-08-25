@@ -42,6 +42,8 @@ wins.
 ## Difference with github.com/miekg/dns
 
 - Many functions (and new ones) are moved into dns/dnsutil.
+- `RR` lost the `Type` and `Rdlength` fields, type is derived from the Go type, `Rdlength` served no function
+  at all.
 - `context.Context` is in the correct places.
 - `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern (usually) zone that lead to
   invocation of this Handler.
