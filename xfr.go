@@ -16,13 +16,27 @@ type Envelope struct {
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
-}
 
-// InWithConn ??
+	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
+	MsgSecretFunc SecretMsgFunc
+}
 
 // In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().
 // Network should always be "tcp".
 func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env chan *Envelope, err error) {
+	if t.Transport == nil {
+		t.Transport = NewDefaultTransport()
+	}
+
+	conn, err := t.Transport.dial(ctx, network, address)
+	if err != nil {
+		return nil, err
+	}
+	return t.InWithConn(ctx, m, conn)
+}
+
+// InWithConn is like [In], but takes a [net.Conn], also see [Client.ExchangeWithConn].
+func (t *Transfer) InWithConn(ctx context.Context, m *Msg, conn net.Conn) (env chan *Envelope, err error) {
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)
 	if !axfr && !ixfr {
@@ -33,19 +47,6 @@ func (t *Transfer) In(ctx context.Context, m *Msg, network, address string) (env
 		if err := m.Pack(); err != nil {
 			return nil, err
 		}
-	}
-
-	if t.Transport == nil {
-		t.Transport = NewDefaultTransport()
-	}
-
-	conn, err := t.Transport.dial(ctx, network, address)
-	if err != nil {
-		return nil, err
-	}
-
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
 	}
 
 	env = make(chan *Envelope)
@@ -70,11 +71,11 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 	// no op tsigigger?
 	options := TSIGOption{}
 
-	if t.TSIGSigner != nil {
+	if t.TSIGSigner != nil && t.MsgSecretFunc != nil {
 		for _, rr := range m.Pseudo {
-			// SIG0
+			// SIG0 too (TODO(miek).
 			if _, ok := rr.(*TSIG); ok {
-				if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
+				if err := TSIGSign(m, t.MsgSecretFunc, t.TSIGSigner, options); err != nil {
 					env <- &Envelope{Error: err}
 					return
 				}

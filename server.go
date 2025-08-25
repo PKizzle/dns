@@ -17,7 +17,7 @@ import (
 // Default maximum number of TCP queries before we close the socket.
 const maxTCPQueries = 128
 
-// ListenAndServe Starts a server on address and network specified Invoke handler
+// ListenAndServe Starts a server on address and network specified and invokes handler
 // for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
@@ -25,7 +25,7 @@ func ListenAndServe(addr string, network string, handler Handler) error {
 }
 
 // ActivateAndServe activates a server with a listener from systemd, l and p should not both be non-nil.
-// If both l and p are not nil only p will be used. Invoke handler for incoming queries.
+// If both l and p are not nil only p will be used. Invokes handler for incoming queries.
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
 	server := &Server{Listener: l, PacketConn: p, Handler: handler}
 	return server.ActivateAndServe()
@@ -77,9 +77,9 @@ type InvalidMsgFunc func(m *Msg, err error)
 // DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a noop.
 func DefaultMsgInvalidFunc(m *Msg, err error) {}
 
-// SecretMsgFunc is a function that is used to retrieve secret applicable to the current message. Most of its
-// use is for [TSIG]. There is no default.
-type SecretMsgFunc func(m *Msg) error
+// SecretMsgFunc is a function that is used to retrieve secrets applicable to the current message.
+// Its primary use is for [TSIG]. There is no default function.
+type SecretMsgFunc func(m *Msg) (secret []byte, err error)
 
 // A Server defines parameters for running an DNS server.
 type Server struct {
@@ -116,8 +116,8 @@ type Server struct {
 	TSIGSigner
 	TSIGVerifier
 
-	// AcceptMsgFunc will check the incoming message and will reject it early in the process.
-	// By default DefaultMsgAcceptFunc will be used.
+	// AcceptMsgFunc will check the incoming message and will reject it early in the process. Defaults to
+	// [DefaultMsgAcceptFunc].
 	MsgAcceptFunc MsgAcceptFunc
 	// If NotifyStartedFunc is set it is called once the server has started listening.
 	NotifyStartedFunc func()
