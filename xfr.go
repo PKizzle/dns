@@ -124,6 +124,14 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			env <- &Envelope{Error: err}
 		}
 
+		if t.MsgSecretFunc != nil && t.TSIGVerifier != nil {
+			err := TSIGVerify(m, t.MsgSecretFunc, t.TSIGVerifier, options)
+			if err != nil { // ErrNoTSIG is an actual problem here, as we expect one.
+				env <- &Envelope{Error: err}
+				return
+			}
+		}
+
 		if first {
 			if !isSOAFirst(r) {
 				env <- &Envelope{r.Answer, ErrSOA}
@@ -134,14 +142,6 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			if len(r.Answer) == 1 { // only one answer that is SOA, receive more
 				env <- &Envelope{r.Answer, nil}
 				continue
-			}
-		}
-
-		if t.MsgSecretFunc != nil && t.TSIGVerifier != nil {
-			err := TSIGVerify(m, t.MsgSecretFunc, t.TSIGVerifier, options)
-			if err != nil && err != ErrNoTSIG {
-				env <- &Envelope{Error: err}
-				return
 			}
 		}
 

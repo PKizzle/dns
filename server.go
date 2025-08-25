@@ -17,8 +17,7 @@ import (
 // Default maximum number of TCP queries before we close the socket.
 const maxTCPQueries = 128
 
-// ListenAndServe Starts a server on address and network specified and invokes handler
-// for incoming queries.
+// ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
 	server := &Server{Addr: addr, Net: network, Handler: handler}
 	return server.ListenAndServe()
@@ -70,7 +69,7 @@ func defaultMsgAcceptFunc(r *Msg) MsgAcceptAction {
 }
 
 // InvalidMsgFunc is a listener hook for observing incoming messages that were discarded
-// because they could not be parsed or an eariler error in the server.
+// because they could not be parsed or an earlier error in the server.
 // Every message that is read by a Reader will eventually be provided to the Handler, or passed to this function.
 type InvalidMsgFunc func(m *Msg, err error)
 
@@ -103,6 +102,7 @@ type Server struct {
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout time.Duration
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
+	// See [ResponseWriter.Hijack] to see how a handler can bypass this.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
