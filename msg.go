@@ -1018,6 +1018,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	}
 	li := int(l)
 	if li < MsgHeaderSize {
+		io.Copy(io.Discard, io.LimitReader(r, int64(li))) // discard the remaining octets
 		return 0, fmt.Errorf("dns: TCP message size %d, can not be smaller than %d", li, MsgHeaderSize)
 	}
 

@@ -339,7 +339,6 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 				}
 			}
 			srv.MsgInvalidFunc(r, err)
-			// when hijack jump out here???
 			continue
 		}
 

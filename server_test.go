@@ -2,7 +2,9 @@ package dns_test
 
 import (
 	"context"
+	"encoding/binary"
 	"io"
+	"net"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -111,4 +113,45 @@ func TestServerZFlag(t *testing.T) {
 	if r.Rcode != dns.RcodeSuccess {
 		t.Errorf("expected rcode %v, got %v", dns.RcodeSuccess, r.Rcode)
 	}
+}
+
+func TestServerMsgInvalidFunc(t *testing.T) {
+	dns.HandleFunc("example.org.", func(context.Context, dns.ResponseWriter, *dns.Msg) {
+		t.Fatal("the handler must not be called in any of these tests")
+	})
+	s, addr, _ := dnstest.TCPServer(":0")
+	defer s.Shutdown(context.TODO())
+
+	invalidErrors := make(chan error)
+	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
+		invalidErrors <- err
+	}
+
+	c, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatalf("cannot connect to test server: %v", err)
+	}
+
+	write := func(m []byte) {
+		l := make([]byte, 2, 2)
+		binary.BigEndian.PutUint16(l[0:], uint16(len(m)))
+		m = append(l, m...)
+		if _, err = c.Write(m); err != nil {
+			t.Fatalf("message write failed: %v", err)
+		}
+	}
+
+	// Message is too short, so there is no header to accept or reject.
+	tooShortMessage := make([]byte, 11)
+
+	write(tooShortMessage)
+	<-invalidErrors // Expect an error to be reported.
+
+	badMessage := make([]byte, 13)
+	badMessage[1] = 0x1 // ID = 1, Accept.
+	badMessage[5] = 1   // QDCOUNT = 1
+	badMessage[12] = 99 // Bad question section.  Invalid!
+
+	write(badMessage)
+	<-invalidErrors // Expect an error to be reported.
 }
