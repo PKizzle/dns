@@ -111,8 +111,8 @@ type Server struct {
 	// Crucially this allows binding when an existing server is listening on `0.0.0.0` or `::`.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReuseAddr bool
-	// If non zero TSIG signing and verification is done on messages that qualify when doing zone transfers.
-	// Also see [Transport].
+	// If non zero TSIG (and MsgSecretFunc is set) signing and verification is done on messages that qualify when doing zone transfers.
+	// Also see [Transport]. By default these are to [TSIGHMAC].
 	TSIGSigner
 	TSIGVerifier
 
@@ -151,6 +151,12 @@ func (srv *Server) Init() {
 	}
 	if srv.IdleTimeout == 0 {
 		srv.IdleTimeout = 8 * time.Second
+	}
+	if srv.TSIGSigner == nil {
+		srv.TSIGSigner = TSIGHMAC
+	}
+	if srv.TSIGVerifier == nil {
+		srv.TSIGVerifier = TSIGHMAC
 	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
