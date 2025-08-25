@@ -25,7 +25,7 @@ func newMsgWithTSIG() *Msg {
 var tsigSecret = []byte("blaat")
 
 func TestTSIG(t *testing.T) {
-	// this plainly test if we can verify what we sign, without any timers or request mac
+	// This plainly test if we can verify what we sign, without any timers or request mac.
 	testcases := []struct {
 		name        string
 		secret      SecretMsgFunc
@@ -48,6 +48,8 @@ func TestTSIG(t *testing.T) {
 			if tc.transformFn != nil {
 				tc.transformFn(m)
 			}
+
+			tc.option.RequestMAC = "" // Negate this from TSIGSign, as TSIGVerify is supposed to be running on a different machine normally.
 
 			err := TSIGVerify(m, tc.secret, TSIGHMAC, &tc.option)
 			if err != tc.err {

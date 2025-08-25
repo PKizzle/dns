@@ -22,7 +22,7 @@ const (
 // TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero). The TSIG MAC is saved in that RR.
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
-// If this is the case options.RequestMAC will be filled by this function.
+// When this function returns options.RequestMAC will have the MAC as calculated.
 //
 // The secret is pulled in via the SecretMsgFunc.
 func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error {
@@ -81,8 +81,7 @@ func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error
 	t = t[:off]
 
 	m.Data = append(m.Data, t...)
-	// TODO: consider setting this.
-	//	options.RequestMAC = tsig.MAC
+	options.RequestMAC = tsig.MAC
 	return nil
 }
 
