@@ -225,7 +225,7 @@ func TestZoneParserAddressAAAA(t *testing.T) {
 func TestZoneParserTargetBad(t *testing.T) {
 	records := []string{
 		"bad.example.org. CNAME ; bad cname",
-		//		"bad.example.org. HTTPS 10 ; bad https", // TODO(miek): add back in
+		"bad.example.org. HTTPS 10 ; bad https",
 		"bad.example.org. MX 10 ; bad mx",
 		"bad.example.org. SRV 1 0 80 ; bad srv",
 	}
