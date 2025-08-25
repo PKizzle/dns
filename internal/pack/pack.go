@@ -2,8 +2,11 @@ package pack
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
+
+	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 // maybe this should all moved to cryptobyte as well...
@@ -63,6 +66,49 @@ func StringAny(s string, msg []byte, off int) (int, error) {
 	}
 	copy(msg[off:off+len(s)], s)
 	off += len(s)
+	return off, nil
+}
+
+func String(s string, msg []byte, off int) (int, error) {
+	off, err := TxtString(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}
+
+func TxtString(s string, msg []byte, off int) (int, error) {
+	lenByteoff := off
+	if off >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
+		return off, errors.New("dns: buffer size too small")
+	}
+	off++
+	for i := 0; i < len(s); i++ {
+		if len(msg) <= off {
+			return off, errors.New("dns: buffer size too small")
+		}
+		if s[i] == '\\' {
+			i++
+			if i == len(s) {
+				break
+			}
+			// check for \DDD
+			if ddd.Is(s[i:]) {
+				msg[off] = ddd.ToByte(s[i:])
+				i += 2
+			} else {
+				msg[off] = s[i]
+			}
+		} else {
+			msg[off] = s[i]
+		}
+		off++
+	}
+	l := off - lenByteoff - 1
+	if l > 255 {
+		return off, errors.New("dns: string exceeded 255 bytes in txt")
+	}
+	msg[lenByteoff] = byte(l)
 	return off, nil
 }
 

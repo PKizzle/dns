@@ -61,11 +61,11 @@ func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *HINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packString(rr.Cpu, msg, off)
+	off, err = pack.String(rr.Cpu, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Os, msg, off)
+	off, err = pack.String(rr.Os, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -74,11 +74,11 @@ func (rr *HINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Cpu, err = unpackString(&s)
+	rr.Cpu, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
-	rr.Os, err = unpackString(&s)
+	rr.Os, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
@@ -271,7 +271,7 @@ func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *X25) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packString(rr.PSDNAddress, msg, off)
+	off, err = pack.String(rr.PSDNAddress, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -280,7 +280,7 @@ func (rr *X25) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.PSDNAddress, err = unpackString(&s)
+	rr.PSDNAddress, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
@@ -291,11 +291,11 @@ func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *ISDN) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packString(rr.Address, msg, off)
+	off, err = pack.String(rr.Address, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.SubAddress, msg, off)
+	off, err = pack.String(rr.SubAddress, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -304,11 +304,11 @@ func (rr *ISDN) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *ISDN) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Address, err = unpackString(&s)
+	rr.Address, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
-	rr.SubAddress, err = unpackString(&s)
+	rr.SubAddress, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
@@ -586,15 +586,15 @@ func (rr *NAPTR) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Flags, msg, off)
+	off, err = pack.String(rr.Flags, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Service, msg, off)
+	off, err = pack.String(rr.Service, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Regexp, msg, off)
+	off, err = pack.String(rr.Regexp, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -613,15 +613,15 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Flags, err = unpackString(&s)
+	rr.Flags, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
-	rr.Service, err = unpackString(&s)
+	rr.Service, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
-	rr.Regexp, err = unpackString(&s)
+	rr.Regexp, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
@@ -772,15 +772,15 @@ func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *GPOS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packString(rr.Longitude, msg, off)
+	off, err = pack.String(rr.Longitude, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Latitude, msg, off)
+	off, err = pack.String(rr.Latitude, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Altitude, msg, off)
+	off, err = pack.String(rr.Altitude, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -789,15 +789,15 @@ func (rr *GPOS) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Longitude, err = unpackString(&s)
+	rr.Longitude, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
-	rr.Latitude, err = unpackString(&s)
+	rr.Latitude, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
-	rr.Altitude, err = unpackString(&s)
+	rr.Altitude, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
@@ -1986,7 +1986,7 @@ func (rr *CAA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packString(rr.Tag, msg, off)
+	off, err = pack.String(rr.Tag, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2002,7 +2002,7 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Flag) {
 		return ErrUnpackOverflow
 	}
-	rr.Tag, err = unpackString(&s)
+	rr.Tag, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}
@@ -2055,7 +2055,7 @@ func (rr *GID) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *UINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packString(rr.Uinfo, msg, off)
+	off, err = pack.String(rr.Uinfo, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2064,7 +2064,7 @@ func (rr *UINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Uinfo, err = unpackString(&s)
+	rr.Uinfo, err = unpack.String(&s)
 	if err != nil {
 		return err
 	}

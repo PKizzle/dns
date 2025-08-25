@@ -118,7 +118,7 @@ func main() {
 			case tag == `dns:"uint48"`:
 				o("off, err = pack.Uint48(rr.%s, msg, off)\n")
 			case tag == `dns:"txt"`:
-				o("off, err = packString(rr.%s, msg, off)\n")
+				o("off, err = pack.String(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
@@ -162,7 +162,7 @@ if rr.%s != "-" {
 				case "uint64":
 					o("off, err = pack.Uint64(rr.%s, msg, off)\n")
 				case "string":
-					o("off, err = packString(rr.%s, msg, off)\n")
+					o("off, err = pack.String(rr.%s, msg, off)\n")
 				default:
 					log.Fatalln("No tag or basic type", rrname, fieldname, tag)
 				}
@@ -275,7 +275,7 @@ if rr.%s != "-" {
 			case `dns:"uint48"`:
 				readInt("Uint48")
 			case `dns:"txt"`:
-				unpackField("unpackString")
+				unpackField("unpack.String")
 			case `dns:"base32"`:
 				unpackFieldRest("unpackStringBase32")
 			case `dns:"base64"`:
@@ -303,7 +303,7 @@ if rr.%s != "-" {
 				case "uint64":
 					readInt("Uint64")
 				case "string":
-					unpackField("unpackString")
+					unpackField("unpack.String")
 				default:
 					log.Fatalln("No tag or basic type", rrname, fieldname, tag)
 				}

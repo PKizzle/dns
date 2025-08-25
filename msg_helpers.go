@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/pack"
@@ -105,47 +104,6 @@ func fromBase64(s []byte) (buf []byte, err error) {
 
 func toBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
-}
-
-func unpackString(s *cryptobyte.String) (string, error) {
-	var txt cryptobyte.String
-	if !s.ReadUint8LengthPrefixed(&txt) {
-		return "", ErrUnpackOverflow
-	}
-	var sb strings.Builder
-	consumed := 0
-	for i, b := range txt {
-		switch {
-		case b == '"' || b == '\\':
-			if consumed == 0 {
-				sb.Grow(len(txt) * 2)
-			}
-			sb.Write(txt[consumed:i])
-			sb.WriteByte('\\')
-			sb.WriteByte(b)
-			consumed = i + 1
-		case b < ' ' || b > '~': // unprintable
-			if consumed == 0 {
-				sb.Grow(len(txt) * 2)
-			}
-			sb.Write(txt[consumed:i])
-			sb.WriteString(ddd.Escape(b))
-			consumed = i + 1
-		}
-	}
-	if consumed == 0 { // no escaping needed
-		return string(txt), nil
-	}
-	sb.Write(txt[consumed:])
-	return sb.String(), nil
-}
-
-func packString(s string, msg []byte, off int) (int, error) {
-	off, err := packTxtString(s, msg, off)
-	if err != nil {
-		return len(msg), err
-	}
-	return off, nil
 }
 
 func unpackStringBase32(s *cryptobyte.String, len int) (string, error) {
@@ -565,46 +523,11 @@ func packTxt(txt []string, msg []byte, off int) (int, error) {
 	}
 	var err error
 	for _, s := range txt {
-		off, err = packTxtString(s, msg, off)
+		off, err = pack.TxtString(s, msg, off)
 		if err != nil {
 			return off, err
 		}
 	}
-	return off, nil
-}
-
-func packTxtString(s string, msg []byte, off int) (int, error) {
-	lenByteoff := off
-	if off >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
-		return off, ErrBuf
-	}
-	off++
-	for i := 0; i < len(s); i++ {
-		if len(msg) <= off {
-			return off, ErrBuf
-		}
-		if s[i] == '\\' {
-			i++
-			if i == len(s) {
-				break
-			}
-			// check for \DDD
-			if ddd.Is(s[i:]) {
-				msg[off] = ddd.ToByte(s[i:])
-				i += 2
-			} else {
-				msg[off] = s[i]
-			}
-		} else {
-			msg[off] = s[i]
-		}
-		off++
-	}
-	l := off - lenByteoff - 1
-	if l > 255 {
-		return off, &Error{err: "string exceeded 255 bytes in txt"}
-	}
-	msg[lenByteoff] = byte(l)
 	return off, nil
 }
 
@@ -639,7 +562,7 @@ func packOctetString(s string, msg []byte, off int) (int, error) {
 func unpackTxt(s *cryptobyte.String) ([]string, error) {
 	var strs []string
 	for !s.Empty() {
-		str, err := unpackString(s)
+		str, err := unpack.String(s)
 		if err != nil {
 			return strs, err
 		}
