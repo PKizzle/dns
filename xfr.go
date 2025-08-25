@@ -68,19 +68,13 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 		close(env)
 	}()
 
-	// no op tsigigger?
-	options := TSIGOption{}
+	options := &TSIGOption{}
 
-	if t.TSIGSigner != nil && t.MsgSecretFunc != nil {
-		for _, rr := range m.Pseudo {
-			// SIG0 too (TODO(miek).
-			if _, ok := rr.(*TSIG); ok {
-				if err := TSIGSign(m, t.MsgSecretFunc, t.TSIGSigner, options); err != nil {
-					env <- &Envelope{Error: err}
-					return
-				}
-				break
-			}
+	if t.MsgSecretFunc != nil && t.TSIGSigner != nil {
+		err := TSIGSign(m, t.MsgSecretFunc, t.TSIGSigner, options)
+		if err != nil && err != ErrNoTSIG {
+			env <- &Envelope{Error: err}
+			return
 		}
 	}
 
@@ -143,19 +137,13 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			}
 		}
 
-		/*
-			if t.TSIGVerifier != nil {
-				for _, rr := range r.Pseudo {
-					if _, ok := rr.(*TSIG); ok {
-						if err := TSIGSign(m, t.TSIGSigner, options); err != nil {
-							env <- &Envelope{Error: err}
-							return
-						}
-						break
-					}
-				}
+		if t.MsgSecretFunc != nil && t.TSIGVerifier != nil {
+			err := TSIGVerify(m, t.MsgSecretFunc, t.TSIGVerifier, options)
+			if err != nil && err != ErrNoTSIG {
+				env <- &Envelope{Error: err}
+				return
 			}
-		*/
+		}
 
 		if isSOALast(r) { // ends the transfer
 			env <- &Envelope{RR: r.Answer}

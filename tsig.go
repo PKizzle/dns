@@ -22,9 +22,10 @@ const (
 // TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero). The TSIG MAC is saved in that RR.
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
+// If this is the case options.RequestMAC will be filled by this function.
 //
 // The secret is pulled in via the SecretMsgFunc.
-func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options TSIGOption) error {
+func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error {
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
 	}
@@ -57,7 +58,7 @@ func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options TSIGOption) error 
 	// decrease additional section count, because we removed the TSIG
 	binary.BigEndian.PutUint16(m.Data[10:], uint16(len(m.Extra)+int(m.ps-1)))
 
-	macbuf, err := tsig.mac(m, options)
+	macbuf, err := tsig.mac(m, *options)
 	if err != nil {
 		return err
 	}
@@ -80,6 +81,8 @@ func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options TSIGOption) error 
 	t = t[:off]
 
 	m.Data = append(m.Data, t...)
+	// TODO: consider setting this.
+	//	options.RequestMAC = tsig.MAC
 	return nil
 }
 
@@ -87,7 +90,7 @@ func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options TSIGOption) error 
 // from m.Data, but left in the unpacked message m.
 //
 // The secret is pulled in via the SecretMsgFunc.
-func TSIGVerify(m *Msg, fn SecretMsgFunc, k TSIGVerifier, options TSIGOption) error {
+func TSIGVerify(m *Msg, fn SecretMsgFunc, k TSIGVerifier, options *TSIGOption) error {
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
 	}
@@ -132,11 +135,11 @@ func TSIGVerify(m *Msg, fn SecretMsgFunc, k TSIGVerifier, options TSIGOption) er
 		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
 	}()
 
-	macbuf, err := tsig.mac(m, options)
+	macbuf, err := tsig.mac(m, *options)
 	if err != nil {
 		return err
 	}
-	if err := k.Verify(tsig, secret, macbuf, options); err != nil {
+	if err := k.Verify(tsig, secret, macbuf, *options); err != nil {
 		return err
 	}
 
