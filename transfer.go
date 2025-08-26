@@ -22,6 +22,15 @@ func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
 	}
+	conn, err := c.Transport.dial(ctx, network, address)
+	if err != nil {
+		return nil, err
+	}
+	return c.TransferInWithConn(ctx, m, conn)
+}
+
+// TransferInWithConnn behaves like [client.TransferIn], but with a supplied connection.
+func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) (<-chan *Envelope, error) {
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)
 	if !axfr && !ixfr {
@@ -34,10 +43,6 @@ func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string
 		}
 	}
 
-	conn, err := c.Transport.dial(ctx, network, address)
-	if err != nil {
-		return nil, err
-	}
 	ch := make(chan *Envelope)
 	switch {
 	case axfr:
@@ -110,7 +115,6 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 // the correct messages through the channel. And also needs to take care of setting up and verifying TSIG and or
 // SIG(0) on the messages sent through the channel. If the Data buffers of the message sent on the channel are
 // zero, TransferOut call Pack().
-// The one check that TransferOut can do it does, is that the first message sent start with a SOA RR.
 //
 // Example setup:
 //
@@ -140,20 +144,4 @@ func (c *Client) TransferOut(w ResponseWriter, ch <-chan *Envelope) error {
 		}
 	}
 	return nil
-}
-
-func hasSOAFirst(m *Msg) bool {
-	if len(m.Answer) == 0 {
-		return false
-	}
-	_, ok := m.Answer[0].(*SOA)
-	return ok
-}
-
-func hasSOALast(m *Msg) bool {
-	if len(m.Answer) == 0 {
-		return false
-	}
-	_, ok := m.Answer[len(m.Answer)-1].(*SOA)
-	return ok
 }

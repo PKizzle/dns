@@ -17,33 +17,10 @@ var testTransferData = []dns.RR{
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
 }
 
-const testXFRZone = "miek.nl."
-
-/*
-var sendXFR = func(w dns.ResponseWriter, req *dns.Msg, rrFn func() []dns.RR) {
-	var wg sync.WaitGroup
-	w.Hijack()
-	env := make(chan *dns.Envelope)
-	tr := new(dns.Transfer)
-	wg.Add(1)
-	go func() {
-		tr.Out(w, req, ch)
-		wg.Done()
-		w.Close()
-	}()
-	ch <- &dns.Envelope{RR: rrFn()}
-	close(ch)
-}
-*/
-
-/*
-func xfrHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
-	sendXFR(w, req, func() []dns.RR { return testXFRData })
-}
-*/
+const testTransferZone = "miek.nl."
 
 func TestTransferInvalid(t *testing.T) {
-	dns.HandleFunc(testXFRZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var wg sync.WaitGroup
 		w.Hijack()
 		env := make(chan *dns.Envelope)
@@ -55,14 +32,14 @@ func TestTransferInvalid(t *testing.T) {
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
 	})
-	defer dns.HandleRemove(testXFRZone)
+	defer dns.HandleRemove(testTransferZone)
 
 	cancel, addr, _ := dnstest.TCPServer(":0")
 	defer cancel()
 
 	c := new(dns.Client)
 	m := new(dns.Msg)
-	dnsutil.SetAXFR(m, testXFRZone)
+	dnsutil.SetAXFR(m, testTransferZone)
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
@@ -83,7 +60,7 @@ func TestTransferInvalid(t *testing.T) {
 }
 
 func TestTransfer(t *testing.T) {
-	dns.HandleFunc(testXFRZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var wg sync.WaitGroup
 		w.Hijack()
 		env := make(chan *dns.Envelope)
@@ -102,17 +79,65 @@ func TestTransfer(t *testing.T) {
 		env <- &dns.Envelope{Msg: m}
 		close(env)
 	})
-	defer dns.HandleRemove(testXFRZone)
+	defer dns.HandleRemove(testTransferZone)
 
 	cancel, addr, _ := dnstest.TCPServer(":0")
 	defer cancel()
 	axfr(t, addr)
 }
 
+func TestTransferTLS(t *testing.T) {
+	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		var wg sync.WaitGroup
+		w.Hijack()
+		env := make(chan *dns.Envelope)
+		c := new(dns.Client)
+
+		wg.Go(func() {
+			c.TransferOut(w, env)
+			w.Close()
+		})
+
+		m := &dns.Msg{Data: r.Data}
+		dnsutil.SetReply(m, r)
+		m.Answer = testTransferData
+		m.Pack()
+
+		env <- &dns.Envelope{Msg: m}
+		close(env)
+	})
+	defer dns.HandleRemove(testTransferZone)
+
+	cancel, addr, _ := dnstest.TLSServer(":0")
+	defer cancel()
+
+	c := &dns.Client{Transport: dns.NewDefaultTransport()}
+	c.TLSConfig = dnstest.TLSConfig()
+	m := new(dns.Msg)
+	dnsutil.SetAXFR(m, testTransferZone)
+
+	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+	if err != nil {
+		t.Fatal("failed to zone transfer in over TLS", err)
+	}
+
+	i := 0
+	for e := range env {
+		if e.Error != nil {
+			t.Fatal(e.Error)
+		}
+		i += len(e.Msg.Answer)
+	}
+
+	if i != len(testTransferData) {
+		t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+	}
+}
+
 func axfr(t *testing.T, addr string) {
 	c := new(dns.Client)
 	m := new(dns.Msg)
-	dnsutil.SetAXFR(m, testXFRZone)
+	dnsutil.SetAXFR(m, testTransferZone)
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
@@ -133,38 +158,6 @@ func axfr(t *testing.T, addr string) {
 }
 
 /*
-
-func TestXFRTLS(t *testing.T) {
-	dns.HandleFunc(testXFRZone, xfrHandler)
-	defer dns.HandleRemove(testXFRZone)
-
-	cancel, addr, _ := dnstest.TLSServer(":0")
-	defer cancel()
-
-	tr := &dns.Transfer{Transport: dns.NewDefaultTransport()}
-	tr.TLSConfig = dnstest.TLSConfig()
-	m := new(dns.Msg)
-	dnsutil.SetAXFR(m, testXFRZone)
-
-	envc, err := tr.In(context.TODO(), m, "tcp", addr)
-	if err != nil {
-		t.Fatal("failed to zone transfer in over TLS", err)
-	}
-
-	i := 0
-	for env := range envc {
-		if env.Error != nil {
-			t.Fatal(env.Error)
-		}
-		i += len(env.RR)
-	}
-
-	if i != len(testXFRData) {
-		t.Fatalf("bad axfr: expected %d, got %d", i, len(testXFRData))
-	}
-}
-
-/*
 func axfrTestingSuiteWithCustomTsig(t *testing.T, addrstr string, provider TsigProvider) {
 	tr := new(Transfer)
 	m := new(Msg)
@@ -174,7 +167,7 @@ func axfrTestingSuiteWithCustomTsig(t *testing.T, addrstr string, provider TsigP
 		t.Fatal("failed to dial", err)
 	}
 	tr.TsigProvider = provider
-	m.SetAxfr(testXFRZone)
+	m.SetAxfr(testTransferZone)
 	m.SetTsig("axfr.", HmacSHA256, 300, time.Now().Unix())
 
 	c, err := tr.In(m, addrstr)
@@ -210,7 +203,7 @@ func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider Tsi
 		t.Fatal("failed to dial", err)
 	}
 	tr.TsigProvider = provider
-	m.SetAxfr(testXFRZone)
+	m.SetAxfr(testTransferZone)
 
 	c, err := tr.In(m, addrstr)
 	if err != nil {
@@ -225,8 +218,8 @@ func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider Tsi
 }
 
 func TestCustomTsigProvider(t *testing.T) {
-	HandleFunc(testXFRZone, SingleEnvelopeXfrServer)
-	defer HandleRemove(testXFRZone)
+	HandleFunc(testTransferZone, SingleEnvelopeXfrServer)
+	defer HandleRemove(testTransferZone)
 
 	cancel, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
 		srv.TsigProvider = tsigSecretProvider(tsigSecret)
@@ -240,8 +233,8 @@ func TestCustomTsigProvider(t *testing.T) {
 }
 
 func TestTSIGNotSigned(t *testing.T) {
-	HandleFunc(testXFRZone, SingleEnvelopeXfrServer)
-	defer HandleRemove(testXFRZone)
+	HandleFunc(testTransferZone, SingleEnvelopeXfrServer)
+	defer HandleRemove(testTransferZone)
 
 	s, addrstr, _, err := RunLocalTCPServer(":0")
 	if err != nil {
