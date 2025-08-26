@@ -76,10 +76,6 @@ type InvalidMsgFunc func(m *Msg, err error)
 // DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a noop.
 func DefaultMsgInvalidFunc(m *Msg, err error) {}
 
-// SecretMsgFunc is a function that is used to retrieve secrets applicable to the current message.
-// Its primary use is for [TSIG]. There is no default function.
-type SecretMsgFunc func(m *Msg) (secret []byte, err error)
-
 // A Server defines parameters for running an DNS server.
 type Server struct {
 	// Address to listen on, ":domain" if empty.
@@ -111,10 +107,6 @@ type Server struct {
 	// Crucially this allows binding when an existing server is listening on `0.0.0.0` or `::`.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReuseAddr bool
-	// If non zero TSIG (and MsgSecretFunc is set) signing and verification is done on messages that qualify when doing zone transfers.
-	// Also see [Transport]. By default these are to [TSIGHMAC].
-	TSIGSigner
-	TSIGVerifier
 
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process. Defaults to
 	// [DefaultMsgAcceptFunc].
@@ -123,8 +115,6 @@ type Server struct {
 	NotifyStartedFunc func()
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
-	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc

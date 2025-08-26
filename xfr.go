@@ -1,3 +1,5 @@
+//go:build ignore
+
 package dns
 
 import (
@@ -7,18 +9,9 @@ import (
 	"time"
 )
 
-// Envelope is used when doing a zone transfer with a remote server.
-type Envelope struct {
-	RR    []RR  // The set of RRs in the answer section of the xfr reply message.
-	Error error // If something went wrong, this contains the error.
-}
-
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
-
-	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 }
 
 // In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().

@@ -164,7 +164,8 @@ type MsgHeader struct {
 	CompactAnswers bool   // Compact Answers OK
 }
 
-// Msg is a DNS message.
+// Msg is a DNS message. Msg implements [iter.Seq] and [iter.Seq2], so you can range over it, when doing so
+// the RRs of each section are returned, this includes the pseudo section.
 type Msg struct {
 	MsgHeader
 

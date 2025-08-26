@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"iter"
 	"net"
 	"strconv"
 	"strings"
@@ -96,12 +97,11 @@ var RcodeToString = map[uint16]string{
 
 // packName packs a domain name. Why should this be exported?
 func packName(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
-	// XXX: A logical copy of this function exists in IsDomainName and
-	// should be kept in sync with this function.
+	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
 	// If not fully qualified, error out.
 	if !dnsutilIsFqdn(s) {
-		return len(msg), ErrFqdn
+		return len(msg), ErrFqdn.Fmt(": %s", s)
 	}
 
 	ls := len(s)
@@ -1032,4 +1032,43 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 		m.Data = m.Data[:n]
 	}
 	return int64(n), err
+}
+
+// RRs() allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
+// sections.
+func (m *Msg) RRs() iter.Seq[RR] {
+	return func(yield func(RR) bool) {
+		for {
+			for _, rr := range m.Question {
+				if !yield(rr) {
+					return
+				}
+			}
+			for _, rr := range m.Answer {
+				if !yield(rr) {
+					return
+				}
+			}
+			for _, rr := range m.Ns {
+				if !yield(rr) {
+					return
+				}
+			}
+			for _, rr := range m.Extra {
+				if !yield(rr) {
+					return
+				}
+			}
+			for _, rr := range m.Pseudo {
+				if !yield(rr) {
+					return
+				}
+			}
+			for _, rr := range m.Stateful {
+				if !yield(rr) {
+					return
+				}
+			}
+		}
+	}
 }

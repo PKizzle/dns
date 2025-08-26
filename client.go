@@ -12,9 +12,6 @@ import (
 // A Client is a DNS client. It is safe to use a client from multiple goroutines.
 type Client struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
-
-	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 }
 
 // Exchange performs a synchronous query over "network". It sends the message m to the address
@@ -47,10 +44,6 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // client.Exchange calls m.Pack().
 //
 // It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
-//
-// If the message m contains a stub [TSIG] record (also see [TSIGSIGN]) and the client as a non-nill
-// MsgSecretFunc, the TSIG record will be generated before the message is send. The reply is then also checked
-// that it holds the correct TSIG.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
