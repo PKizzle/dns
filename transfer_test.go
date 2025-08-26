@@ -133,6 +133,7 @@ func TestTransferTSIG(t *testing.T) {
 			w.Close()
 		})
 		// send multiple so we need to do this, if there is tsig needed.
+		// send replies back with tsig record and sign with original request mac.
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
 	})
@@ -162,6 +163,7 @@ func TestTransferTSIG(t *testing.T) {
 				t.Errorf("expected no SOA, got one")
 			}
 		}
+		// Verify the answer, with request mac.
 	}
 }
 
