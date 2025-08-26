@@ -21,20 +21,19 @@ func TestTSIG(t *testing.T) {
 	// This plainly test if we can verify what we sign, without any timers or request mac.
 	testcases := []struct {
 		name        string
-		option      TSIGOption
 		transformFn func(m *Msg)
 		err         error
 	}{
-		{"signverify", TSIGOption{}, nil, nil},
-		{"signverify-changed-id", TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
-		{"signverify-upper", TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify", nil, nil},
+		{"signverify-changed-id", func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := newMsgWithTSIG()
+			option := TSIGOption{}
 			hmac := TSIGHMAC{Secret: tsigSecret}
-			if err := TSIGSign(m, hmac, &tc.option); err != nil {
+			if err := TSIGSign(m, hmac, &option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
 
@@ -42,11 +41,11 @@ func TestTSIG(t *testing.T) {
 				tc.transformFn(m)
 			}
 
-			tc.option.RequestMAC = "" // Negate this from TSIGSign, as TSIGVerify is supposed to be running on a different machine normally.
+			option.RequestMAC = "" // Negate this from TSIGSign, as TSIGVerify is supposed to be running on a different machine normally.
 
-			err := TSIGVerify(m, hmac, &tc.option)
+			err := TSIGVerify(m, hmac, &option)
 			if err != tc.err {
-				t.Fatalf("execpted %v error, got: %s", tc.err, err)
+				t.Fatalf("expecpted %v error, got: %s", tc.err, err)
 			}
 		})
 	}

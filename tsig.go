@@ -62,6 +62,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 		return err
 	}
 
+	tsig.OrigID = m.ID
 	tsig.MAC = hex.EncodeToString(mac)
 	tsig.MACSize = uint16(len(tsig.MAC) / 2)
 	if tsig.TimeSigned == 0 {
