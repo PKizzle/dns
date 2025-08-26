@@ -30,7 +30,7 @@ func TestServer(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		network string
-		run     func(laddr string, opts ...func(*dns.Server)) (*dns.Server, string, error)
+		run     func(laddr string, opts ...func(*dns.Server)) (func(), string, error)
 	}{
 		{"udp", "udp", dnstest.UDPServer},
 		{"tcp", "tcp", dnstest.TCPServer},
@@ -42,8 +42,8 @@ func TestServer(t *testing.T) {
 			defer dns.HandleRemove("miek.nl.")
 			defer dns.HandleRemove("example.nl.")
 
-			s, addrstr, err := tc.run(":0")
-			defer s.Shutdown(context.TODO())
+			cancel, addrstr, err := tc.run(":0")
+			defer cancel()
 
 			c := &dns.Client{Transport: dns.NewDefaultTransport()}
 			if tc.name == "tcp-tls" {
@@ -95,8 +95,8 @@ func TestServer(t *testing.T) {
 func TestServerZFlag(t *testing.T) {
 	dns.HandleFunc("example.com.", helloHandler)
 	defer dns.HandleRemove("example.com.")
-	s, addrstr, _ := dnstest.UDPServer(":0")
-	defer s.Shutdown(context.TODO())
+	cancel, addrstr, _ := dnstest.UDPServer(":0")
+	defer cancel()
 
 	m := new(dns.Msg)
 	dnsutil.SetQuestion(m, "example.com.", dns.TypeTXT)
@@ -119,13 +119,14 @@ func TestServerMsgInvalidFunc(t *testing.T) {
 	dns.HandleFunc("example.org.", func(context.Context, dns.ResponseWriter, *dns.Msg) {
 		t.Fatal("the handler must not be called in any of these tests")
 	})
-	s, addr, _ := dnstest.TCPServer(":0")
-	defer s.Shutdown(context.TODO())
 
 	invalidErrors := make(chan error)
-	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
-		invalidErrors <- err
-	}
+	cancel, addr, _ := dnstest.TCPServer(":0", func(srv *dns.Server) {
+		srv.MsgInvalidFunc = func(m *dns.Msg, err error) {
+			invalidErrors <- err
+		}
+	})
+	defer cancel()
 
 	c, err := net.Dial("tcp", addr)
 	if err != nil {

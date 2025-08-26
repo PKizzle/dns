@@ -15,9 +15,9 @@ type Envelope struct {
 
 // TransferIn performs a zone transfer with address over network, the message m is used to ask for the transfer and
 // should have an [AXFR] or [IXFR] RR in the question section.  The caller is responsible for setting up and verifying TSIG and or
-// SIG(0) on the message send, and the messages returned on the channel.
-// If m's buffer is empty Transfer will call m.Pack().
-// If the client's transport is nil NewDefaultTransport will be used.
+// SIG(0) on the message send, and the messages returned on the channel. The messages returned are "lightly" unpacked, just like in
+// [dns.HandleFunc].
+// If m's buffer is empty Transfer will call m.Pack(). If the client's transport is nil NewDefaultTransport will be used.
 func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string) (<-chan *Envelope, error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
@@ -68,12 +68,15 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 		return
 	}
 
-	r := new(Msg)
-	r.Data = m.Data
+	r := &Msg{Data: m.Data}
 	r.Options = OptionUnpackHeader
+	dnsutilSetReply(r, m)
 	for {
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
+			if isEOFOrClosedNetwork(err) {
+				break
+			}
 			ch <- &Envelope{Error: err}
 			return
 		}
@@ -97,19 +100,21 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 			ch <- &Envelope{r, ErrRcode}
 			return
 		}
+		r.Options = OptionUnpack
 		ch <- &Envelope{Msg: r}
 	}
 }
 
 // Out performs an outgoing transfer with the client connecting in w. The server is responsible for sending
-// the correct messages through the channel. The server also needs to take care of setting up and verifying TSIG and or
-// SIG(0) on the messages sent through the channel.
+// the correct messages through the channel. And also needs to take care of setting up and verifying TSIG and or
+// SIG(0) on the messages sent through the channel. If the Data buffers of the message sent on the channel are
+// zero, TransferOut call Pack().
 //
 // Example setup:
 //
 //	env := make(chan<- *dns.Envelope)
-//	w.Hijack() // hijack the connection as we should close when done
 //	c := new(dns.Client)
+//	w.Hijack() // hijack the connection as we should close when done
 //	var wg sync.WaitGroup
 //	wg.Go(func() { c.TransferOut(w, env) })
 //	for i := range msgs {
@@ -133,4 +138,20 @@ func (c *Client) TransferOut(w ResponseWriter, ch <-chan *Envelope) error {
 		}
 	}
 	return nil
+}
+
+func HasSOAFirst(m *Msg) bool {
+	if len(m.Answer) == 0 {
+		return false
+	}
+	_, ok := m.Answer[0].(*SOA)
+	return ok
+}
+
+func HasSOALast(m *Msg) bool {
+	if len(m.Answer) == 0 {
+		return false
+	}
+	_, ok := m.Answer[len(m.Answer)-1].(*SOA)
+	return ok
 }

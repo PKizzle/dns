@@ -259,19 +259,3 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	timersonly = timersonly
 	return nil
 }
-
-func isSOAFirst(m *Msg) bool {
-	if len(m.Answer) == 0 {
-		return false
-	}
-	_, ok := m.Answer[0].(*SOA)
-	return ok
-}
-
-func isSOALast(m *Msg) bool {
-	if len(m.Answer) == 0 {
-		return false
-	}
-	_, ok := m.Answer[len(m.Answer)-1].(*SOA)
-	return ok
-}

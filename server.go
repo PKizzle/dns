@@ -3,10 +3,8 @@ package dns
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -314,13 +312,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
-			if errors.Is(err, io.EOF) {
+			if isEOFOrClosedNetwork(err) {
 				break
-			}
-			if _, ok := err.(*net.OpError); ok {
-				if strings.Contains(err.Error(), "use of closed network connection") {
-					break
-				}
 			}
 			srv.MsgInvalidFunc(r, err)
 			continue
@@ -378,7 +371,7 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		return
 	}
 
-	r.Options = 0
+	r.Options = OptionUnpack
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()
 }

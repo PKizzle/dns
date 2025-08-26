@@ -3,7 +3,10 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"errors"
+	"io"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -44,4 +47,18 @@ func (t *Transport) dial(ctx context.Context, network, address string) (net.Conn
 		return dialer.DialContext(ctx, network, address)
 	}
 	return t.Dialer.DialContext(ctx, network, address)
+}
+
+// isEOFOrClosedNetwork returns true if the error err is an io.EOF or a *net.OpError with the
+// text 'use of closed network connection'.
+func isEOFOrClosedNetwork(err error) bool {
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+	if _, ok := err.(*net.OpError); ok {
+		if strings.Contains(err.Error(), "use of closed network connection") {
+			return true
+		}
+	}
+	return false
 }
