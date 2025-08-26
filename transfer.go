@@ -44,17 +44,11 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 	}
 
 	ch := make(chan *Envelope)
-	switch {
-	case axfr:
-		go c.axfrTransferIn(ctx, m, ch, conn)
-	case ixfr:
-		//		go t.inIXFR(ctx, m, ch, conn)
-	}
-
+	go c.transferIn(ctx, m, ch, conn)
 	return ch, nil
 }
 
-func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
+func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
 	defer func() {
 		// First close the connection, then the channel. This allows functions blocked on the channel to
 		// assume that the connection is closed and no further operations are pending when they resume.
@@ -77,7 +71,6 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 	r.Options = OptionUnpackHeader
 	dnsutilSetReply(r, m)
 	for {
-		// first message must hace axfre in answe
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
 			if isEOFOrClosedNetwork(err) {

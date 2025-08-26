@@ -213,8 +213,9 @@ type Option uint16
 const (
 	OptionUnpack         Option = 0         // Unpack the entire message, mostly defined to serve as documentation.
 	OptionUnpackHeader   Option = 1 << iota // Unpack only the header of the message.
-	OptionUnpackQuestion                    // Unpack only the question section of the message
-	// OptionNoBufferUse // reuse buffers?
+	OptionUnpackQuestion                    // Unpack up the question section of the message.
+	OptionUnpackAnswer                      // Unpack up to the answer section of the message.
+	// OptionNoBufferUse // reuse buffers? Or something else that tells what to do do with the buffer.
 )
 
 // Convert a MsgHeader to a string, with dig-like headers:
