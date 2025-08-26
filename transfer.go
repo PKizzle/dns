@@ -122,8 +122,10 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 // The server is responsible for sending the correct sequence of Msgs through the channel ch.
 func (c *Client) TransferOut(w ResponseWriter, ch <-chan *Envelope) error {
 	for env := range ch {
-		if err := env.Msg.Pack(); err != nil {
-			return err
+		if len(env.Msg.Data) == 0 {
+			if err := env.Msg.Pack(); err != nil {
+				return err
+			}
 		}
 
 		if _, err := io.Copy(w, env.Msg); err != nil {

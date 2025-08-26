@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"encoding/binary"
 	"testing"
 	"time"
@@ -28,20 +27,20 @@ func TestTSIG(t *testing.T) {
 	// This plainly test if we can verify what we sign, without any timers or request mac.
 	testcases := []struct {
 		name        string
-		secret      SecretMsgFunc
 		option      TSIGOption
 		transformFn func(m *Msg)
 		err         error
 	}{
-		{"signverify", func(*Msg) ([]byte, error) { return tsigSecret, nil }, TSIGOption{}, nil, nil},
-		{"signverify-changed-id", func(*Msg) ([]byte, error) { return tsigSecret, nil }, TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
-		{"signverify-upper", func(*Msg) ([]byte, error) { return bytes.ToUpper(tsigSecret), nil }, TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify", TSIGOption{}, nil, nil},
+		{"signverify-changed-id", TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify-upper", TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := newMsgWithTSIG()
-			if err := TSIGSign(m, tc.secret, TSIGHMAC, &tc.option); err != nil {
+			hmac := TSIGHMAC{Secret: tsigSecret}
+			if err := TSIGSign(m, hmac, &tc.option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
 
@@ -51,7 +50,7 @@ func TestTSIG(t *testing.T) {
 
 			tc.option.RequestMAC = "" // Negate this from TSIGSign, as TSIGVerify is supposed to be running on a different machine normally.
 
-			err := TSIGVerify(m, tc.secret, TSIGHMAC, &tc.option)
+			err := TSIGVerify(m, hmac, &tc.option)
 			if err != tc.err {
 				t.Fatalf("execpted %v error, got: %s", tc.err, err)
 			}

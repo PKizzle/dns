@@ -17,7 +17,7 @@ type TSIGHMAC struct {
 	Secret []byte
 }
 
-func (h TSIGHMAC) Sign(t *TSIG, secret, p []byte) ([]byte, error) {
+func (h TSIGHMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
@@ -37,8 +37,8 @@ func (h TSIGHMAC) Sign(t *TSIG, secret, p []byte) ([]byte, error) {
 	return hs.Sum(nil), nil
 }
 
-func (h TSIGHMAC) Verify(t *TSIG, secret, p []byte, options TSIGOption) error {
-	buf, err := h.Sign(t, h.Secret, p)
+func (h TSIGHMAC) Verify(t *TSIG, p []byte, options TSIGOption) error {
+	buf, err := h.Sign(t, p)
 	if err != nil {
 		return err
 	}
