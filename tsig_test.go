@@ -3,20 +3,14 @@ package dns
 import (
 	"encoding/binary"
 	"testing"
-	"time"
 )
 
 func newMsgWithTSIG() *Msg {
-	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
-	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
-	m.Question = []RR{mx}
+	m := NewMsg("miek.nl", TypeMX)
+	m.ID = 3
 
-	tsig := &TSIG{Hdr: Header{Name: "example.", Class: ClassANY}}
-	tsig.Algorithm = HmacSHA256
-	tsig.TimeSigned = uint64(time.Now().Unix())
-	tsig.OrigID = m.ID
-
-	m.Pseudo = append(m.Pseudo, tsig)
+	tsig := NewTSIG("example.", HmacSHA256, 0)
+	m.Pseudo = []RR{tsig}
 	m.Pack()
 	return m
 }

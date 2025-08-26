@@ -14,6 +14,11 @@ type Client struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
 }
 
+// NewClient returns a client with the transport set to [DefaultTransport].
+func NewClient() *Client {
+	return &Client{Transport: NewDefaultTransport()}
+}
+
 // Exchange performs a synchronous query over "network". It sends the message m to the address
 // and waits for a reply. Exchange does not retry a failed query, nor
 // will it fall back to TCP in case of truncation. If the Data buffer in m is empty, Exchange calls m.Pack().

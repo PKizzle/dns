@@ -95,13 +95,12 @@ func TestTransfer(t *testing.T) {
 				addr = adr
 			}
 
-			c := &dns.Client{Transport: &dns.DefaultTransport}
+			c := dns.NewClient()
 			if name == "tcp-tls" {
 				c.TLSConfig = dnstest.TLSConfig()
 			}
 
-			m := new(dns.Msg)
-			dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
+			m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 
 			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 			if err != nil {
@@ -142,10 +141,12 @@ func TestTransferTSIG(t *testing.T) {
 	defer cancel()
 
 	c := new(dns.Client)
-	m := new(dns.Msg).Init(testTransferZone, dns.TypeAXFR)
-	m.Pseudo = []dns.RR{new(dns.TSIG).Init("keyname", dns.HmacSHA512, 0)}
-
+	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
+	m.Pseudo = []dns.RR{dns.NewTSIG("keyname", dns.HmacSHA512, 0)}
 	signer := dns.TSIGHMAC{"geheim"}
+	println(m.String())
+	dns.TSIGSign(m, signer, &dns.TSIGOption{})
+	println(m.String())
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
