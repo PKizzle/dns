@@ -3,10 +3,8 @@ package dns
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"io"
 	"net"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,14 +17,20 @@ const maxTCPQueries = 128
 
 // ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
-	server := &Server{Addr: addr, Net: network, Handler: handler}
+	server := NewServer()
+	server.Addr = addr
+	server.Net = network
+	server.Handler = handler
 	return server.ListenAndServe()
 }
 
 // ActivateAndServe activates a server with a listener from systemd, l and p should not both be non-nil.
 // If both l and p are not nil only p will be used. Invokes handler for incoming queries.
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
-	server := &Server{Listener: l, PacketConn: p, Handler: handler}
+	server := NewServer()
+	server.Listener = l
+	server.PacketConn = p
+	server.Handler = handler
 	return server.ActivateAndServe()
 }
 
@@ -76,10 +80,6 @@ type InvalidMsgFunc func(m *Msg, err error)
 // DefaultMsgInvalidFunc is the default function used in case no InvalidMsgFunc is set. It is defined to be a noop.
 func DefaultMsgInvalidFunc(m *Msg, err error) {}
 
-// SecretMsgFunc is a function that is used to retrieve secrets applicable to the current message.
-// Its primary use is for [TSIG]. There is no default function.
-type SecretMsgFunc func(m *Msg) (secret []byte, err error)
-
 // A Server defines parameters for running an DNS server.
 type Server struct {
 	// Address to listen on, ":domain" if empty.
@@ -111,10 +111,6 @@ type Server struct {
 	// Crucially this allows binding when an existing server is listening on `0.0.0.0` or `::`.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
 	ReuseAddr bool
-	// If non zero TSIG (and MsgSecretFunc is set) signing and verification is done on messages that qualify when doing zone transfers.
-	// Also see [Transport]. By default these are to [TSIGHMAC].
-	TSIGSigner
-	TSIGVerifier
 
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process. Defaults to
 	// [DefaultMsgAcceptFunc].
@@ -123,8 +119,6 @@ type Server struct {
 	NotifyStartedFunc func()
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
-	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
@@ -132,35 +126,19 @@ type Server struct {
 	shutdown chan bool
 }
 
-// Init sets some default values in Server.
-func (srv *Server) Init() {
-	if srv.UDPSize == 0 {
-		srv.UDPSize = MinMsgSize
-	}
-	if srv.MsgInvalidFunc == nil {
-		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
-	}
-	if srv.MsgAcceptFunc == nil {
-		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
-	}
-	if srv.Handler == nil {
-		srv.Handler = DefaultServeMux
-	}
-	if srv.ReadTimeout == 0 {
-		srv.ReadTimeout = 2 * time.Second
-	}
-	if srv.IdleTimeout == 0 {
-		srv.IdleTimeout = 8 * time.Second
-	}
-	if srv.TSIGSigner == nil {
-		srv.TSIGSigner = TSIGHMAC
-	}
-	if srv.TSIGVerifier == nil {
-		srv.TSIGVerifier = TSIGHMAC
-	}
+// NewServer return a new server initialized with some defaults
+func NewServer() *Server {
+	srv := new(Server)
+	srv.UDPSize = MinMsgSize
+	srv.MsgInvalidFunc = DefaultMsgInvalidFunc
+	srv.MsgAcceptFunc = DefaultMsgAcceptFunc
+	srv.Handler = DefaultServeMux
+	srv.ReadTimeout = 2 * time.Second
+	srv.IdleTimeout = 8 * time.Second
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
 	srv.shutdown = make(chan bool)
+	return srv
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server. If TLS config is available a TLS
@@ -170,8 +148,6 @@ func (srv *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":domain"
 	}
-
-	srv.Init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -330,13 +306,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 		r := &Msg{Data: make([]byte, srv.UDPSize)}
 		if _, err := r.ReadFrom(conn); err != nil {
-			if errors.Is(err, io.EOF) {
+			if isEOFOrClosedNetwork(err) {
 				break
-			}
-			if _, ok := err.(*net.OpError); ok {
-				if strings.Contains(err.Error(), "use of closed network connection") {
-					break
-				}
 			}
 			srv.MsgInvalidFunc(r, err)
 			continue
@@ -394,7 +365,7 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		return
 	}
 
-	r.Options = 0
+	r.Options = OptionUnpack
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()
 }

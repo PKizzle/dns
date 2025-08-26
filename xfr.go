@@ -1,3 +1,5 @@
+//go:build ignore
+
 package dns
 
 import (
@@ -7,18 +9,9 @@ import (
 	"time"
 )
 
-// Envelope is used when doing a zone transfer with a remote server.
-type Envelope struct {
-	RR    []RR  // The set of RRs in the answer section of the xfr reply message.
-	Error error // If something went wrong, this contains the error.
-}
-
 // A Transfer defines parameters that are used during a zone transfer.
 type Transfer struct {
 	*Transport // If Transport is nil it gets a copy of DefaultTransport.
-
-	// MsgSecretFunc is used to retrieve secrets. Used for TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 }
 
 // In performs an incoming transfer with the server on address via network. If m.Data is empty, In calls m.Pack().
@@ -42,11 +35,15 @@ func (t *Transfer) InWithConn(ctx context.Context, m *Msg, conn net.Conn) (env c
 	if !axfr && !ixfr {
 		return nil, &Error{"unsupported transfer type"}
 	}
-
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return nil, err
 		}
+	}
+
+	conn, err := c.Transport.dial(ctx, network, address)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	env = make(chan *Envelope)
@@ -119,7 +116,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			env <- &Envelope{r.Answer, ErrRcode}
 			return
 		}
-		r.Options = OptionUnpackAll
+		r.Options = OptionUnpack
 		if err := r.Unpack(); err != nil {
 			env <- &Envelope{Error: err}
 		}
@@ -261,20 +258,4 @@ func (t *Transfer) Out(w ResponseWriter, q *Msg, ch chan *Envelope) error {
 	}
 	timersonly = timersonly
 	return nil
-}
-
-func isSOAFirst(m *Msg) bool {
-	if len(m.Answer) == 0 {
-		return false
-	}
-	_, ok := m.Answer[0].(*SOA)
-	return ok
-}
-
-func isSOALast(m *Msg) bool {
-	if len(m.Answer) == 0 {
-		return false
-	}
-	_, ok := m.Answer[len(m.Answer)-1].(*SOA)
-	return ok
 }

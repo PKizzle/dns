@@ -3,7 +3,10 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"errors"
+	"io"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -18,13 +21,6 @@ type Transport struct {
 	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
 	// be used to dial.
 	TLSConfig *tls.Config
-
-	// If non zero (and MsgSecretFunc is not nil) TSIG signing and verification is done on messages that qualify when doing zone transfers.
-	TSIGSigner
-	TSIGVerifier
-
-	// MsgSecretFunc is used to retrieve secrets. Used to TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 }
 
 // DefaultTransport is the default transport in client, when none is set. Note changing this value how global
@@ -36,8 +32,6 @@ var DefaultTransport = Transport{
 	},
 	ReadTimeout:  2 * time.Second,
 	WriteTimeout: 2 * time.Second,
-	TSIGSigner:   TSIGHMAC,
-	TSIGVerifier: TSIGHMAC,
 }
 
 // NewDefaultTransport returns a copy of [DefaultTransport].
@@ -53,4 +47,18 @@ func (t *Transport) dial(ctx context.Context, network, address string) (net.Conn
 		return dialer.DialContext(ctx, network, address)
 	}
 	return t.Dialer.DialContext(ctx, network, address)
+}
+
+// isEOFOrClosedNetwork returns true if the error err is an io.EOF or a *net.OpError with the
+// text 'use of closed network connection'.
+func isEOFOrClosedNetwork(err error) bool {
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+	if _, ok := err.(*net.OpError); ok {
+		if strings.Contains(err.Error(), "use of closed network connection") {
+			return true
+		}
+	}
+	return false
 }

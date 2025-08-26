@@ -6,8 +6,9 @@ import "fmt"
 type Error struct{ err string }
 
 func (e *Error) Fmt(format string, a ...any) error {
-	e.err += fmt.Sprintf(format, a...)
-	return e
+	e1 := *e
+	e1.err += fmt.Sprintf(format, a...)
+	return &e1
 }
 
 func (e *Error) Error() string { return "dns: " + e.err }

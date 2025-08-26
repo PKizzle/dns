@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns/svcb"
 )
@@ -1645,10 +1646,16 @@ func (*IXFR) parse(c *zlexer, origin string) *ParseError {
 }
 
 // TSIG is the RR the holds the transaction signature of a message. See RFC 2845 and RFC 4635.
-// A TSIG RR when created must the [ClassANY], algorithm, timesigned, and optianal fudge factor.
+// A TSIG RR when created must have the [ClassANY], algorithm, timesigned, and optianal fudge factor.
+// The owner name is the name of the key. I.e:
+//
+//	tsig := &dns.TSIG{Hdr: dns.Header{Name: "keyname.", Class: dns.ClassANY}, Algorithm: dns.HmacSHA512,
+//			TimeSigned: uint64(time.Now().Unix())}
+//
+// See [TSIG.Init] for an easier way of doing this.
 type TSIG struct {
 	Hdr        Header
-	Algorithm  string `dns:"domain-name"` // Algorithm is encoded as a name.
+	Algorithm  string `dns:"domain-name"` // Algorithm is encoded as a name, see HmacSHAXXX contstants.
 	TimeSigned uint64 `dns:"uint48"`
 	Fudge      uint16
 	MACSize    uint16
@@ -1666,6 +1673,25 @@ func (rr *TSIG) String() string {
 		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigID)),
 		strconv.Itoa(int(rr.Error)), strconv.Itoa(int(rr.OtherLen)), rr.OtherData)
 	return sb.String()
+}
+
+// NewTSIG return a new TSIG with initial fields set. If fudge is zero, the default of 300 is used.
+// If timesigned isn't given the current time is used via time.Now().Unix().
+func NewTSIG(z, algorithm string, fudge uint16, timesigned ...int64) *TSIG {
+	t := new(TSIG)
+	t.Hdr.Name = z
+	t.Hdr.Class = ClassANY
+	t.Algorithm = algorithm
+	if fudge == 0 {
+		fudge = 300
+	}
+	t.Fudge = fudge
+	if len(timesigned) == 0 {
+		t.TimeSigned = uint64(time.Now().Unix())
+	} else {
+		t.TimeSigned = uint64(timesigned[0])
+	}
+	return t
 }
 
 func (*TSIG) parse(c *zlexer, origin string) *ParseError {

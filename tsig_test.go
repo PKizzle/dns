@@ -1,47 +1,40 @@
 package dns
 
 import (
-	"bytes"
 	"encoding/binary"
 	"testing"
-	"time"
 )
 
 func newMsgWithTSIG() *Msg {
-	m := &Msg{MsgHeader: MsgHeader{ID: 3, RecursionDesired: true}}
-	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
-	m.Question = []RR{mx}
+	m := NewMsg("miek.nl.", TypeMX)
+	m.ID = 3
 
-	tsig := &TSIG{Hdr: Header{Name: "example.", Class: ClassANY}}
-	tsig.Algorithm = HmacSHA256
-	tsig.TimeSigned = uint64(time.Now().Unix())
-	tsig.OrigID = m.ID
-
-	m.Pseudo = append(m.Pseudo, tsig)
+	tsig := NewTSIG("example.", HmacSHA256, 0)
+	m.Pseudo = []RR{tsig}
 	m.Pack()
 	return m
 }
 
-var tsigSecret = []byte("blaat")
+var tsigSecret = "blaat"
 
 func TestTSIG(t *testing.T) {
 	// This plainly test if we can verify what we sign, without any timers or request mac.
 	testcases := []struct {
 		name        string
-		secret      SecretMsgFunc
 		option      TSIGOption
 		transformFn func(m *Msg)
 		err         error
 	}{
-		{"signverify", func(*Msg) ([]byte, error) { return tsigSecret, nil }, TSIGOption{}, nil, nil},
-		{"signverify-changed-id", func(*Msg) ([]byte, error) { return tsigSecret, nil }, TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
-		{"signverify-upper", func(*Msg) ([]byte, error) { return bytes.ToUpper(tsigSecret), nil }, TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify", TSIGOption{}, nil, nil},
+		{"signverify-changed-id", TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify-upper", TSIGOption{}, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := newMsgWithTSIG()
-			if err := TSIGSign(m, tc.secret, TSIGHMAC, &tc.option); err != nil {
+			hmac := TSIGHMAC{Secret: tsigSecret}
+			if err := TSIGSign(m, hmac, &tc.option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
 
@@ -51,7 +44,7 @@ func TestTSIG(t *testing.T) {
 
 			tc.option.RequestMAC = "" // Negate this from TSIGSign, as TSIGVerify is supposed to be running on a different machine normally.
 
-			err := TSIGVerify(m, tc.secret, TSIGHMAC, &tc.option)
+			err := TSIGVerify(m, hmac, &tc.option)
 			if err != tc.err {
 				t.Fatalf("execpted %v error, got: %s", tc.err, err)
 			}

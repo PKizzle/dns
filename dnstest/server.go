@@ -1,22 +1,24 @@
 package dnstest
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"sync"
-	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
-// Server returns a new running server. The caller must call s.Shutdown(...) when done.
-func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.Server, string, error) {
-	s := &dns.Server{PacketConn: pc, Listener: l, ReadTimeout: time.Second}
+// Server returns a new running server. The returned cancel function shutsdown the server. Any options should
+// be set by opts.
+func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (cancel func(), addr string, err error) {
+	s := dns.NewServer()
+	s.PacketConn = pc
+	s.Listener = l
 
-	s.Init()
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
 	s.NotifyStartedFunc = waitLock.Unlock
@@ -28,10 +30,7 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 		opt(s)
 	}
 
-	var (
-		addr   string
-		closer io.Closer
-	)
+	var closer io.Closer
 	if l != nil {
 		addr = l.Addr().String()
 		closer = l
@@ -46,10 +45,11 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (*dns.
 	}()
 
 	waitLock.Lock()
-	return s, addr, nil
+	cancel = func() { s.Shutdown(context.TODO()) }
+	return cancel, addr, nil
 }
 
-func UDPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+func UDPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	pc, err := net.ListenPacket("udp", addr)
 	if err != nil {
 		return nil, "", err
@@ -57,7 +57,7 @@ func UDPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, err
 	return Server(pc, nil, opts...)
 }
 
-func TCPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, "", err
@@ -65,7 +65,7 @@ func TCPServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, err
 	return Server(nil, l, opts...)
 }
 
-func TLSServer(addr string, opts ...func(*dns.Server)) (*dns.Server, string, error) {
+func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, "", err

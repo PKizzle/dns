@@ -164,7 +164,8 @@ type MsgHeader struct {
 	CompactAnswers bool   // Compact Answers OK
 }
 
-// Msg is a DNS message.
+// Msg is a DNS message. Msg implements [iter.Seq] and [iter.Seq2], so you can range over it, when doing so
+// the RRs of each section are returned, this includes the pseudo section.
 type Msg struct {
 	MsgHeader
 
@@ -210,11 +211,11 @@ type Msg struct {
 type Option uint16
 
 const (
-	OptionUnpackAll Option = 0 // Unpack the entire message, mostly defined to serve as documentation.
-
+	OptionUnpack         Option = 0         // Unpack the entire message, mostly defined to serve as documentation.
 	OptionUnpackHeader   Option = 1 << iota // Unpack only the header of the message.
-	OptionUnpackQuestion                    // Unpack only the question section of the message
-	// OptionNoBufferUse // reuse buffers?
+	OptionUnpackQuestion                    // Unpack up the question section of the message.
+	OptionUnpackAnswer                      // Unpack up to the answer section of the message.
+	// OptionNoBufferUse // reuse buffers? Or something else that tells what to do do with the buffer.
 )
 
 // Convert a MsgHeader to a string, with dig-like headers:
