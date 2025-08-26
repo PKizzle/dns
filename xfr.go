@@ -35,11 +35,15 @@ func (t *Transfer) InWithConn(ctx context.Context, m *Msg, conn net.Conn) (env c
 	if !axfr && !ixfr {
 		return nil, &Error{"unsupported transfer type"}
 	}
-
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return nil, err
 		}
+	}
+
+	conn, err := c.Transport.dial(ctx, network, address)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	env = make(chan *Envelope)

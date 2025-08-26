@@ -18,13 +18,6 @@ type Transport struct {
 	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
 	// be used to dial.
 	TLSConfig *tls.Config
-
-	// If non zero (and MsgSecretFunc is not nil) TSIG signing and verification is done on messages that qualify when doing zone transfers.
-	TSIGSigner
-	TSIGVerifier
-
-	// MsgSecretFunc is used to retrieve secrets. Used to TSIG and SIG(0).
-	MsgSecretFunc SecretMsgFunc
 }
 
 // DefaultTransport is the default transport in client, when none is set. Note changing this value how global
@@ -36,8 +29,6 @@ var DefaultTransport = Transport{
 	},
 	ReadTimeout:  2 * time.Second,
 	WriteTimeout: 2 * time.Second,
-	TSIGSigner:   TSIGHMAC,
-	TSIGVerifier: TSIGHMAC,
 }
 
 // NewDefaultTransport returns a copy of [DefaultTransport].

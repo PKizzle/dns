@@ -12,24 +12,24 @@ import (
 	"codeberg.org/miekg/dns/internal/pack"
 )
 
-type tsigHMAC int
-
 // TSIGHMAC is TSIGSigner and TSIGVerifier that does the default HMAC for TSIG, see RFC 8945.
-var TSIGHMAC = tsigHMAC(0)
+type TSIGHMAC struct {
+	Secret []byte
+}
 
-func (h tsigHMAC) Sign(t *TSIG, secret, p []byte) ([]byte, error) {
+func (h TSIGHMAC) Sign(t *TSIG, secret, p []byte) ([]byte, error) {
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
-		hs = hmac.New(sha1.New, secret)
+		hs = hmac.New(sha1.New, h.Secret)
 	case HmacSHA224:
-		hs = hmac.New(sha256.New224, secret)
+		hs = hmac.New(sha256.New224, h.Secret)
 	case HmacSHA256:
-		hs = hmac.New(sha256.New, secret)
+		hs = hmac.New(sha256.New, h.Secret)
 	case HmacSHA384:
-		hs = hmac.New(sha512.New384, secret)
+		hs = hmac.New(sha512.New384, h.Secret)
 	case HmacSHA512:
-		hs = hmac.New(sha512.New, secret)
+		hs = hmac.New(sha512.New, h.Secret)
 	default:
 		return nil, ErrKeyAlg.Fmt(": HMAC sign")
 	}
@@ -37,8 +37,8 @@ func (h tsigHMAC) Sign(t *TSIG, secret, p []byte) ([]byte, error) {
 	return hs.Sum(nil), nil
 }
 
-func (h tsigHMAC) Verify(t *TSIG, secret, p []byte, options TSIGOption) error {
-	buf, err := h.Sign(t, secret, p)
+func (h TSIGHMAC) Verify(t *TSIG, secret, p []byte, options TSIGOption) error {
+	buf, err := h.Sign(t, h.Secret, p)
 	if err != nil {
 		return err
 	}

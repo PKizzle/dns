@@ -23,16 +23,9 @@ const (
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero). The TSIG MAC is saved in that RR.
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.
-//
-// The secret is pulled in via the SecretMsgFunc.
-func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error {
+func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
-	}
-
-	secret, err := fn(m)
-	if err != nil {
-		return err
 	}
 
 	var tsig *TSIG
@@ -63,7 +56,7 @@ func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error
 		return err
 	}
 
-	mac, err := k.Sign(tsig, secret, macbuf)
+	mac, err := k.Sign(tsig, macbuf)
 	if err != nil {
 		return err
 	}
@@ -87,16 +80,9 @@ func TSIGSign(m *Msg, fn SecretMsgFunc, k TSIGSigner, options *TSIGOption) error
 
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
 // from m.Data, but left in the unpacked message m.
-//
-// The secret is pulled in via the SecretMsgFunc.
-func TSIGVerify(m *Msg, fn SecretMsgFunc, k TSIGVerifier, options *TSIGOption) error {
+func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
-	}
-
-	secret, err := fn(m)
-	if err != nil {
-		return err
 	}
 
 	var tsig *TSIG
@@ -138,7 +124,7 @@ func TSIGVerify(m *Msg, fn SecretMsgFunc, k TSIGVerifier, options *TSIGOption) e
 	if err != nil {
 		return err
 	}
-	if err := k.Verify(tsig, secret, macbuf, *options); err != nil {
+	if err := k.Verify(tsig, macbuf, *options); err != nil {
 		return err
 	}
 
@@ -165,11 +151,11 @@ type (
 	TSIGSigner interface {
 		// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return
 		// signature or an error.
-		Sign(t *TSIG, secret, p []byte) ([]byte, error)
+		Sign(t *TSIG, p []byte) ([]byte, error)
 	}
 
 	TSIGVerifier interface {
 		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
-		Verify(t *TSIG, secret, p []byte, options TSIGOption) error
+		Verify(t *TSIG, p []byte, options TSIGOption) error
 	}
 )

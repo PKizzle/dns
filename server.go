@@ -142,12 +142,6 @@ func (srv *Server) Init() {
 	if srv.IdleTimeout == 0 {
 		srv.IdleTimeout = 8 * time.Second
 	}
-	if srv.TSIGSigner == nil {
-		srv.TSIGSigner = TSIGHMAC
-	}
-	if srv.TSIGVerifier == nil {
-		srv.TSIGVerifier = TSIGHMAC
-	}
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
 	srv.shutdown = make(chan bool)
