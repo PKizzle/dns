@@ -70,7 +70,15 @@ func TestTransferInvalid(t *testing.T) {
 	}
 
 	for e := range env {
-		println(e.Msg.String())
+		e.Msg.Unpack()
+		if len(e.Answer) != 0 {
+			t.Errorf("expected empty answer, got %d", len(e.Answer))
+		}
+		if len(e.Answer) > 0 {
+			if _, ok := m.Answer[0].(*dns.SOA); ok {
+				t.Errorf("expected no SOA, got one")
+			}
+		}
 	}
 }
 

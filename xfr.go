@@ -116,7 +116,7 @@ func (t *Transfer) inAXFR(ctx context.Context, m *Msg, env chan *Envelope, conn 
 			env <- &Envelope{r.Answer, ErrRcode}
 			return
 		}
-		r.Options = OptionUnpackAll
+		r.Options = OptionUnpack
 		if err := r.Unpack(); err != nil {
 			env <- &Envelope{Error: err}
 		}

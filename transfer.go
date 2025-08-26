@@ -72,6 +72,7 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 	r.Options = OptionUnpackHeader
 	dnsutilSetReply(r, m)
 	for {
+		// first message must hace axfre in answe
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
@@ -109,6 +110,7 @@ func (c *Client) axfrTransferIn(ctx context.Context, m *Msg, ch chan<- *Envelope
 // the correct messages through the channel. And also needs to take care of setting up and verifying TSIG and or
 // SIG(0) on the messages sent through the channel. If the Data buffers of the message sent on the channel are
 // zero, TransferOut call Pack().
+// The one check that TransferOut can do it does, is that the first message sent start with a SOA RR.
 //
 // Example setup:
 //
@@ -140,7 +142,7 @@ func (c *Client) TransferOut(w ResponseWriter, ch <-chan *Envelope) error {
 	return nil
 }
 
-func HasSOAFirst(m *Msg) bool {
+func hasSOAFirst(m *Msg) bool {
 	if len(m.Answer) == 0 {
 		return false
 	}
@@ -148,7 +150,7 @@ func HasSOAFirst(m *Msg) bool {
 	return ok
 }
 
-func HasSOALast(m *Msg) bool {
+func hasSOALast(m *Msg) bool {
 	if len(m.Answer) == 0 {
 		return false
 	}
