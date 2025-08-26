@@ -126,6 +126,7 @@ func TestTransferTLS(t *testing.T) {
 		if e.Error != nil {
 			t.Fatal(e.Error)
 		}
+		e.Unpack()
 		i += len(e.Msg.Answer)
 	}
 
