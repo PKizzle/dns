@@ -21,7 +21,7 @@ func newMsgWithTSIG() *Msg {
 	return m
 }
 
-var tsigSecret = []byte("blaat")
+var tsigSecret = "blaat"
 
 func TestTSIG(t *testing.T) {
 	// This plainly test if we can verify what we sign, without any timers or request mac.

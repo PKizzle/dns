@@ -14,22 +14,22 @@ import (
 
 // TSIGHMAC is TSIGSigner and TSIGVerifier that does the default HMAC for TSIG, see RFC 8945.
 type TSIGHMAC struct {
-	Secret []byte
+	Secret string
 }
 
 func (h TSIGHMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
-		hs = hmac.New(sha1.New, h.Secret)
+		hs = hmac.New(sha1.New, []byte(h.Secret))
 	case HmacSHA224:
-		hs = hmac.New(sha256.New224, h.Secret)
+		hs = hmac.New(sha256.New224, []byte(h.Secret))
 	case HmacSHA256:
-		hs = hmac.New(sha256.New, h.Secret)
+		hs = hmac.New(sha256.New, []byte(h.Secret))
 	case HmacSHA384:
-		hs = hmac.New(sha512.New384, h.Secret)
+		hs = hmac.New(sha512.New384, []byte(h.Secret))
 	case HmacSHA512:
-		hs = hmac.New(sha512.New, h.Secret)
+		hs = hmac.New(sha512.New, []byte(h.Secret))
 	default:
 		return nil, ErrKeyAlg.Fmt(": HMAC sign")
 	}

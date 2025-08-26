@@ -39,7 +39,7 @@ func TestTransferInvalid(t *testing.T) {
 
 	c := new(dns.Client)
 	m := new(dns.Msg)
-	dnsutil.SetAXFR(m, testTransferZone)
+	dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
@@ -101,7 +101,7 @@ func TestTransfer(t *testing.T) {
 			}
 
 			m := new(dns.Msg)
-			dnsutil.SetAXFR(m, testTransferZone)
+			dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
 
 			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 			if err != nil {
@@ -142,8 +142,10 @@ func TestTransferTSIG(t *testing.T) {
 	defer cancel()
 
 	c := new(dns.Client)
-	m := new(dns.Msg)
-	dnsutil.SetAXFR(m, testTransferZone)
+	m := new(dns.Msg).Init(testTransferZone, dns.TypeAXFR)
+	m.Pseudo = []dns.RR{new(dns.TSIG).Init("keyname", dns.HmacSHA512, 0)}
+
+	signer := dns.TSIGHMAC{"geheim"}
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
