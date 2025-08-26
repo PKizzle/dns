@@ -142,7 +142,7 @@ func TestTransferTSIG(t *testing.T) {
 
 	c := new(dns.Client)
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
-	m.Pseudo = []dns.RR{dns.NewTSIG("keyname", dns.HmacSHA512, 0)}
+	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
 	signer := dns.TSIGHMAC{"geheim"}
 	println(m.String())
 	dns.TSIGSign(m, signer, &dns.TSIGOption{})
