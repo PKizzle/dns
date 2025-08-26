@@ -17,14 +17,20 @@ const maxTCPQueries = 128
 
 // ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
-	server := &Server{Addr: addr, Net: network, Handler: handler}
+	server := NewServer()
+	server.Addr = addr
+	server.Net = network
+	server.Handler = handler
 	return server.ListenAndServe()
 }
 
 // ActivateAndServe activates a server with a listener from systemd, l and p should not both be non-nil.
 // If both l and p are not nil only p will be used. Invokes handler for incoming queries.
 func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
-	server := &Server{Listener: l, PacketConn: p, Handler: handler}
+	server := NewServer()
+	server.Listener = l
+	server.PacketConn = p
+	server.Handler = handler
 	return server.ActivateAndServe()
 }
 
@@ -120,29 +126,19 @@ type Server struct {
 	shutdown chan bool
 }
 
-// Init sets some default values in Server.
-func (srv *Server) Init() {
-	if srv.UDPSize == 0 {
-		srv.UDPSize = MinMsgSize
-	}
-	if srv.MsgInvalidFunc == nil {
-		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
-	}
-	if srv.MsgAcceptFunc == nil {
-		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
-	}
-	if srv.Handler == nil {
-		srv.Handler = DefaultServeMux
-	}
-	if srv.ReadTimeout == 0 {
-		srv.ReadTimeout = 2 * time.Second
-	}
-	if srv.IdleTimeout == 0 {
-		srv.IdleTimeout = 8 * time.Second
-	}
+// NewServer return a new server initialized with some defaults
+func NewServer() *Server {
+	srv := new(Server)
+	srv.UDPSize = MinMsgSize
+	srv.MsgInvalidFunc = DefaultMsgInvalidFunc
+	srv.MsgAcceptFunc = DefaultMsgAcceptFunc
+	srv.Handler = DefaultServeMux
+	srv.ReadTimeout = 2 * time.Second
+	srv.IdleTimeout = 8 * time.Second
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
 	srv.shutdown = make(chan bool)
+	return srv
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server. If TLS config is available a TLS
@@ -152,8 +148,6 @@ func (srv *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":domain"
 	}
-
-	srv.Init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":

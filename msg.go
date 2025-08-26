@@ -1072,3 +1072,21 @@ func (m *Msg) RRs() iter.Seq[RR] {
 		}
 	}
 }
+
+// NewMsg returns a new message with the question section sets to z and the type t. If the type isn't know nil
+// is returned. Furhter more recursion desired is set.
+func NewMsg(z string, t uint16) *Msg {
+	var rr RR
+	newFn, ok := TypeToRR[t]
+	if !ok {
+		return nil
+	}
+	m := new(Msg)
+	m.ID = ID()
+	m.RecursionDesired = true
+	rr = newFn()
+	rr.Header().Name = z
+	rr.Header().Class = ClassINET
+	m.Question = []RR{rr}
+	return m
+}

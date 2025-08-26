@@ -1675,22 +1675,23 @@ func (rr *TSIG) String() string {
 	return sb.String()
 }
 
-// Init fills out the TSIG with some initial settings. If fudge is zero, the default of 300 is used.
+// NewTSIG return a new TSIG with initial fields set. If fudge is zero, the default of 300 is used.
 // If timesigned isn't given the current time is used via time.Now().Unix().
-func (rr *TSIG) Init(z, algorithm string, fudge uint16, timesigned ...int64) *TSIG {
-	rr.Hdr.Name = z
-	rr.Hdr.Class = ClassANY
-	rr.Algorithm = algorithm
+func NewTSIG(z, algorithm string, fudge uint16, timesigned ...int64) *TSIG {
+	t := new(TSIG)
+	t.Hdr.Name = z
+	t.Hdr.Class = ClassANY
+	t.Algorithm = algorithm
 	if fudge == 0 {
 		fudge = 300
 	}
-	rr.Fudge = fudge
+	t.Fudge = fudge
 	if len(timesigned) == 0 {
-		rr.TimeSigned = uint64(time.Now().Unix())
+		t.TimeSigned = uint64(time.Now().Unix())
 	} else {
-		rr.TimeSigned = uint64(timesigned[0])
+		t.TimeSigned = uint64(timesigned[0])
 	}
-	return rr
+	return t
 }
 
 func (*TSIG) parse(c *zlexer, origin string) *ParseError {

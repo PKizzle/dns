@@ -15,8 +15,9 @@ import (
 // Server returns a new running server. The returned cancel function shutsdown the server. Any options should
 // be set by opts.
 func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (cancel func(), addr string, err error) {
-	s := &dns.Server{PacketConn: pc, Listener: l}
-	s.Init()
+	s := dns.NewServer()
+	s.PacketConn = pc
+	s.Listener = l
 
 	waitLock := sync.Mutex{}
 	waitLock.Lock()
