@@ -81,84 +81,90 @@ func TestTransfer(t *testing.T) {
 	})
 	defer dns.HandleRemove(testTransferZone)
 
-	cancel, addr, _ := dnstest.TCPServer(":0")
-	defer cancel()
-	axfr(t, addr)
+	for _, name := range []string{"tcp", "tcp-tls"} {
+		t.Run(name, func(t *testing.T) {
+			addr := ""
+			switch name {
+			case "tcp":
+				cancel, adr, _ := dnstest.TCPServer(":0")
+				defer cancel()
+				addr = adr
+			case "tcp-tls":
+				cancel, adr, _ := dnstest.TLSServer(":0")
+				defer cancel()
+				addr = adr
+			}
+
+			c := &dns.Client{Transport: &dns.DefaultTransport}
+			if name == "tcp-tls" {
+				c.TLSConfig = dnstest.TLSConfig()
+			}
+
+			m := new(dns.Msg)
+			dnsutil.SetAXFR(m, testTransferZone)
+
+			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			if err != nil {
+				t.Fatal("failed to setup zone transfer in", err)
+			}
+
+			i := 0
+			for e := range env {
+				if e.Error != nil {
+					t.Fatal(e.Error)
+				}
+				e.Msg.Unpack()
+				i += len(e.Msg.Answer)
+			}
+			if i != len(testTransferData) {
+				t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+			}
+		})
+	}
 }
 
-func TestTransferTLS(t *testing.T) {
+func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var wg sync.WaitGroup
 		w.Hijack()
 		env := make(chan *dns.Envelope)
 		c := new(dns.Client)
-
 		wg.Go(func() {
 			c.TransferOut(w, env)
 			w.Close()
 		})
-
-		m := &dns.Msg{Data: r.Data}
-		dnsutil.SetReply(m, r)
-		m.Answer = testTransferData
-		m.Pack()
-
-		env <- &dns.Envelope{Msg: m}
+		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
 
-	cancel, addr, _ := dnstest.TLSServer(":0")
+	cancel, addr, _ := dnstest.TCPServer(":0")
 	defer cancel()
 
-	c := &dns.Client{Transport: dns.NewDefaultTransport()}
-	c.TLSConfig = dnstest.TLSConfig()
-	m := new(dns.Msg)
-	dnsutil.SetAXFR(m, testTransferZone)
-
-	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
-	if err != nil {
-		t.Fatal("failed to zone transfer in over TLS", err)
-	}
-
-	i := 0
-	for e := range env {
-		if e.Error != nil {
-			t.Fatal(e.Error)
-		}
-		e.Unpack()
-		i += len(e.Msg.Answer)
-	}
-
-	if i != len(testTransferData) {
-		t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
-	}
-}
-
-func axfr(t *testing.T, addr string) {
 	c := new(dns.Client)
 	m := new(dns.Msg)
 	dnsutil.SetAXFR(m, testTransferZone)
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
-		t.Fatal("failed to setup zone transfer in", err)
+		t.Fatal("failed to zone transfer in", err)
 	}
 
-	i := 0
 	for e := range env {
-		if e.Error != nil {
-			t.Fatal(e.Error)
-		}
 		e.Msg.Unpack()
-		i += len(e.Msg.Answer)
-	}
-	if i != len(testTransferData) {
-		t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+		if len(e.Answer) != 0 {
+			t.Errorf("expected empty answer, got %d", len(e.Answer))
+		}
+		if len(e.Answer) > 0 {
+			if _, ok := m.Answer[0].(*dns.SOA); ok {
+				t.Errorf("expected no SOA, got one")
+			}
+		}
 	}
 }
 
 /*
+}
 func axfrTestingSuiteWithCustomTsig(t *testing.T, addrstr string, provider TsigProvider) {
 	tr := new(Transfer)
 	m := new(Msg)
