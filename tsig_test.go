@@ -6,7 +6,7 @@ import (
 )
 
 func newMsgWithTSIG() *Msg {
-	m := NewMsg("miek.nl", TypeMX)
+	m := NewMsg("miek.nl.", TypeMX)
 	m.ID = 3
 
 	tsig := NewTSIG("example.", HmacSHA256, 0)

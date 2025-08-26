@@ -24,6 +24,7 @@ const (
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.
 func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
+	// call pack?
 	if m.ps == 0 && len(m.Data) == 0 {
 		return ErrNoTSIG
 	}
