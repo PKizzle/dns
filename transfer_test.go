@@ -132,6 +132,7 @@ func TestTransferTSIG(t *testing.T) {
 			c.TransferOut(w, env)
 			w.Close()
 		})
+		// send multiple so we need to do this, if there is tsig needed.
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
 	})
@@ -144,9 +145,7 @@ func TestTransferTSIG(t *testing.T) {
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
 	signer := dns.TSIGHMAC{"geheim"}
-	println(m.String())
 	dns.TSIGSign(m, signer, &dns.TSIGOption{})
-	println(m.String())
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
