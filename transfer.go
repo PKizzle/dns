@@ -9,15 +9,17 @@ import (
 
 // Envelope is used when doing a zone transfer with a remote server.
 type Envelope struct {
-	*Msg        // The message as returned by the remote server, or the one to be send to the remote.
+	RRs   []RR  // The RRs as returned by the remote server, or the ones to be send to the remote.
 	Error error // If something went wrong, this contains the error.
 }
 
 // TransferIn performs a zone transfer with address over network, the message m is used to ask for the transfer and
-// should have an [AXFR] or [IXFR] RR in the question section.  The caller is responsible for setting up and verifying TSIG and or
-// SIG(0) on the message send, and the messages returned on the channel. The messages returned are "lightly" unpacked, just like in
-// [dns.HandleFunc].
-// If m's buffer is empty Transfer will call m.Pack(). If the client's transport is nil NewDefaultTransport will be used.
+// should have an [AXFR] or [IXFR] RR in the question section. If the pseudo section contains a (stub) TSIG or
+// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New].
+// On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
+// are as they were found, i.e. including the starting and ending SOA RRs.
+//
+// If m's buffer is empty Transfer will call m.Pack(). If the client's transport is nil DefaultTransport will be used.
 func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string) (<-chan *Envelope, error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
@@ -43,12 +45,29 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 		}
 	}
 
+	if c.TSIGSigner != nil && hasTSIG(m) != nil {
+		if err := TSIGSign(m, c.TSIGSigner, &TSIGOption{}); err != nil {
+			return nil, err
+		}
+	}
+	// if.SIG0Signer != nil {}
+
+	remote := &response{conn: conn} // for Session() call in msg.go#L926
+	if _, err := io.Copy(remote, m); err != nil {
+		return nil, err
+	}
+
 	ch := make(chan *Envelope)
-	go c.transferIn(ctx, m, ch, conn)
+	if axfr {
+		go c.transferInAXFR(ctx, m, ch, conn)
+	}
+	if ixfr {
+		// go c.transferInIXFR(ctx, m, ch, conn)
+	}
 	return ch, nil
 }
 
-func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
+func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
 	defer func() {
 		// First close the connection, then the channel. This allows functions blocked on the channel to
 		// assume that the connection is closed and no further operations are pending when they resume.
@@ -56,18 +75,11 @@ func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, co
 		close(ch)
 	}()
 
-	remote := &response{conn: conn} // for Session() call in msg.go#L926
-	if _, err := io.Copy(remote, m); err != nil {
-		ch <- &Envelope{Error: err}
-		return
+	options := TSIGOption{}
+	if x := hasTSIG(m); x != nil {
+		options.RequestMAC = x.MAC
 	}
-
-	if err := ctx.Err(); err != nil {
-		ch <- &Envelope{Error: err}
-		return
-	}
-
-	r := &Msg{Data: m.Data}
+	r := &Msg{}
 	r.Options = OptionUnpackHeader
 	for {
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
@@ -78,29 +90,51 @@ func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, co
 			ch <- &Envelope{Error: err}
 			return
 		}
-
 		if err := ctx.Err(); err != nil {
 			ch <- &Envelope{Error: err}
 			return
 		}
 
 		if err := r.Unpack(); err != nil {
-			ch <- &Envelope{r, err}
+			ch <- &Envelope{Error: err}
 			return
 		}
 
 		if m.ID != r.ID {
-			ch <- &Envelope{r, ErrID.Fmt(": %d != %d", m.ID, r.ID)}
+			ch <- &Envelope{Error: ErrID.Fmt(": %d != %d", m.ID, r.ID)}
 			return
 		}
 
 		if r.Rcode != RcodeSuccess {
-			ch <- &Envelope{r, ErrRcode}
+			ch <- &Envelope{Error: ErrRcode}
 			return
 		}
+
 		r.Options = OptionUnpack
 		err := r.Unpack()
-		ch <- &Envelope{Msg: r, Error: err}
+		if err != nil {
+			ch <- &Envelope{RRs: r.Answer, Error: err}
+		}
+
+		// On first loop first be need to see a SOA RR.
+		if !options.TimersOnly {
+			if len(r.Answer) == 0 {
+				ch <- &Envelope{Error: ErrSOA}
+				return
+			}
+			if _, ok := r.Answer[0].(*SOA); !ok {
+				ch <- &Envelope{Error: ErrSOA}
+				return
+			}
+		}
+
+		if c.TSIGVerifier != nil && hasTSIG(m) != nil {
+			if err := TSIGVerify(m, c.TSIGVerifier, &options); err != nil {
+				ch <- &Envelope{RRs: r.Answer, Error: err}
+			}
+		}
+		ch <- &Envelope{RRs: r.Answer, Error: err}
+		options.TimersOnly = true
 	}
 }
 
@@ -124,16 +158,26 @@ func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, co
 //	w.Close() // close connection
 //
 // The server is responsible for sending the correct sequence of Msgs through the channel ch.
-func (c *Client) TransferOut(w ResponseWriter, ch <-chan *Envelope) error {
-	for env := range ch {
-		if len(env.Msg.Data) == 0 {
-			if err := env.Msg.Pack(); err != nil {
-				return err
-			}
-		}
+func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) error {
+	for e := range env {
+		m := new(Msg)
+		dnsutilSetReply(m, r)
+		//		options
+		m.Answer = e.RRs
+		// tsig
+		m.Pack()
 
-		if _, err := io.Copy(w, env.Msg); err != nil {
+		if _, err := io.Copy(w, m); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+func hasTSIG(m *Msg) *TSIG {
+	for i := range m.Pseudo {
+		if t, ok := m.Pseudo[i].(*TSIG); ok {
+			return t
 		}
 	}
 	return nil

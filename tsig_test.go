@@ -15,7 +15,7 @@ func newMsgWithTSIG() *Msg {
 	return m
 }
 
-var tsigSecret = "blaat"
+var tsigSecret = []byte("blaat")
 
 func TestTSIG(t *testing.T) {
 	// This plainly test if we can verify what we sign, without any timers or request mac.
@@ -32,7 +32,7 @@ func TestTSIG(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m := newMsgWithTSIG()
 			option := TSIGOption{}
-			hmac := TSIGHMAC{Secret: tsigSecret}
+			hmac := HmacTSIG{Secret: tsigSecret}
 			if err := TSIGSign(m, hmac, &option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
@@ -54,7 +54,7 @@ func TestTSIG(t *testing.T) {
 func TestTSIGSectionExtra(t *testing.T) {
 	m := newMsgWithTSIG()
 	option := TSIGOption{}
-	hmac := TSIGHMAC{Secret: tsigSecret}
+	hmac := HmacTSIG{Secret: tsigSecret}
 	if err := TSIGSign(m, hmac, &option); err != nil {
 		t.Fatalf("failed to sign: %s", err)
 	}

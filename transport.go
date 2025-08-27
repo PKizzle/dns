@@ -22,17 +22,15 @@ type Transport struct {
 	// be used to dial.
 	TLSConfig *tls.Config
 
-	// SecretMsgFunc is a function that is used to retrieve secrets applicable to the current message.
-	// Its primary use is for [TSIG]. There is no default function.
-	MsgSecretFunc SecretMsgFunc
-
-	// If non zero (and SecretFunc is not nil) TSIG signing and verification is done on messages that qualify when doing zone transfers.
+	// If non zero TSIG signing and verification is done on messages that have a TSIG record in the pseudo
+	// section.
 	TSIGSigner
 	TSIGVerifier
-}
 
-// Its primary use is for [TSIG]. There is no default function.
-type SecretMsgFunc func(m *Msg) (secret []byte, err error)
+	// If non zero SIG0 signing and verification is done on messages that have a SIG0 record in the pseudo
+	// section.
+	// SIG0Signer
+}
 
 // DefaultTransport is the default transport in client, when none is set. Note changing this value how global
 // effects to future [Client]s and [Transfer]s. The TSIGSigner and TSIGVerifier are both set to [TSIGHMAC].
