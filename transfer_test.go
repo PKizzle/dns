@@ -142,6 +142,8 @@ func TestTransferTSIG(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		// verified request for a tsig axfr, generate answer with request mac, appendeng
+		println("REQUEST MAC from REQUEST", o.RequestMAC)
 
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.

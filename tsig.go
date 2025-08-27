@@ -159,6 +159,7 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 		return ErrTime
 	}
 	pack.Uint16(arcount+1, m.Data, 10) // restore arcount
+	options.RequestMAC = tsig.MAC
 	return nil
 }
 
