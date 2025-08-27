@@ -770,6 +770,10 @@ func (m *Msg) String() string {
 	sb.WriteString(sections[4])
 	sb.WriteString(": ")
 	sb.WriteString(strconv.Itoa(len(m.Extra)))
+	sb.WriteString(", ")
+
+	sb.WriteString("DATA SIZE: ")
+	sb.WriteString(strconv.Itoa(len(m.Data)))
 	sb.WriteByte('\n')
 
 	if len(m.Question) > 0 {

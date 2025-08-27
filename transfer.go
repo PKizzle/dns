@@ -69,7 +69,6 @@ func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, co
 
 	r := &Msg{Data: m.Data}
 	r.Options = OptionUnpackHeader
-	dnsutilSetReply(r, m)
 	for {
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
@@ -91,7 +90,7 @@ func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, co
 		}
 
 		if m.ID != r.ID {
-			ch <- &Envelope{r, ErrID}
+			ch <- &Envelope{r, ErrID.Fmt(": %d != %d", m.ID, r.ID)}
 			return
 		}
 
@@ -100,7 +99,8 @@ func (c *Client) transferIn(ctx context.Context, m *Msg, ch chan<- *Envelope, co
 			return
 		}
 		r.Options = OptionUnpack
-		ch <- &Envelope{Msg: r}
+		err := r.Unpack()
+		ch <- &Envelope{Msg: r, Error: err}
 	}
 }
 
