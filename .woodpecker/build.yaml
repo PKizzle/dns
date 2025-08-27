@@ -2,7 +2,7 @@ steps:
   build:
     when:
       event: [push, pull_request]
-    image: golang
+    image: golang:tip
     commands:
       - go get
       - go build
