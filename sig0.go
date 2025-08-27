@@ -17,7 +17,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-//SIG0Signer = crypto.Signer
+// SIG0Signer = crypto.Signer
 
 // This needs functions that we have for TSIG
 // SIGSign and SIGVerify, the current method is nice, but as this works on a Msg, the TSIG naming is better.
@@ -213,4 +213,13 @@ func SIG0Verify(m *Msg, k *KEY) error {
 		}
 	}
 	return ErrKeyAlg
+}
+
+func hasSIG0(m *Msg) *SIG {
+	for i := range m.Pseudo {
+		if s, ok := m.Pseudo[i].(*SIG); ok {
+			return s
+		}
+	}
+	return nil
 }
