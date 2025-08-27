@@ -95,7 +95,13 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
 // from m.Data, but left in the unpacked message m.
 func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
-	if m.ps == 0 && len(m.Data) == 0 {
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
+			return err
+		}
+	}
+
+	if m.ps == 0 {
 		return ErrNoTSIG
 	}
 

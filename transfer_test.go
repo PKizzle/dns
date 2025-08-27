@@ -2,12 +2,14 @@ package dns_test
 
 import (
 	"context"
+	"log"
 	"sync"
 	"testing"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 var testTransferData = []dns.RR{
@@ -134,8 +136,18 @@ func TestTransferTSIG(t *testing.T) {
 		})
 
 		r.Unpack()
+		println("REAVIED", r.String())
+		println(bin.Dump(r.Data))
+		o := dns.TSIGOption{}
+		v := dns.TSIGHMAC{"geheim"}
+		err := dns.TSIGVerify(r, v, &o)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.
+
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
 	})
@@ -148,11 +160,13 @@ func TestTransferTSIG(t *testing.T) {
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
 
-	signer := dns.TSIGHMAC{"geheim"}
-	err := dns.TSIGSign(m, signer, &dns.TSIGOption{})
+	s := dns.TSIGHMAC{"geheim"}
+	err := dns.TSIGSign(m, s, &dns.TSIGOption{})
 	if err != nil {
 		t.Fatal(err)
 	}
+	println("SIGNED", m.String())
+	println(bin.Dump(m.Data))
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
