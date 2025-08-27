@@ -9,7 +9,6 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/internal/bin"
 )
 
 var testTransferData = []dns.RR{
@@ -136,7 +135,6 @@ func TestTransferTSIG(t *testing.T) {
 		})
 
 		r.Unpack()
-		println(bin.Dump(r.Data))
 		o := dns.TSIGOption{}
 		v := dns.TSIGHMAC{"geheim"}
 		err := dns.TSIGVerify(r, v, &o)

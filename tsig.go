@@ -2,6 +2,7 @@ package dns
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/jump"
@@ -62,6 +63,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	}()
 
 	macbuf, err := tsig.mac(m, *options)
+	fmt.Printf("Tsig sign mac buf %v\n", macbuf)
 	if err != nil {
 		return err
 	}
@@ -93,7 +95,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 }
 
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
-// from m.Data, but left in the unpacked message m.
+// from m.Data, but left in the unpacked message m. TODO(miek)
 func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -141,9 +143,11 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	}()
 
 	macbuf, err := tsig.mac(m, *options)
+	fmt.Printf("Tsig verify mac buf %v\n", macbuf)
 	if err != nil {
 		return err
 	}
+	println("TSG", tsig.String())
 	if err := k.Verify(tsig, macbuf, *options); err != nil {
 		return err
 	}
