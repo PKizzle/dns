@@ -136,7 +136,6 @@ func TestTransferTSIG(t *testing.T) {
 		})
 
 		r.Unpack()
-		println("REAVIED", r.String())
 		println(bin.Dump(r.Data))
 		o := dns.TSIGOption{}
 		v := dns.TSIGHMAC{"geheim"}
@@ -165,8 +164,6 @@ func TestTransferTSIG(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	println("SIGNED", m.String())
-	println(bin.Dump(m.Data))
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
