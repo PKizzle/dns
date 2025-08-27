@@ -9,13 +9,13 @@ import (
 )
 
 // Recorder is a type of ResponseWriter that captures the all the messages written to it.
-// If Discard is true, this effectively a dns.DiscardWriter.
+// If Discard is true, this effectively an [io.Discard] writer.
 type Recorder struct {
 	w       dns.ResponseWriter
 	Discard bool       // When true the message is recorded, but not written to the underlaying connection.
 	Msgs    []*dns.Msg // All messages written to it.
 	Msg     *dns.Msg   // Msg contains the last message written.
-	Start   time.Time
+	Start   time.Time  // Time when the record was created.
 }
 
 var _ dns.ResponseWriter = &Recorder{}
@@ -28,7 +28,6 @@ func NewRecorder(w dns.ResponseWriter) *Recorder {
 	return &Recorder{w: w, Start: time.Now()}
 }
 
-// Write is a wrapper that records the message that gets written to it.
 func (r *Recorder) Write(b []byte) (int, error) {
 	// See [Msg.WriteTo] that defaults to TCP
 	msg := &dns.Msg{Data: b[2:]}

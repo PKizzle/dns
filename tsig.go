@@ -1,11 +1,11 @@
 package dns
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/jump"
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -20,9 +20,10 @@ const (
 )
 
 // TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
-// (owner name of the RR), time fudge (defaults to 300 seconds, if zero). The TSIG MAC is saved in that RR.
+// (owner name of the RR), time fudge (defaults to 300 seconds, if zero).
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.
+// TODO(miek): also set in options - todo, don't know yet.
 func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -53,9 +54,10 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if off == 0 {
 		return ErrNoTSIG
 	}
+
 	m.Data = m.Data[:off]
-	// decrease additional section count, because we removed the TSIG
-	binary.BigEndian.PutUint16(m.Data[10:], uint16(len(m.Extra)+int(m.ps-1)))
+	arcount := uint16(len(m.Extra) + int(m.ps-1))
+	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
 
 	macbuf, err := tsig.mac(m, *options)
 	if err != nil {
@@ -82,13 +84,21 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	m.Data = append(m.Data, t...)
 	options.RequestMAC = tsig.MAC
+
+	pack.Uint16(arcount+1, m.Data, 10) // and +1 after we done for the new and improved TSIG that is added
 	return nil
 }
 
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
-// from m.Data, but left in the unpacked message m.
+// from m.Data, but left in the unpacked message m. TODO(miek)
 func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
-	if m.ps == 0 && len(m.Data) == 0 {
+	if len(m.Data) == 0 {
+		if err := m.Pack(); err != nil {
+			return err
+		}
+	}
+
+	if m.ps == 0 {
 		return ErrNoTSIG
 	}
 
@@ -119,12 +129,15 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if off == 0 {
 		return ErrNoTSIG
 	}
+
 	m.Data = m.Data[:off]
+	arcount := uint16(len(m.Extra) + int(m.ps-1))
+	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
 
 	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
-	binary.BigEndian.PutUint16(m.Data[0:2], tsig.OrigID)
+	pack.Uint16(tsig.OrigID, m.Data, 0)
 	defer func() {
-		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
+		pack.Uint16(m.ID, m.Data, 0)
 	}()
 
 	macbuf, err := tsig.mac(m, *options)
@@ -146,6 +159,7 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if uint64(tsig.Fudge) < fudge {
 		return ErrTime
 	}
+	pack.Uint16(arcount+1, m.Data, 10) // restore arcount
 	return nil
 }
 

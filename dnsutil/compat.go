@@ -4,7 +4,7 @@ import "codeberg.org/miekg/dns"
 
 // SetQuestion set the question section in the message m.
 // It generates an ID and sets the RecursionDesired (RD) bit to true.
-// If the type t isn't know, nil is returned.
+// If the type t isn't know, nil is returned. Also see [dns.NewMsg].
 func SetQuestion(m *dns.Msg, z string, t uint16) *dns.Msg {
 	m.ID = dns.ID()
 	m.RecursionDesired = true
@@ -21,7 +21,7 @@ func SetQuestion(m *dns.Msg, z string, t uint16) *dns.Msg {
 	return m
 }
 
-// Question return the question namd and the type from the message m.
+// Question return the question name and the type from the message m.
 func Question(m *dns.Msg) (z string, t uint16) {
 	z = m.Question[0].Header().Name
 	t = dns.RRToType(m.Question[0])

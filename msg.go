@@ -157,12 +157,12 @@ loop:
 		case '.':
 			if i == 0 && len(s) > 1 {
 				// leading dots are not legal except for the root zone
-				return len(msg), ErrName
+				return len(msg), ErrName.Fmt(": %s", s)
 			}
 
 			if wasDot {
 				// two dots back to back is not legal
-				return len(msg), ErrName
+				return len(msg), ErrName.Fmt(": %s", s)
 			}
 			wasDot = true
 
@@ -686,17 +686,25 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	m.Extra = m.Extra[:len(m.Extra)-j]
 	m.ps = 0
 
-	for _, r := range m.Extra {
-		if _, ok := r.(*TSIG); ok {
+	// Check for m.Extra TSIG and SIG(0) and move them to pseudo. This MUST be the the last RR in the extra
+	// section.
+	if last := len(m.Extra); last > 0 {
+		if _, ok := m.Extra[last-1].(*TSIG); ok {
 			m.ps++
+			m.Pseudo = append(m.Pseudo, m.Extra[last-1])
+			m.Extra = m.Extra[:last-1]
 		}
-		if _, ok := r.(*SIG); ok {
+	}
+	if last := len(m.Extra); last > 0 {
+		if _, ok := m.Extra[last-1].(*SIG); ok {
 			m.ps++
+			m.Pseudo = append(m.Pseudo, m.Extra[last-1])
+			m.Extra = m.Extra[:last-1]
 		}
 	}
 
 	if !s.Empty() {
-		return &Error{err: "trailing message data"}
+		return (&Error{err: "trailing message data"}).Fmt(": %d more octets", len(s))
 	}
 	return nil
 }

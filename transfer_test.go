@@ -2,6 +2,7 @@ package dns_test
 
 import (
 	"context"
+	"log"
 	"sync"
 	"testing"
 
@@ -132,8 +133,18 @@ func TestTransferTSIG(t *testing.T) {
 			c.TransferOut(w, env)
 			w.Close()
 		})
+
+		r.Unpack()
+		o := dns.TSIGOption{}
+		v := dns.TSIGHMAC{"geheim"}
+		err := dns.TSIGVerify(r, v, &o)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.
+
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
 	})
@@ -145,8 +156,12 @@ func TestTransferTSIG(t *testing.T) {
 	c := new(dns.Client)
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
-	signer := dns.TSIGHMAC{"geheim"}
-	dns.TSIGSign(m, signer, &dns.TSIGOption{})
+
+	s := dns.TSIGHMAC{"geheim"}
+	err := dns.TSIGSign(m, s, &dns.TSIGOption{})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
