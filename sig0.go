@@ -17,6 +17,8 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
+//SIG0Signer = crypto.Signer
+
 // This needs functions that we have for TSIG
 // SIGSign and SIGVerify, the current method is nice, but as this works on a Msg, the TSIG naming is better.
 // for dnssec SIgn as a method works better, because it is on a RRset.
