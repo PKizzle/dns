@@ -157,12 +157,12 @@ loop:
 		case '.':
 			if i == 0 && len(s) > 1 {
 				// leading dots are not legal except for the root zone
-				return len(msg), ErrName
+				return len(msg), ErrName.Fmt(": %s", s)
 			}
 
 			if wasDot {
 				// two dots back to back is not legal
-				return len(msg), ErrName
+				return len(msg), ErrName.Fmt(": %s", s)
 			}
 			wasDot = true
 
@@ -696,7 +696,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	}
 
 	if !s.Empty() {
-		return &Error{err: "trailing message data"}
+		return (&Error{err: "trailing message data"}).Fmt(": %d more octets", len(s))
 	}
 	return nil
 }

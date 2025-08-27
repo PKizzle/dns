@@ -8,6 +8,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 var testTransferData = []dns.RR{
@@ -132,6 +133,10 @@ func TestTransferTSIG(t *testing.T) {
 			c.TransferOut(w, env)
 			w.Close()
 		})
+		if err := r.Unpack(); err != nil {
+			println(bin.Dump(r.Data))
+			println(err.Error())
+		}
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
@@ -146,7 +151,12 @@ func TestTransferTSIG(t *testing.T) {
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
 	signer := dns.TSIGHMAC{"geheim"}
-	dns.TSIGSign(m, signer, &dns.TSIGOption{})
+	err := dns.TSIGSign(m, signer, &dns.TSIGOption{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// denk dat ar count niet staat
+	println("SENDNIG\n", m.String())
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
