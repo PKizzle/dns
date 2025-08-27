@@ -3,6 +3,8 @@ package dns
 import (
 	"encoding/binary"
 	"testing"
+
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 func newMsgWithTSIG() *Msg {
@@ -49,4 +51,16 @@ func TestTSIG(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTSIGSectionExtra(t *testing.T) {
+	m := newMsgWithTSIG()
+	option := TSIGOption{}
+	hmac := TSIGHMAC{Secret: tsigSecret}
+	if err := TSIGSign(m, hmac, &option); err != nil {
+		t.Fatalf("failed to sign: %s", err)
+	}
+	println(len(m.Extra))
+	println(len(m.Pseudo))
+	println(bin.Dump(m.Data))
 }
