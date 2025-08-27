@@ -658,6 +658,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	if err != nil {
 		return err
 	}
+	println("unpacked extra", len(m.Extra), dh.Arcount)
 
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
 	// section. Any TSIG and SIG0 records will also be put in the pseudo section, but after the options.

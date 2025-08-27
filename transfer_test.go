@@ -133,9 +133,10 @@ func TestTransferTSIG(t *testing.T) {
 			c.TransferOut(w, env)
 			w.Close()
 		})
+		println("DDS", len(r.Extra))
 		if err := r.Unpack(); err != nil {
-			println(bin.Dump(r.Data))
 			println(err.Error())
+			println(bin.Dump(r.Data))
 		}
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.
@@ -156,7 +157,7 @@ func TestTransferTSIG(t *testing.T) {
 		t.Fatal(err)
 	}
 	// denk dat ar count niet staat
-	println("SENDNIG\n", m.String())
+	println("SENDNIG\n", m.String(), "\n", bin.Dump(m.Data))
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
