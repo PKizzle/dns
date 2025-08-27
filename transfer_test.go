@@ -147,6 +147,9 @@ func TestTransferTSIG(t *testing.T) {
 
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.
+		// create new message
+		m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
+		m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
 
 		env <- &dns.Envelope{Msg: &dns.Msg{}}
 		close(env)
