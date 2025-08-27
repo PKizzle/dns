@@ -87,11 +87,10 @@ wins.
 ```
 OLD                                           | NEW
                                               |
-m := new(dns.Msg)                             | m := &dns.Msg{MsgHeader: MsgHeader{ID: dns.ID(), RecursionDesired: true}}
-m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | key := &DNSKEY{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
-                                              | m.Question = []RR{key}
-m.SetEdns0(4096, true)                        | m.UDPSize = 4096
+m := new(dns.Msg)                             | m := dns.NewMsg("miek.nl.", dns.TypeDNSKEY)
+m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | m.UDPSize = 4096
                                               | m.Security = true
+m.SetEdns0(4096, true)                        |
 ```
 
 Setting the UDP buffer size:
@@ -146,7 +145,7 @@ OLD                                                                  | NEW
                                                                      |
 ;; opcode: QUERY, status: NOERROR, id: 62167                         | ;; QUERY, rcode: NOERROR, id: 3, flags: rd do
 ;; flags: qr rd ra; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0 | ;; EDNS, version: 0, udp: 1024
-                                                                     | ;; QUESTION: 1, PSEUDO: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+                                                                     | ;; QUESTION: 1, PSEUDO: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0, DATA SIZE: 25
 ;; OPT PSEUDOSECTION:                                                |
 ; EDNS: version 0; flags:; udp: 512                                  | ;; PSEUDO SECTION:
 ; NSID: 6770646e732d616d73  (g)(p)(d)(n)(s)(-)(a)(m)(s)              | .               CLASS0  NSID    6770 ; ("gp")
