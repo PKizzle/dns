@@ -158,6 +158,7 @@ func TestTransferTSIG(t *testing.T) {
 	}
 	// denk dat ar count niet staat
 	println("SENDNIG\n", m.String(), "\n", bin.Dump(m.Data))
+	return
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {

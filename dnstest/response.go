@@ -22,6 +22,12 @@ type ResponseWriter6 struct {
 	ResponseWriter
 }
 
+// IP addresses for documentation and test purposes.
+var (
+	IPv4 = net.ParseIP("198.51.100.1") // RFC 5737
+	IPv6 = net.ParseIP("2001:db8::1")  // RFC 5156
+)
+
 func (t *ResponseWriter6) LocalAddr() net.Addr {
 	ip := net.ParseIP("::1")
 	if t.TCP {
@@ -31,11 +37,10 @@ func (t *ResponseWriter6) LocalAddr() net.Addr {
 }
 
 func (t *ResponseWriter6) RemoteAddr() net.Addr {
-	ip := net.ParseIP("2001:db8::1")
 	if t.TCP {
-		return &net.TCPAddr{IP: ip, Port: port}
+		return &net.TCPAddr{IP: IPv6, Port: port}
 	}
-	return &net.UDPAddr{IP: ip, Port: port}
+	return &net.UDPAddr{IP: IPv6, Port: port}
 }
 
 func (t *ResponseWriter) LocalAddr() net.Addr {
@@ -47,11 +52,10 @@ func (t *ResponseWriter) LocalAddr() net.Addr {
 }
 
 func (t *ResponseWriter) RemoteAddr() net.Addr {
-	ip := net.ParseIP("198.51.100.1")
 	if t.TCP {
-		return &net.TCPAddr{IP: ip, Port: port}
+		return &net.TCPAddr{IP: IPv4, Port: port}
 	}
-	return &net.UDPAddr{IP: ip, Port: port}
+	return &net.UDPAddr{IP: IPv4, Port: port}
 }
 
 func (t *ResponseWriter) Write(buf []byte) (int, error) { return len(buf), nil }

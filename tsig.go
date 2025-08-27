@@ -1,11 +1,11 @@
 package dns
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/jump"
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 // HMAC hashing codes. These are transmitted as domain names.
@@ -54,8 +54,12 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 		return ErrNoTSIG
 	}
 	m.Data = m.Data[:off]
-	// decrease additional section count, because we removed the TSIG
-	binary.BigEndian.PutUint16(m.Data[10:], uint16(len(m.Extra)+int(m.ps-1)))
+
+	arcount := uint16(len(m.Extra) + int(m.ps-1))
+	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
+	defer func() {
+		pack.Uint16(arcount+1, m.Data, 10) // and +1 after we done for the new and improved TSIG that is added
+	}()
 
 	macbuf, err := tsig.mac(m, *options)
 	if err != nil {
@@ -82,6 +86,9 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	m.Data = append(m.Data, t...)
 	options.RequestMAC = tsig.MAC
+
+	// can't be in a defer about because then we not working on the same buffer
+	pack.Uint16(arcount+1, m.Data, 10) // and +1 after we done for the new and improved TSIG that is added
 	return nil
 }
 
@@ -122,9 +129,9 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	m.Data = m.Data[:off]
 
 	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
-	binary.BigEndian.PutUint16(m.Data[0:2], tsig.OrigID)
+	pack.Uint16(tsig.OrigID, m.Data, 0)
 	defer func() {
-		binary.BigEndian.PutUint16(m.Data[0:2], m.ID)
+		pack.Uint16(m.ID, m.Data, 0)
 	}()
 
 	macbuf, err := tsig.mac(m, *options)

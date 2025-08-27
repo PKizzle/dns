@@ -3,8 +3,6 @@ package dns
 import (
 	"encoding/binary"
 	"testing"
-
-	"codeberg.org/miekg/dns/internal/bin"
 )
 
 func newMsgWithTSIG() *Msg {
@@ -60,7 +58,15 @@ func TestTSIGSectionExtra(t *testing.T) {
 	if err := TSIGSign(m, hmac, &option); err != nil {
 		t.Fatalf("failed to sign: %s", err)
 	}
-	println(len(m.Extra))
-	println(len(m.Pseudo))
-	println(bin.Dump(m.Data))
+	// After tsig signed, we expect m.Extra == 0, m.Pseudo == 1 and the binary ArCount must be 1
+	if len(m.Extra) != 0 {
+		t.Errorf("expected m.Extra len to be 0, got %d", len(m.Extra))
+	}
+	if len(m.Pseudo) != 1 {
+		t.Errorf("expected m.Pseudo len to be 1, got %d", len(m.Pseudo))
+	}
+	arcount := binary.BigEndian.Uint16(m.Data[10:])
+	if arcount != 1 {
+		t.Errorf("expected binary arcount to be 1, got %d", arcount)
+	}
 }
