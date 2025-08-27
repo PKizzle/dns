@@ -2,7 +2,6 @@ package dns
 
 import (
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/jump"
@@ -21,9 +20,10 @@ const (
 )
 
 // TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
-// (owner name of the RR), time fudge (defaults to 300 seconds, if zero). The TSIG MAC is saved in that RR.
+// (owner name of the RR), time fudge (defaults to 300 seconds, if zero).
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.
+// TODO(miek): also set in options - todo, don't know yet.
 func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -54,16 +54,12 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if off == 0 {
 		return ErrNoTSIG
 	}
-	m.Data = m.Data[:off]
 
+	m.Data = m.Data[:off]
 	arcount := uint16(len(m.Extra) + int(m.ps-1))
 	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
-	defer func() {
-		pack.Uint16(arcount+1, m.Data, 10) // and +1 after we done for the new and improved TSIG that is added
-	}()
 
 	macbuf, err := tsig.mac(m, *options)
-	fmt.Printf("Tsig sign mac buf %v\n", macbuf)
 	if err != nil {
 		return err
 	}
@@ -89,7 +85,6 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	m.Data = append(m.Data, t...)
 	options.RequestMAC = tsig.MAC
 
-	// can't be in a defer about because then we not working on the same buffer
 	pack.Uint16(arcount+1, m.Data, 10) // and +1 after we done for the new and improved TSIG that is added
 	return nil
 }
@@ -134,7 +129,10 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if off == 0 {
 		return ErrNoTSIG
 	}
+
 	m.Data = m.Data[:off]
+	arcount := uint16(len(m.Extra) + int(m.ps-1))
+	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
 
 	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
 	pack.Uint16(tsig.OrigID, m.Data, 0)
@@ -143,11 +141,9 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	}()
 
 	macbuf, err := tsig.mac(m, *options)
-	fmt.Printf("Tsig verify mac buf %v\n", macbuf)
 	if err != nil {
 		return err
 	}
-	println("TSG", tsig.String())
 	if err := k.Verify(tsig, macbuf, *options); err != nil {
 		return err
 	}
@@ -163,6 +159,7 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if uint64(tsig.Fudge) < fudge {
 		return ErrTime
 	}
+	pack.Uint16(arcount+1, m.Data, 10) // restore arcount
 	return nil
 }
 

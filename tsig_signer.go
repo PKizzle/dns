@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
-	"fmt"
 	"hash"
 	"time"
 
@@ -19,7 +18,6 @@ type TSIGHMAC struct {
 }
 
 func (h TSIGHMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
-	println(t.Algorithm)
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
@@ -40,14 +38,11 @@ func (h TSIGHMAC) Sign(t *TSIG, p []byte) ([]byte, error) {
 }
 
 func (h TSIGHMAC) Verify(t *TSIG, p []byte, options TSIGOption) error {
-	println("VERIFY")
-	fmt.Printf("Tsig veri mac buf: %v\n", p)
 	buf, err := h.Sign(t, p)
 	if err != nil {
 		return err
 	}
 	mac, err := hex.DecodeString(t.MAC)
-	fmt.Printf("SIGNED\nbuf-from-sign: %v\nbuf-from-tsig: %v\n", buf, mac)
 	if err != nil {
 		return err
 	}
