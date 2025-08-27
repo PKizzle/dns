@@ -23,7 +23,6 @@ const (
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero).
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.
-// TODO(miek): also set in options - todo, don't know yet.
 func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -90,7 +89,8 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 }
 
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
-// from m.Data, but left in the unpacked message m. TODO(miek)
+// from m.Data, but left in the unpacked message m. TODO(miek):
+// When this function returns options.RequestMAC will have the MAC seen on the TSIG.
 func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -160,6 +160,7 @@ func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
 		return ErrTime
 	}
 	pack.Uint16(arcount+1, m.Data, 10) // restore arcount
+	options.RequestMAC = tsig.MAC
 	return nil
 }
 

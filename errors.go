@@ -19,7 +19,7 @@ var (
 	ErrFqdn             = &Error{err: "domain must be fully qualified"} // ErrFqdn indicates that a domain name does not have a closing dot.
 	ErrName             = &Error{err: "bad domain name"}
 	ErrLabel            = &Error{err: "bad label type"}
-	ErrID               = &Error{err: "id mismatch"}
+	ErrID               = &Error{err: "ID mismatch"}
 	ErrKeyAlg           = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey              = &Error{err: "bad key"}
 	ErrKeySize          = &Error{err: "bad key size"}

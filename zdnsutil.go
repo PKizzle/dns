@@ -122,8 +122,7 @@ func dnsutilCanonical(s string) string {
 // string is a valid domain name as the DNS is 8 bit protocol. It checks if each
 // label fits in 63 characters and that the entire name will fit into the 255 octet wire format limit.
 func dnsutilIsName(s string) bool {
-	// XXX: The logic in this function was copied from packName and
-	// should be kept in sync with that function.
+	// XXX: The logic in this function was copied from packName and should be kept in sync with that function.
 
 	const lenmsg = 256
 
@@ -222,4 +221,36 @@ func dnsutilSetReply(m, r *Msg) *Msg {
 	m.Rcode = RcodeSuccess
 	m.Question = r.Question
 	return m
+}
+
+// compareLabel compares a and b while ignoring case. It returns 0 when equal, -1 when a is smaller than b,
+// and +1 when a is greater then b. This ends up a compareLabel in the dns package too.
+func compareLabel(a, b string) int {
+	// Don't want to make this public 'cause we dont have function that work on label level.
+	la := len(a)
+	lb := len(b)
+	if la < lb {
+		return -1
+	}
+	if la > lb {
+		return 1
+	}
+
+	for i := la - 1; i >= 0; i-- {
+		ai := a[i]
+		bi := b[i]
+		if ai >= 'A' && ai <= 'Z' {
+			ai |= 'a' - 'A'
+		}
+		if bi >= 'A' && bi <= 'Z' {
+			bi |= 'a' - 'A'
+		}
+		if ai < bi {
+			return -1
+		}
+		if ai > bi {
+			return 1
+		}
+	}
+	return 0
 }

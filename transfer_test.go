@@ -125,6 +125,8 @@ func TestTransfer(t *testing.T) {
 
 func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
+
 		var wg sync.WaitGroup
 		w.Hijack()
 		env := make(chan *dns.Envelope)
@@ -134,18 +136,29 @@ func TestTransferTSIG(t *testing.T) {
 			w.Close()
 		})
 
-		r.Unpack()
 		o := dns.TSIGOption{}
 		v := dns.TSIGHMAC{"geheim"}
 		err := dns.TSIGVerify(r, v, &o)
 		if err != nil {
 			log.Fatal(err)
 		}
+		// verified request for a tsig axfr, generate answer with request mac, appendeng
+		println("REQUEST MAC from REQUEST", o.RequestMAC)
 
 		// send multiple so we need to do this, if there is tsig needed.
 		// send replies back with tsig record and sign with original request mac.
+		// create new message
+		m := new(dns.Msg)
+		dnsutil.SetReply(m, r)
+		m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
+		m.Answer = testTransferData
+		m.Pack()
+		if err := dns.TSIGSign(m, v, &o); err != nil {
+			t.Fatal(err)
+		}
+		println("SENDING", m.String())
 
-		env <- &dns.Envelope{Msg: &dns.Msg{}}
+		env <- &dns.Envelope{Msg: m}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -156,10 +169,10 @@ func TestTransferTSIG(t *testing.T) {
 	c := new(dns.Client)
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
+	m.Pack()
 
 	s := dns.TSIGHMAC{"geheim"}
-	err := dns.TSIGSign(m, s, &dns.TSIGOption{})
-	if err != nil {
+	if err := dns.TSIGSign(m, s, &dns.TSIGOption{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -169,15 +182,20 @@ func TestTransferTSIG(t *testing.T) {
 	}
 
 	for e := range env {
-		e.Msg.Unpack()
-		if len(e.Answer) != 0 {
-			t.Errorf("expected empty answer, got %d", len(e.Answer))
+		// check tsig
+		if e.Error != nil {
+			println(e.Error.Error())
 		}
-		if len(e.Answer) > 0 {
-			if _, ok := m.Answer[0].(*dns.SOA); ok {
-				t.Errorf("expected no SOA, got one")
+		println("GOT REPLYT", e.Msg.String())
+		if len(e.Msg.Answer) != 0 {
+			t.Errorf("expected empty answer, got %d", len(e.Msg.Answer))
+		}
+		if len(e.Msg.Answer) > 0 {
+			if _, ok := e.Msg.Answer[0].(*dns.SOA); ok {
+				t.Errorf("expected SOA, got one")
 			}
 		}
+		println(e.Msg.String())
 		// Verify the answer, with request mac.
 	}
 }

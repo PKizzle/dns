@@ -287,9 +287,7 @@ if rr.%s != "-" {
 			case `dns:"octet"`:
 				unpackField("unpackStringOctet")
 			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
-				// TODO(tmthrgd): This is a particular unpleasant
-				// way of dealing with this. Can we do better?
-				// Probably not with the structs as they are.
+				// TODO(tmthrgd): This is a particular unpleasant way of dealing with this. Can we do better? Probably not with the structs as they are.
 				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)")
 				errCheck()
 			case "":

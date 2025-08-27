@@ -221,3 +221,35 @@ func SetReply(m, r *dns.Msg) *dns.Msg {
 	m.Question = r.Question
 	return m
 }
+
+// compareLabel compares a and b while ignoring case. It returns 0 when equal, -1 when a is smaller than b,
+// and +1 when a is greater then b. This ends up a compareLabel in the dns package too.
+func compareLabel(a, b string) int {
+	// Don't want to make this public 'cause we dont have function that work on label level.
+	la := len(a)
+	lb := len(b)
+	if la < lb {
+		return -1
+	}
+	if la > lb {
+		return 1
+	}
+
+	for i := la - 1; i >= 0; i-- {
+		ai := a[i]
+		bi := b[i]
+		if ai >= 'A' && ai <= 'Z' {
+			ai |= 'a' - 'A'
+		}
+		if bi >= 'A' && bi <= 'Z' {
+			bi |= 'a' - 'A'
+		}
+		if ai < bi {
+			return -1
+		}
+		if ai > bi {
+			return 1
+		}
+	}
+	return 0
+}

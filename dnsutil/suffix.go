@@ -23,7 +23,7 @@ func CommonSuffix(a, b string) (n int) {
 	i2 := len(b1) - 2
 	// the second check can be done here: last/only label
 	// before we fall through into the for-loop below
-	if equal(a[a1[j1]:], b[b1[j2]:]) {
+	if compareLabel(a[a1[j1]:], b[b1[j2]:]) == 0 {
 		n++
 	} else {
 		return
@@ -32,7 +32,7 @@ func CommonSuffix(a, b string) (n int) {
 		if i1 < 0 || i2 < 0 {
 			break
 		}
-		if equal(a[a1[i1]:a1[j1]], b[b1[i2]:b1[j2]]) {
+		if compareLabel(a[a1[i1]:a1[j1]], b[b1[i2]:b1[j2]]) == 0 {
 			n++
 		} else {
 			break
@@ -43,29 +43,4 @@ func CommonSuffix(a, b string) (n int) {
 		i2--
 	}
 	return
-}
-
-// equal compares a and b while ignoring case. It returns true when equal otherwise false.
-func equal(a, b string) bool {
-	// See ../sort.go where the offical version hangs out.
-	la := len(a)
-	lb := len(b)
-	if la != lb {
-		return false
-	}
-
-	for i := la - 1; i >= 0; i-- {
-		ai := a[i]
-		bi := b[i]
-		if ai >= 'A' && ai <= 'Z' {
-			ai |= 'a' - 'A'
-		}
-		if bi >= 'A' && bi <= 'Z' {
-			bi |= 'a' - 'A'
-		}
-		if ai != bi {
-			return false
-		}
-	}
-	return true
 }
