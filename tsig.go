@@ -178,3 +178,12 @@ type (
 		Key() []byte
 	}
 )
+
+func hasTSIG(m *Msg) *TSIG {
+	for i := range m.Pseudo {
+		if t, ok := m.Pseudo[i].(*TSIG); ok {
+			return t
+		}
+	}
+	return nil
+}

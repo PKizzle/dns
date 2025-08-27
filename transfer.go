@@ -9,17 +9,33 @@ import (
 
 // Envelope is used when doing a zone transfer with a remote server.
 type Envelope struct {
-	RRs   []RR  // The RRs as returned by the remote server, or the ones to be send to the remote.
-	Error error // If something went wrong, this contains the error.
+	Answer []RR  // The RRs as returned by the remote server, or the ones to be send to the remote.
+	Error  error // If something went wrong, this contains the error.
 }
 
 // TransferIn performs a zone transfer with address over network, the message m is used to ask for the transfer and
 // should have an [AXFR] or [IXFR] RR in the question section. If the pseudo section contains a (stub) TSIG or
-// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New].
+// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs.
 // On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
 // are as they were found, i.e. including the starting and ending SOA RRs.
 //
-// If m's buffer is empty Transfer will call m.Pack(). If the client's transport is nil DefaultTransport will be used.
+// If m's buffer is empty Transfer will call m.Pack(). If the Answer's transport is nil [DefaultTransport] will
+// be set and used.
+//
+// Setting up a transfer is done as follows:
+//
+//	m := dns.NewMsg("example.org.", dns.TypeAXFR)
+//	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+//	if err != nil {
+//		t.Fatal("failed to setup zone transfer in", err)
+//	}
+//
+//	for e := range env {
+//		if e.Error != nil {
+//			// ...
+//		}
+//		// do things with e.Answer
+//	}
 func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string) (<-chan *Envelope, error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
@@ -113,13 +129,13 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		r.Options = OptionUnpack
 		err := r.Unpack()
 		if err != nil {
-			ch <- &Envelope{RRs: r.Answer, Error: err}
+			ch <- &Envelope{Answer: r.Answer, Error: err}
 		}
 
 		// On first loop first be need to see a SOA RR.
 		if !options.TimersOnly {
 			if len(r.Answer) == 0 {
-				ch <- &Envelope{Error: ErrSOA}
+				ch <- &Envelope{Error: ErrSOA.Fmt(": empty answer")}
 				return
 			}
 			if _, ok := r.Answer[0].(*SOA); !ok {
@@ -130,10 +146,10 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 
 		if c.TSIGVerifier != nil && hasTSIG(m) != nil {
 			if err := TSIGVerify(m, c.TSIGVerifier, &options); err != nil {
-				ch <- &Envelope{RRs: r.Answer, Error: err}
+				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
-		ch <- &Envelope{RRs: r.Answer, Error: err}
+		ch <- &Envelope{Answer: r.Answer, Error: err}
 		options.TimersOnly = true
 	}
 }
@@ -143,41 +159,32 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 // SIG(0) on the messages sent through the channel. If the Data buffers of the message sent on the channel are
 // zero, TransferOut call Pack().
 //
-// Example setup:
+// Example setup from within a dns.HandleFunc:
 //
-//	env := make(chan<- *dns.Envelope)
-//	c := new(dns.Client)
-//	w.Hijack() // hijack the connection as we should close when done
-//	var wg sync.WaitGroup
-//	wg.Go(func() { c.TransferOut(w, env) })
-//	for i := range msgs {
-//		env <- &dns.Envelope{Msg: msgs[i]}
-//	}
-//	close(env)
-//	wg.Wait() // wait until everything is written out
-//	w.Close() // close connection
+//		w.Hijack() // hijack the connection as we should close when done
+//		env := make(chan<- *dns.Envelope)
+//		c := dns.NewClient()
+//		var wg sync.WaitGroup
 //
-// The server is responsible for sending the correct sequence of Msgs through the channel ch.
+//		wg.Go(func() {
+//	        c.TransferOut(w, env)
+//		    w.Close() // close connection
+//	    })
+//		env <- &dns.Envelope{Answer: []dns.RR{...}}
+//		close(env)
+//
+// The server is responsible for sending the correct sequence of RRs through the channel env.
 func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) error {
 	for e := range env {
 		m := new(Msg)
 		dnsutilSetReply(m, r)
 		//		options
-		m.Answer = e.RRs
+		m.Answer = e.Answer
 		// tsig
 		m.Pack()
 
 		if _, err := io.Copy(w, m); err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-func hasTSIG(m *Msg) *TSIG {
-	for i := range m.Pseudo {
-		if t, ok := m.Pseudo[i].(*TSIG); ok {
-			return t
 		}
 	}
 	return nil

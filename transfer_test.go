@@ -29,7 +29,7 @@ func TestTransferInvalid(t *testing.T) {
 			c.TransferOut(w, r, env)
 			w.Close()
 		})
-		env <- &dns.Envelope{RRs: []dns.RR{}}
+		env <- &dns.Envelope{Answer: []dns.RR{}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -47,17 +47,8 @@ func TestTransferInvalid(t *testing.T) {
 	}
 
 	for e := range env {
-		if e.Error != nil {
-			t.Errorf("unexpected error: %s", err)
-			break
-		}
-		if len(e.RRs) != 0 {
-			t.Errorf("expected empty answer, got %d", len(e.RRs))
-		}
-		if len(e.RRs) > 0 {
-			if _, ok := e.RRs[0].(*dns.SOA); ok {
-				t.Errorf("expected no SOA, got one")
-			}
+		if e.Error == nil {
+			t.Errorf("expected error, got none")
 		}
 	}
 }
@@ -67,13 +58,13 @@ func TestTransfer(t *testing.T) {
 		w.Hijack()
 		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
-		c := new(dns.Client)
+		c := dns.NewClient()
 
 		wg.Go(func() {
 			c.TransferOut(w, r, env)
 			w.Close()
 		})
-		env <- &dns.Envelope{RRs: testTransferData}
+		env <- &dns.Envelope{Answer: testTransferData}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -107,10 +98,10 @@ func TestTransfer(t *testing.T) {
 			i := 0
 			for e := range env {
 				if e.Error != nil {
-					t.Errorf("unexpected error: %s", err)
+					t.Errorf("unexpected error: %s", e.Error)
 					break
 				}
-				i += len(e.RRs)
+				i += len(e.Answer)
 				if i != len(testTransferData) {
 					t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
 				}
@@ -179,7 +170,7 @@ func TestTransferTSIG(t *testing.T) {
 		if e.Error != nil {
 			println(e.Error.Error())
 		}
-		fmt.Printf("%v\n", e.RRs)
+		fmt.Printf("%v\n", e.Answer)
 	}
 }
 
