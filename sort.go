@@ -71,7 +71,7 @@ func CompareName(a, b string) int {
 		j2--
 		i2--
 	}
-	// TODO: think more
+	// TODO(miek): think more if this is correct, also some test.
 	if i1 < i2 { // a less than b?
 		return -1
 	}
@@ -87,36 +87,3 @@ func Equal(a, b RR) bool { return Compare(a, b) == 0 }
 
 // EqualName returns true if the domain names a and b are equal. See [CompareName].
 func EqualName(a, b string) bool { return CompareName(a, b) == 0 }
-
-// compareLabel compares a and b while ignoring case. It returns 0 when equal, -1 when a is smaller than b,
-// and +1 when a is greater then b.
-func compareLabel(a, b string) int {
-	// TODO(miek): functional equavalent exists in dnsutil/suffix.go
-	// Don't want to make this public 'cause we dont have function that work on label level.
-	la := len(a)
-	lb := len(b)
-	if la < lb {
-		return -1
-	}
-	if la > lb {
-		return 1
-	}
-
-	for i := la - 1; i >= 0; i-- {
-		ai := a[i]
-		bi := b[i]
-		if ai >= 'A' && ai <= 'Z' {
-			ai |= 'a' - 'A'
-		}
-		if bi >= 'A' && bi <= 'Z' {
-			bi |= 'a' - 'A'
-		}
-		if ai < bi {
-			return -1
-		}
-		if ai > bi {
-			return 1
-		}
-	}
-	return 0
-}
