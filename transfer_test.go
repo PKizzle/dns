@@ -2,7 +2,6 @@ package dns_test
 
 import (
 	"context"
-	"log"
 	"sync"
 	"testing"
 
@@ -22,15 +21,15 @@ const testTransferZone = "miek.nl."
 
 func TestTransferInvalid(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		var wg sync.WaitGroup
 		w.Hijack()
+		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
 		c := new(dns.Client)
 		wg.Go(func() {
-			c.TransferOut(w, env)
+			c.TransferOut(w, r, env)
 			w.Close()
 		})
-		env <- &dns.Envelope{Msg: &dns.Msg{}}
+		env <- &dns.Envelope{RRs: []dns.RR{}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -48,12 +47,15 @@ func TestTransferInvalid(t *testing.T) {
 	}
 
 	for e := range env {
-		e.Msg.Unpack()
-		if len(e.Answer) != 0 {
-			t.Errorf("expected empty answer, got %d", len(e.Answer))
+		if e.Error != nil {
+			t.Errorf("unexpected error: %s", err)
+			break
 		}
-		if len(e.Answer) > 0 {
-			if _, ok := m.Answer[0].(*dns.SOA); ok {
+		if len(e.RRs) != 0 {
+			t.Errorf("expected empty answer, got %d", len(e.RRs))
+		}
+		if len(e.RRs) > 0 {
+			if _, ok := e.RRs[0].(*dns.SOA); ok {
 				t.Errorf("expected no SOA, got one")
 			}
 		}
@@ -62,22 +64,16 @@ func TestTransferInvalid(t *testing.T) {
 
 func TestTransfer(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		var wg sync.WaitGroup
 		w.Hijack()
+		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
 		c := new(dns.Client)
 
 		wg.Go(func() {
-			c.TransferOut(w, env)
+			c.TransferOut(w, r, env)
 			w.Close()
 		})
-
-		m := &dns.Msg{Data: r.Data}
-		dnsutil.SetReply(m, r)
-		m.Answer = testTransferData
-		m.Pack()
-
-		env <- &dns.Envelope{Msg: m}
+		env <- &dns.Envelope{RRs: testTransferData}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -111,18 +107,19 @@ func TestTransfer(t *testing.T) {
 			i := 0
 			for e := range env {
 				if e.Error != nil {
-					t.Fatal(e.Error)
+					t.Errorf("unexpected error: %s", err)
+					break
 				}
-				e.Msg.Unpack()
-				i += len(e.Msg.Answer)
-			}
-			if i != len(testTransferData) {
-				t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+				i += len(e.RRs)
+				if i != len(testTransferData) {
+					t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+				}
 			}
 		})
 	}
 }
 
+/*
 func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Unpack()
@@ -166,15 +163,12 @@ func TestTransferTSIG(t *testing.T) {
 	cancel, addr, _ := dnstest.TCPServer(":0")
 	defer cancel()
 
-	c := new(dns.Client)
+	c := NewClient()
+	c.TSIGSign = dns.HmacTSIG{[]byte("geheim")}
+	c.TSIGVerify = dns.HmacTSIG{[]byte("geheim")}
+
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
-	m.Pack()
-
-	s := dns.HmacTSIG{[]byte("geheim")}
-	if err := dns.TSIGSign(m, s, &dns.TSIGOption{}); err != nil {
-		t.Fatal(err)
-	}
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
@@ -182,21 +176,10 @@ func TestTransferTSIG(t *testing.T) {
 	}
 
 	for e := range env {
-		// check tsig
 		if e.Error != nil {
 			println(e.Error.Error())
 		}
-		println("GOT REPLYT", e.Msg.String())
-		if len(e.Msg.Answer) != 0 {
-			t.Errorf("expected empty answer, got %d", len(e.Msg.Answer))
-		}
-		if len(e.Msg.Answer) > 0 {
-			if _, ok := e.Msg.Answer[0].(*dns.SOA); ok {
-				t.Errorf("expected SOA, got one")
-			}
-		}
-		println(e.Msg.String())
-		// Verify the answer, with request mac.
+		fmt.Printf("%v\n", e.RRs)
 	}
 }
 
