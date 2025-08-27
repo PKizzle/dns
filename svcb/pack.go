@@ -14,6 +14,7 @@ import (
 
 // should all be generated...
 
+// Pack converts a pair to wire-format. Only exported to make it available to the dns packer.
 func Pack(p Pair, msg []byte, off int) (int, error) {
 	switch x := p.(type) {
 	case *MANDATORY:
@@ -40,6 +41,7 @@ func Pack(p Pair, msg []byte, off int) (int, error) {
 	return 0, fmt.Errorf("dns: no svcb pack defined")
 }
 
+// Unpack converts wire-format to a pair. Only exported to make it available to the dns unpacker.
 func Unpack(p Pair, data *cryptobyte.String) error {
 	switch x := p.(type) {
 	case *MANDATORY:

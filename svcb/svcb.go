@@ -9,7 +9,7 @@ import (
 	"codeberg.org/miekg/dns/internal/ddd"
 )
 
-// Keys defined in RFC 9460.
+// Keys as defined in RFC 9460.
 const (
 	KeyMandatory uint16 = iota
 	KeyAlpn
@@ -252,14 +252,14 @@ func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 // to the hinted IP address may be terminated and a new connection may be opened.
 // Basic use pattern for creating an ipv4hint option:
 //
-//		h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//		e := new(dns.IPV4HINT)
-//		e.Hint = []net.IP{net.IPv4(1,1,1,1)}
+//	 h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
+//	 e := new(dns.IPV4HINT)
+//	 e.Hint = []net.IP{net.IPv4(1,1,1,1)}
 //
-//	 Or
+//	Or
 //
-//		e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
-//		h.Value = append(h.Value, e)
+//	 e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
+//	 h.Value = append(h.Value, e)
 type IPV4HINT struct {
 	Hint []net.IP
 }
