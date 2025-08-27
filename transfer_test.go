@@ -125,6 +125,8 @@ func TestTransfer(t *testing.T) {
 
 func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
+
 		var wg sync.WaitGroup
 		w.Hijack()
 		env := make(chan *dns.Envelope)
@@ -134,7 +136,6 @@ func TestTransferTSIG(t *testing.T) {
 			w.Close()
 		})
 
-		r.Unpack()
 		o := dns.TSIGOption{}
 		v := dns.TSIGHMAC{"geheim"}
 		err := dns.TSIGVerify(r, v, &o)

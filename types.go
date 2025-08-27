@@ -1104,7 +1104,7 @@ type TKEY struct {
 	KeySize    uint16
 	Key        string `dns:"size-hex:KeySize"`
 	OtherLen   uint16
-	OtherData  string `dns:"size-hex:OtherLen"` // TODO; size-hex TODO? OtherLen??
+	OtherData  string `dns:"size-hex:OtherLen"`
 }
 
 // TKEY has no official presentation format, but this will suffice.
