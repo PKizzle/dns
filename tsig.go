@@ -171,13 +171,16 @@ type TSIGOption struct {
 
 type (
 	TSIGSigner interface {
-		// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return
-		// signature or an error.
+		// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return signature or an error.
 		Sign(t *TSIG, p []byte) ([]byte, error)
+		// Key returns the key to sign with.
+		Key() []byte
 	}
 
 	TSIGVerifier interface {
 		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 		Verify(t *TSIG, p []byte, options TSIGOption) error
+		// Key returns the key to verify with.
+		Key() []byte
 	}
 )

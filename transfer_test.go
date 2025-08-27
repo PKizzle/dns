@@ -137,7 +137,7 @@ func TestTransferTSIG(t *testing.T) {
 		})
 
 		o := dns.TSIGOption{}
-		v := dns.TSIGHMAC{"geheim"}
+		v := dns.HmacTSIG{[]byte("geheim")}
 		err := dns.TSIGVerify(r, v, &o)
 		if err != nil {
 			log.Fatal(err)
@@ -171,7 +171,7 @@ func TestTransferTSIG(t *testing.T) {
 	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
 	m.Pack()
 
-	s := dns.TSIGHMAC{"geheim"}
+	s := dns.HmacTSIG{[]byte("geheim")}
 	if err := dns.TSIGSign(m, s, &dns.TSIGOption{}); err != nil {
 		t.Fatal(err)
 	}
