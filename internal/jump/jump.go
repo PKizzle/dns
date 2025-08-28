@@ -49,15 +49,20 @@ func RR(msgBuf []byte, off int) int {
 }
 
 // To jumps to the start of the i-th RR in the message, that starts at msgBuf[0]. This counts from 0 which
-// returns the RR *after* the question section. When we jump over the entire message, 0 is returned.
+// returns the RR *after* a possible question section. When we jump over the entire message, 0 is returned. The
+// supported number of "RR"s in the question section is zero or one. The zero check is done by checking the
+// Qdcount *in the buffer* as there is no other way of doing so.
 func To(i int, msgBuf []byte) int {
 	off := 12
 	if off >= len(msgBuf) {
 		return 0
 	}
-	off = Question(msgBuf, off)
-	if off >= len(msgBuf) {
-		return 0
+	qdcount := binary.BigEndian.Uint16(msgBuf[4:])
+	if qdcount > 0 {
+		off = Question(msgBuf, off)
+		if off >= len(msgBuf) {
+			return 0
+		}
 	}
 	for range i {
 		off = RR(msgBuf, off)

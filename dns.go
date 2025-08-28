@@ -198,7 +198,7 @@ type Msg struct {
 	Stateful []RR // Holds the DSO RR(s) for Stateful operations, see RFC 8490.
 
 	// Data is the data of the message that was either received from the wire or is about to be send
-	// over the wire. Note that this data is a snapshot of the Msg as it was packed or unpacked.
+	// over the wire. Note that this data is a snapshot of the Msg when it was packed or unpacked.
 	Data []byte
 
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.

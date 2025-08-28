@@ -14,23 +14,26 @@ var testTransferData = []dns.RR{
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
 	dnstest.New("x.miek.nl. IN A 10.0.0.1"),
 	dnstest.New("miek.nl. IN MX 1 x.miek.nl."),
-	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
 }
 
 const testTransferZone = "miek.nl."
 
 func TestTransferInvalid(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
 		w.Hijack()
-		var wg sync.WaitGroup
+
 		env := make(chan *dns.Envelope)
 		c := new(dns.Client)
+
+		var wg sync.WaitGroup
 		wg.Go(func() {
 			c.TransferOut(w, r, env)
-			w.Close()
 		})
 		env <- &dns.Envelope{Answer: []dns.RR{}}
 		close(env)
+		w.Close()
 	})
 	defer dns.HandleRemove(testTransferZone)
 
@@ -55,16 +58,24 @@ func TestTransferInvalid(t *testing.T) {
 
 func TestTransfer(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
 		w.Hijack()
-		var wg sync.WaitGroup
+
 		env := make(chan *dns.Envelope)
 		c := dns.NewClient()
 
+		var wg sync.WaitGroup
 		wg.Go(func() {
-			c.TransferOut(w, r, env)
+			err := c.TransferOut(w, r, env)
+			if err != nil {
+				t.Fatal(err)
+			}
 			w.Close()
 		})
-		env <- &dns.Envelope{Answer: testTransferData}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[1]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[2]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[3]}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -102,9 +113,9 @@ func TestTransfer(t *testing.T) {
 					break
 				}
 				i += len(e.Answer)
-				if i != len(testTransferData) {
-					t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
-				}
+			}
+			if i != len(testTransferData) {
+				t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
 			}
 		})
 	}
@@ -114,39 +125,24 @@ func TestTransfer(t *testing.T) {
 func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Unpack()
+		w.Hijack()
 
 		var wg sync.WaitGroup
-		w.Hijack()
 		env := make(chan *dns.Envelope)
-		c := new(dns.Client)
+		c := dns.NewClient()
+		c.TSIGSigner = dns.HmacTSIG{[]byte("geheim")}
 		wg.Go(func() {
-			c.TransferOut(w, env)
+			err := c.TransferOut(w, r, env)
+			if err != nil {
+				// ...
+			}
 			w.Close()
 		})
-
-		o := dns.TSIGOption{}
-		v := dns.HmacTSIG{[]byte("geheim")}
-		err := dns.TSIGVerify(r, v, &o)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// verified request for a tsig axfr, generate answer with request mac, appendeng
-		println("REQUEST MAC from REQUEST", o.RequestMAC)
-
-		// send multiple so we need to do this, if there is tsig needed.
-		// send replies back with tsig record and sign with original request mac.
-		// create new message
-		m := new(dns.Msg)
-		dnsutil.SetReply(m, r)
-		m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
-		m.Answer = testTransferData
-		m.Pack()
-		if err := dns.TSIGSign(m, v, &o); err != nil {
-			t.Fatal(err)
-		}
-		println("SENDING", m.String())
-
-		env <- &dns.Envelope{Msg: m}
+		// 4 envelopes to test the timers only and mac carry forward
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[1]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[2]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[3]}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -154,12 +150,11 @@ func TestTransferTSIG(t *testing.T) {
 	cancel, addr, _ := dnstest.TCPServer(":0")
 	defer cancel()
 
-	c := NewClient()
-	c.TSIGSign = dns.HmacTSIG{[]byte("geheim")}
-	c.TSIGVerify = dns.HmacTSIG{[]byte("geheim")}
+	c := dns.NewClient()
+	c.TSIGSigner = dns.HmacTSIG{[]byte("geheim")}
 
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
-	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
+	m.Pseudo = []dns.RR{dns.NewTSIG(".", dns.HmacSHA512, 0)}
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {
@@ -168,50 +163,13 @@ func TestTransferTSIG(t *testing.T) {
 
 	for e := range env {
 		if e.Error != nil {
-			println(e.Error.Error())
+			t.Fatal(e.Error)
 		}
-		fmt.Printf("%v\n", e.Answer)
 	}
 }
+*/
 
 /*
-}
-func axfrTestingSuiteWithCustomTsig(t *testing.T, addrstr string, provider TsigProvider) {
-	tr := new(Transfer)
-	m := new(Msg)
-	var err error
-	tr.Conn, err = Dial("tcp", addrstr)
-	if err != nil {
-		t.Fatal("failed to dial", err)
-	}
-	tr.TsigProvider = provider
-	m.SetAxfr(testTransferZone)
-	m.SetTsig("axfr.", HmacSHA256, 300, time.Now().Unix())
-
-	c, err := tr.In(m, addrstr)
-	if err != nil {
-		t.Fatal("failed to zone transfer in", err)
-	}
-
-	var records []RR
-	for msg := range c {
-		if msg.Error != nil {
-			t.Fatal(msg.Error)
-		}
-		records = append(records, msg.RR...)
-	}
-
-	if len(records) != len(xfrTestData) {
-		t.Fatalf("bad axfr: expected %v, got %v", records, xfrTestData)
-	}
-
-	for i, rr := range records {
-		if !IsDuplicate(rr, xfrTestData[i]) {
-			t.Errorf("bad axfr: expected %v, got %v", records, xfrTestData)
-		}
-	}
-}
-
 func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider TsigProvider) {
 	tr := new(Transfer)
 	m := new(Msg)
@@ -234,34 +192,5 @@ func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider Tsi
 		}
 	}
 }
-
-func TestCustomTsigProvider(t *testing.T) {
-	HandleFunc(testTransferZone, SingleEnvelopeXfrServer)
-	defer HandleRemove(testTransferZone)
-
-	cancel, addrstr, _, err := RunLocalTCPServer(":0", func(srv *Server) {
-		srv.TsigProvider = tsigSecretProvider(tsigSecret)
-	})
-	if err != nil {
-		t.Fatalf("unable to run test server: %s", err)
-	}
-	defer s.Shutdown()
-
-	axfrTestingSuiteWithCustomTsig(t, addrstr, tsigSecretProvider(tsigSecret))
-}
-
-func TestTSIGNotSigned(t *testing.T) {
-	HandleFunc(testTransferZone, SingleEnvelopeXfrServer)
-	defer HandleRemove(testTransferZone)
-
-	s, addrstr, _, err := RunLocalTCPServer(":0")
-	if err != nil {
-		t.Fatalf("unable to run test server: %s", err)
-	}
-	defer s.Shutdown()
-
-	axfrTestingSuiteWithMsgNotSigned(t, addrstr, tsigSecretProvider(tsigSecret))
-}
-
 
 */

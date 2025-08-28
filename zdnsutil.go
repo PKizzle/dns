@@ -208,8 +208,8 @@ func dnsutilSplit(s string) []int {
 	}
 }
 
-// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question and sets query
-// response bit to true.
+// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question section. It sets QR
+// to true. If the Opcode is [OpcodeQuery] the RD and CD bits are copied from r as well.
 func dnsutilSetReply(m, r *Msg) *Msg {
 	m.ID = r.ID
 	m.Response = true

@@ -22,13 +22,10 @@ type Transport struct {
 	// be used to dial.
 	TLSConfig *tls.Config
 
-	// If non zero TSIG signing and verification is done on messages that have a TSIG record in the pseudo
-	// section.
+	// If non zero, TSIG signing and verification is done on messages that have a TSIG record in the pseudo section.
 	TSIGSigner
-	TSIGVerifier
 
-	// If non zero SIG0 signing and verification is done on messages that have a SIG0 record in the pseudo
-	// section.
+	// If non zero SIG0 signing and verification is done on messages that have a SIG0 record in the pseudo section.
 	// SIG0Signer
 }
 
