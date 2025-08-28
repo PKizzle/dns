@@ -209,7 +209,7 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	for _, option := range options {
 		l := option.Len()
 		if off+l >= len(msg) {
-			return off, ErrBuf
+			return len(msg), ErrBuf
 		}
 		code := RRToCode(option) // TODO(miek): unknown codes, caught later
 
@@ -217,7 +217,7 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 		pack.Uint16(uint16(l-tlv), msg, off+2)
 		optionoff, err := packOptionCode(option, msg, off+4)
 		if err != nil {
-			return off, err
+			return len(msg), err
 		}
 
 		off += optionoff + l
@@ -516,7 +516,7 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 func packTxt(txt []string, msg []byte, off int) (int, error) {
 	if len(txt) == 0 {
 		if off >= len(msg) {
-			return off, ErrBuf
+			return len(msg), ErrBuf
 		}
 		msg[off] = 0
 		return off, nil
@@ -525,7 +525,7 @@ func packTxt(txt []string, msg []byte, off int) (int, error) {
 	for _, s := range txt {
 		off, err = pack.TxtString(s, msg, off)
 		if err != nil {
-			return off, err
+			return len(msg), err
 		}
 	}
 	return off, nil
@@ -533,11 +533,11 @@ func packTxt(txt []string, msg []byte, off int) (int, error) {
 
 func packOctetString(s string, msg []byte, off int) (int, error) {
 	if off >= len(msg) || len(s) > 256*4+1 {
-		return off, ErrBuf
+		return len(msg), ErrBuf
 	}
 	for i := 0; i < len(s); i++ {
 		if len(msg) <= off {
-			return off, ErrBuf
+			return len(msg), ErrBuf
 		}
 		if s[i] == '\\' {
 			i++
