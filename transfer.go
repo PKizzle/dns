@@ -122,7 +122,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		}
 
 		if r.Rcode != RcodeSuccess {
-			ch <- &Envelope{Error: ErrRcode}
+			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", sprintRcode(r.Rcode))}
 			return
 		}
 
@@ -153,6 +153,13 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		options.TimersOnly = true
 		if hasTSIG(m) != nil {
 			options.RequestMAC = hasTSIG(m).MAC
+		}
+
+		// If there is a SOA RR as the last we're done
+		if len(r.Answer) > 0 {
+			if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
+				return
+			}
 		}
 	}
 }

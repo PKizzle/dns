@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestClient(t *testing.T) {
+func TestClientExternal(t *testing.T) {
 	m := &Msg{MsgHeader: MsgHeader{ID: ID(), RecursionDesired: true}}
 	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}
 	m.Question = []RR{mx}
@@ -26,4 +26,27 @@ func TestClient(t *testing.T) {
 	}
 	fmt.Println(r.String())
 	t.Logf("%v\n", r.Data)
+}
+
+func TestTransferInExternal(t *testing.T) {
+	c := NewClient()
+	secret, _ := fromBase64([]byte("Vn37JPSCmaCHKJhghcpRg8m6PlQ="))
+	c.TSIGSigner = HmacTSIG{Secret: secret}
+
+	m := NewMsg("ok.bad-dnssec.wb.sidnlabs.nl.", TypeAXFR)
+	m.Pseudo = []RR{NewTSIG("wb_sha1.", HmacSHA1, 0)}
+
+	env, err := c.TransferIn(context.TODO(), m, "tcp", "94.198.159.39:53")
+	if err != nil {
+		t.Fatal("failed to zone transfer in", err)
+	}
+
+	for e := range env {
+		if e.Error != nil {
+			t.Fatal(e.Error)
+		}
+		for i := range e.Answer {
+			fmt.Printf("%s\n", e.Answer[i])
+		}
+	}
 }
