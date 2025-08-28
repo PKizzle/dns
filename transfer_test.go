@@ -2,6 +2,7 @@ package dns_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -117,43 +118,24 @@ func TestTransfer(t *testing.T) {
 	}
 }
 
-/*
 func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Unpack()
+		w.Hijack()
 
 		var wg sync.WaitGroup
-		w.Hijack()
 		env := make(chan *dns.Envelope)
 		c := dns.NewClient()
+		c.TSIGSigner = dns.HmacTSIG{[]byte("geheim")}
 		wg.Go(func() {
-			c.TransferOut(w, env)
+			c.TransferOut(w, r, env)
 			w.Close()
 		})
-
-		o := dns.TSIGOption{}
-		v := dns.HmacTSIG{[]byte("geheim")}
-		err := dns.TSIGVerify(r, v, &o)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// verified request for a tsig axfr, generate answer with request mac, appendeng
-		println("REQUEST MAC from REQUEST", o.RequestMAC)
-
-		// send multiple so we need to do this, if there is tsig needed.
-		// send replies back with tsig record and sign with original request mac.
-		// create new message
-		m := new(dns.Msg)
-		dnsutil.SetReply(m, r)
-		m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
-		m.Answer = testTransferData
-		m.Pack()
-		if err := dns.TSIGSign(m, v, &o); err != nil {
-			t.Fatal(err)
-		}
-		println("SENDING", m.String())
-
-		env <- &dns.Envelope{Msg: m}
+		// 4 envelopes to test the timers only and mac carry forward
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[1]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[2]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[3]}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -161,12 +143,11 @@ func TestTransferTSIG(t *testing.T) {
 	cancel, addr, _ := dnstest.TCPServer(":0")
 	defer cancel()
 
-	c := NewClient()
-	c.TSIGSign = dns.HmacTSIG{[]byte("geheim")}
-	c.TSIGVerify = dns.HmacTSIG{[]byte("geheim")}
+	c := dns.NewClient()
+	c.TSIGSigner = dns.HmacTSIG{[]byte("geheim")}
 
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
-	m.Pseudo = []dns.RR{dns.NewTSIG("keyname.", dns.HmacSHA512, 0)}
+	m.Pseudo = []dns.RR{dns.NewTSIG(".", dns.HmacSHA512, 0)}
 
 	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 	if err != nil {

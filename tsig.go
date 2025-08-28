@@ -169,7 +169,7 @@ type (
 		Sign(t *TSIG, p []byte) ([]byte, error)
 		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 		Verify(t *TSIG, p []byte, options TSIGOption) error
-		// Key returns the key to sign with.
+		// Key returns the key to sign or verify with.
 		Key() []byte
 	}
 )
