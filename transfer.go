@@ -20,7 +20,7 @@ type Envelope struct {
 // On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
 // are as they were found, i.e. including the starting and ending SOA RRs.
 //
-// If m's buffer is empty TransferIn will call m.Pack(). If the Answer's transport is nil [DefaultTransport] will
+// If m's buffer is empty TransferIn will call m.Pack(). If the clients's transport is nil [DefaultTransport] will
 // be set and used.
 //
 // Setting up a transfer is done as follows:
@@ -174,7 +174,11 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //		close(env)
 //
 // The server is responsible for sending the correct sequence of RRs through the channel env.
+// If the clients's transport is nil [DefaultTransport] will be set and used.
 func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) error {
+	if c.Transport == nil {
+		c.Transport = NewDefaultTransport()
+	}
 	options := TSIGOption{}
 	for e := range env {
 		m := new(Msg)
