@@ -45,9 +45,6 @@ func TestTransferInExternal(t *testing.T) {
 		if e.Error != nil {
 			t.Fatal(e.Error)
 		}
-		for i := range e.Answer {
-			fmt.Printf("%s\n", e.Answer[i])
-		}
 	}
 }
 
@@ -65,11 +62,18 @@ func TestTransferInExternalRoot(t *testing.T) {
 	}
 
 	j := 0
+	rrs := 0
 	for e := range env {
 		if e.Error != nil {
 			t.Fatal(e.Error)
 		}
+		rrs += len(e.Answer)
 		j++
 	}
-	fmt.Printf("%d envelopes\n", j)
+	if j != 83 {
+		t.Fatalf("expected %d envelopes, got %d", 83, j)
+	}
+	if rrs != 24886 {
+		t.Fatalf("expected %d envelopes, got %d", 24886, rrs)
+	}
 }

@@ -86,7 +86,6 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 // from m.Data, but left in the unpacked message m. TODO(miek): that a good plan?
 // When this function returns options.RequestMAC will have the MAC seen on the TSIG.
 func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
-	println("MMMMM", len(m.Data))
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return err
@@ -94,12 +93,12 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	}
 
 	if m.ps == 0 {
-		return ErrNoTSIG.Fmt(": %s", "-verify")
+		return ErrNoTSIG.Fmt(": %s", "verify")
 	}
 
 	t := hasTSIG(m)
 	if t == nil {
-		return ErrNoTSIG.Fmt(": %s", "+verify")
+		return ErrNoTSIG.Fmt(": %s", "verify")
 	}
 
 	// Sign unless there is a key or MAC validation error (RFC 8945 5.3.2).
@@ -112,14 +111,11 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	last := len(m.Answer) + len(m.Ns) + len(m.Extra) + int(m.ps) - 1
 	if last < 0 {
-		return ErrNoTSIG.Fmt(": %s", "%verify")
+		return ErrNoTSIG.Fmt(": %s", "verify")
 	}
 	off := jump.To(last, m.Data)
-	println("LAST", last, "LL", len(m.Data), off)
 	if off == 0 {
-		println(m.String())
-		println("***********")
-		return ErrNoTSIG.Fmt(": %s", "&verify")
+		return ErrNoTSIG.Fmt(": %s", "verify")
 	}
 
 	m.Data = m.Data[:off]

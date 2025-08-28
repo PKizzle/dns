@@ -637,7 +637,6 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	s := cryptobyte.String(msg)
 	var err error
 
-	println("QQQ", dh.Qdcount)
 	m.Question, err = m.unpackQuestions(dh.Qdcount, &s, msgBuf)
 	if err != nil {
 		return err
@@ -807,7 +806,6 @@ func (m *Msg) String() string {
 			sb.WriteByte('\n')
 		}
 	}
-	return sb.String()
 	if len(m.Answer) > 0 {
 		sb.WriteString("\n;; ")
 		sb.WriteString(sections[2])
@@ -1001,7 +999,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	l := make([]byte, 2, 2)
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
-	n, err := r.Write(l)
+	n, err := r.Conn().Write(l)
 	return int64(n), err
 }
 

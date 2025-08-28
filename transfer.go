@@ -5,8 +5,6 @@ import (
 	"io"
 	"net"
 	"time"
-
-	"codeberg.org/miekg/dns/internal/bin"
 )
 
 // Envelope is used when doing a zone transfer with a remote server.
@@ -102,17 +100,12 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 	}
 
 	r := &Msg{}
-	i := 0
 	for {
-		println("EVELOP", i)
-		i++
 		r.Options = OptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
-			if isEOFOrClosedNetwork(err) {
-				break
-			}
-			ch <- &Envelope{Error: err}
+			// the response writer or actual conn is closed, just return, or some other error, we may
+			// not be sure someone is still listening on this channel.
 			return
 		}
 		if err := ctx.Err(); err != nil {
@@ -141,8 +134,6 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			ch <- &Envelope{Answer: r.Answer, Error: err}
 		}
 
-		println("RRRRR", len(r.Data), r.String())
-		println("\n", bin.Dump(r.Data[:200]))
 		// On first loop first be need to see a SOA RR.
 		if !options.TimersOnly {
 			if len(r.Answer) == 0 {
@@ -160,19 +151,23 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
-		ch <- &Envelope{Answer: r.Answer, Error: err}
+
+		ch <- &Envelope{Answer: r.Answer}
+		// If there is a SOA RR as the last we're done
+		if options.TimersOnly {
+			if len(r.Answer) > 0 {
+				if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
+					return
+				}
+			}
+		}
+
 		options.TimersOnly = true
 		if t != nil {
 			// r must have tsig, otherwise errored out above
 			options.RequestMAC = hasTSIG(r).MAC
 		}
 
-		// If there is a SOA RR as the last we're done
-		if len(r.Answer) > 0 {
-			if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
-				return
-			}
-		}
 	}
 }
 
@@ -194,10 +189,15 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //
 // The server is responsible for sending the correct sequence of RRs through the channel env.
 // If the clients's transport is nil [DefaultTransport] will be set and used.
-func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) error {
+func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (err error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
 	}
+	defer func() {
+		// drain channel reads
+		for range env {
+		}
+	}()
 
 	t := hasTSIG(r)
 	options := TSIGOption{}
@@ -209,16 +209,16 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) err
 		if t != nil {
 			m.Pseudo = []RR{t} // need to change tsig rr, or not?
 		}
-		if err := m.Pack(); err != nil {
+		if err = m.Pack(); err != nil {
 			return err
 		}
 		if c.TSIGSigner != nil && t != nil {
-			if err := TSIGSign(m, c.TSIGSigner, &options); err != nil {
+			if err = TSIGSign(m, c.TSIGSigner, &options); err != nil {
 				return err
 			}
 		}
 
-		if _, err := io.Copy(w, m); err != nil {
+		if _, err = io.Copy(w, m); err != nil {
 			return err
 		}
 		options.TimersOnly = true
