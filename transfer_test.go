@@ -121,7 +121,6 @@ func TestTransfer(t *testing.T) {
 	}
 }
 
-/*
 func TestTransferTSIG(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Unpack()
@@ -134,11 +133,10 @@ func TestTransferTSIG(t *testing.T) {
 		wg.Go(func() {
 			err := c.TransferOut(w, r, env)
 			if err != nil {
-				// ...
+				t.Fatal(err)
 			}
 			w.Close()
 		})
-		// 4 envelopes to test the timers only and mac carry forward
 		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
 		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[1]}}
 		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[2]}}
@@ -167,7 +165,6 @@ func TestTransferTSIG(t *testing.T) {
 		}
 	}
 }
-*/
 
 /*
 func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider TsigProvider) {
