@@ -93,11 +93,8 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		close(ch)
 	}()
 
+	t := hasTSIG(m)
 	options := TSIGOption{}
-	if x := hasTSIG(m); x != nil {
-		options.RequestMAC = x.MAC
-	}
-
 	r := &Msg{}
 	for {
 		r.Options = OptionUnpackHeader
@@ -147,17 +144,20 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.TSIGSigner != nil && hasTSIG(m) != nil {
+		if c.TSIGSigner != nil && t != nil {
 			if err := TSIGVerify(m, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
 		ch <- &Envelope{Answer: r.Answer, Error: err}
 		options.TimersOnly = true
+		if hasTSIG(m) != nil {
+			options.RequestMAC = hasTSIG(m).MAC
+		}
 	}
 }
 
-// Out performs an outgoing transfer with the client connecting in w.
+// TransferOut performs an outgoing transfer with the client connecting in w.
 //
 // Example setup from within a dns.HandleFunc:
 //
@@ -179,16 +179,21 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) err
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
 	}
+
+	t := hasTSIG(r)
 	options := TSIGOption{}
 	for e := range env {
 		m := new(Msg)
-		dnsutilSetReply(m, r)
 		m.Authoritative = true
+		dnsutilSetReply(m, r)
 		m.Answer = e.Answer
+		if t != nil {
+			m.Pseudo = []RR{t} // need to change tsig rr, or not?
+		}
 		if err := m.Pack(); err != nil {
 			return err
 		}
-		if c.TSIGSigner != nil && hasTSIG(m) != nil {
+		if c.TSIGSigner != nil && t != nil {
 			if err := TSIGSign(m, c.TSIGSigner, &options); err != nil {
 				return err
 			}
@@ -198,6 +203,7 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) err
 			return err
 		}
 		options.TimersOnly = true
+		// request mac, denk het wel
 	}
 	return nil
 }
