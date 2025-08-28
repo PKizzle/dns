@@ -171,21 +171,22 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 	}
 }
 
-// TransferOut performs an outgoing transfer with the client connecting in w.
+// TransferOut performs an outgoing transfer with the client connecting in w, r is the request
+// that initiates the transfer.
 //
 // Example setup from within a dns.HandleFunc:
 //
-//		w.Hijack() // hijack the connection as we should close when done
-//		env := make(chan *dns.Envelope)
-//		c := dns.NewClient()
-//		var wg sync.WaitGroup
-//
-//		wg.Go(func() {
-//	        c.TransferOut(w, env)
-//		    w.Close() // close connection
-//	    })
-//		env <- &dns.Envelope{Answer: []dns.RR{...}}
-//		close(env)
+//	r.Unpack()
+//	w.Hijack() // hijack the connection as we should close when done
+//	env := make(chan *dns.Envelope)
+//	c := dns.NewClient()
+//	var wg sync.WaitGroup
+//	wg.Go(func() {
+//	    c.TransferOut(w, env)
+//	    w.Close()
+//	})
+//	env <- &dns.Envelope{Answer: []dns.RR{...}}
+//	close(env)
 //
 // The server is responsible for sending the correct sequence of RRs through the channel env.
 // If the clients's transport is nil [DefaultTransport] will be set and used.
@@ -199,15 +200,18 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		}
 	}()
 
-	t := hasTSIG(r)
 	options := TSIGOption{}
+	t := hasTSIG(r)
+	if t != nil {
+		options.RequestMAC = t.MAC
+	}
 	for e := range env {
 		m := new(Msg)
 		m.Authoritative = true
 		dnsutilSetReply(m, r)
 		m.Answer = e.Answer
 		if t != nil {
-			m.Pseudo = []RR{t} // need to change tsig rr, or not?
+			m.Pseudo = []RR{t} // will overwrite the bits that matter
 		}
 		if err = m.Pack(); err != nil {
 			return err
@@ -221,8 +225,12 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		if _, err = io.Copy(w, m); err != nil {
 			return err
 		}
+
 		options.TimersOnly = true
-		// request mac, denk het wel
+		if t != nil {
+			// m must have tsig, otherwise errored out above
+			options.RequestMAC = hasTSIG(m).MAC
+		}
 	}
 	return nil
 }
