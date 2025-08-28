@@ -80,7 +80,7 @@ func String(s string, msg []byte, off int) (int, error) {
 func TxtString(s string, msg []byte, off int) (int, error) {
 	lenByteoff := off
 	if off >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
-		return off, errors.New("dns: buffer size too small")
+		return len(msg), errors.New("dns: buffer size too small")
 	}
 	off++
 	for i := 0; i < len(s); i++ {
@@ -106,7 +106,7 @@ func TxtString(s string, msg []byte, off int) (int, error) {
 	}
 	l := off - lenByteoff - 1
 	if l > 255 {
-		return off, errors.New("dns: string exceeded 255 bytes in txt")
+		return len(msg), errors.New("dns: string exceeded 255 bytes in txt")
 	}
 	msg[lenByteoff] = byte(l)
 	return off, nil

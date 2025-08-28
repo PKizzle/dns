@@ -188,7 +188,10 @@ func (rr *NXNAME) compare(b RR) (x int) {
 func (rr *CNAME) compare(b RR) (x int) {
 	x = CompareName(rr.Target, b.(*CNAME).Target)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -200,7 +203,10 @@ func (rr *HINFO) compare(b RR) (x int) {
 func (rr *MB) compare(b RR) (x int) {
 	x = CompareName(rr.Mb, b.(*MB).Mb)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -208,7 +214,10 @@ func (rr *MB) compare(b RR) (x int) {
 func (rr *MG) compare(b RR) (x int) {
 	x = CompareName(rr.Mg, b.(*MG).Mg)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -216,11 +225,17 @@ func (rr *MG) compare(b RR) (x int) {
 func (rr *MINFO) compare(b RR) (x int) {
 	x = CompareName(rr.Rmail, b.(*MINFO).Rmail)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	x = CompareName(rr.Email, b.(*MINFO).Email)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -228,7 +243,10 @@ func (rr *MINFO) compare(b RR) (x int) {
 func (rr *MR) compare(b RR) (x int) {
 	x = CompareName(rr.Mr, b.(*MR).Mr)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -236,7 +254,10 @@ func (rr *MR) compare(b RR) (x int) {
 func (rr *MF) compare(b RR) (x int) {
 	x = CompareName(rr.Mf, b.(*MF).Mf)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -244,23 +265,46 @@ func (rr *MF) compare(b RR) (x int) {
 func (rr *MD) compare(b RR) (x int) {
 	x = CompareName(rr.Md, b.(*MD).Md)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *MX) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*MX).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Mx, b.(*MX).Mx)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *AFSDB) compare(b RR) (x int) {
+	x = int(rr.Subtype) - int(b.(*AFSDB).Subtype)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Hostname, b.(*AFSDB).Hostname)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -274,9 +318,19 @@ func (rr *ISDN) compare(b RR) (x int) {
 }
 
 func (rr *RT) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*RT).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Host, b.(*RT).Host)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -284,7 +338,10 @@ func (rr *RT) compare(b RR) (x int) {
 func (rr *NS) compare(b RR) (x int) {
 	x = CompareName(rr.Ns, b.(*NS).Ns)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -292,7 +349,10 @@ func (rr *NS) compare(b RR) (x int) {
 func (rr *PTR) compare(b RR) (x int) {
 	x = CompareName(rr.Ptr, b.(*PTR).Ptr)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -300,11 +360,17 @@ func (rr *PTR) compare(b RR) (x int) {
 func (rr *RP) compare(b RR) (x int) {
 	x = CompareName(rr.Mbox, b.(*RP).Mbox)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	x = CompareName(rr.Txt, b.(*RP).Txt)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -312,11 +378,52 @@ func (rr *RP) compare(b RR) (x int) {
 func (rr *SOA) compare(b RR) (x int) {
 	x = CompareName(rr.Ns, b.(*SOA).Ns)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	x = CompareName(rr.Mbox, b.(*SOA).Mbox)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Serial) - int(b.(*SOA).Serial)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Refresh) - int(b.(*SOA).Refresh)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Retry) - int(b.(*SOA).Retry)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Expire) - int(b.(*SOA).Expire)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Minttl) - int(b.(*SOA).Minttl)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -334,29 +441,94 @@ func (rr *AVC) compare(b RR) (x int) {
 }
 
 func (rr *SRV) compare(b RR) (x int) {
+	x = int(rr.Priority) - int(b.(*SRV).Priority)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Weight) - int(b.(*SRV).Weight)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Port) - int(b.(*SRV).Port)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Target, b.(*SRV).Target)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *NAPTR) compare(b RR) (x int) {
+	x = int(rr.Order) - int(b.(*NAPTR).Order)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Preference) - int(b.(*NAPTR).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Replacement, b.(*NAPTR).Replacement)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *CERT) compare(b RR) (x int) {
+	x = int(rr.Type) - int(b.(*CERT).Type)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.KeyTag) - int(b.(*CERT).KeyTag)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*CERT).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *DNAME) compare(b RR) (x int) {
 	x = CompareName(rr.Target, b.(*DNAME).Target)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -370,13 +542,26 @@ func (rr *AAAA) compare(b RR) (x int) {
 }
 
 func (rr *PX) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*PX).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Map822, b.(*PX).Map822)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	x = CompareName(rr.Mapx400, b.(*PX).Mapx400)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -386,6 +571,55 @@ func (rr *GPOS) compare(b RR) (x int) {
 }
 
 func (rr *LOC) compare(b RR) (x int) {
+	x = int(rr.Version) - int(b.(*LOC).Version)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Size) - int(b.(*LOC).Size)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.HorizPre) - int(b.(*LOC).HorizPre)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.VertPre) - int(b.(*LOC).VertPre)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Latitude) - int(b.(*LOC).Latitude)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Longitude) - int(b.(*LOC).Longitude)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Altitude) - int(b.(*LOC).Altitude)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -394,9 +628,61 @@ func (rr *SIG) compare(b RR) (x int) {
 }
 
 func (rr *RRSIG) compare(b RR) (x int) {
+	x = int(rr.TypeCovered) - int(b.(*RRSIG).TypeCovered)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*RRSIG).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Labels) - int(b.(*RRSIG).Labels)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.OrigTTL) - int(b.(*RRSIG).OrigTTL)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Expiration) - int(b.(*RRSIG).Expiration)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Inception) - int(b.(*RRSIG).Inception)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.KeyTag) - int(b.(*RRSIG).KeyTag)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.SignerName, b.(*RRSIG).SignerName)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -408,7 +694,10 @@ func (rr *NXT) compare(b RR) (x int) {
 func (rr *NSEC) compare(b RR) (x int) {
 	x = CompareName(rr.NextDomain, b.(*NSEC).NextDomain)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -422,34 +711,106 @@ func (rr *CDS) compare(b RR) (x int) {
 }
 
 func (rr *DS) compare(b RR) (x int) {
+	x = int(rr.KeyTag) - int(b.(*DS).KeyTag)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*DS).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.DigestType) - int(b.(*DS).DigestType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *KX) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*KX).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Exchanger, b.(*KX).Exchanger)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *TA) compare(b RR) (x int) {
+	x = int(rr.KeyTag) - int(b.(*TA).KeyTag)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*TA).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.DigestType) - int(b.(*TA).DigestType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *TALINK) compare(b RR) (x int) {
 	x = CompareName(rr.PreviousName, b.(*TALINK).PreviousName)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	x = CompareName(rr.NextName, b.(*TALINK).NextName)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *SSHFP) compare(b RR) (x int) {
+	x = int(rr.Algorithm) - int(b.(*SSHFP).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Type) - int(b.(*SSHFP).Type)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -462,41 +823,229 @@ func (rr *CDNSKEY) compare(b RR) (x int) {
 }
 
 func (rr *DNSKEY) compare(b RR) (x int) {
+	x = int(rr.Flags) - int(b.(*DNSKEY).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Protocol) - int(b.(*DNSKEY).Protocol)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*DNSKEY).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *IPSECKEY) compare(b RR) (x int) {
+	x = int(rr.Precedence) - int(b.(*IPSECKEY).Precedence)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.GatewayType) - int(b.(*IPSECKEY).GatewayType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*IPSECKEY).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *AMTRELAY) compare(b RR) (x int) {
+	x = int(rr.Precedence) - int(b.(*AMTRELAY).Precedence)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.GatewayType) - int(b.(*AMTRELAY).GatewayType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *RKEY) compare(b RR) (x int) {
+	x = int(rr.Flags) - int(b.(*RKEY).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Protocol) - int(b.(*RKEY).Protocol)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Algorithm) - int(b.(*RKEY).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *NSAPPTR) compare(b RR) (x int) {
 	x = CompareName(rr.Ptr, b.(*NSAPPTR).Ptr)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
 
 func (rr *NSEC3) compare(b RR) (x int) {
+	x = int(rr.Hash) - int(b.(*NSEC3).Hash)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Flags) - int(b.(*NSEC3).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Iterations) - int(b.(*NSEC3).Iterations)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.SaltLength) - int(b.(*NSEC3).SaltLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.HashLength) - int(b.(*NSEC3).HashLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *NSEC3PARAM) compare(b RR) (x int) {
+	x = int(rr.Hash) - int(b.(*NSEC3PARAM).Hash)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Flags) - int(b.(*NSEC3PARAM).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Iterations) - int(b.(*NSEC3PARAM).Iterations)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.SaltLength) - int(b.(*NSEC3PARAM).SaltLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *TKEY) compare(b RR) (x int) {
 	x = CompareName(rr.Algorithm, b.(*TKEY).Algorithm)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Inception) - int(b.(*TKEY).Inception)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Expiration) - int(b.(*TKEY).Expiration)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Mode) - int(b.(*TKEY).Mode)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Error) - int(b.(*TKEY).Error)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.KeySize) - int(b.(*TKEY).KeySize)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.OtherLen) - int(b.(*TKEY).OtherLen)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -506,6 +1055,20 @@ func (rr *RFC3597) compare(b RR) (x int) {
 }
 
 func (rr *URI) compare(b RR) (x int) {
+	x = int(rr.Priority) - int(b.(*URI).Priority)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Weight) - int(b.(*URI).Weight)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -514,14 +1077,77 @@ func (rr *DHCID) compare(b RR) (x int) {
 }
 
 func (rr *TLSA) compare(b RR) (x int) {
+	x = int(rr.Usage) - int(b.(*TLSA).Usage)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Selector) - int(b.(*TLSA).Selector)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.MatchingType) - int(b.(*TLSA).MatchingType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *SMIMEA) compare(b RR) (x int) {
+	x = int(rr.Usage) - int(b.(*SMIMEA).Usage)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Selector) - int(b.(*SMIMEA).Selector)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.MatchingType) - int(b.(*SMIMEA).MatchingType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *HIP) compare(b RR) (x int) {
+	x = int(rr.HitLength) - int(b.(*HIP).HitLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.PublicKeyAlgorithm) - int(b.(*HIP).PublicKeyAlgorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.PublicKeyLength) - int(b.(*HIP).PublicKeyLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -530,21 +1156,66 @@ func (rr *NINFO) compare(b RR) (x int) {
 }
 
 func (rr *NID) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*NID).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.NodeID) - int(b.(*NID).NodeID)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *L32) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*L32).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *L64) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*L64).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Locator64) - int(b.(*L64).Locator64)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *LP) compare(b RR) (x int) {
+	x = int(rr.Preference) - int(b.(*LP).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Fqdn, b.(*LP).Fqdn)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -554,18 +1225,46 @@ func (rr *EUI48) compare(b RR) (x int) {
 }
 
 func (rr *EUI64) compare(b RR) (x int) {
+	x = int(rr.Address) - int(b.(*EUI64).Address)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *CAA) compare(b RR) (x int) {
+	x = int(rr.Flag) - int(b.(*CAA).Flag)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *UID) compare(b RR) (x int) {
+	x = int(rr.Uid) - int(b.(*UID).Uid)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *GID) compare(b RR) (x int) {
+	x = int(rr.Gid) - int(b.(*GID).Gid)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -586,10 +1285,45 @@ func (rr *OPENPGPKEY) compare(b RR) (x int) {
 }
 
 func (rr *CSYNC) compare(b RR) (x int) {
+	x = int(rr.Serial) - int(b.(*CSYNC).Serial)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Flags) - int(b.(*CSYNC).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *ZONEMD) compare(b RR) (x int) {
+	x = int(rr.Serial) - int(b.(*ZONEMD).Serial)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Scheme) - int(b.(*ZONEMD).Scheme)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Hash) - int(b.(*ZONEMD).Hash)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -606,9 +1340,19 @@ func (rr *APL) compare(b RR) (x int) {
 }
 
 func (rr *SVCB) compare(b RR) (x int) {
+	x = int(rr.Priority) - int(b.(*SVCB).Priority)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Target, b.(*SVCB).Target)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
@@ -632,7 +1376,45 @@ func (rr *IXFR) compare(b RR) (x int) {
 func (rr *TSIG) compare(b RR) (x int) {
 	x = CompareName(rr.Algorithm, b.(*TSIG).Algorithm)
 	if x != 0 {
-		return x
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Fudge) - int(b.(*TSIG).Fudge)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.MACSize) - int(b.(*TSIG).MACSize)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.OrigID) - int(b.(*TSIG).OrigID)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Error) - int(b.(*TSIG).Error)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.OtherLen) - int(b.(*TSIG).OtherLen)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
 	}
 	return 0
 }
