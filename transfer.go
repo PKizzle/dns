@@ -175,17 +175,25 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //
 // The server is responsible for sending the correct sequence of RRs through the channel env.
 func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) error {
+	options := TSIGOption{}
 	for e := range env {
 		m := new(Msg)
 		dnsutilSetReply(m, r)
-		//		options
+		m.Authoritative = true
 		m.Answer = e.Answer
-		// tsig
-		m.Pack()
+		if err := m.Pack(); err != nil {
+			return err
+		}
+		if c.TSIGSigner != nil && hasTSIG(m) != nil {
+			if err := TSIGSign(m, c.TSIGSigner, &options); err != nil {
+				return err
+			}
+		}
 
 		if _, err := io.Copy(w, m); err != nil {
 			return err
 		}
+		options.TimersOnly = true
 	}
 	return nil
 }

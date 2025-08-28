@@ -102,7 +102,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		return r, time.Since(t), err
 	}
 	if r.ID != m.ID {
-		return r, time.Since(t), ErrID
+		return r, time.Since(t), ErrID.Fmt(": %d != %d", r.ID, m.ID)
 	}
 
 	return r, time.Since(t), nil
