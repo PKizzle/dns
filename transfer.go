@@ -5,6 +5,8 @@ import (
 	"io"
 	"net"
 	"time"
+
+	"codeberg.org/miekg/dns/internal/bin"
 )
 
 // Envelope is used when doing a zone transfer with a remote server.
@@ -93,10 +95,17 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		close(ch)
 	}()
 
-	t := hasTSIG(m)
 	options := TSIGOption{}
+	t := hasTSIG(m)
+	if t != nil {
+		options.RequestMAC = t.MAC
+	}
+
 	r := &Msg{}
+	i := 0
 	for {
+		println("EVELOP", i)
+		i++
 		r.Options = OptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
@@ -132,6 +141,8 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			ch <- &Envelope{Answer: r.Answer, Error: err}
 		}
 
+		println("RRRRR", len(r.Data), r.String())
+		println("\n", bin.Dump(r.Data[:200]))
 		// On first loop first be need to see a SOA RR.
 		if !options.TimersOnly {
 			if len(r.Answer) == 0 {
@@ -144,15 +155,16 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.TSIGSigner != nil && t != nil {
-			if err := TSIGVerify(m, c.TSIGSigner, &options); err != nil {
+		if c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
 		ch <- &Envelope{Answer: r.Answer, Error: err}
 		options.TimersOnly = true
-		if hasTSIG(m) != nil {
-			options.RequestMAC = hasTSIG(m).MAC
+		if t != nil {
+			// r must have tsig, otherwise errored out above
+			options.RequestMAC = hasTSIG(r).MAC
 		}
 
 		// If there is a SOA RR as the last we're done

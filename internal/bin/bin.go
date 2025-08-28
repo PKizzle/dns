@@ -89,3 +89,23 @@ func Dump(p []byte, off ...int) string {
 	}
 	return dump.String()
 }
+
+// Bytes returns the bytes as a Go slice literal that can be used in source code.
+func Bytes(p []byte, off ...int) string {
+	if len(p) == 0 {
+		return ""
+	}
+	of := 0
+	if len(off) > 0 {
+		of = off[0]
+	}
+	dump := strings.Builder{}
+	dump.WriteString("[]byte{")
+	dump.WriteString(fmt.Sprintf("%d", p[of]))
+	for _, c := range p[of+1:] {
+		dump.WriteString(fmt.Sprintf(", %d", c))
+	}
+
+	dump.WriteByte('}')
+	return dump.String()
+}

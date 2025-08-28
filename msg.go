@@ -636,6 +636,8 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	s := cryptobyte.String(msg)
 	var err error
+
+	println("QQQ", dh.Qdcount)
 	m.Question, err = m.unpackQuestions(dh.Qdcount, &s, msgBuf)
 	if err != nil {
 		return err
@@ -659,9 +661,10 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 		return err
 	}
 
+	m.Pseudo, m.Stateful = nil, nil // we append here, so don't want carry stuff from before with us
+
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
 	// section. Any TSIG and SIG0 records will also be put in the pseudo section, but after the options.
-
 	j := 0
 	for i := 0; i < len(m.Extra)-j; i++ {
 		rr := m.Extra[i]
@@ -686,8 +689,8 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	m.Extra = m.Extra[:len(m.Extra)-j]
 	m.ps = 0
 
-	// Check for m.Extra TSIG and SIG(0) and move them to pseudo. This MUST be the the last RR in the extra
-	// section.
+	// Check for m.Extra TSIG and SIG(0) and move them to pseudo. This MUST be the the last RR in the extra section.
+	// Now we should also error out on having these both. TODO(miek): flag protocol error?
 	if last := len(m.Extra); last > 0 {
 		if _, ok := m.Extra[last-1].(*TSIG); ok {
 			m.ps++
@@ -804,6 +807,7 @@ func (m *Msg) String() string {
 			sb.WriteByte('\n')
 		}
 	}
+	return sb.String()
 	if len(m.Answer) > 0 {
 		sb.WriteString("\n;; ")
 		sb.WriteString(sections[2])

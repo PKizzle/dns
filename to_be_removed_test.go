@@ -53,10 +53,13 @@ func TestTransferInExternal(t *testing.T) {
 
 func TestTransferInExternalRoot(t *testing.T) {
 	c := NewClient()
+	secret, _ := fromBase64([]byte("WhateverSecretYouUse"))
+	c.TSIGSigner = HmacTSIG{Secret: secret}
 
 	m := NewMsg(".", TypeAXFR)
+	m.Pseudo = []RR{NewTSIG("sec_key.", HmacSHA1, 0)}
 
-	env, err := c.TransferIn(context.TODO(), m, "tcp", "192.33.4.12:53")
+	env, err := c.TransferIn(context.TODO(), m, "tcp", "10.0.76.235:54")
 	if err != nil {
 		t.Fatal("failed to zone transfer in", err)
 	}
@@ -65,9 +68,6 @@ func TestTransferInExternalRoot(t *testing.T) {
 	for e := range env {
 		if e.Error != nil {
 			t.Fatal(e.Error)
-		}
-		for i := range e.Answer {
-			fmt.Printf("%s\n", e.Answer[i])
 		}
 		j++
 	}
