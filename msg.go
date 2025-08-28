@@ -999,7 +999,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	l := make([]byte, 2, 2)
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
-	n, err := r.Conn().Write(l)
+	n, err := r.Write(l)
 	return int64(n), err
 }
 
