@@ -80,7 +80,15 @@ func main() {
 				continue
 			}
 
-			o := func(s string) { fmt.Fprintf(b, s+";if x != 0 { return x }\n", fieldname, rrname, fieldname) }
+			o := func(s string) {
+				fmt.Fprintf(b, s+`;if x != 0 {
+if x < 0 {
+	return -1
+}
+return 1
+}
+`, fieldname, rrname, fieldname)
+			}
 			// fieldtype is either slice or the actual singular type name.
 			fieldtype := ""
 			if id, ok := field.Type.(*ast.Ident); ok {
@@ -123,6 +131,8 @@ func main() {
 			case tag == `dns:"domain-name"`:
 				o("x = CompareName(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"a"`:
+				//		sort.Slice(realIPs, func(i, j int) bool {
+				//     return bytes.Compare(realIPs[i], realIPs[j]) < 0
 
 			case tag == `dns:"aaaa"`:
 
@@ -153,13 +163,13 @@ func main() {
 			case tag == "":
 				switch fieldtype {
 				case "uint8":
-
+					fallthrough
 				case "uint16":
-
+					fallthrough
 				case "uint32":
-
+					fallthrough
 				case "uint64":
-
+					o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 				case "string":
 				}
 			}
