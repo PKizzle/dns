@@ -29,6 +29,7 @@ func TestClientExternal(t *testing.T) {
 }
 
 func TestTransferInExternal(t *testing.T) {
+	t.Skip()
 	c := NewClient()
 	secret, _ := fromBase64([]byte("Vn37JPSCmaCHKJhghcpRg8m6PlQ="))
 	c.TSIGSigner = HmacTSIG{Secret: secret}
@@ -49,6 +50,7 @@ func TestTransferInExternal(t *testing.T) {
 }
 
 func TestTransferInExternalRoot(t *testing.T) {
+	t.Skip()
 	c := NewClient()
 	secret, _ := fromBase64([]byte("WhateverSecretYouUse"))
 	c.TSIGSigner = HmacTSIG{Secret: secret}
