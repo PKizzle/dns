@@ -21,7 +21,9 @@ const testTransferZone = "miek.nl."
 
 func TestTransferInvalid(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
 		w.Hijack()
+
 		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
 		c := new(dns.Client)
@@ -55,7 +57,9 @@ func TestTransferInvalid(t *testing.T) {
 
 func TestTransfer(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
 		w.Hijack()
+
 		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
 		c := dns.NewClient()
@@ -64,7 +68,10 @@ func TestTransfer(t *testing.T) {
 			c.TransferOut(w, r, env)
 			w.Close()
 		})
-		env <- &dns.Envelope{Answer: testTransferData}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[1]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[2]}}
+		env <- &dns.Envelope{Answer: []dns.RR{testTransferData[3]}}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -102,9 +109,9 @@ func TestTransfer(t *testing.T) {
 					break
 				}
 				i += len(e.Answer)
-				if i != len(testTransferData) {
-					t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
-				}
+			}
+			if i != len(testTransferData) {
+				t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
 			}
 		})
 	}
@@ -118,7 +125,7 @@ func TestTransferTSIG(t *testing.T) {
 		var wg sync.WaitGroup
 		w.Hijack()
 		env := make(chan *dns.Envelope)
-		c := new(dns.Client)
+		c := dns.NewClient()
 		wg.Go(func() {
 			c.TransferOut(w, env)
 			w.Close()

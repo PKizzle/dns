@@ -24,7 +24,7 @@ func hashName(label string, ha uint8, iter uint16, salt string) string {
 	wireSalt = wireSalt[:n]
 
 	name := make([]byte, 255)
-	off, err := PackDomainName(strings.ToLower(label), name, 0, nil, false)
+	off, err := PackName(strings.ToLower(label), name, 0, nil, false)
 	if err != nil {
 		return ""
 	}
@@ -57,7 +57,7 @@ func NSEC3Cover(rr *dns.NSEC3, name string) bool {
 	}
 	ownerHash := owner[:labelIndices[1]-1]
 	ownerZone := owner[labelIndices[1]:]
-	if !IsSubDomain(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
+	if !IsBelow(ownerZone, strings.ToUpper(name)) { // name is outside owner zone
 		return false
 	}
 

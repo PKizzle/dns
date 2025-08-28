@@ -148,7 +148,7 @@ OLD                                                                  | NEW
                                                                      | ;; QUESTION: 1, PSEUDO: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0, DATA SIZE: 25
 ;; OPT PSEUDOSECTION:                                                |
 ; EDNS: version 0; flags:; udp: 512                                  | ;; PSEUDO SECTION:
-; NSID: 6770646e732d616d73  (g)(p)(d)(n)(s)(-)(a)(m)(s)              | .               CLASS0  NSID    6770 ; ("gp")
+; NSID: 6770646e732d616d73  (g)(p)(d)(n)(s)(-)(a)(m)(s)              | .               CLASS0  NSID    6770 ; ("gpdns-ams")
                                                                      |
 ;; QUESTION SECTION:                                                 |
 ;miek.nl.       IN       MX                                          | ;; QUESTION SECTION:

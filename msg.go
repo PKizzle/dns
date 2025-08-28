@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	maxCompressionOffset    = 2 << 13 // We have 14 bits for the compression pointer
-	maxDomainNameWireOctets = 255     // See RFC 1035 section 2.3.4
+	maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
+	maxNameWireOctets    = 255     // See RFC 1035 section 2.3.4
 
 	// This is the maximum length of a domain name in presentation format. The
 	// maximum wire length of a domain name is 255 octets (see above), with the
@@ -27,7 +27,7 @@ const (
 	// expanding to at most 4 bytes (\DDD). If all other labels are of the maximum
 	// length, then the final label can only be 61 octets long to not exceed the
 	// maximum allowed wire length.
-	maxDomainNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
+	maxNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
 )
 
 // ID by default returns a 16-bit random number to be used as a message id. The
@@ -266,8 +266,8 @@ func UnpackName(msg []byte, off int) (string, int, error) {
 }
 
 func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
-	name := make([]byte, 0, maxDomainNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
-	budget := maxDomainNameWireOctets
+	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
+	budget := maxNameWireOctets
 	var ptrs bool
 
 	// If we never see a pointer, we need to ensure that we advance s to our final position.
@@ -295,7 +295,7 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return string(name), nil
 			}
 			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
-				return "", ErrLongDomain
+				return "", ErrLongName.Fmt(": %s", name)
 			}
 			for _, b := range label {
 				if isLabelSpecial(b) {

@@ -83,9 +83,9 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 }
 
 // TSIGVerify verifies the TSIG on a message. On success a nil error is returned. The TSIG record is removed
-// from m.Data, but left in the unpacked message m. TODO(miek):
+// from m.Data, but left in the unpacked message m. TODO(miek): that a good plan?
 // When this function returns options.RequestMAC will have the MAC seen on the TSIG.
-func TSIGVerify(m *Msg, k TSIGVerifier, options *TSIGOption) error {
+func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return err
@@ -167,14 +167,9 @@ type (
 	TSIGSigner interface {
 		// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return signature or an error.
 		Sign(t *TSIG, p []byte) ([]byte, error)
-		// Key returns the key to sign with.
-		Key() []byte
-	}
-
-	TSIGVerifier interface {
 		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 		Verify(t *TSIG, p []byte, options TSIGOption) error
-		// Key returns the key to verify with.
+		// Key returns the key to sign with.
 		Key() []byte
 	}
 )

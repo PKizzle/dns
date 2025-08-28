@@ -20,18 +20,23 @@ type HmacTSIG struct {
 func (h HmacTSIG) Key() []byte { return h.Secret }
 
 func (h HmacTSIG) Sign(t *TSIG, p []byte) ([]byte, error) {
+	secret := h.Key()
+	if secret == nil {
+		return nil, ErrKey.Fmt(": HMAC sign")
+	}
+
 	var hs hash.Hash
 	switch t.Algorithm {
 	case HmacSHA1:
-		hs = hmac.New(sha1.New, h.Key())
+		hs = hmac.New(sha1.New, secret)
 	case HmacSHA224:
-		hs = hmac.New(sha256.New224, h.Key())
+		hs = hmac.New(sha256.New224, secret)
 	case HmacSHA256:
-		hs = hmac.New(sha256.New, h.Key())
+		hs = hmac.New(sha256.New, secret)
 	case HmacSHA384:
-		hs = hmac.New(sha512.New384, h.Key())
+		hs = hmac.New(sha512.New384, secret)
 	case HmacSHA512:
-		hs = hmac.New(sha512.New, h.Key())
+		hs = hmac.New(sha512.New, secret)
 	default:
 		return nil, ErrKeyAlg.Fmt(": HMAC sign")
 	}

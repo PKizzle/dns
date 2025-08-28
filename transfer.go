@@ -15,19 +15,21 @@ type Envelope struct {
 
 // TransferIn performs a zone transfer with address over network, the message m is used to ask for the transfer and
 // should have an [AXFR] or [IXFR] RR in the question section. If the pseudo section contains a (stub) TSIG or
-// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs.
+// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs. For
+// this the client also need a [TSIGSigner] or [SIG0Signer].
 // On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
 // are as they were found, i.e. including the starting and ending SOA RRs.
 //
-// If m's buffer is empty Transfer will call m.Pack(). If the Answer's transport is nil [DefaultTransport] will
+// If m's buffer is empty TransferIn will call m.Pack(). If the Answer's transport is nil [DefaultTransport] will
 // be set and used.
 //
 // Setting up a transfer is done as follows:
 //
+//	c := dns.NewClient()
 //	m := dns.NewMsg("example.org.", dns.TypeAXFR)
 //	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 //	if err != nil {
-//		t.Fatal("failed to setup zone transfer in", err)
+//	   t.Fatal("failed to setup zone transfer in", err)
 //	}
 //
 //	for e := range env {
@@ -95,9 +97,10 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 	if x := hasTSIG(m); x != nil {
 		options.RequestMAC = x.MAC
 	}
+
 	r := &Msg{}
-	r.Options = OptionUnpackHeader
 	for {
+		r.Options = OptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
@@ -144,8 +147,8 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.TSIGVerifier != nil && hasTSIG(m) != nil {
-			if err := TSIGVerify(m, c.TSIGVerifier, &options); err != nil {
+		if c.TSIGSigner != nil && hasTSIG(m) != nil {
+			if err := TSIGVerify(m, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
@@ -154,15 +157,12 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 	}
 }
 
-// Out performs an outgoing transfer with the client connecting in w. The server is responsible for sending
-// the correct messages through the channel. And also needs to take care of setting up and verifying TSIG and or
-// SIG(0) on the messages sent through the channel. If the Data buffers of the message sent on the channel are
-// zero, TransferOut call Pack().
+// Out performs an outgoing transfer with the client connecting in w.
 //
 // Example setup from within a dns.HandleFunc:
 //
 //		w.Hijack() // hijack the connection as we should close when done
-//		env := make(chan<- *dns.Envelope)
+//		env := make(chan *dns.Envelope)
 //		c := dns.NewClient()
 //		var wg sync.WaitGroup
 //

@@ -18,7 +18,6 @@ func newMsgWithTSIG() *Msg {
 var tsigSecret = []byte("blaat")
 
 func TestTSIG(t *testing.T) {
-	// This plainly test if we can verify what we sign, without any timers or request mac.
 	testcases := []struct {
 		name        string
 		transformFn func(m *Msg)
