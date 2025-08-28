@@ -50,3 +50,26 @@ func TestTransferInExternal(t *testing.T) {
 		}
 	}
 }
+
+func TestTransferInExternalRoot(t *testing.T) {
+	c := NewClient()
+
+	m := NewMsg(".", TypeAXFR)
+
+	env, err := c.TransferIn(context.TODO(), m, "tcp", "192.33.4.12:53")
+	if err != nil {
+		t.Fatal("failed to zone transfer in", err)
+	}
+
+	j := 0
+	for e := range env {
+		if e.Error != nil {
+			t.Fatal(e.Error)
+		}
+		for i := range e.Answer {
+			fmt.Printf("%s\n", e.Answer[i])
+		}
+		j++
+	}
+	fmt.Printf("%d envelopes\n", j)
+}
