@@ -13,6 +13,6 @@ func Trim(q string, z string) string {
 	return q[:i-1]
 }
 
-// IsBelow checks if child sits below parent in the DNS tree. If child and parent
-// are at the same level, true is returned as well.
+// IsBelow checks if child sits below parent in the DNS tree, i.e. check if the child is a sub-domain of
+// parent. If child and parent are at the same level, true is returned as well.
 func IsBelow(parent, child string) bool { return CommonSuffix(parent, child) == Count(parent) }

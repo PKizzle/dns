@@ -12,7 +12,7 @@ import (
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
-// Server returns a new running server. The returned cancel function shutsdown the server. Any options should
+// Server returns a new running server. The returned cancel function shuts down the server. Any options should
 // be set by opts.
 func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (cancel func(), addr string, err error) {
 	s := dns.NewServer()

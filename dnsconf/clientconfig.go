@@ -1,3 +1,5 @@
+// Package dnsconf is used to get the DNS system configuration, typically stored in /etc/resolv.conf on unix
+// systems.
 package dnsconf
 
 import (

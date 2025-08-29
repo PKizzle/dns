@@ -1,4 +1,4 @@
-// Package dnstest allows for easy testing of DNS client against a test server.
+// Package dnstest allows for easy testing of DNS clients against a test server.
 package dnstest
 
 import (
@@ -15,7 +15,7 @@ type Recorder struct {
 	Discard bool       // When true the message is recorded, but not written to the underlaying connection.
 	Msgs    []*dns.Msg // All messages written to it.
 	Msg     *dns.Msg   // Msg contains the last message written.
-	Start   time.Time  // Time when the record was created.
+	Start   time.Time  // Time when the recorder was created.
 }
 
 var _ dns.ResponseWriter = &Recorder{}

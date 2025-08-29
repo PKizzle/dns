@@ -1,3 +1,5 @@
+// Package svcb deals with all the intricacies of the SVCB/HTTPS package. All the sub-types ([Pairs]) used in
+// the RR are defined here.
 package svcb
 
 import (
