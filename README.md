@@ -6,9 +6,9 @@
 # Status
 
 - All basics work.
-- Simpler.
 - Fast(er); recvmmsg and pipeling suppport.
-- More convenience functions included in `dns` or otherwise in `dnsutils`.
+- More convenience functions included in _dns_ or otherwise in _dnsutils_.
+- Test helper function included _dnstest_.
 - Example programs included _and_ benchmarked in `cmd/`.
 
 See [open issues](https://codeberg.org/miekg/dns/issues) on the remaining work.
