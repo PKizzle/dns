@@ -101,6 +101,8 @@ func TestMsgExtendedRcode(t *testing.T) {
 	r := new(dns.Msg)
 	r.Data = m.Data
 	r.Unpack()
+	println(r.Options)
+	println(r.String())
 	if r.Rcode != dns.RcodeBadTime {
 		t.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
 	}

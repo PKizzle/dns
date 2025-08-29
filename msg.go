@@ -652,7 +652,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	if err != nil {
 		return err
 	}
-	if m.Options <= MsgOptionUnpackAnswer {
+	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
