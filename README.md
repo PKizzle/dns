@@ -158,6 +158,8 @@ _all of them_
 - 9499 - DNS Terminology
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
+- draft-ietf-compact-denial - CO bit
+- draft-ietf-deleg - DELEG RR
 
 ## Loosely Based Upon
 

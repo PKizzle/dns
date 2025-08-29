@@ -197,6 +197,7 @@ const (
 	// EDNS0 OPT "Header.Bits"
 	_DO = 1 << 15 // DNSSEC OK
 	_CO = 1 << 14 // Compact Answers OK
+	_DE = 1 << 13 // DELEG OK
 )
 
 // Various constants used in the LOC RR. See RFC 1876.
@@ -1476,16 +1477,6 @@ type OPT struct {
 
 func (rr *OPT) String() string { return "" }
 
-/* XXX(miek): leave here if we know for sure the generated one is OK.
-func (rr *OPT) Data() []Field {
-	fields := make([]Field, len(rr.Options))
-	for i := range rr.Options {
-		fields[i] = rr.Options[i]
-	}
-	return fields
-}
-*/
-
 func (rr *OPT) Len() int {
 	l := rr.Hdr.Len()
 	for i := range rr.Options {
@@ -1606,9 +1597,7 @@ type HTTPS struct {
 	SVCB
 }
 
-func (rr *HTTPS) String() string {
-	return rr.SVCB.String()
-}
+func (rr *HTTPS) String() string { return rr.SVCB.String() }
 
 // Meta RRs
 
