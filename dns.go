@@ -162,7 +162,8 @@ type MsgHeader struct {
 	UDPSize        uint16 // UDPSize is the OPT's RR advertised UDP size.
 	Version        uint8  // Version is the EDNS version, always zero.
 	Security       bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
-	CompactAnswers bool   // Compact Answers OK
+	CompactAnswers bool   // Compact Answers OK, https://datatracker.ietf.org/doc/draft-ietf-dnsop-compact-denial-of-existence/
+	Delegation     bool   // DELEG RR, https://datatracker.ietf.org/doc/draft-ietf-deleg/
 }
 
 // Msg is a DNS message. Msg implements [iter.Seq] and [iter.Seq2], so you can range over it, when doing so
@@ -264,6 +265,9 @@ func (h *MsgHeader) String() string {
 	}
 	if h.CompactAnswers {
 		sb.WriteString(" co")
+	}
+	if h.Delegation {
+		sb.WriteString(" de")
 	}
 	sb.WriteByte('\n')
 	return sb.String()

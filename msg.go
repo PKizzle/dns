@@ -534,6 +534,10 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 			opt.Hdr.Name = "."
 			opt.SetCompactAnswers(true)
 		}
+		if m.Delegation {
+			opt.Hdr.Name = "."
+			opt.SetDelegation(true)
+		}
 		for _, option := range m.Pseudo {
 			if edns0, ok := option.(EDNS0); ok {
 				opt.Hdr.Name = "."
@@ -677,6 +681,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 			// move to end, so it can be removed later and unpack the opt for the settings.
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
+			m.Delegation = opt.Delegation()
 			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
@@ -742,8 +747,8 @@ func (m *Msg) String() string {
 	sb := strings.Builder{}
 
 	sb.WriteString(m.MsgHeader.String())
-	// if core EDNS flags are set, we print this (flags are already handles in MsgHeader
-	if m.UDPSize > 0 || m.Security || m.CompactAnswers {
+	// if core EDNS flags are set, we print this (flags are already handled in MsgHeader
+	if m.UDPSize > 0 || m.Security || m.CompactAnswers || m.Delegation {
 		sb.WriteString(";; EDNS, version: ")
 		sb.WriteString(strconv.Itoa(int(m.Version)))
 		sb.WriteString(", udp: ")
@@ -863,7 +868,7 @@ func (m *Msg) isCompressible() bool {
 // isPseudo returns (1) true of we should have a pseudo section in this message, or not (0). It returns an
 // int becuse we need that number of the Extra section sizing.
 func (m *Msg) isPseudo() int {
-	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Rcode > 0xF {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
 		return 1
 	}
 	return 0

@@ -40,6 +40,18 @@ func (rr *OPT) SetCompactAnswers(co bool) {
 	}
 }
 
+// Delegation returns the value of the delegation (DE OK) bit. See [Msg.Delegation].
+func (rr *OPT) Delegation() bool { return rr.Hdr.TTL&_DE == _DE }
+
+// SetDelegation sets the delegation (DE OK) bit. See [Msg.Delegation].
+func (rr *OPT) SetDelegation(de bool) {
+	if de {
+		rr.Hdr.TTL |= _DE
+	} else {
+		rr.Hdr.TTL &^= _DE
+	}
+}
+
 // Rcode returns the EDNS extended Rcode field (the upper 8 bits of the TTL). See [Msg.Rcode].
 func (rr *OPT) Rcode() uint16 {
 	return uint16(rr.Hdr.TTL&0xFF000000>>24) << 4
@@ -53,10 +65,10 @@ func (rr *OPT) SetRcode(v uint16) {
 
 // Z returns the Z part of the OPT RR as a uint16 with only the 15 least significant bits used.
 func (rr *OPT) Z() uint16 {
-	return uint16(rr.Hdr.TTL & 0x3FFF)
+	return uint16(rr.Hdr.TTL & 0x1FFF)
 }
 
 // SetZ sets the Z part of the OPT RR, note only the 15 least significant bits of z are used.
 func (rr *OPT) SetZ(z uint16) {
-	rr.Hdr.TTL = rr.Hdr.TTL&^0x3FFF | uint32(z&0x3FFF)
+	rr.Hdr.TTL = rr.Hdr.TTL&^0x1FFF | uint32(z&0x1FFF)
 }
