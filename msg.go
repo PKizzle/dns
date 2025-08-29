@@ -644,7 +644,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	if err != nil {
 		return err
 	}
-	if m.Options <= MsgOptionUnpackQuestion {
+	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
 		return nil
 	}
 
@@ -725,7 +725,7 @@ func (m *Msg) Unpack() error {
 		return ErrUnpackOverflow.Fmt(": %s", "MsgHeader")
 	}
 	m.setMsgHeader(dh)
-	if m.Options <= MsgOptionUnpackHeader {
+	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
 		return nil
 	}
 
@@ -785,7 +785,7 @@ func (m *Msg) String() string {
 	sb.WriteString(strconv.Itoa(len(m.Data)))
 	sb.WriteByte('\n')
 
-	if m.Options <= MsgOptionUnpackHeader {
+	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
 		return sb.String()
 	}
 
@@ -808,7 +808,7 @@ func (m *Msg) String() string {
 			sb.WriteByte('\n')
 		}
 	}
-	if m.Options <= MsgOptionUnpackQuestion {
+	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
 		return sb.String()
 	}
 	if len(m.Pseudo) > 0 {
@@ -829,7 +829,7 @@ func (m *Msg) String() string {
 			sb.WriteByte('\n')
 		}
 	}
-	if m.Options <= MsgOptionUnpackAnswer {
+	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return sb.String()
 	}
 	if len(m.Ns) > 0 {
@@ -958,7 +958,7 @@ func (m *Msg) setMsgHeader(dh header) {
 
 // io.Reader and io.Writer interfaces implementation.
 
-// Write writes the buffer p to the m.Data.
+// Write writes the buffer p to the m.Data. If m's Data buffer is empty Pack() is called.
 func (m *Msg) Write(p []byte) (n int, err error) {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -970,7 +970,7 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 	return n, nil
 }
 
-// Read reads the data from m.Data into p.
+// Read reads the data from m.Data into p. If m's Data buffer is empty Pack() is called.
 func (m *Msg) Read(p []byte) (n int, err error) {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
