@@ -184,7 +184,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 }
 
 // ixfr is similar, but different enough to warrant its own function. Doing this in the axfr-loop is possible,
-// but make that more brittle.
+// but make that more brittle. Although ifxr also needs to support axfr...
 func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
 	defer func() {
 		conn.Close()
@@ -203,7 +203,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 
 	r := &Msg{}
 	for {
-		r.Options = OptionUnpackHeader
+		r.Options = MsgOptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
 			return
@@ -228,7 +228,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			return
 		}
 
-		r.Options = OptionUnpack
+		r.Options = MsgOptionUnpack
 		err := r.Unpack()
 		if err != nil {
 			ch <- &Envelope{Answer: r.Answer, Error: err}
@@ -283,110 +283,6 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			// r must have tsig, otherwise errored out above
 			options.RequestMAC = hasTSIG(r).MAC
 		}
-	}
-}
-
-// ixfr is similar, but different enough to warrant its own function. Doing this in the axfr-loop is possible,
-// but make that more brittle.
-func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
-	defer func() {
-		conn.Close()
-		close(ch)
-	}()
-
-	options := TSIGOption{}
-	t := hasTSIG(m)
-	if t != nil {
-		options.RequestMAC = t.MAC
-	}
-	// serial is the serial of the first SOA, it used to determine when we seen all the RRs.
-	serial := uint32(0)
-	// assume incremental transfer, which implies seeing the 2n SOA with serial 'serial',
-	expectSOA := 1 // we ignore the first one and assume we get an axfr instead of ixfr, if the first msg indicates we do ifxr with +1 this.
-
-	r := &Msg{}
-	for {
-		r.Options = OptionUnpackHeader
-		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
-		if _, err := io.Copy(r, conn); err != nil {
-			return
-		}
-		if err := ctx.Err(); err != nil {
-			ch <- &Envelope{Error: err}
-			return
-		}
-
-		if err := r.Unpack(); err != nil {
-			ch <- &Envelope{Error: err}
-			return
-		}
-
-		if m.ID != r.ID {
-			ch <- &Envelope{Error: ErrID.Fmt(": %d != %d", m.ID, r.ID)}
-			return
-		}
-
-		if r.Rcode != RcodeSuccess {
-			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", sprintRcode(r.Rcode))}
-			return
-		}
-
-		r.Options = OptionUnpack
-		err := r.Unpack()
-		if err != nil {
-			ch <- &Envelope{Answer: r.Answer, Error: err}
-		}
-
-		// On first loop first be need to see a SOA RR and check that with the request serial.
-		if !options.TimersOnly {
-			if len(r.Answer) == 0 {
-				ch <- &Envelope{Error: ErrSOA.Fmt(": empty answer")}
-				return
-			}
-			if _, ok := r.Answer[0].(*SOA); !ok {
-				ch <- &Envelope{Error: ErrSOA}
-				return
-			}
-			serial := r.Answer[0].(*SOA).Serial
-			// If we requested a higher serial, we are already up to date.
-			if r.Ns[0].(*SOA).Serial < serial { // TODO(miek): serial arithmetic
-				ch <- &Envelope{Answer: r.Answer}
-				return
-			}
-			if len(r.Answer) > 2 {
-				if _, ok := r.Ns[1].(*SOA); ok {
-					expectSOA++
-				}
-			}
-		}
-
-		if c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
-				ch <- &Envelope{Answer: r.Answer, Error: err}
-			}
-		}
-
-		ch <- &Envelope{Answer: r.Answer}
-
-		// If we see the first SOA's serial expectSOA times we need to stop.
-		if options.TimersOnly {
-			for _, rr := range r.Answer {
-				if s, ok := rr.(*SOA); ok && s.Serial == serial {
-					expectSOA--
-					if expectSOA == 0 {
-						ch <- &Envelope{r.Answer, nil}
-						return
-					}
-				}
-			}
-		}
-
-		options.TimersOnly = true
-		if t != nil {
-			// r must have tsig, otherwise errored out above
-			options.RequestMAC = hasTSIG(r).MAC
-		}
-
 	}
 }
 
