@@ -336,7 +336,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 // serveDNS serves the message it skip the message handling if the received message has the response bit set.
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
-	r.Options = OptionUnpackQuestion | OptionUnpackHeader
+	r.Options = MsgOptionUnpackQuestion | MsgOptionUnpackHeader
 
 	if err := r.Unpack(); err != nil {
 		srv.MsgInvalidFunc(r, err)
@@ -365,7 +365,7 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		return
 	}
 
-	r.Options = OptionUnpack
+	r.Options = MsgOptionUnpack
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 	wg.Done()
 }

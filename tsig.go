@@ -70,7 +70,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	}
 
 	tbuf := make([]byte, t.Len())
-	if off, err = PackRR(t, tbuf, 0, nil); err != nil {
+	if _, off, err = packRR(t, tbuf, 0, nil); err != nil {
 		return err
 	}
 	tbuf = tbuf[:off]

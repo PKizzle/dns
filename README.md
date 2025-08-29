@@ -1,5 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/codeberg.org/miekg/dns)](https://goreportcard.com/report/codeberg.org/miekg/dns)
 [![](https://godoc.org/coreberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
+[![status-badge](https://ci.codeberg.org/api/badges/15045/status.svg)](https://ci.codeberg.org/repos/15045)
 
 # Even more alternative approach to a DNS library (version 2)
 
@@ -35,26 +36,30 @@ wins.
 - KISS.
 - Everything is an resource record.
 - Small API.
+  - Package _dnsutil_ contains functions that help programmers, but are not nessecarily in scope the the
+    _dns_ package.
+  - Package _dnstest_ contains functions and types that help you test, similar to the _httptest_ package.
+  - Package _svcb_ holds all details of the SVCB/HTTPS record.
+  - Many helper/debug functions are moved in _internal_ packages.
 - Fast.
   - The cmd/reflect server does 350K/280K UDP/TCP respectively.
 - Improved naming by embracing sub-packages.
 
 ## Difference with github.com/miekg/dns
 
-- Many functions (and new ones) are moved into dns/dnsutil.
+- Many functions (and new ones) are moved into dns/dnsutil, and dns/dnstest. This copied some stuff from
+  CoreDNS.
 - `RR` lost the `Type` and `Rdlength` fields, type is derived from the Go type, `Rdlength` served no function
   at all.
-- `context.Context` is in the correct places.
+- `context.Context` is used in the correct places.
 - `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern (usually) zone that lead to
   invocation of this Handler.
 - `internal/*` packages that hold code that used to be private, but was cluttering; also allowed for better
   naming.
-
   - builtin perf testing with internal/dnsperf
-
 - Interfaces do not have private methods.
 - `Msg` contains a buffer named `Data` that holds the binary data for this message. This pulls TSIG/SIG(0)
-  handling out of the client, simplifying it enormously as we can get rid of `dns.Conn`.
+  handling out of the client and server, simplifying it enormously as we can get rid of `dns.Conn`.
 - `Msg` includes `Options` that control on how you want it packed/unpacked.
 - `Msg` includes all the ENDS0 OPT RR bits, as this almost was a real message header; in this package it now is.
 - `Msg` has a pseudo section that holds all EDNS0 Options as (faked) resource records.
@@ -74,13 +79,13 @@ wins.
   - msg is a io.Writer.
   - msg.Data is re-used between request and reply in Exchange.
   - private RRs are easier.
-  - private EDNS0 are almost implementable.
-- SVCB record got its own package dns/svcb where all the key-values (called `svcb.Pair`) now reside.
+  - private EDNS0 are implementable.
+- SVCB record got its own package _dns/svcb_ where all the key-values (called `svcb.Pair`) now reside.
 - IsDuplicate is gone in favor of Compare and a full support for the `sort.Interface`, so you can just
   sort RRs in an RRset.
 - Copy is gone... I think this was only use the message level and can be emulated by copying the buffer and
   calling `Unpack`.
-- Copied and sanitized all the tests that accumulated over 16 years of development.
+- Copied, sanitized and removed tests that accumulated over 16 years of development.
 
 ### Setting EDNS0
 

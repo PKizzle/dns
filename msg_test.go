@@ -58,9 +58,7 @@ func TestMsgPackBinary(t *testing.T) {
 	m.Answer[0], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.215")
 	m.Answer[1], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.216")
 
-	t.Logf("%s\n", m)
 	m.Pack()
-	t.Logf("%s\n", m)
 }
 
 func TestMsgUnpackName(t *testing.T) {
@@ -103,6 +101,8 @@ func TestMsgExtendedRcode(t *testing.T) {
 	r := new(dns.Msg)
 	r.Data = m.Data
 	r.Unpack()
+	println(r.Options)
+	println(r.String())
 	if r.Rcode != dns.RcodeBadTime {
 		t.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
 	}

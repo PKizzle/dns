@@ -128,6 +128,7 @@ func (h *Header) String() string {
 // the [OPT] [RR], which is four (2 octets for the type, and 2 octets for the length) plus the encoded lengh of the option itself.
 type EDNS0 interface {
 	RR
+	// Pseudo signal that the type implementing this interface is an EDNS0 sub-type.
 	Pseudo() bool
 }
 
@@ -202,19 +203,19 @@ type Msg struct {
 	Data []byte
 
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
-	Options Option
+	Options MsgOption
 }
 
 // Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
 // you only want to unpack the Question section you must also set unpack header: OptionUnpackHeader |
 // OptionUnpackQuestion.
-type Option uint16
+type MsgOption uint16
 
 const (
-	OptionUnpack         Option = 0         // Unpack the entire message, mostly defined to serve as documentation.
-	OptionUnpackHeader   Option = 1 << iota // Unpack only the header of the message.
-	OptionUnpackQuestion                    // Unpack up the question section of the message.
-	OptionUnpackAnswer                      // Unpack up to the answer section of the message.
+	MsgOptionUnpack         MsgOption = 0         // Unpack the entire message, mostly defined to serve as documentation.
+	MsgOptionUnpackHeader   MsgOption = 1 << iota // Unpack only the header of the message.
+	MsgOptionUnpackQuestion                       // Unpack up the question section of the message.
+	MsgOptionUnpackAnswer                         // Unpack up to the answer section of the message.
 	// OptionNoBufferUse // reuse buffers? Or something else that tells what to do do with the buffer.
 )
 

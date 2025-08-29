@@ -8,7 +8,7 @@ TSIG, EDNS0, dynamic updates, notifies and DNSSEC validation/signing.
 
 Resource records (RRs) are native types. They are not stored in wire format, but every Msg holds the wire-format in its Data field.
 Everything is modelled or made to look like an RR.
-The question section holds an RR and the EDNS0 option codes are also RRs.
+The question section holds an RR and the EDNS0 option codes are also (fake/pseudo) RRs.
 
 Basic usage pattern for creating a new resource record:
 
@@ -27,7 +27,7 @@ Or even:
 
 	mx, err := dns.New("$ORIGIN nl.\nmiek 1H IN MX 10 mx.miek")
 
-In the DNS, messages are exchanged, these messages contain RRs (RRsets). Use pattern for creating a message:
+In the DNS, messages are exchanged, these messages contain RRs ([RRset]s). Use pattern for creating a message:
 
 	m := new(dns.Msg)
 	m.Question = []dns.RR{mx}
@@ -91,11 +91,10 @@ Signature generation, signature verification (See [RRSIG]) and key generation ar
 
 # EDNS0
 
-EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated by RFC 6891. It defines a new RR type,
-the [OPT] RR, which is then completely abused.
-
-In this package all EDNS0 options are implemented as RRs, doing basic "EDNS0" things, like
-setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you and these can be set directly on the message as shown above.
+EDNS0 is an extension mechanism for the DNS defined in RFC 2671 and updated by RFC 6891. It defines a RR type,
+the [OPT] RR, which holds type-length-value sub-types.
+In this package all EDNS0 options are implemented as RRs. Doing basic "EDNS0" things, like
+setting the DNSSEC OK bit (DO) or the UDP buffer size is handled for you and these can be set directly on message as shown above.
 
 The data of an OPT RR sits in the [Msg] Pseudo section consists out of a slice of EDNS0 (RFC 6891) interfaces.
 These are just RRs with an extra Pseudo() method.
@@ -111,7 +110,7 @@ Basic use pattern for a server to check if (and which) options are set, which is
 		}
 	}
 
-# Further reading
+# Further Reading
 
 All functionality and types are documented in their respective types and functions.
 */

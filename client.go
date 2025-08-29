@@ -11,10 +11,10 @@ import (
 
 // A Client is a DNS client. It is safe to use a client from multiple goroutines.
 type Client struct {
-	*Transport // If Transport is nil it gets a copy of DefaultTransport.
+	*Transport // If Transport is nil it gets [NewDefaultTransport].
 }
 
-// NewClient returns a client with the transport set to [DefaultTransport].
+// NewClient returns a client with the transport set to [NewDefaultTransport].
 func NewClient() *Client {
 	return &Client{Transport: NewDefaultTransport()}
 }
@@ -23,7 +23,7 @@ func NewClient() *Client {
 // and waits for a reply. Exchange does not retry a failed query, nor
 // will it fall back to TCP in case of truncation. If the Data buffer in m is empty, Exchange calls m.Pack().
 //
-// See [client.Exchange] for more information on setting larger buffer sizes.
+// See [Client.Exchange] for more information on setting larger buffer sizes.
 func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err error) {
 	client := &Client{}
 	r, _, err = client.Exchange(ctx, m, network, address)
