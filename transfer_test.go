@@ -19,7 +19,8 @@ var testTransferData = []dns.RR{
 
 const testTransferZone = "miek.nl."
 
-func TestTransferInvalid(t *testing.T) {
+func TestTransferEdgeCases(t *testing.T) {
+	single := false
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Unpack()
 		w.Hijack()
@@ -31,28 +32,42 @@ func TestTransferInvalid(t *testing.T) {
 		wg.Go(func() {
 			c.TransferOut(w, r, env)
 		})
-		env <- &dns.Envelope{Answer: []dns.RR{}}
+		if single {
+			env <- &dns.Envelope{Answer: []dns.RR{testTransferData[0]}}
+		} else {
+			env <- &dns.Envelope{Answer: []dns.RR{}}
+		}
 		close(env)
 		w.Close()
 	})
 	defer dns.HandleRemove(testTransferZone)
 
-	cancel, addr, _ := dnstest.TCPServer(":0")
-	defer cancel()
+	for _, name := range []string{"invalid", "single"} {
+		t.Run(name, func(t *testing.T) {
+			if name == "single" {
+				single = true
+			}
+			cancel, addr, _ := dnstest.TCPServer(":0")
+			defer cancel()
 
-	c := new(dns.Client)
-	m := new(dns.Msg)
-	dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
+			c := new(dns.Client)
+			m := new(dns.Msg)
+			dnsutil.SetQuestion(m, testTransferZone, dns.TypeAXFR)
 
-	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
-	if err != nil {
-		t.Fatal("failed to zone transfer in", err)
-	}
+			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			if err != nil {
+				t.Fatal("failed to zone transfer in", err)
+			}
 
-	for e := range env {
-		if e.Error == nil {
-			t.Errorf("expected error, got none")
-		}
+			for e := range env {
+				if !single && e.Error == nil {
+					t.Fatal("expected error, got none")
+				}
+				if single && len(e.Answer) != 1 {
+					t.Fatalf("bad axfr: expected %d, got %d", 1, len(e.Answer))
+				}
+			}
+		})
 	}
 }
 

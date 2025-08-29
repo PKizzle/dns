@@ -14,13 +14,17 @@ type Envelope struct {
 }
 
 // TransferIn performs a zone transfer with address over network, the message m is used to ask for the transfer and
-// should have an [AXFR] or [IXFR] RR in the question section. If the pseudo section contains a (stub) TSIG or
+// should have an [AXFR] or [IXFR] RR in the question section.  For doing an IXFR a SOA record needs to be
+// present in the [Ns] section of the [Msg], see RFC 1995.
+//
+// If the pseudo section contains a (stub) TSIG or
 // SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs. For
 // this the client also need a [TSIGSigner] or [SIG0Signer].
+//
 // On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
 // are as they were found, i.e. including the starting and ending SOA RRs.
 //
-// If m's buffer is empty TransferIn will call m.Pack(). If the clients's transport is nil [DefaultTransport] will
+// If m's buffer is empty TransferIn will call m.Pack(). If the clients's transport is nil [NewDefaultTransport] will
 // be set and used.
 //
 // Setting up a transfer is done as follows:
@@ -56,6 +60,14 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 	if !axfr && !ixfr {
 		return nil, &Error{"unsupported transfer type"}
 	}
+	if ixfr {
+		if len(m.Ns) == 0 {
+			return nil, ErrSOA.Fmt(": empty Ns")
+		}
+		if _, ok := m.Ns[0].(*SOA); !ok {
+			return nil, ErrSOA.Fmt(": bad Ns")
+		}
+	}
 
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
@@ -80,7 +92,7 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 		go c.transferInAXFR(ctx, m, ch, conn)
 	}
 	if ixfr {
-		// go c.transferInIXFR(ctx, m, ch, conn)
+		go c.transferInIXFR(ctx, m, ch, conn)
 	}
 	return ch, nil
 }
@@ -153,11 +165,115 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		}
 
 		ch <- &Envelope{Answer: r.Answer}
+
 		// If there is a SOA RR as the last we're done
 		if options.TimersOnly {
 			if len(r.Answer) > 0 {
 				if _, ok := r.Answer[len(r.Answer)-1].(*SOA); ok {
 					return
+				}
+			}
+		}
+
+		options.TimersOnly = true
+		if t != nil {
+			// r must have tsig, otherwise errored out above
+			options.RequestMAC = hasTSIG(r).MAC
+		}
+	}
+}
+
+// ixfr is similar, but different enough to warrant its own function. Doing this in the axfr-loop is possible,
+// but make that more brittle.
+func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope, conn net.Conn) {
+	defer func() {
+		conn.Close()
+		close(ch)
+	}()
+
+	options := TSIGOption{}
+	t := hasTSIG(m)
+	if t != nil {
+		options.RequestMAC = t.MAC
+	}
+	// serial is the serial of the first SOA, it used to determine when we seen all the RRs.
+	serial := uint32(0)
+	// assume incremental transfer, which implies seeing the 2n SOA with serial 'serial',
+	expectSOA := 1 // we ignore the first one and assume we get an axfr instead of ixfr, if the first msg indicates we do ifxr with +1 this.
+
+	r := &Msg{}
+	for {
+		r.Options = OptionUnpackHeader
+		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
+		if _, err := io.Copy(r, conn); err != nil {
+			return
+		}
+		if err := ctx.Err(); err != nil {
+			ch <- &Envelope{Error: err}
+			return
+		}
+
+		if err := r.Unpack(); err != nil {
+			ch <- &Envelope{Error: err}
+			return
+		}
+
+		if m.ID != r.ID {
+			ch <- &Envelope{Error: ErrID.Fmt(": %d != %d", m.ID, r.ID)}
+			return
+		}
+
+		if r.Rcode != RcodeSuccess {
+			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", sprintRcode(r.Rcode))}
+			return
+		}
+
+		r.Options = OptionUnpack
+		err := r.Unpack()
+		if err != nil {
+			ch <- &Envelope{Answer: r.Answer, Error: err}
+		}
+
+		// On first loop first be need to see a SOA RR and check that with the request serial.
+		if !options.TimersOnly {
+			if len(r.Answer) == 0 {
+				ch <- &Envelope{Error: ErrSOA.Fmt(": empty answer")}
+				return
+			}
+			if _, ok := r.Answer[0].(*SOA); !ok {
+				ch <- &Envelope{Error: ErrSOA}
+				return
+			}
+			serial := r.Answer[0].(*SOA).Serial
+			// If we requested a higher serial, we are already up to date.
+			if r.Ns[0].(*SOA).Serial < serial { // TODO(miek): serial arithmetic
+				ch <- &Envelope{Answer: r.Answer}
+				return
+			}
+			if len(r.Answer) > 2 {
+				if _, ok := r.Ns[1].(*SOA); ok {
+					expectSOA++
+				}
+			}
+		}
+
+		if c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
+				ch <- &Envelope{Answer: r.Answer, Error: err}
+			}
+		}
+
+		ch <- &Envelope{Answer: r.Answer}
+
+		// If we see the first SOA's serial expectSOA times we need to stop.
+		if options.TimersOnly {
+			for _, rr := range r.Answer {
+				if s, ok := rr.(*SOA); ok && s.Serial == serial {
+					expectSOA--
+					if expectSOA == 0 {
+						ch <- &Envelope{r.Answer, nil}
+						return
+					}
 				}
 			}
 		}
@@ -189,7 +305,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //	close(env)
 //
 // The server is responsible for sending the correct sequence of RRs through the channel env.
-// If the clients's transport is nil [DefaultTransport] will be set and used.
+// If the clients's transport is nil [NewDefaultTransport] will be set and used.
 func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (err error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
