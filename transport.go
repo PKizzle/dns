@@ -29,9 +29,9 @@ type Transport struct {
 	// SIG0Signer
 }
 
-// DefaultTransport is the default transport in client, when none is set. Note changing this value how global
+// defaultTransport is the default transport in client, when none is set. Note changing this value has global
 // effects to future [Client]s and [Transfer]s. The TSIGSigner and TSIGVerifier are both set to [TSIGHMAC].
-var DefaultTransport = Transport{
+var defaultTransport = Transport{
 	Dialer: &net.Dialer{
 		Timeout:   5 * time.Second,
 		KeepAlive: 3 * time.Second,
@@ -40,9 +40,10 @@ var DefaultTransport = Transport{
 	WriteTimeout: 2 * time.Second,
 }
 
-// NewDefaultTransport returns a copy of [DefaultTransport].
+// NewDefaultTransport returns the default transport. That transport has Diailer timeout of 5s, keep alive of
+// 3s and read and write timeout set to 2s.
 func NewDefaultTransport() *Transport {
-	d := DefaultTransport
+	d := defaultTransport
 	return &d
 }
 

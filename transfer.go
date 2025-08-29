@@ -101,7 +101,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 
 	r := &Msg{}
 	for {
-		r.Options = OptionUnpackHeader
+		r.Options = MsgOptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
 			// the response writer or actual conn is closed, just return, or some other error, we may
@@ -128,7 +128,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			return
 		}
 
-		r.Options = OptionUnpack
+		r.Options = MsgOptionUnpack
 		err := r.Unpack()
 		if err != nil {
 			ch <- &Envelope{Answer: r.Answer, Error: err}

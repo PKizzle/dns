@@ -355,12 +355,13 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-// PackRR packs a resource record rr into msg[off:].
-// See PackName for documentation about the compression.
+/*
+// PackRR packs a resource record rr into msg[off:]. See PackName for documentation about the compression.
 func PackRR(rr RR, msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	_, off1, err = packRR(rr, msg, off, compression)
 	return off1, err
 }
+*/
 
 func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEnd int, off1 int, err error) {
 	if rr == nil {
@@ -387,6 +388,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	return headerEnd, off1, nil
 }
 
+/*
 // UnpackRR unpacks msg[off:] into an RR.
 func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	if off < 0 || off >= len(msg) {
@@ -396,6 +398,7 @@ func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
 	rr, err = unpackRR(&s, msg)
 	return rr, offset(s, msg), err
 }
+*/
 
 func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	h, rdlength, err := unpackRRHeader(msg, msgBuf)
@@ -641,13 +644,16 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	if err != nil {
 		return err
 	}
-	if m.Options&OptionUnpackQuestion == OptionUnpackQuestion {
+	if m.Options <= MsgOptionUnpackQuestion {
 		return nil
 	}
 
 	m.Answer, err = unpackRRs(dh.Ancount, &s, msgBuf)
 	if err != nil {
 		return err
+	}
+	if m.Options <= MsgOptionUnpackAnswer {
+		return nil
 	}
 
 	m.Ns, err = unpackRRs(dh.Nscount, &s, msgBuf)
@@ -719,15 +725,16 @@ func (m *Msg) Unpack() error {
 		return ErrUnpackOverflow.Fmt(": %s", "MsgHeader")
 	}
 	m.setMsgHeader(dh)
-	if m.Options&OptionUnpackHeader == OptionUnpackHeader {
-		if m.Options&OptionUnpackQuestion != OptionUnpackQuestion {
-			return nil
-		}
+	if m.Options <= MsgOptionUnpackHeader {
+		return nil
 	}
+
 	return m.unpack(dh, s, m.Data)
 }
 
-// Convert a complete message to a string with dig-like output.
+// Convert a complete message to a string with dig-like output. String also looks at the [Msg.Options] and
+// only prints up to that point, i.e. options set to [MsgOptionUnpackHeader] means String will only return the
+// header.
 func (m *Msg) String() string {
 	if m == nil {
 		return "<nil> Msg"
@@ -778,6 +785,10 @@ func (m *Msg) String() string {
 	sb.WriteString(strconv.Itoa(len(m.Data)))
 	sb.WriteByte('\n')
 
+	if m.Options <= MsgOptionUnpackHeader {
+		return sb.String()
+	}
+
 	if len(m.Question) > 0 {
 		sb.WriteString("\n;; ")
 		sb.WriteString(sections[0])
@@ -797,6 +808,9 @@ func (m *Msg) String() string {
 			sb.WriteByte('\n')
 		}
 	}
+	if m.Options <= MsgOptionUnpackQuestion {
+		return sb.String()
+	}
 	if len(m.Pseudo) > 0 {
 		sb.WriteString("\n;; ")
 		sb.WriteString(sections[1])
@@ -814,6 +828,9 @@ func (m *Msg) String() string {
 			sb.WriteString(r.String())
 			sb.WriteByte('\n')
 		}
+	}
+	if m.Options <= MsgOptionUnpackAnswer {
+		return sb.String()
 	}
 	if len(m.Ns) > 0 {
 		sb.WriteString("\n;; ")
