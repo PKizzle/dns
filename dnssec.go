@@ -198,7 +198,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
-	off, err1 := packName(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
+	off, err1 := pack.Name(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
 	}
@@ -722,7 +722,7 @@ func packSigWire(sw *rrsigWireFmt, msg []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packName(sw.SignerName, msg, off, nil, false)
+	off, err = pack.Name(sw.SignerName, msg, off, nil, false)
 	if err != nil {
 		return off, err
 	}

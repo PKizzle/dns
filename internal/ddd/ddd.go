@@ -1,9 +1,7 @@
 package ddd
 
-func IsDigit(b byte) bool { return b >= '0' && b <= '9' }
-
+func IsDigit(b byte) bool  { return b >= '0' && b <= '9' }
 func IsLetter(b byte) bool { return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') }
-
 func Is[T ~[]byte | ~string](s T) bool {
 	return len(s) >= 3 && IsDigit(s[0]) && IsDigit(s[1]) && IsDigit(s[2])
 }

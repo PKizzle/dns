@@ -15,11 +15,8 @@ func (e *Error) Fmt(format string, a ...any) error {
 func (e *Error) Error() string { return "dns: " + e.err }
 
 var (
-	ErrAlg              = &Error{err: "bad algorithm"}                // ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrBuf              = &Error{err: "buffer size too small"}        // ErrBuf indicates that the buffer used is too small for the message.
-	ErrFqdn             = &Error{err: "name must be fully qualified"} // ErrFqdn indicates that a name does not have a closing dot.
-	ErrName             = &Error{err: "bad name"}
-	ErrLabel            = &Error{err: "bad label type"}
+	ErrAlg              = &Error{err: "bad algorithm"}         // ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrBuf              = &Error{err: "buffer size too small"} // ErrBuf indicates that the buffer used is too small for the message.
 	ErrID               = &Error{err: "ID mismatch"}
 	ErrKeyAlg           = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey              = &Error{err: "bad key"}

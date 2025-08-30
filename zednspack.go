@@ -164,7 +164,7 @@ func (e *REPORTING) unpack(s *cryptobyte.String) (err error) {
 }
 
 func (e *REPORTING) pack(msg []byte, off int) (int, error) {
-	off, err := packName(e.AgentDomain, msg, off, nil, false)
+	off, err := pack.Name(e.AgentDomain, msg, off, nil, false)
 	if err != nil {
 		return off, err
 	}

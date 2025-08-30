@@ -50,7 +50,7 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	if off == len(msg) {
 		return off, nil
 	}
-	off, err := packName(h.Name, msg, off, compress, true)
+	off, err := pack.Name(h.Name, msg, off, compress, true)
 	if err != nil {
 		return len(msg), err
 	}
@@ -352,7 +352,7 @@ func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 func packNames(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
 	var err error
 	for _, name := range names {
-		off, err = packName(name, msg, off, compress, false)
+		off, err = pack.Name(name, msg, off, compress, false)
 		if err != nil {
 			return len(msg), err
 		}
@@ -507,7 +507,7 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 	case IPSECGatewayIPv6:
 		off, err = pack.AAAA(gatewayAddr, msg, off)
 	case IPSECGatewayHost:
-		off, err = packName(gatewayString, msg, off, compression, compress)
+		off, err = pack.Name(gatewayString, msg, off, compression, compress)
 	}
 
 	return off, err

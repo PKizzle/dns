@@ -163,7 +163,7 @@ type tsigWireFmt struct {
 
 func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 	// Header
-	off, err := packName(tw.Name, buf, 0, nil, false)
+	off, err := pack.Name(tw.Name, buf, 0, nil, false)
 	if err != nil {
 		return off, err
 	}
@@ -176,7 +176,7 @@ func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 		return off, err
 	}
 
-	off, err = packName(tw.Algorithm, buf, off, nil, false)
+	off, err = pack.Name(tw.Algorithm, buf, off, nil, false)
 	if err != nil {
 		return off, err
 	}
