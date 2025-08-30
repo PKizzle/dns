@@ -1,6 +1,8 @@
 package dns
 
-import "sort"
+import (
+	"sort"
+)
 
 // Compare returns an integer comparing two RRs according to "Canonical Form and Order of Resource Records" in
 // RFC 4034 Section 6. Note the TTL is skipped when comparing.
@@ -34,52 +36,37 @@ func Compare(a, b RR) int {
 var _ sort.Interface = RRset{}
 
 func (set RRset) Len() int           { return len(set) }
-func (set RRset) Less(i, j int) bool { return Compare(set[i], set[j]) == 01 }
+func (set RRset) Less(i, j int) bool { return Compare(set[i], set[j]) == -1 }
 func (set RRset) Swap(i, j int)      { set[i], set[j] = set[j], set[i] }
 
-// CompareName returns an integer compraring two names. See [Compare]. The names a and b must be syntactically valid domain names.
+// See https://bert-hubert.blogspot.com/2015/10/how-to-do-fast-canonical-ordering-of.html
 func CompareName(a, b string) int {
-	// root label
-	if a == "." || b == "." {
-		return 0
-	}
+	labels := 1
 
-	// more readable code would be nice..
+	lasta, _ := dnsutilPrev(a, 0)
+	lastb, _ := dnsutilPrev(b, 0)
 
-	l1 := dnsutilSplit(a)
-	l2 := dnsutilSplit(b)
-
-	j1 := len(l1) - 1 // end
-	i1 := len(l1) - 2 // start
-	j2 := len(l2) - 1
-	i2 := len(l2) - 2
-	// the second check can be done here: last/only label before we fall through into the for-loop below
-	x := compareLabel(a[l1[j1]:], b[l2[j2]:])
-	if x != 0 {
-		return x
-	}
 	for {
-		if i1 < 0 || i2 < 0 {
-			break
+		cura, overshota := dnsutilPrev(a, labels)
+		curb, overshotb := dnsutilPrev(b, labels)
+		if overshota && overshotb {
+			return 0
 		}
-		x := compareLabel(a[l1[i1]:l1[j1]], b[l2[i2]:l2[j2]])
+		if overshota {
+			return -1
+		}
+		if overshotb {
+			return 1
+		}
+
+		x := compareLabel(a[cura:lasta], b[curb:lastb])
 		if x != 0 {
 			return x
 		}
-		j1--
-		i1--
-		j2--
-		i2--
+		labels++
+		lasta = cura
+		lastb = curb
 	}
-	// TODO(miek): think more if this is correct, also some test.
-	if i1 < i2 { // a less than b?
-		return -1
-	}
-	if i1 > i2 {
-		return 1
-	}
-
-	return 0
 }
 
 // Equal returns true if a and b are equal. See [Compare].

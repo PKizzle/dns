@@ -53,6 +53,43 @@ func dnsutilNext(s string, offset int) (i int, end bool) {
 	return i + 1, true
 }
 
+// Prev returns the index of the label when starting from the right and jumping n labels to the left.
+// The bool start is true when the start of the string has been overshot. Also see [Next].
+func dnsutilPrev(s string, n int) (i int, start bool) {
+	if s == "" {
+		return 0, true
+	}
+	if n == 0 {
+		return len(s), false
+	}
+
+	l := len(s) - 1
+	if s[l] == '.' {
+		l--
+	}
+
+	for ; l >= 0 && n > 0; l-- {
+		if s[l] != '.' {
+			continue
+		}
+		j := l - 1
+		for j >= 0 && s[j] == '\\' {
+			j--
+		}
+
+		if (j-l)%2 == 0 {
+			continue
+		}
+
+		n--
+		if n == 0 {
+			return l + 1, false
+		}
+	}
+
+	return 0, n > 1
+}
+
 // IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
 // This means the RRs need to have the same type, name, and class.
 func dnsutilIsRRset(rrset []RR) bool {
@@ -188,26 +225,6 @@ func dnsutilIsName(s string) bool {
 	return true
 }
 
-// Split splits a name s into its label indexes, s must be a syntactically valid domain name.
-// www.miek.nl. returns []int{0, 4, 9}, www.miek.nl also returns []int{0, 4, 9}.
-// The root name (.) returns the empty slice.
-func dnsutilSplit(s string) []int {
-	if s == "." {
-		return nil
-	}
-	idx := make([]int, 1, 3)
-	off := 0
-	end := false
-
-	for {
-		off, end = dnsutilNext(s, off)
-		if end {
-			return idx
-		}
-		idx = append(idx, off)
-	}
-}
-
 // SetReply creates a reply message from r. It copies the ID, opcode, rcode and question and sets query
 // response bit to true.
 func dnsutilSetReply(m, r *Msg) *Msg {
@@ -226,17 +243,11 @@ func dnsutilSetReply(m, r *Msg) *Msg {
 // compareLabel compares a and b while ignoring case. It returns 0 when equal, -1 when a is smaller than b,
 // and +1 when a is greater then b. This ends up a compareLabel in the dns package too.
 func compareLabel(a, b string) int {
-	// Don't want to make this public 'cause we dont have function that work on label level.
-	la := len(a)
-	lb := len(b)
-	if la < lb {
-		return -1
+	l := len(a)
+	if len(b) < l {
+		l = len(b)
 	}
-	if la > lb {
-		return 1
-	}
-
-	for i := la - 1; i >= 0; i-- {
+	for i := range l {
 		ai := a[i]
 		bi := b[i]
 		if ai >= 'A' && ai <= 'Z' {
