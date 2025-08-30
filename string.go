@@ -112,16 +112,6 @@ func writeTXTStringByte(s *strings.Builder, b byte) {
 	}
 }
 
-// isLabelSpecial returns true if a domain name label byte should be prefixed
-// with an escaping backslash.
-func isLabelSpecial(b byte) bool {
-	switch b {
-	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
-		return true
-	}
-	return false
-}
-
 func sprintType(t uint16) string {
 	if t1, ok := TypeToString[uint16(t)]; ok {
 		return t1

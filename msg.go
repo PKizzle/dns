@@ -10,23 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/pack"
 	"golang.org/x/crypto/cryptobyte"
-)
-
-const (
-	maxNameWireOctets = 255 // See RFC 1035 section 2.3.4
-
-	// This is the maximum length of a domain name in presentation format. The
-	// maximum wire length of a domain name is 255 octets (see above), with the
-	// maximum label length being 63. The wire format requires one extra byte over
-	// the presentation format, reducing the number of octets by 1. Each label in
-	// the name will be separated by a single period, with each octet in the label
-	// expanding to at most 4 bytes (\DDD). If all other labels are of the maximum
-	// length, then the final label can only be 61 octets long to not exceed the
-	// maximum allowed wire length.
-	maxNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
 )
 
 // ID by default returns a 16-bit random number to be used as a message id. The
@@ -90,94 +75,6 @@ var RcodeToString = map[uint16]string{
 	RcodeBadAlg:                 "BADALG",
 	RcodeBadTrunc:               "BADTRUNC",
 	RcodeBadCookie:              "BADCOOKIE",
-}
-
-// Domain names are a sequence of counted strings split at the dots. They end with a zero-length string.
-
-// Unpack a domain name. WHY exported??
-// In addition to the simple sequences of counted strings above, domain names are allowed to refer to strings elsewhere in the
-// packet, to avoid repeating common suffixes when returning many entries in a single domain. The pointers are marked
-// by a length byte with the top two bits set. Ignoring those two bits, that byte and the next give a 14 bit offset from into msg
-// where we should pick up the trail.
-// Note that if we jump elsewhere in the packet, we record the last offset we read from when we found the first pointer,
-// which is where the next record or record field will start. We enforce that pointers always point backwards into the message.
-
-// UnpackName unpacks a domain name into a string. It returns the name, the new offset into msg and any error that occurred.
-// When an error is encountered, the unpacked name will be discarded and len(msg) will be returned as the offset.
-func UnpackName(msg []byte, off int) (string, int, error) {
-	s := cryptobyte.String(msg[off:])
-	name, err := unpackName(&s, msg)
-	if err != nil {
-		return "", len(msg), err
-	}
-	return name, offset(s, msg), nil
-}
-
-func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
-	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
-	budget := maxNameWireOctets
-	var ptrs bool
-
-	// If we never see a pointer, we need to ensure that we advance s to our final position.
-	cs := *s
-
-	for {
-		var c byte
-		if !cs.ReadUint8(&c) {
-			return "", ErrUnpackOverflow
-		}
-		switch c & 0xC0 {
-		case 0x00: // literal string
-			var label []byte
-			if !cs.ReadBytes(&label, int(c)) {
-				return "", ErrUnpackOverflow
-			}
-			// If we see a zero-length label (root label), this is the end of the name.
-			if len(label) == 0 {
-				if !ptrs {
-					*s = cs
-				}
-				if len(name) == 0 {
-					return ".", nil
-				}
-				return string(name), nil
-			}
-			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
-				return "", ErrLongName.Fmt(": %s", name)
-			}
-			for _, b := range label {
-				if isLabelSpecial(b) {
-					name = append(name, '\\', b)
-				} else if b < ' ' || b > '~' {
-					name = append(name, ddd.Escape(b)...)
-				} else {
-					name = append(name, b)
-				}
-			}
-			name = append(name, '.')
-		case 0xC0: // pointer
-			var c1 byte
-			if !cs.ReadUint8(&c1) {
-				return "", ErrUnpackOverflow
-			}
-			// If this is the first pointer we've seen, we need to advance s to our current position.
-			if !ptrs {
-				*s = cs
-			}
-			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
-			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
-			// occurrence".
-			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= offset(cs, msgBuf)-2 {
-				return "", &Error{err: "pointer not to prior occurrence of name"}
-			}
-			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
-			cs = msgBuf[off:]
-			ptrs = true
-		default: // 0x80 and 0x40 are reserved
-			return "", &Error{err: "reserved domain name label type"}
-		}
-	}
 }
 
 // packQuestion packs an RR into a question section.

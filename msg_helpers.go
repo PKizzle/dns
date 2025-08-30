@@ -4,7 +4,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net"
 
@@ -14,25 +13,13 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// off reports the offset of data into buf, that is reports off such that
-// &data[0] == &buf[off]. It panics if data is not buf[off:].
-func offset(data, buf []byte) int {
-	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
-		panic("dns: internal error: cannot compute off")
-	}
-	return len(buf) - len(data)
-}
-
 // helper functions called from the generated zmsg.go - among others
 // all need to move to internal/pack or internal/unpack
 
 // unpackRRHeader unpacks an RR header advancing msg.
 func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength uint16, err error) {
-	h.Name, err = unpackName(msg, msgBuf)
+	h.Name, err = unpack.Name(msg, msgBuf)
 	if err != nil {
-		if errors.Is(err, ErrUnpackOverflow) {
-			return h, 0, ErrTruncatedMessage
-		}
 		return h, 0, err
 	}
 	if !msg.ReadUint16(&h.t) ||

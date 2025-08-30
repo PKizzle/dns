@@ -21,7 +21,6 @@ var (
 	ErrKeyAlg           = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey              = &Error{err: "bad key"}
 	ErrKeySize          = &Error{err: "bad key size"}
-	ErrLongName         = &Error{err: fmt.Sprintf("name exceeded %d wire-format octets", maxNameWireOctets)}
 	ErrNoTSIG           = &Error{err: "no TSIG signature found"}
 	ErrNoSIG0           = &Error{err: "no SIG(0) signature found"}
 	ErrPrivKey          = &Error{err: "bad private key"}
@@ -33,7 +32,6 @@ var (
 	ErrOPT              = &Error{err: "unknown OPT code"}
 	ErrTime             = &Error{err: "bad time"} // ErrTime indicates a timing error in TSIG authentication.
 	ErrTruncatedMessage = &Error{err: "overflow unpacking truncated message"}
-	ErrUnpackOverflow   = &Error{err: "overflow unpacking data"}
 	ErrTrailingData     = &Error{err: "trailing record rdata"}
 	ErrLenData          = &Error{err: "inconsitent rdata length"}
 )
