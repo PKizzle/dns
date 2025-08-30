@@ -15,16 +15,12 @@ func (e *Error) Fmt(format string, a ...any) error {
 func (e *Error) Error() string { return "dns: " + e.err }
 
 var (
-	ErrAlg              = &Error{err: "bad algorithm"}                // ErrAlg indicates an error with the (DNSSEC) algorithm.
-	ErrBuf              = &Error{err: "buffer size too small"}        // ErrBuf indicates that the buffer used is too small for the message.
-	ErrFqdn             = &Error{err: "name must be fully qualified"} // ErrFqdn indicates that a name does not have a closing dot.
-	ErrName             = &Error{err: "bad name"}
-	ErrLabel            = &Error{err: "bad label type"}
+	ErrAlg              = &Error{err: "bad algorithm"}         // ErrAlg indicates an error with the (DNSSEC) algorithm.
+	ErrBuf              = &Error{err: "buffer size too small"} // ErrBuf indicates that the buffer used is too small for the message.
 	ErrID               = &Error{err: "ID mismatch"}
 	ErrKeyAlg           = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey              = &Error{err: "bad key"}
 	ErrKeySize          = &Error{err: "bad key size"}
-	ErrLongName         = &Error{err: fmt.Sprintf("name exceeded %d wire-format octets", maxNameWireOctets)}
 	ErrNoTSIG           = &Error{err: "no TSIG signature found"}
 	ErrNoSIG0           = &Error{err: "no SIG(0) signature found"}
 	ErrPrivKey          = &Error{err: "bad private key"}
@@ -36,7 +32,7 @@ var (
 	ErrOPT              = &Error{err: "unknown OPT code"}
 	ErrTime             = &Error{err: "bad time"} // ErrTime indicates a timing error in TSIG authentication.
 	ErrTruncatedMessage = &Error{err: "overflow unpacking truncated message"}
-	ErrUnpackOverflow   = &Error{err: "overflow unpacking data"}
 	ErrTrailingData     = &Error{err: "trailing record rdata"}
 	ErrLenData          = &Error{err: "inconsitent rdata length"}
+	ErrUnpackOverflow   = &Error{err: "overflow unpacking data"}
 )

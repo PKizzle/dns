@@ -9,6 +9,8 @@ import (
 	"codeberg.org/miekg/dns/internal/ddd"
 )
 
+const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
+
 // maybe this should all moved to cryptobyte as well...
 // near future direction is clear all pack helpers should be here, not in msg_helpers.go
 
@@ -141,4 +143,155 @@ func AAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 		return len(msg), fmt.Errorf("dns: overflow packing aaaa")
 	}
 	return off, nil
+}
+
+func Name(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
+	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
+
+	// If not fully qualified, error out.
+	//	if !dnsutil.IsFqdn(s) {
+	//		return len(msg), fmt.Errorf("dns: name must be fully qualified: %s", s)
+	//	}
+
+	ls := len(s)
+
+	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
+	// Except for escaped dots (\.), which are normal dots. There is also a trailing zero.
+
+	// Compression
+	pointer := ^uint16(0)
+
+	// Emit sequence of counted strings, chopping at dots.
+	var (
+		begin     int
+		compBegin int
+		compOff   int
+		bs        []byte
+		wasDot    bool
+	)
+loop:
+	for i := 0; i < ls; i++ {
+		var c byte
+		if bs == nil {
+			c = s[i]
+		} else {
+			c = bs[i]
+		}
+
+		switch c {
+		case '\\':
+			if off+1 > len(msg) {
+				return len(msg), fmt.Errorf("dns: buffer size too small")
+			}
+
+			if bs == nil {
+				bs = []byte(s)
+			}
+
+			// check for \DDD
+			if ddd.Is(bs[i+1:]) {
+				bs[i] = ddd.ToByte(bs[i+1:])
+				copy(bs[i+1:ls-3], bs[i+4:])
+				ls -= 3
+				compOff += 3
+			} else {
+				copy(bs[i:ls-1], bs[i+1:])
+				ls--
+				compOff++
+			}
+
+			wasDot = false
+		case '.':
+			if i == 0 && len(s) > 1 {
+				// leading dots are not legal except for the root zone
+				return len(msg), fmt.Errorf("dns: bad name: %s", s)
+			}
+
+			if wasDot {
+				// two dots back to back is not legal
+				return len(msg), fmt.Errorf("dns: bad name: %s", s)
+			}
+			wasDot = true
+
+			labelLen := i - begin
+			if labelLen >= 1<<6 { // top two bits of length must be clear
+				return len(msg), fmt.Errorf("dns: bad label type")
+			}
+
+			// off can already (we're in a loop) be bigger than len(msg)
+			// this happens when a name isn't fully qualified
+			if off+1+labelLen > len(msg) {
+				return len(msg), fmt.Errorf("dns: buffer size too small")
+			}
+
+			// Don't try to compress '.'
+			// We should only compress when compress is true, but we should also still pick
+			// up names that can be used for *future* compression(s).
+			if !isRootLabel(s, bs, begin, ls) && compression != nil {
+				if p, ok := compression[s[compBegin:]]; ok {
+					// The first hit is the longest matching dname
+					// keep the pointer offset we get back and store
+					// the offset of the current name, because that's
+					// where we need to insert the pointer later
+
+					// If compress is true, we're allowed to compress this dname
+					if compress {
+						pointer = p // Where to point to
+						break loop
+					}
+				} else if off < maxCompressionOffset {
+					// Only offsets smaller than maxCompressionOffset can be used.
+					compression[s[compBegin:]] = uint16(off)
+				}
+			}
+
+			// The following is covered by the length check above.
+			msg[off] = byte(labelLen)
+
+			if bs == nil {
+				copy(msg[off+1:], s[begin:i])
+			} else {
+				copy(msg[off+1:], bs[begin:i])
+			}
+			off += 1 + labelLen
+
+			begin = i + 1
+			compBegin = begin + compOff
+		default:
+			wasDot = false
+		}
+	}
+
+	// Root label is special
+	if isRootLabel(s, bs, 0, ls) {
+		return off, nil
+	}
+
+	if !wasDot {
+		return len(msg), fmt.Errorf("dns: name must be fully qualified: %s", s)
+	}
+
+	// If we did compression and we find something add the pointer here
+	if pointer != ^uint16(0) {
+		// We have two bytes (14 bits) to put the pointer in
+		binary.BigEndian.PutUint16(msg[off:], 0xC000|pointer)
+		return off + 2, nil
+	}
+
+	if off < len(msg) {
+		msg[off] = 0
+	}
+
+	println("RETURING", wasDot)
+	return off + 1, nil
+}
+
+// isRootLabel returns whether s or bs, from off to end, is the root label ".".
+// If bs is nil, s will be checked, otherwise bs will be checked.
+func isRootLabel(s string, bs []byte, off, end int) bool {
+	if bs == nil {
+		return s[off:end] == "."
+	}
+
+	return end-off == 1 && bs[off] == '.'
 }

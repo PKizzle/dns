@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -198,7 +199,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	wire = wire[:n]
 
 	owner := make([]byte, 255)
-	off, err1 := packName(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
+	off, err1 := pack.Name(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
 	}
@@ -593,8 +594,8 @@ type wireSlice [][]byte
 func (p wireSlice) Len() int      { return len(p) }
 func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p wireSlice) Less(i, j int) bool {
-	_, ioff, _ := UnpackName(p[i], 0)
-	_, joff, _ := UnpackName(p[j], 0)
+	_, ioff, _ := unpack.NameOnlyUsedInDNSSEC(p[i], 0)
+	_, joff, _ := unpack.NameOnlyUsedInDNSSEC(p[j], 0)
 	return bytes.Compare(p[i][ioff+10:], p[j][joff+10:]) < 0
 }
 
@@ -722,7 +723,7 @@ func packSigWire(sw *rrsigWireFmt, msg []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packName(sw.SignerName, msg, off, nil, false)
+	off, err = pack.Name(sw.SignerName, msg, off, nil, false)
 	if err != nil {
 		return off, err
 	}

@@ -1,9 +1,7 @@
 package ddd
 
-func IsDigit(b byte) bool { return b >= '0' && b <= '9' }
-
+func IsDigit(b byte) bool  { return b >= '0' && b <= '9' }
 func IsLetter(b byte) bool { return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') }
-
 func Is[T ~[]byte | ~string](s T) bool {
 	return len(s) >= 3 && IsDigit(s[0]) && IsDigit(s[1]) && IsDigit(s[2])
 }
@@ -44,6 +42,15 @@ func Escape(b byte) string {
 	b -= '~' + 1
 	// The cast here is needed as b*4 may overflow byte.
 	return escapedByteLarge[int(b)*4 : int(b)*4+4]
+}
+
+// ShouldEscape returns true if a domain name label byte should be prefixed with an escaping backslash.
+func ShouldEscape(b byte) bool {
+	switch b {
+	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
+		return true
+	}
+	return false
 }
 
 func Next(s string, offset int) (byte, int) {

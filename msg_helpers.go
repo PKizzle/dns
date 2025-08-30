@@ -4,7 +4,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net"
 
@@ -14,25 +13,13 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// off reports the offset of data into buf, that is reports off such that
-// &data[0] == &buf[off]. It panics if data is not buf[off:].
-func offset(data, buf []byte) int {
-	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
-		panic("dns: internal error: cannot compute off")
-	}
-	return len(buf) - len(data)
-}
-
 // helper functions called from the generated zmsg.go - among others
 // all need to move to internal/pack or internal/unpack
 
 // unpackRRHeader unpacks an RR header advancing msg.
 func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength uint16, err error) {
-	h.Name, err = unpackName(msg, msgBuf)
+	h.Name, err = unpack.Name(msg, msgBuf)
 	if err != nil {
-		if errors.Is(err, ErrUnpackOverflow) {
-			return h, 0, ErrTruncatedMessage
-		}
 		return h, 0, err
 	}
 	if !msg.ReadUint16(&h.t) ||
@@ -50,7 +37,7 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	if off == len(msg) {
 		return off, nil
 	}
-	off, err := packName(h.Name, msg, off, compress, true)
+	off, err := pack.Name(h.Name, msg, off, compress, true)
 	if err != nil {
 		return len(msg), err
 	}
@@ -340,7 +327,7 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	var names []string
 	for !s.Empty() {
-		name, err := unpackName(s, msgBuf)
+		name, err := unpack.Name(s, msgBuf)
 		if err != nil {
 			return names, err
 		}
@@ -352,7 +339,7 @@ func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 func packNames(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
 	var err error
 	for _, name := range names {
-		off, err = packName(name, msg, off, compress, false)
+		off, err = pack.Name(name, msg, off, compress, false)
 		if err != nil {
 			return len(msg), err
 		}
@@ -492,7 +479,7 @@ func unpackIPSECGateway(s *cryptobyte.String, msgBuf []byte, gatewayType uint8) 
 	case IPSECGatewayIPv6:
 		addr, err = unpack.AAAA(s)
 	case IPSECGatewayHost:
-		name, err = unpackName(s, msgBuf)
+		name, err = unpack.Name(s, msgBuf)
 	}
 	return addr, name, err
 }
@@ -507,7 +494,7 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 	case IPSECGatewayIPv6:
 		off, err = pack.AAAA(gatewayAddr, msg, off)
 	case IPSECGatewayHost:
-		off, err = packName(gatewayString, msg, off, compression, compress)
+		off, err = pack.Name(gatewayString, msg, off, compression, compress)
 	}
 
 	return off, err

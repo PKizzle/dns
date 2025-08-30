@@ -10,24 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
-)
-
-const (
-	maxCompressionOffset = 2 << 13 // We have 14 bits for the compression pointer
-	maxNameWireOctets    = 255     // See RFC 1035 section 2.3.4
-
-	// This is the maximum length of a domain name in presentation format. The
-	// maximum wire length of a domain name is 255 octets (see above), with the
-	// maximum label length being 63. The wire format requires one extra byte over
-	// the presentation format, reducing the number of octets by 1. Each label in
-	// the name will be separated by a single period, with each octet in the label
-	// expanding to at most 4 bytes (\DDD). If all other labels are of the maximum
-	// length, then the final label can only be 61 octets long to not exceed the
-	// maximum allowed wire length.
-	maxNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
 )
 
 // ID by default returns a 16-bit random number to be used as a message id. The
@@ -93,252 +78,13 @@ var RcodeToString = map[uint16]string{
 	RcodeBadCookie:              "BADCOOKIE",
 }
 
-// Domain names are a sequence of counted strings split at the dots. They end with a zero-length string.
-
-// packName packs a domain name. Why should this be exported?
-func packName(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
-	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
-
-	// If not fully qualified, error out.
-	if !dnsutilIsFqdn(s) {
-		return len(msg), ErrFqdn.Fmt(": %s", s)
-	}
-
-	ls := len(s)
-
-	// Each dot ends a segment of the name.
-	// We trade each dot byte for a length byte.
-	// Except for escaped dots (\.), which are normal dots.
-	// There is also a trailing zero.
-
-	// Compression
-	pointer := ^uint16(0)
-
-	// Emit sequence of counted strings, chopping at dots.
-	var (
-		begin     int
-		compBegin int
-		compOff   int
-		bs        []byte
-		wasDot    bool
-	)
-loop:
-	for i := 0; i < ls; i++ {
-		var c byte
-		if bs == nil {
-			c = s[i]
-		} else {
-			c = bs[i]
-		}
-
-		switch c {
-		case '\\':
-			if off+1 > len(msg) {
-				return len(msg), ErrBuf
-			}
-
-			if bs == nil {
-				bs = []byte(s)
-			}
-
-			// check for \DDD
-			if ddd.Is(bs[i+1:]) {
-				bs[i] = ddd.ToByte(bs[i+1:])
-				copy(bs[i+1:ls-3], bs[i+4:])
-				ls -= 3
-				compOff += 3
-			} else {
-				copy(bs[i:ls-1], bs[i+1:])
-				ls--
-				compOff++
-			}
-
-			wasDot = false
-		case '.':
-			if i == 0 && len(s) > 1 {
-				// leading dots are not legal except for the root zone
-				return len(msg), ErrName.Fmt(": %s", s)
-			}
-
-			if wasDot {
-				// two dots back to back is not legal
-				return len(msg), ErrName.Fmt(": %s", s)
-			}
-			wasDot = true
-
-			labelLen := i - begin
-			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return len(msg), ErrLabel
-			}
-
-			// off can already (we're in a loop) be bigger than len(msg)
-			// this happens when a name isn't fully qualified
-			if off+1+labelLen > len(msg) {
-				return len(msg), ErrBuf
-			}
-
-			// Don't try to compress '.'
-			// We should only compress when compress is true, but we should also still pick
-			// up names that can be used for *future* compression(s).
-			if !isRootLabel(s, bs, begin, ls) && compression != nil {
-				if p, ok := compression[s[compBegin:]]; ok {
-					// The first hit is the longest matching dname
-					// keep the pointer offset we get back and store
-					// the offset of the current name, because that's
-					// where we need to insert the pointer later
-
-					// If compress is true, we're allowed to compress this dname
-					if compress {
-						pointer = p // Where to point to
-						break loop
-					}
-				} else if off < maxCompressionOffset {
-					// Only offsets smaller than maxCompressionOffset can be used.
-					compression[s[compBegin:]] = uint16(off)
-				}
-			}
-
-			// The following is covered by the length check above.
-			msg[off] = byte(labelLen)
-
-			if bs == nil {
-				copy(msg[off+1:], s[begin:i])
-			} else {
-				copy(msg[off+1:], bs[begin:i])
-			}
-			off += 1 + labelLen
-
-			begin = i + 1
-			compBegin = begin + compOff
-		default:
-			wasDot = false
-		}
-	}
-
-	// Root label is special
-	if isRootLabel(s, bs, 0, ls) {
-		return off, nil
-	}
-
-	// If we did compression and we find something add the pointer here
-	if pointer != ^uint16(0) {
-		// We have two bytes (14 bits) to put the pointer in
-		binary.BigEndian.PutUint16(msg[off:], 0xC000|pointer)
-		return off + 2, nil
-	}
-
-	if off < len(msg) {
-		msg[off] = 0
-	}
-
-	return off + 1, nil
-}
-
-// isRootLabel returns whether s or bs, from off to end, is the root
-// label ".".
-//
-// If bs is nil, s will be checked, otherwise bs will be checked.
-func isRootLabel(s string, bs []byte, off, end int) bool {
-	if bs == nil {
-		return s[off:end] == "."
-	}
-
-	return end-off == 1 && bs[off] == '.'
-}
-
-// Unpack a domain name. WHY exported??
-// In addition to the simple sequences of counted strings above, domain names are allowed to refer to strings elsewhere in the
-// packet, to avoid repeating common suffixes when returning many entries in a single domain. The pointers are marked
-// by a length byte with the top two bits set. Ignoring those two bits, that byte and the next give a 14 bit offset from into msg
-// where we should pick up the trail.
-// Note that if we jump elsewhere in the packet, we record the last offset we read from when we found the first pointer,
-// which is where the next record or record field will start. We enforce that pointers always point backwards into the message.
-
-// UnpackName unpacks a domain name into a string. It returns the name, the new offset into msg and any error that occurred.
-// When an error is encountered, the unpacked name will be discarded and len(msg) will be returned as the offset.
-func UnpackName(msg []byte, off int) (string, int, error) {
-	s := cryptobyte.String(msg[off:])
-	name, err := unpackName(&s, msg)
-	if err != nil {
-		return "", len(msg), err
-	}
-	return name, offset(s, msg), nil
-}
-
-func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
-	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
-	budget := maxNameWireOctets
-	var ptrs bool
-
-	// If we never see a pointer, we need to ensure that we advance s to our final position.
-	cs := *s
-
-	for {
-		var c byte
-		if !cs.ReadUint8(&c) {
-			return "", ErrUnpackOverflow
-		}
-		switch c & 0xC0 {
-		case 0x00: // literal string
-			var label []byte
-			if !cs.ReadBytes(&label, int(c)) {
-				return "", ErrUnpackOverflow
-			}
-			// If we see a zero-length label (root label), this is the end of the name.
-			if len(label) == 0 {
-				if !ptrs {
-					*s = cs
-				}
-				if len(name) == 0 {
-					return ".", nil
-				}
-				return string(name), nil
-			}
-			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
-				return "", ErrLongName.Fmt(": %s", name)
-			}
-			for _, b := range label {
-				if isLabelSpecial(b) {
-					name = append(name, '\\', b)
-				} else if b < ' ' || b > '~' {
-					name = append(name, ddd.Escape(b)...)
-				} else {
-					name = append(name, b)
-				}
-			}
-			name = append(name, '.')
-		case 0xC0: // pointer
-			var c1 byte
-			if !cs.ReadUint8(&c1) {
-				return "", ErrUnpackOverflow
-			}
-			// If this is the first pointer we've seen, we need to advance s to our current position.
-			if !ptrs {
-				*s = cs
-			}
-			// The pointer should always point backwards to an earlier part of the message. Technically it could work pointing
-			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
-			// occurrence".
-			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= offset(cs, msgBuf)-2 {
-				return "", &Error{err: "pointer not to prior occurrence of name"}
-			}
-			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
-			cs = msgBuf[off:]
-			ptrs = true
-		default: // 0x80 and 0x40 are reserved
-			return "", &Error{err: "reserved domain name label type"}
-		}
-	}
-}
-
 // packQuestion packs an RR into a question section.
 func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 	if rr == nil {
 		return len(msg), &Error{err: "nil rr"}
 	}
 
-	off, err = packName(rr.Header().Name, msg, off, nil, false)
+	off, err = pack.Name(rr.Header().Name, msg, off, nil, false)
 	if err != nil {
 		return len(msg), err
 	}
@@ -416,8 +162,8 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	}
 
 	// Restrict msgBuf to the end of the RR (the current position of msg) so
-	// that we compute the correct offset in unpackName.
-	msgBuf = msgBuf[:offset(*msg, msgBuf)]
+	// that we compute the correct offset in unpack.Name.
+	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
 	// TODO(miek): custom RR types here?? You can just add to the map? document and test.
@@ -583,7 +329,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 
 // We only allow a single question in the question section.
 func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	name, err := unpackName(msg, msgBuf)
+	name, err := unpack.Name(msg, msgBuf)
 	if err != nil {
 		return nil, fmt.Errorf("%s: question.Name", err.Error())
 	}

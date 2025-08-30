@@ -158,7 +158,7 @@ func Canonical(s string) string {
 // string is a valid domain name as the DNS is 8 bit protocol. It checks if each
 // label fits in 63 characters and that the entire name will fit into the 255 octet wire format limit.
 func IsName(s string) bool {
-	// XXX: The logic in this function was copied from packName and should be kept in sync with that function.
+	// XXX: The logic in this function was copied from pack.Name and should be kept in sync with that function.
 
 	const lenmsg = 256
 

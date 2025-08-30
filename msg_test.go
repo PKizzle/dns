@@ -7,6 +7,8 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/bin"
+	"codeberg.org/miekg/dns/internal/unpack"
+	"golang.org/x/crypto/cryptobyte"
 )
 
 // TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
@@ -76,15 +78,17 @@ func TestMsgUnpackName(t *testing.T) {
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			name, off, err := dns.UnpackName(tc.buf, tc.start)
+			s := cryptobyte.String(tc.buf[tc.start:])
+			sl := (len(s))
+			name, err := unpack.Name(&s, tc.buf)
 			if err != nil {
 				t.Fatal(err)
 			}
+			if off := tc.start + sl - len(s); off != tc.off {
+				t.Errorf("expected offset %d, got %d", tc.off, off)
+			}
 			if name != tc.name {
 				t.Errorf("expected name %s, got %s", tc.name, name)
-			}
-			if off != tc.off {
-				t.Errorf("expected offset %d, got %d", tc.off, off)
 			}
 		})
 	}

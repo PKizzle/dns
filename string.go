@@ -29,7 +29,7 @@ func sprintName(s string) string {
 			}
 			break
 		}
-		if isLabelSpecial(b) {
+		if ddd.ShouldEscape(b) {
 			if sb.Len() == 0 {
 				sb.Grow(len(s) * 2)
 				sb.WriteString(s[:i])
@@ -110,16 +110,6 @@ func writeTXTStringByte(s *strings.Builder, b byte) {
 	default:
 		s.WriteByte(b)
 	}
-}
-
-// isLabelSpecial returns true if a domain name label byte should be prefixed
-// with an escaping backslash.
-func isLabelSpecial(b byte) bool {
-	switch b {
-	case '.', ' ', '\'', '@', ';', '(', ')', '"', '\\':
-		return true
-	}
-	return false
 }
 
 func sprintType(t uint16) string {

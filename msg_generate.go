@@ -108,9 +108,9 @@ func main() {
 			switch {
 			case tag == `dns:"-"`: // ignored
 			case tag == `dns:"cdomain-name"`:
-				o("off, err = packName(rr.%s, msg, off, compression, true)\n")
+				o("off, err = pack.Name(rr.%s, msg, off, compression, true)\n")
 			case tag == `dns:"domain-name"`:
-				o("off, err = packName(rr.%s, msg, off, compression, false)\n")
+				o("off, err = pack.Name(rr.%s, msg, off, compression, false)\n")
 			case tag == `dns:"a"`:
 				o("off, err = pack.A(rr.%s, msg, off)\n")
 			case tag == `dns:"aaaa"`:
@@ -267,7 +267,7 @@ if rr.%s != "-" {
 			switch tag {
 			case `dns:"-"`: // ignored
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
-				unpackFieldBuf("unpackName")
+				unpackFieldBuf("unpack.Name")
 			case `dns:"a"`:
 				unpackField("unpack.A")
 			case `dns:"aaaa"`:
