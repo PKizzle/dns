@@ -141,6 +141,31 @@ func NewServer() *Server {
 	return srv
 }
 
+func (srv *Server) init() {
+	if srv.UDPSize == 0 {
+		srv.UDPSize = MinMsgSize
+	}
+	if srv.MsgInvalidFunc == nil {
+		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
+	}
+	if srv.MsgAcceptFunc == nil {
+		srv.MsgAcceptFunc = DefaultMsgAcceptFunc
+	}
+	if srv.Handler == nil {
+		srv.Handler = DefaultServeMux
+	}
+	if srv.ReadTimeout == 0 {
+		srv.ReadTimeout = 2 * time.Second
+	}
+	if srv.IdleTimeout == 0 {
+		srv.IdleTimeout = 8 * time.Second
+	}
+
+	srv.ctx, srv.cancel = context.WithCancel(context.Background())
+	srv.exited = make(chan struct{})
+	srv.shutdown = make(chan bool)
+}
+
 // ListenAndServe starts a nameserver on the configured address in *Server. If TLS config is available a TLS
 // listener will be started.
 func (srv *Server) ListenAndServe() error {
@@ -148,6 +173,7 @@ func (srv *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":domain"
 	}
+	srv.init()
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
@@ -180,6 +206,7 @@ func (srv *Server) ListenAndServe() error {
 
 // ActivateAndServe starts a nameserver with the PacketConn or Listener configured in *Server. Its main use is to start a server from systemd.
 func (srv *Server) ActivateAndServe() error {
+	srv.init()
 	if srv.PacketConn != nil {
 		if t, ok := srv.PacketConn.(*net.UDPConn); ok && t != nil {
 			if e := setUDPSocketOptions(t); e != nil {

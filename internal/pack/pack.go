@@ -282,7 +282,6 @@ loop:
 		msg[off] = 0
 	}
 
-	println("RETURING", wasDot)
 	return off + 1, nil
 }
 
