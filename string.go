@@ -29,7 +29,7 @@ func sprintName(s string) string {
 			}
 			break
 		}
-		if isLabelSpecial(b) {
+		if ddd.ShouldEscape(b) {
 			if sb.Len() == 0 {
 				sb.Grow(len(s) * 2)
 				sb.WriteString(s[:i])

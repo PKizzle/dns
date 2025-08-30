@@ -267,7 +267,7 @@ if rr.%s != "-" {
 			switch tag {
 			case `dns:"-"`: // ignored
 			case `dns:"cdomain-name"`, `dns:"domain-name"`:
-				unpackFieldBuf("unpackName")
+				unpackFieldBuf("unpack.Name")
 			case `dns:"a"`:
 				unpackField("unpack.A")
 			case `dns:"aaaa"`:

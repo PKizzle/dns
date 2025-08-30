@@ -327,7 +327,7 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	var names []string
 	for !s.Empty() {
-		name, err := unpackName(s, msgBuf)
+		name, err := unpack.Name(s, msgBuf)
 		if err != nil {
 			return names, err
 		}
@@ -479,7 +479,7 @@ func unpackIPSECGateway(s *cryptobyte.String, msgBuf []byte, gatewayType uint8) 
 	case IPSECGatewayIPv6:
 		addr, err = unpack.AAAA(s)
 	case IPSECGatewayHost:
-		name, err = unpackName(s, msgBuf)
+		name, err = unpack.Name(s, msgBuf)
 	}
 	return addr, name, err
 }

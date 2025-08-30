@@ -50,7 +50,7 @@ func (rr *CNAME) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Target, err = unpackName(&s, msgBuf)
+	rr.Target, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (rr *MB) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *MB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Mb, err = unpackName(&s, msgBuf)
+	rr.Mb, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -118,7 +118,7 @@ func (rr *MG) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *MG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Mg, err = unpackName(&s, msgBuf)
+	rr.Mg, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -142,11 +142,11 @@ func (rr *MINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Rmail, err = unpackName(&s, msgBuf)
+	rr.Rmail, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
-	rr.Email, err = unpackName(&s, msgBuf)
+	rr.Email, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (rr *MR) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Mr, err = unpackName(&s, msgBuf)
+	rr.Mr, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (rr *MF) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *MF) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Mf, err = unpackName(&s, msgBuf)
+	rr.Mf, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (rr *MD) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *MD) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Md, err = unpackName(&s, msgBuf)
+	rr.Md, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Mx, err = unpackName(&s, msgBuf)
+	rr.Mx, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Subtype) {
 		return ErrUnpackOverflow
 	}
-	rr.Hostname, err = unpackName(&s, msgBuf)
+	rr.Hostname, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -335,7 +335,7 @@ func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Host, err = unpackName(&s, msgBuf)
+	rr.Host, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -355,7 +355,7 @@ func (rr *NS) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *NS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Ns, err = unpackName(&s, msgBuf)
+	rr.Ns, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -375,7 +375,7 @@ func (rr *PTR) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Ptr, err = unpackName(&s, msgBuf)
+	rr.Ptr, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -399,11 +399,11 @@ func (rr *RP) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 
 func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Mbox, err = unpackName(&s, msgBuf)
+	rr.Mbox, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
-	rr.Txt, err = unpackName(&s, msgBuf)
+	rr.Txt, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -447,11 +447,11 @@ func (rr *SOA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Ns, err = unpackName(&s, msgBuf)
+	rr.Ns, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
-	rr.Mbox, err = unpackName(&s, msgBuf)
+	rr.Mbox, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -567,7 +567,7 @@ func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Port) {
 		return ErrUnpackOverflow
 	}
-	rr.Target, err = unpackName(&s, msgBuf)
+	rr.Target, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -625,7 +625,7 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.Replacement, err = unpackName(&s, msgBuf)
+	rr.Replacement, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -686,7 +686,7 @@ func (rr *DNAME) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Target, err = unpackName(&s, msgBuf)
+	rr.Target, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -757,11 +757,11 @@ func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Map822, err = unpackName(&s, msgBuf)
+	rr.Map822, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
-	rr.Mapx400, err = unpackName(&s, msgBuf)
+	rr.Mapx400, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -943,7 +943,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.KeyTag) {
 		return ErrUnpackOverflow
 	}
-	rr.SignerName, err = unpackName(&s, msgBuf)
+	rr.SignerName, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -983,7 +983,7 @@ func (rr *NSEC) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.NextDomain, err = unpackName(&s, msgBuf)
+	rr.NextDomain, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1079,7 +1079,7 @@ func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Exchanger, err = unpackName(&s, msgBuf)
+	rr.Exchanger, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1144,11 +1144,11 @@ func (rr *TALINK) pack(msg []byte, off int, compression map[string]uint16) (off1
 
 func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.PreviousName, err = unpackName(&s, msgBuf)
+	rr.PreviousName, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
-	rr.NextName, err = unpackName(&s, msgBuf)
+	rr.NextName, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1391,7 +1391,7 @@ func (rr *NSAPPTR) pack(msg []byte, off int, compression map[string]uint16) (off
 
 func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Ptr, err = unpackName(&s, msgBuf)
+	rr.Ptr, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1568,7 +1568,7 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Algorithm, err = unpackName(&s, msgBuf)
+	rr.Algorithm, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1933,7 +1933,7 @@ func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Preference) {
 		return ErrUnpackOverflow
 	}
-	rr.Fqdn, err = unpackName(&s, msgBuf)
+	rr.Fqdn, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -2290,7 +2290,7 @@ func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Priority) {
 		return ErrUnpackOverflow
 	}
-	rr.Target, err = unpackName(&s, msgBuf)
+	rr.Target, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -2394,7 +2394,7 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 
 func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Algorithm, err = unpackName(&s, msgBuf)
+	rr.Algorithm, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}

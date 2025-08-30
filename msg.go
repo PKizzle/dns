@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -161,8 +162,8 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	}
 
 	// Restrict msgBuf to the end of the RR (the current position of msg) so
-	// that we compute the correct offset in unpackName.
-	msgBuf = msgBuf[:offset(*msg, msgBuf)]
+	// that we compute the correct offset in unpack.Name.
+	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
 	// TODO(miek): custom RR types here?? You can just add to the map? document and test.
@@ -328,7 +329,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 
 // We only allow a single question in the question section.
 func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	name, err := unpackName(msg, msgBuf)
+	name, err := unpack.Name(msg, msgBuf)
 	if err != nil {
 		return nil, fmt.Errorf("%s: question.Name", err.Error())
 	}

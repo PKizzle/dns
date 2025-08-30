@@ -81,7 +81,7 @@ func String(s *cryptobyte.String) (string, error) {
 	return sb.String(), nil
 }
 
-// Unpack a domain name.
+// Name unpacks a domain name.
 // In addition to the simple sequences of counted strings above, domain names are allowed to refer to strings elsewhere in the
 // packet, to avoid repeating common suffixes when returning many entries in a single domain. The pointers are marked
 // by a length byte with the top two bits set. Ignoring those two bits, that byte and the next give a 14 bit offset from into msg
@@ -89,18 +89,19 @@ func String(s *cryptobyte.String) (string, error) {
 // Note that if we jump elsewhere in the packet, we record the last offset we read from when we found the first pointer,
 // which is where the next record or record field will start. We enforce that pointers always point backwards into the message.
 
-// UnpackName unpacks a domain name into a string. It returns the name, the new offset into msg and any error that occurred.
+// Name unpacks a domain name into a string. It returns the name, the new offset into msg and any error that occurred.
 // When an error is encountered, the unpacked name will be discarded and len(msg) will be returned as the offset.
-func UnpackName(msg []byte, off int) (string, int, error) {
+func NameOnlyUsedInDNSSEC(msg []byte, off int) (string, int, error) {
 	s := cryptobyte.String(msg[off:])
-	name, err := unpackName(&s, msg)
+	name, err := Name(&s, msg)
 	if err != nil {
 		return "", len(msg), err
 	}
-	return name, offset(s, msg), nil
+	return name, Offset(s, msg), nil
 }
 
-func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
+// Name unpacks a name in a cryptobyte.String. TODO(miek): fold into the above.
+func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
 	budget := maxNameWireOctets
 	var ptrs bool
@@ -155,7 +156,7 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			// forwards, but we choose not to support that as RFC 1035 specifically refers to a "prior
 			// occurrence".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
-			if int(off) >= offset(cs, msgBuf)-2 {
+			if int(off) >= Offset(cs, msgBuf)-2 {
 				return "", fmt.Errorf("dns: pointer not to prior occurrence of name")
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
@@ -167,9 +168,9 @@ func unpackName(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	}
 }
 
-// off reports the offset of data into buf, that is reports off such that
+// Offset reports the offset of data into buf, that is reports off such that
 // &data[0] == &buf[off]. It panics if data is not buf[off:].
-func offset(data, buf []byte) int {
+func Offset(data, buf []byte) int {
 	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
 		panic("dns: internal error: cannot compute off")
 	}

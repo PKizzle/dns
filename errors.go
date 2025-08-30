@@ -34,4 +34,5 @@ var (
 	ErrTruncatedMessage = &Error{err: "overflow unpacking truncated message"}
 	ErrTrailingData     = &Error{err: "trailing record rdata"}
 	ErrLenData          = &Error{err: "inconsitent rdata length"}
+	ErrUnpackOverflow   = &Error{err: "overflow unpacking data"}
 )
