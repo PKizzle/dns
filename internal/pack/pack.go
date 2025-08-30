@@ -2,8 +2,6 @@ package pack
 
 import (
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"net"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -16,7 +14,7 @@ const maxCompressionOffset = 2 << 13 // We have 14 bits for the compression poin
 
 func Uint8(i uint8, msg []byte, off int) (off1 int, err error) {
 	if off+1 > len(msg) {
-		return len(msg), fmt.Errorf("dns: overflow packing uint8")
+		return len(msg), &Error{"overflow uint8"}
 	}
 	msg[off] = i
 	return off + 1, nil
@@ -24,7 +22,7 @@ func Uint8(i uint8, msg []byte, off int) (off1 int, err error) {
 
 func Uint16(i uint16, msg []byte, off int) (off1 int, err error) {
 	if off+2 > len(msg) {
-		return len(msg), fmt.Errorf("dns: overflow packing uint16")
+		return len(msg), &Error{"overflow uint16"}
 	}
 	binary.BigEndian.PutUint16(msg[off:], i)
 	return off + 2, nil
@@ -32,7 +30,7 @@ func Uint16(i uint16, msg []byte, off int) (off1 int, err error) {
 
 func Uint32(i uint32, msg []byte, off int) (off1 int, err error) {
 	if off+4 > len(msg) {
-		return len(msg), fmt.Errorf("dns: overflow packing uint32")
+		return len(msg), &Error{"overflow uint32"}
 	}
 	binary.BigEndian.PutUint32(msg[off:], i)
 	return off + 4, nil
@@ -40,7 +38,7 @@ func Uint32(i uint32, msg []byte, off int) (off1 int, err error) {
 
 func Uint48(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+6 > len(msg) {
-		return len(msg), fmt.Errorf("overflow packing uint64 as uint48")
+		return len(msg), &Error{"overflow uint64 as uint48"}
 	}
 	msg[off] = byte(i >> 40)
 	msg[off+1] = byte(i >> 32)
@@ -54,7 +52,7 @@ func Uint48(i uint64, msg []byte, off int) (off1 int, err error) {
 
 func Uint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	if off+8 > len(msg) {
-		return len(msg), fmt.Errorf("dns: overflow packing uint64")
+		return len(msg), &Error{"overflow uint64"}
 	}
 	binary.BigEndian.PutUint64(msg[off:], i)
 	off += 8
@@ -64,7 +62,7 @@ func Uint64(i uint64, msg []byte, off int) (off1 int, err error) {
 // StringAny packs a string as-is, no decoding or lenght bytes are written.
 func StringAny(s string, msg []byte, off int) (int, error) {
 	if off+len(s) > len(msg) {
-		return len(msg), fmt.Errorf("dns: overflow packing string anything")
+		return len(msg), &Error{"overflow string anything"}
 	}
 	copy(msg[off:off+len(s)], s)
 	off += len(s)
@@ -82,12 +80,12 @@ func String(s string, msg []byte, off int) (int, error) {
 func TxtString(s string, msg []byte, off int) (int, error) {
 	lenByteoff := off
 	if off >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
-		return len(msg), errors.New("dns: buffer size too small")
+		return len(msg), &Error{"buffer size too small"}
 	}
 	off++
 	for i := 0; i < len(s); i++ {
 		if len(msg) <= off {
-			return off, errors.New("dns: buffer size too small")
+			return off, &Error{"buffer size too small"}
 		}
 		if s[i] == '\\' {
 			i++
@@ -108,7 +106,7 @@ func TxtString(s string, msg []byte, off int) (int, error) {
 	}
 	l := off - lenByteoff - 1
 	if l > 255 {
-		return len(msg), errors.New("dns: string exceeded 255 bytes in txt")
+		return len(msg), &Error{"string exceeded 255 bytes in txt"}
 	}
 	msg[lenByteoff] = byte(l)
 	return off, nil
@@ -119,13 +117,13 @@ func A(a net.IP, msg []byte, off int) (int, error) {
 	case net.IPv4len, net.IPv6len:
 		// It must be a slice of 4, even if it is 16, we encode only the first 4
 		if off+net.IPv4len > len(msg) {
-			return len(msg), fmt.Errorf("dns: overflow packing a")
+			return len(msg), &Error{"overflow a"}
 		}
 
 		copy(msg[off:], a.To4())
 		off += net.IPv4len
 	default:
-		return len(msg), fmt.Errorf("dns: overflow packing a")
+		return len(msg), &Error{"overflow a"}
 	}
 	return off, nil
 }
@@ -134,24 +132,19 @@ func AAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	switch len(aaaa) {
 	case net.IPv6len:
 		if off+net.IPv6len > len(msg) {
-			return len(msg), fmt.Errorf("dns: overflow packing aaaa")
+			return len(msg), &Error{"overflow aaaa"}
 		}
 
 		copy(msg[off:], aaaa)
 		off += net.IPv6len
 	default:
-		return len(msg), fmt.Errorf("dns: overflow packing aaaa")
+		return len(msg), &Error{"overflow aaaa"}
 	}
 	return off, nil
 }
 
 func Name(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
-
-	// If not fully qualified, error out.
-	//	if !dnsutil.IsFqdn(s) {
-	//		return len(msg), fmt.Errorf("dns: name must be fully qualified: %s", s)
-	//	}
 
 	ls := len(s)
 
@@ -181,7 +174,7 @@ loop:
 		switch c {
 		case '\\':
 			if off+1 > len(msg) {
-				return len(msg), fmt.Errorf("dns: buffer size too small")
+				return len(msg), &Error{"buffer size too small"}
 			}
 
 			if bs == nil {
@@ -204,24 +197,24 @@ loop:
 		case '.':
 			if i == 0 && len(s) > 1 {
 				// leading dots are not legal except for the root zone
-				return len(msg), fmt.Errorf("dns: bad name: %s", s)
+				return len(msg), &Error{"bad name: " + string(s)}
 			}
 
 			if wasDot {
 				// two dots back to back is not legal
-				return len(msg), fmt.Errorf("dns: bad name: %s", s)
+				return len(msg), &Error{"bad name: " + string(s)}
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return len(msg), fmt.Errorf("dns: bad label type")
+				return len(msg), &Error{"bad label type"}
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
 			if off+1+labelLen > len(msg) {
-				return len(msg), fmt.Errorf("dns: buffer size too small")
+				return len(msg), &Error{"buffer size too small"}
 			}
 
 			// Don't try to compress '.'
@@ -268,7 +261,7 @@ loop:
 	}
 
 	if !wasDot {
-		return len(msg), fmt.Errorf("dns: name must be fully qualified: %s", s)
+		return len(msg), &Error{"name must be fully qualified: " + string(s)}
 	}
 
 	// If we did compression and we find something add the pointer here
@@ -282,7 +275,6 @@ loop:
 		msg[off] = 0
 	}
 
-	println("RETURING", wasDot)
 	return off + 1, nil
 }
 

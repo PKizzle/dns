@@ -223,7 +223,7 @@ if rr.%s != "-" {
 				errCheck()
 			}
 			readInt := func(type_ string) {
-				fmt.Fprintf(b, "if !s.Read%s(&rr.%s) { return ErrUnpackOverflow }\n", type_, fieldname)
+				fmt.Fprintf(b, "if !s.Read%s(&rr.%s) { return unpack.ErrOverflow }\n", type_, fieldname)
 			}
 
 			// size-* are special, because they reference a struct member we should use for the length.
@@ -309,7 +309,7 @@ if rr.%s != "-" {
 				log.Fatalln(rrname, fieldname, tag)
 			}
 		}
-		fmt.Fprintf(b, `if !s.Empty() { return ErrTrailingData.Fmt(": %%s", "%s")}`+"\n", rrname)
+		fmt.Fprintf(b, `if !s.Empty() { return unpack.Errorf("trailing record data: %%s", "%s")}`+"\n", rrname)
 		fmt.Fprint(b, "return nil }\n\n")
 	}
 

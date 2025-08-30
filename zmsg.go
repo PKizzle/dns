@@ -23,7 +23,7 @@ func (rr *NULL) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NULL")
+		return unpack.Errorf("trailing record data: %s", "NULL")
 	}
 	return nil
 }
@@ -35,7 +35,7 @@ func (rr *NXNAME) pack(msg []byte, off int, compression map[string]uint16) (off1
 func (rr *NXNAME) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NXNAME")
+		return unpack.Errorf("trailing record data: %s", "NXNAME")
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func (rr *CNAME) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "CNAME")
+		return unpack.Errorf("trailing record data: %s", "CNAME")
 	}
 	return nil
 }
@@ -83,7 +83,7 @@ func (rr *HINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "HINFO")
+		return unpack.Errorf("trailing record data: %s", "HINFO")
 	}
 	return nil
 }
@@ -103,7 +103,7 @@ func (rr *MB) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MB")
+		return unpack.Errorf("trailing record data: %s", "MB")
 	}
 	return nil
 }
@@ -123,7 +123,7 @@ func (rr *MG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MG")
+		return unpack.Errorf("trailing record data: %s", "MG")
 	}
 	return nil
 }
@@ -151,7 +151,7 @@ func (rr *MINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MINFO")
+		return unpack.Errorf("trailing record data: %s", "MINFO")
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func (rr *MR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MR")
+		return unpack.Errorf("trailing record data: %s", "MR")
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (rr *MF) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MF")
+		return unpack.Errorf("trailing record data: %s", "MF")
 	}
 	return nil
 }
@@ -211,7 +211,7 @@ func (rr *MD) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MD")
+		return unpack.Errorf("trailing record data: %s", "MD")
 	}
 	return nil
 }
@@ -231,14 +231,14 @@ func (rr *MX) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *MX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Mx, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "MX")
+		return unpack.Errorf("trailing record data: %s", "MX")
 	}
 	return nil
 }
@@ -258,14 +258,14 @@ func (rr *AFSDB) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *AFSDB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Subtype) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Hostname, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "AFSDB")
+		return unpack.Errorf("trailing record data: %s", "AFSDB")
 	}
 	return nil
 }
@@ -285,7 +285,7 @@ func (rr *X25) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "X25")
+		return unpack.Errorf("trailing record data: %s", "X25")
 	}
 	return nil
 }
@@ -313,7 +313,7 @@ func (rr *ISDN) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "ISDN")
+		return unpack.Errorf("trailing record data: %s", "ISDN")
 	}
 	return nil
 }
@@ -333,14 +333,14 @@ func (rr *RT) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *RT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Host, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "RT")
+		return unpack.Errorf("trailing record data: %s", "RT")
 	}
 	return nil
 }
@@ -360,7 +360,7 @@ func (rr *NS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NS")
+		return unpack.Errorf("trailing record data: %s", "NS")
 	}
 	return nil
 }
@@ -380,7 +380,7 @@ func (rr *PTR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "PTR")
+		return unpack.Errorf("trailing record data: %s", "PTR")
 	}
 	return nil
 }
@@ -408,7 +408,7 @@ func (rr *RP) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "RP")
+		return unpack.Errorf("trailing record data: %s", "RP")
 	}
 	return nil
 }
@@ -456,22 +456,22 @@ func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.ReadUint32(&rr.Serial) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Refresh) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Retry) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Expire) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Minttl) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SOA")
+		return unpack.Errorf("trailing record data: %s", "SOA")
 	}
 	return nil
 }
@@ -491,7 +491,7 @@ func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "TXT")
+		return unpack.Errorf("trailing record data: %s", "TXT")
 	}
 	return nil
 }
@@ -511,7 +511,7 @@ func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SPF")
+		return unpack.Errorf("trailing record data: %s", "SPF")
 	}
 	return nil
 }
@@ -531,7 +531,7 @@ func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "AVC")
+		return unpack.Errorf("trailing record data: %s", "AVC")
 	}
 	return nil
 }
@@ -559,20 +559,20 @@ func (rr *SRV) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *SRV) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Weight) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Port) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Target, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SRV")
+		return unpack.Errorf("trailing record data: %s", "SRV")
 	}
 	return nil
 }
@@ -608,10 +608,10 @@ func (rr *NAPTR) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Order) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Flags, err = unpack.String(&s)
 	if err != nil {
@@ -630,7 +630,7 @@ func (rr *NAPTR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NAPTR")
+		return unpack.Errorf("trailing record data: %s", "NAPTR")
 	}
 	return nil
 }
@@ -658,20 +658,20 @@ func (rr *CERT) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Type) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Certificate, err = unpackStringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "CERT")
+		return unpack.Errorf("trailing record data: %s", "CERT")
 	}
 	return nil
 }
@@ -691,7 +691,7 @@ func (rr *DNAME) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "DNAME")
+		return unpack.Errorf("trailing record data: %s", "DNAME")
 	}
 	return nil
 }
@@ -711,7 +711,7 @@ func (rr *A) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "A")
+		return unpack.Errorf("trailing record data: %s", "A")
 	}
 	return nil
 }
@@ -731,7 +731,7 @@ func (rr *AAAA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "AAAA")
+		return unpack.Errorf("trailing record data: %s", "AAAA")
 	}
 	return nil
 }
@@ -755,7 +755,7 @@ func (rr *PX) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Map822, err = unpack.Name(&s, msgBuf)
 	if err != nil {
@@ -766,7 +766,7 @@ func (rr *PX) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "PX")
+		return unpack.Errorf("trailing record data: %s", "PX")
 	}
 	return nil
 }
@@ -802,7 +802,7 @@ func (rr *GPOS) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "GPOS")
+		return unpack.Errorf("trailing record data: %s", "GPOS")
 	}
 	return nil
 }
@@ -842,28 +842,28 @@ func (rr *LOC) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Version) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Size) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.HorizPre) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.VertPre) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Latitude) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Longitude) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Altitude) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "LOC")
+		return unpack.Errorf("trailing record data: %s", "LOC")
 	}
 	return nil
 }
@@ -875,7 +875,7 @@ func (rr *SIG) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SIG")
+		return unpack.Errorf("trailing record data: %s", "SIG")
 	}
 	return nil
 }
@@ -923,25 +923,25 @@ func (rr *RRSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.TypeCovered) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Labels) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.OrigTTL) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Expiration) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Inception) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.SignerName, err = unpack.Name(&s, msgBuf)
 	if err != nil {
@@ -952,7 +952,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "RRSIG")
+		return unpack.Errorf("trailing record data: %s", "RRSIG")
 	}
 	return nil
 }
@@ -964,7 +964,7 @@ func (rr *NXT) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *NXT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NXT")
+		return unpack.Errorf("trailing record data: %s", "NXT")
 	}
 	return nil
 }
@@ -992,7 +992,7 @@ func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NSEC")
+		return unpack.Errorf("trailing record data: %s", "NSEC")
 	}
 	return nil
 }
@@ -1004,7 +1004,7 @@ func (rr *DLV) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "DLV")
+		return unpack.Errorf("trailing record data: %s", "DLV")
 	}
 	return nil
 }
@@ -1016,7 +1016,7 @@ func (rr *CDS) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "CDS")
+		return unpack.Errorf("trailing record data: %s", "CDS")
 	}
 	return nil
 }
@@ -1044,20 +1044,20 @@ func (rr *DS) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.DigestType) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "DS")
+		return unpack.Errorf("trailing record data: %s", "DS")
 	}
 	return nil
 }
@@ -1077,14 +1077,14 @@ func (rr *KX) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *KX) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Exchanger, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "KX")
+		return unpack.Errorf("trailing record data: %s", "KX")
 	}
 	return nil
 }
@@ -1112,20 +1112,20 @@ func (rr *TA) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.KeyTag) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.DigestType) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "TA")
+		return unpack.Errorf("trailing record data: %s", "TA")
 	}
 	return nil
 }
@@ -1153,7 +1153,7 @@ func (rr *TALINK) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "TALINK")
+		return unpack.Errorf("trailing record data: %s", "TALINK")
 	}
 	return nil
 }
@@ -1177,17 +1177,17 @@ func (rr *SSHFP) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Type) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.FingerPrint, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SSHFP")
+		return unpack.Errorf("trailing record data: %s", "SSHFP")
 	}
 	return nil
 }
@@ -1199,7 +1199,7 @@ func (rr *KEY) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "KEY")
+		return unpack.Errorf("trailing record data: %s", "KEY")
 	}
 	return nil
 }
@@ -1211,7 +1211,7 @@ func (rr *CDNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off
 func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "CDNSKEY")
+		return unpack.Errorf("trailing record data: %s", "CDNSKEY")
 	}
 	return nil
 }
@@ -1239,20 +1239,20 @@ func (rr *DNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off1
 func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Protocol) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "DNSKEY")
+		return unpack.Errorf("trailing record data: %s", "DNSKEY")
 	}
 	return nil
 }
@@ -1284,13 +1284,13 @@ func (rr *IPSECKEY) pack(msg []byte, off int, compression map[string]uint16) (of
 func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Precedence) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.GatewayType) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)
 	if err != nil {
@@ -1301,7 +1301,7 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "IPSECKEY")
+		return unpack.Errorf("trailing record data: %s", "IPSECKEY")
 	}
 	return nil
 }
@@ -1325,17 +1325,17 @@ func (rr *AMTRELAY) pack(msg []byte, off int, compression map[string]uint16) (of
 func (rr *AMTRELAY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Precedence) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.GatewayType) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "AMTRELAY")
+		return unpack.Errorf("trailing record data: %s", "AMTRELAY")
 	}
 	return nil
 }
@@ -1363,20 +1363,20 @@ func (rr *RKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Protocol) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Algorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.PublicKey, err = unpackStringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "RKEY")
+		return unpack.Errorf("trailing record data: %s", "RKEY")
 	}
 	return nil
 }
@@ -1396,7 +1396,7 @@ func (rr *NSAPPTR) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NSAPPTR")
+		return unpack.Errorf("trailing record data: %s", "NSAPPTR")
 	}
 	return nil
 }
@@ -1443,23 +1443,23 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Hash) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Flags) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Iterations) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.SaltLength) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Salt, err = unpackStringHex(&s, int(rr.SaltLength))
 	if err != nil {
 		return err
 	}
 	if !s.ReadUint8(&rr.HashLength) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.NextDomain, err = unpackStringBase32(&s, int(rr.HashLength))
 	if err != nil {
@@ -1470,7 +1470,7 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NSEC3")
+		return unpack.Errorf("trailing record data: %s", "NSEC3")
 	}
 	return nil
 }
@@ -1505,23 +1505,23 @@ func (rr *NSEC3PARAM) pack(msg []byte, off int, compression map[string]uint16) (
 func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Hash) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Flags) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Iterations) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.SaltLength) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Salt, err = unpackStringHex(&s, int(rr.SaltLength))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NSEC3PARAM")
+		return unpack.Errorf("trailing record data: %s", "NSEC3PARAM")
 	}
 	return nil
 }
@@ -1573,33 +1573,33 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.ReadUint32(&rr.Inception) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&rr.Expiration) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Mode) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Error) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.KeySize) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Key, err = unpackStringHex(&s, int(rr.KeySize))
 	if err != nil {
 		return err
 	}
 	if !s.ReadUint16(&rr.OtherLen) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "TKEY")
+		return unpack.Errorf("trailing record data: %s", "TKEY")
 	}
 	return nil
 }
@@ -1619,7 +1619,7 @@ func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "RFC3597")
+		return unpack.Errorf("trailing record data: %s", "RFC3597")
 	}
 	return nil
 }
@@ -1643,17 +1643,17 @@ func (rr *URI) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Weight) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Target, err = unpackStringOctet(&s)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "URI")
+		return unpack.Errorf("trailing record data: %s", "URI")
 	}
 	return nil
 }
@@ -1673,7 +1673,7 @@ func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "DHCID")
+		return unpack.Errorf("trailing record data: %s", "DHCID")
 	}
 	return nil
 }
@@ -1701,20 +1701,20 @@ func (rr *TLSA) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Usage) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Selector) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.MatchingType) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Certificate, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "TLSA")
+		return unpack.Errorf("trailing record data: %s", "TLSA")
 	}
 	return nil
 }
@@ -1742,20 +1742,20 @@ func (rr *SMIMEA) pack(msg []byte, off int, compression map[string]uint16) (off1
 func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Usage) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Selector) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.MatchingType) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Certificate, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SMIMEA")
+		return unpack.Errorf("trailing record data: %s", "SMIMEA")
 	}
 	return nil
 }
@@ -1791,13 +1791,13 @@ func (rr *HIP) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.HitLength) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.PublicKeyAlgorithm) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.PublicKeyLength) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Hit, err = unpackStringHex(&s, int(rr.HitLength))
 	if err != nil {
@@ -1812,7 +1812,7 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "HIP")
+		return unpack.Errorf("trailing record data: %s", "HIP")
 	}
 	return nil
 }
@@ -1832,7 +1832,7 @@ func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NINFO")
+		return unpack.Errorf("trailing record data: %s", "NINFO")
 	}
 	return nil
 }
@@ -1852,13 +1852,13 @@ func (rr *NID) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *NID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint64(&rr.NodeID) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NID")
+		return unpack.Errorf("trailing record data: %s", "NID")
 	}
 	return nil
 }
@@ -1878,14 +1878,14 @@ func (rr *L32) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *L32) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Locator32, err = unpack.A(&s)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "L32")
+		return unpack.Errorf("trailing record data: %s", "L32")
 	}
 	return nil
 }
@@ -1905,13 +1905,13 @@ func (rr *L64) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *L64) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint64(&rr.Locator64) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "L64")
+		return unpack.Errorf("trailing record data: %s", "L64")
 	}
 	return nil
 }
@@ -1931,14 +1931,14 @@ func (rr *LP) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 func (rr *LP) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Preference) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Fqdn, err = unpack.Name(&s, msgBuf)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "LP")
+		return unpack.Errorf("trailing record data: %s", "LP")
 	}
 	return nil
 }
@@ -1954,10 +1954,10 @@ func (rr *EUI48) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *EUI48) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint48(&rr.Address) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "EUI48")
+		return unpack.Errorf("trailing record data: %s", "EUI48")
 	}
 	return nil
 }
@@ -1973,10 +1973,10 @@ func (rr *EUI64) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *EUI64) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint64(&rr.Address) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "EUI64")
+		return unpack.Errorf("trailing record data: %s", "EUI64")
 	}
 	return nil
 }
@@ -2000,7 +2000,7 @@ func (rr *CAA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint8(&rr.Flag) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Tag, err = unpack.String(&s)
 	if err != nil {
@@ -2011,7 +2011,7 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "CAA")
+		return unpack.Errorf("trailing record data: %s", "CAA")
 	}
 	return nil
 }
@@ -2027,10 +2027,10 @@ func (rr *UID) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *UID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Uid) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "UID")
+		return unpack.Errorf("trailing record data: %s", "UID")
 	}
 	return nil
 }
@@ -2046,10 +2046,10 @@ func (rr *GID) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *GID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Gid) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "GID")
+		return unpack.Errorf("trailing record data: %s", "GID")
 	}
 	return nil
 }
@@ -2069,7 +2069,7 @@ func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "UINFO")
+		return unpack.Errorf("trailing record data: %s", "UINFO")
 	}
 	return nil
 }
@@ -2089,7 +2089,7 @@ func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "EID")
+		return unpack.Errorf("trailing record data: %s", "EID")
 	}
 	return nil
 }
@@ -2109,7 +2109,7 @@ func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "NIMLOC")
+		return unpack.Errorf("trailing record data: %s", "NIMLOC")
 	}
 	return nil
 }
@@ -2129,7 +2129,7 @@ func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "OPENPGPKEY")
+		return unpack.Errorf("trailing record data: %s", "OPENPGPKEY")
 	}
 	return nil
 }
@@ -2153,17 +2153,17 @@ func (rr *CSYNC) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Serial) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Flags) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.TypeBitMap, err = unpackNsec(&s)
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "CSYNC")
+		return unpack.Errorf("trailing record data: %s", "CSYNC")
 	}
 	return nil
 }
@@ -2191,20 +2191,20 @@ func (rr *ZONEMD) pack(msg []byte, off int, compression map[string]uint16) (off1
 func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint32(&rr.Serial) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Scheme) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&rr.Hash) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Digest, err = unpackStringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "ZONEMD")
+		return unpack.Errorf("trailing record data: %s", "ZONEMD")
 	}
 	return nil
 }
@@ -2224,7 +2224,7 @@ func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "OPT")
+		return unpack.Errorf("trailing record data: %s", "OPT")
 	}
 	return nil
 }
@@ -2244,7 +2244,7 @@ func (rr *RESINFO) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "RESINFO")
+		return unpack.Errorf("trailing record data: %s", "RESINFO")
 	}
 	return nil
 }
@@ -2264,7 +2264,7 @@ func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "APL")
+		return unpack.Errorf("trailing record data: %s", "APL")
 	}
 	return nil
 }
@@ -2288,7 +2288,7 @@ func (rr *SVCB) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.ReadUint16(&rr.Priority) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.Target, err = unpack.Name(&s, msgBuf)
 	if err != nil {
@@ -2299,7 +2299,7 @@ func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "SVCB")
+		return unpack.Errorf("trailing record data: %s", "SVCB")
 	}
 	return nil
 }
@@ -2311,7 +2311,7 @@ func (rr *HTTPS) pack(msg []byte, off int, compression map[string]uint16) (off1 
 func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "HTTPS")
+		return unpack.Errorf("trailing record data: %s", "HTTPS")
 	}
 	return nil
 }
@@ -2323,7 +2323,7 @@ func (rr *ANY) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *ANY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "ANY")
+		return unpack.Errorf("trailing record data: %s", "ANY")
 	}
 	return nil
 }
@@ -2335,7 +2335,7 @@ func (rr *AXFR) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 func (rr *AXFR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "AXFR")
+		return unpack.Errorf("trailing record data: %s", "AXFR")
 	}
 	return nil
 }
@@ -2347,7 +2347,7 @@ func (rr *IXFR) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 func (rr *IXFR) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "IXFR")
+		return unpack.Errorf("trailing record data: %s", "IXFR")
 	}
 	return nil
 }
@@ -2399,33 +2399,33 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 		return err
 	}
 	if !s.ReadUint48(&rr.TimeSigned) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Fudge) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.MACSize) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.MAC, err = unpackStringHex(&s, int(rr.MACSize))
 	if err != nil {
 		return err
 	}
 	if !s.ReadUint16(&rr.OrigID) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.Error) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&rr.OtherLen) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
 	if err != nil {
 		return err
 	}
 	if !s.Empty() {
-		return ErrTrailingData.Fmt(": %s", "TSIG")
+		return unpack.Errorf("trailing record data: %s", "TSIG")
 	}
 	return nil
 }
