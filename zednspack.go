@@ -39,19 +39,19 @@ func (o *LLQ) pack(msg []byte, off int) (off1 int, err error) {
 
 func (o *LLQ) unpack(s *cryptobyte.String) error {
 	if !s.ReadUint16(&o.Version) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&o.Opcode) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint16(&o.Error) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint64(&o.ID) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint32(&o.LeaseLife) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	return nil
 }
@@ -138,10 +138,10 @@ func (o *N3U) unpack(s *cryptobyte.String) error {
 
 func (o *EDE) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint16(&o.InfoCode) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if o.ExtraText, err = unpack.StringAny(s, len(*s)); err != nil {
-		return ErrUnpackOverflow.Fmt(": %s", "EDE option")
+		return unpack.Errorf("overflow: %s", "EDE option")
 	}
 	return nil
 }
@@ -158,7 +158,7 @@ func (o *EDE) pack(msg []byte, off int) (int, error) {
 func (e *REPORTING) unpack(s *cryptobyte.String) (err error) {
 	e.AgentDomain, err = unpack.Name(s, nil) // TODO: unpackNAme with nil buffer, no compression pointers..
 	if err != nil {
-		return ErrUnpackOverflow.Fmt(": %s", "REPORTING agent domain")
+		return unpack.Errorf("overflow: %s", "REPORTING agent domain")
 	}
 	return nil
 }
@@ -184,7 +184,7 @@ func (o *EXPIRE) unpack(s *cryptobyte.String) error {
 		return nil
 	}
 	if !s.ReadUint32(&o.Expire) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	return nil
 }
@@ -201,7 +201,7 @@ func (o *TCPKEEPALIVE) unpack(s *cryptobyte.String) error {
 		return nil
 	}
 	if !s.ReadUint16(&o.Timeout) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	return nil
 }
@@ -226,13 +226,13 @@ func (o *SUBNET) pack(msg []byte, off int) (int, error) {
 
 func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint16(&o.Family) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&o.SourceNetmask) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	if !s.ReadUint8(&o.SourceScope) {
-		return ErrUnpackOverflow
+		return unpack.ErrOverflow
 	}
 	switch o.Family {
 	case 0:

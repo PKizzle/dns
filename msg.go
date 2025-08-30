@@ -101,17 +101,9 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-/*
-// PackRR packs a resource record rr into msg[off:]. See PackName for documentation about the compression.
-func PackRR(rr RR, msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	_, off1, err = packRR(rr, msg, off, compression)
-	return off1, err
-}
-*/
-
 func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEnd int, off1 int, err error) {
 	if rr == nil {
-		return len(msg), len(msg), &Error{err: "nil rr"}
+		return len(msg), len(msg), &pack.Error{Err: "nil rr"}
 	}
 
 	rrtype := RRToType(rr)
@@ -126,25 +118,13 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 
 	rdlength := off1 - headerEnd
 	if int(uint16(rdlength)) != rdlength { // overflow
-		return headerEnd, len(msg), ErrLenData
+		return headerEnd, len(msg), pack.Errorf("inconsitent rdata length")
 	}
 
 	// The RDLENGTH field is the last field in the header and we set it here.
 	binary.BigEndian.PutUint16(msg[headerEnd-2:], uint16(rdlength))
 	return headerEnd, off1, nil
 }
-
-/*
-// UnpackRR unpacks msg[off:] into an RR.
-func UnpackRR(msg []byte, off int) (rr RR, off1 int, err error) {
-	if off < 0 || off >= len(msg) {
-		return nil, off, &Error{err: "bad offset"}
-	}
-	s := cryptobyte.String(msg[off:])
-	rr, err = unpackRR(&s, msg)
-	return rr, offset(s, msg), err
-}
-*/
 
 func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	h, rdlength, err := unpackRRHeader(msg, msgBuf)
@@ -158,7 +138,7 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	var data []byte
 	if !msg.ReadBytes(&data, int(rdlength)) {
 		h := h // Avoid spilling h to the heap in the happy path.
-		return &h, ErrTruncatedMessage
+		return &h, unpack.ErrTruncatedMessage
 	}
 
 	// Restrict msgBuf to the end of the RR (the current position of msg) so
@@ -331,17 +311,17 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	name, err := unpack.Name(msg, msgBuf)
 	if err != nil {
-		return nil, fmt.Errorf("%s: question.Name", err.Error())
+		return nil, err
 	}
 	var qtype uint16
 	if !msg.Empty() && !msg.ReadUint16(&qtype) {
-		return nil, ErrTruncatedMessage.Fmt(": %s", "question.Type")
+		return nil, unpack.Errorf("overflow: %s", "question.Type")
 	}
 	m.qtype = qtype
 
 	var qclass uint16
 	if !msg.Empty() && !msg.ReadUint16(&qclass) {
-		return nil, ErrTruncatedMessage.Fmt(": %s", "question.Class")
+		return nil, unpack.Errorf("overflow: %s", "question.Class")
 	}
 
 	var rr RR
@@ -463,7 +443,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	}
 
 	if !s.Empty() {
-		return (&Error{err: "trailing message data"}).Fmt(": %d more octets", len(s))
+		return pack.Errorf(": %d more octets", len(s))
 	}
 	return nil
 }
@@ -473,7 +453,7 @@ func (m *Msg) Unpack() error {
 	s := cryptobyte.String(m.Data)
 	var dh header
 	if !dh.unpack(&s) {
-		return ErrUnpackOverflow.Fmt(": %s", "MsgHeader")
+		return unpack.Errorf("overflow: %s", "MsgHeader")
 	}
 	m.setMsgHeader(dh)
 	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
@@ -658,27 +638,27 @@ func (m *Msg) Len() int {
 func (dh *header) pack(msg []byte, off int) (int, error) {
 	off, err := pack.Uint16(dh.ID, msg, off)
 	if err != nil {
-		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.ID")
+		return off, pack.Errorf(": %s", "header.ID")
 	}
 	off, err = pack.Uint16(dh.Bits, msg, off)
 	if err != nil {
-		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Bits")
+		return off, pack.Errorf(": %s", "header.Bits")
 	}
 	off, err = pack.Uint16(dh.Qdcount, msg, off)
 	if err != nil {
-		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Qdcount")
+		return off, pack.Errorf(": %s", "header.Qdcount")
 	}
 	off, err = pack.Uint16(dh.Ancount, msg, off)
 	if err != nil {
-		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Ancount")
+		return off, pack.Errorf(": %s", "header.Ancount")
 	}
 	off, err = pack.Uint16(dh.Nscount, msg, off)
 	if err != nil {
-		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Nscount")
+		return off, pack.Errorf(": %s", "header.Nscount")
 	}
 	off, err = pack.Uint16(dh.Arcount, msg, off)
 	if err != nil {
-		return off, (&Error{err: err.Error()}).Fmt(": %s", "header.Arcount")
+		return off, pack.Errorf(": %s", "header.Arcount")
 	}
 	return off, nil
 }

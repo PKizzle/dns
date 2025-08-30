@@ -1,8 +1,6 @@
 package unpack
 
 import (
-	"errors"
-	"fmt"
 	"net"
 	"strings"
 
@@ -27,7 +25,7 @@ const (
 func A(s *cryptobyte.String) (net.IP, error) {
 	ip := make(net.IP, net.IPv4len)
 	if !s.CopyBytes(ip) {
-		return nil, errors.New("dns: overflow unpacking a")
+		return nil, &Error{"overflow a"}
 	}
 	return ip, nil
 }
@@ -35,7 +33,7 @@ func A(s *cryptobyte.String) (net.IP, error) {
 func AAAA(s *cryptobyte.String) (net.IP, error) {
 	ip := make(net.IP, net.IPv6len)
 	if !s.CopyBytes(ip) {
-		return nil, errors.New("dns: overflow unpacking aaaa")
+		return nil, &Error{"overflow aaaa"}
 	}
 	return ip, nil
 }
@@ -43,7 +41,7 @@ func AAAA(s *cryptobyte.String) (net.IP, error) {
 func StringAny(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !s.ReadBytes(&b, len) {
-		return "", errors.New("dns: overflow unpacking string anything")
+		return "", &Error{"overflow string anything"}
 	}
 	return string(b), nil
 }
@@ -51,7 +49,7 @@ func StringAny(s *cryptobyte.String, len int) (string, error) {
 func String(s *cryptobyte.String) (string, error) {
 	var txt cryptobyte.String
 	if !s.ReadUint8LengthPrefixed(&txt) {
-		return "", errors.New("dns: overflow unpacking string")
+		return "", &Error{"overflow string"}
 	}
 	var sb strings.Builder
 	consumed := 0
@@ -100,7 +98,7 @@ func NameOnlyUsedInDNSSEC(msg []byte, off int) (string, int, error) {
 	return name, Offset(s, msg), nil
 }
 
-// Name unpacks a name in a cryptobyte.String. TODO(miek): fold into the above.
+// Name unpacks a name in a cryptobyte.String.
 func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
 	budget := maxNameWireOctets
@@ -112,13 +110,13 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	for {
 		var c byte
 		if !cs.ReadUint8(&c) {
-			return "", fmt.Errorf("dns: overflow unpacking data")
+			return "", &Error{"overflow"}
 		}
 		switch c & 0xC0 {
 		case 0x00: // literal string
 			var label []byte
 			if !cs.ReadBytes(&label, int(c)) {
-				return "", fmt.Errorf("dns: overflow unpacking data")
+				return "", &Error{"overflow"}
 			}
 			// If we see a zero-length label (root label), this is the end of the name.
 			if len(label) == 0 {
@@ -131,7 +129,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				return string(name), nil
 			}
 			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
-				return "", fmt.Errorf("name exceeded max wire-format octets: %s", s)
+				return "", &Error{"name exceeded max wire-format octets: " + string(*s)}
 			}
 			for _, b := range label {
 				if ddd.ShouldEscape(b) {
@@ -146,7 +144,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 		case 0xC0: // pointer
 			var c1 byte
 			if !cs.ReadUint8(&c1) {
-				return "", fmt.Errorf("dns: overflow unpacking data")
+				return "", &Error{"overflow"}
 			}
 			// If this is the first pointer we've seen, we need to advance s to our current position.
 			if !ptrs {
@@ -157,13 +155,13 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			// occurrence".
 			off := uint16(c&^0xC0)<<8 | uint16(c1)
 			if int(off) >= Offset(cs, msgBuf)-2 {
-				return "", fmt.Errorf("dns: pointer not to prior occurrence of name")
+				return "", &Error{"pointer not to prior occurrence of name"}
 			}
 			// Jump to the offset in msgBuf. We carry msgBuf around with us solely for this line.
 			cs = msgBuf[off:]
 			ptrs = true
 		default: // 0x80 and 0x40 are reserved
-			return "", fmt.Errorf("dns: reserved domain name label type")
+			return "", &Error{"reserved domain name label type"}
 		}
 	}
 }

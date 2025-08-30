@@ -4,7 +4,6 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
 	"net"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -26,7 +25,7 @@ func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength u
 		!msg.ReadUint16(&h.Class) ||
 		!msg.ReadUint32(&h.TTL) ||
 		!msg.ReadUint16(&rdlength) {
-		return h, rdlength, ErrTruncatedMessage
+		return h, rdlength, unpack.ErrTruncatedMessage
 	}
 	return h, rdlength, nil
 }
@@ -96,7 +95,7 @@ func toBase64(b []byte) string {
 func unpackStringBase32(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
+		return "", unpack.ErrOverflow
 	}
 	return toBase32(b), nil
 }
@@ -107,7 +106,7 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	if off+len(b32) > len(msg) {
-		return len(msg), &Error{err: "overflow packing base32"}
+		return len(msg), &pack.Error{Err: "overflow base32"}
 	}
 	copy(msg[off:off+len(b32)], b32)
 	off += len(b32)
@@ -117,7 +116,7 @@ func packStringBase32(s string, msg []byte, off int) (int, error) {
 func unpackStringBase64(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
+		return "", unpack.ErrOverflow
 	}
 	return toBase64(b), nil
 }
@@ -128,7 +127,7 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	if off+len(b64) > len(msg) {
-		return len(msg), &Error{err: "overflow packing base64"}
+		return len(msg), &pack.Error{Err: "overflow base64"}
 	}
 	copy(msg[off:off+len(b64)], b64)
 	off += len(b64)
@@ -138,7 +137,7 @@ func packStringBase64(s string, msg []byte, off int) (int, error) {
 func unpackStringHex(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !s.ReadBytes(&b, len) {
-		return "", ErrUnpackOverflow
+		return "", unpack.ErrOverflow
 	}
 	return hex.EncodeToString(b), nil
 }
@@ -149,7 +148,7 @@ func packStringHex(s string, msg []byte, off int) (int, error) {
 		return len(msg), err
 	}
 	if off+len(h) > len(msg) {
-		return len(msg), &Error{err: "overflow packing hex"}
+		return len(msg), &pack.Error{Err: "overflow hex"}
 	}
 	copy(msg[off:off+len(h)], h)
 	off += len(h)
@@ -176,13 +175,13 @@ func unpackOpt(s *cryptobyte.String) ([]EDNS0, error) {
 			data cryptobyte.String
 		)
 		if !s.ReadUint16(&code) || !s.ReadUint16LengthPrefixed(&data) {
-			return nil, ErrUnpackOverflow
+			return nil, unpack.ErrOverflow
 		}
 		var option EDNS0
 		if newFn, ok := CodeToRR[code]; ok {
 			option = newFn()
 		} else {
-			return nil, fmt.Errorf("dns: unknown OPT code %d\n", code)
+			return nil, unpack.Errorf("unknown OPT code %d", code)
 		}
 		if err := unpackOptionCode(option, &data); err != nil {
 			return nil, err
@@ -196,7 +195,7 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	for _, option := range options {
 		l := option.Len()
 		if off+l >= len(msg) {
-			return len(msg), ErrBuf
+			return len(msg), pack.ErrBuf
 		}
 		code := RRToCode(option) // TODO(miek): unknown codes, caught later
 
@@ -232,19 +231,19 @@ func unpackNsec(s *cryptobyte.String) ([]uint16, error) {
 		)
 		if !s.ReadUint8(&window) ||
 			!s.ReadUint8LengthPrefixed(&bits) {
-			return nsec, ErrUnpackOverflow
+			return nsec, unpack.ErrOverflow
 		}
 		if int(window) <= lastwindow {
 			// RFC 4034: Blocks are present in the NSEC RR RDATA in
 			// increasing numerical order.
-			return nsec, &Error{err: "out of order NSEC(3) block in type bitmap"}
+			return nsec, &unpack.Error{Err: "out of order NSEC(3) BLock in type bitmap"}
 		}
 		if len(bits) == 0 {
 			// RFC 4034: Blocks with no types present MUST NOT be included.
-			return nsec, &Error{err: "empty NSEC(3) block in type bitmap"}
+			return nsec, &unpack.Error{Err: "empty NSEC(3) block in type bitmap"}
 		}
 		if len(bits) > 32 {
-			return nsec, &Error{err: "NSEC(3) block too long in type bitmap"}
+			return nsec, &unpack.Error{Err: "NSEC(3) block too long in type bitmap"}
 		}
 
 		// Walk the bytes in the window and extract the type bits
@@ -289,7 +288,7 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 		return off, nil
 	}
 	if off > len(msg) {
-		return off, &Error{err: "overflow packing nsec"}
+		return off, &pack.Error{Err: "overflow NSEC(3)"}
 	}
 	toZero := msg[off:]
 	if maxLen := typeBitMapLen(bitmap); maxLen < len(toZero) {
@@ -307,10 +306,10 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 			lastlength = 0
 		}
 		if window < lastwindow || length < lastlength {
-			return len(msg), &Error{err: "nsec bits out of order"}
+			return len(msg), &pack.Error{Err: "NSEC(3) bits out of order"}
 		}
 		if off+2+int(length) > len(msg) {
-			return len(msg), &Error{err: "overflow packing nsec"}
+			return len(msg), &pack.Error{Err: "overflow NSEC(3)"}
 		}
 		// Setting the window #
 		msg[off] = byte(window)
@@ -360,7 +359,7 @@ func packApl(data []APLPrefix, msg []byte, off int) (int, error) {
 
 func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	if len(p.Network.IP) != len(p.Network.Mask) {
-		return len(msg), &Error{err: "address and mask lengths don't match"}
+		return len(msg), &pack.Error{Err: "address and mask lengths don't match"}
 	}
 
 	var err error
@@ -373,7 +372,7 @@ func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	case net.IPv6len:
 		off, err = pack.Uint16(2, msg, off)
 	default:
-		err = &Error{err: "unrecognized address family"}
+		err = &pack.Error{Err: "unrecognized address family"}
 	}
 	if err != nil {
 		return len(msg), err
@@ -402,7 +401,7 @@ func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	}
 
 	if off+len(addr) > len(msg) {
-		return len(msg), &Error{err: "overflow packing APL prefix"}
+		return len(msg), &pack.Error{Err: "overflow APL prefix"}
 	}
 	off += copy(msg[off:], addr)
 
@@ -429,7 +428,7 @@ func unpackAplPrefix(s *cryptobyte.String) (APLPrefix, error) {
 	if !s.ReadUint16(&family) ||
 		!s.ReadUint8(&prefix) ||
 		!s.ReadUint8(&nlen) {
-		return APLPrefix{}, ErrUnpackOverflow
+		return APLPrefix{}, unpack.ErrOverflow
 	}
 
 	var ip net.IP
@@ -439,17 +438,17 @@ func unpackAplPrefix(s *cryptobyte.String) (APLPrefix, error) {
 	case 2:
 		ip = make(net.IP, net.IPv6len)
 	default:
-		return APLPrefix{}, &Error{err: "unrecognized APL address family"}
+		return APLPrefix{}, &unpack.Error{Err: "unrecognized APL address family"}
 	}
 	if int(prefix) > 8*len(ip) {
-		return APLPrefix{}, &Error{err: "APL prefix too long"}
+		return APLPrefix{}, &unpack.Error{Err: "APL prefix too long"}
 	}
 	afdlen := int(nlen & 0x7f)
 	if afdlen > len(ip) {
-		return APLPrefix{}, &Error{err: "APL length too long"}
+		return APLPrefix{}, &unpack.Error{Err: "APL length too long"}
 	}
 	if !s.CopyBytes(ip[:afdlen]) {
-		return APLPrefix{}, ErrUnpackOverflow
+		return APLPrefix{}, unpack.ErrOverflow
 	}
 
 	// Address MUST NOT contain trailing zero bytes per RFC3123 Sections 4.1 and 4.2.
@@ -503,7 +502,7 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 func packTxt(txt []string, msg []byte, off int) (int, error) {
 	if len(txt) == 0 {
 		if off >= len(msg) {
-			return len(msg), ErrBuf
+			return len(msg), pack.ErrBuf
 		}
 		msg[off] = 0
 		return off, nil
@@ -520,11 +519,11 @@ func packTxt(txt []string, msg []byte, off int) (int, error) {
 
 func packOctetString(s string, msg []byte, off int) (int, error) {
 	if off >= len(msg) || len(s) > 256*4+1 {
-		return len(msg), ErrBuf
+		return len(msg), pack.ErrBuf
 	}
 	for i := 0; i < len(s); i++ {
 		if len(msg) <= off {
-			return len(msg), ErrBuf
+			return len(msg), pack.ErrBuf
 		}
 		if s[i] == '\\' {
 			i++

@@ -3,6 +3,7 @@ package dns
 import (
 	"slices"
 
+	"codeberg.org/miekg/dns/internal/unpack"
 	"codeberg.org/miekg/dns/svcb"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -13,7 +14,7 @@ func unpackSVCB(s *cryptobyte.String) ([]svcb.Pair, error) {
 	for !s.Empty() {
 		var data *cryptobyte.String
 		if !s.ReadUint16(&key) || !s.ReadUint16LengthPrefixed(data) {
-			return nil, ErrUnpackOverflow
+			return nil, unpack.ErrOverflow
 		}
 		pairFn := svcb.KeyToPair(key)
 		if pairFn == nil {
