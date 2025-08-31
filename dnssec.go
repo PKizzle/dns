@@ -154,7 +154,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 		keywire.Algorithm = k.Algorithm
 		keywire.PublicKey = k.PublicKey
 		wire := make([]byte, DefaultMsgSize)
-		n, err := packKeyWire(keywire, wire)
+		n, err := keywire.pack(wire)
 		if err != nil {
 			return 0
 		}
@@ -192,7 +192,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	keywire.Algorithm = k.Algorithm
 	keywire.PublicKey = k.PublicKey
 	wire := make([]byte, DefaultMsgSize)
-	n, err := packKeyWire(keywire, wire)
+	n, err := keywire.pack(wire)
 	if err != nil {
 		return nil
 	}
@@ -288,7 +288,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 
 	// Create the desired binary blob
 	signdata := make([]byte, DefaultMsgSize)
-	n, err := packSigWire(sigwire, signdata)
+	n, err := sigwire.pack(signdata)
 	if err != nil {
 		return err
 	}
@@ -360,8 +360,10 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 // It also checks that the Zone Key bit (RFC 4034 2.1.1) is set on the DNSKEY
 // and that the Protocol field is set to 3 (RFC 4034 2.1.2).
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
-	// First the easy checks
 	if !dnsutilIsRRset(rrset) {
+		return ErrRRset
+	}
+	if rrset[0].Header().t != rr.TypeCovered {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {
@@ -373,7 +375,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	if rr.Algorithm != k.Algorithm {
 		return ErrKey
 	}
-	if !strings.EqualFold(rr.SignerName, k.Hdr.Name) {
+	if !EqualName(rr.SignerName, k.Hdr.Name) {
 		return ErrKey
 	}
 	if k.Protocol != 3 {
@@ -384,13 +386,6 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	// cover RRsets.
 	if k.Flags&ZONE == 0 {
 		return ErrKey
-	}
-
-	// IsRRset checked that we have at least one RR and that the RRs in
-	// the set have consistent type, class, and name. Also check that type and
-	// class matches the RRSIG record.
-	if h0 := rrset[0].Header(); h0.Class != rr.Hdr.Class || h0.t != rr.TypeCovered {
-		return ErrRRset
 	}
 
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
@@ -405,8 +400,8 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	sigwire.KeyTag = rr.KeyTag
 	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
 	// Create the desired binary blob
-	signeddata := make([]byte, DefaultMsgSize)
-	n, err := packSigWire(sigwire, signeddata)
+	signeddata := make([]byte, MinMsgSize)
+	n, err := sigwire.pack(signeddata)
 	if err != nil {
 		return err
 	}
@@ -693,62 +688,54 @@ func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
 	return buf, nil
 }
 
-func packSigWire(sw *rrsigWireFmt, msg []byte) (int, error) {
+func (sw *rrsigWireFmt) pack(buf []byte) (int, error) {
 	// copied from zmsg.go RRSIG packing
-	off, err := pack.Uint16(sw.TypeCovered, msg, 0)
+	off, err := pack.Uint16(sw.TypeCovered, buf, 0)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint8(sw.Algorithm, msg, off)
+	off, err = pack.Uint8(sw.Algorithm, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint8(sw.Labels, msg, off)
+	off, err = pack.Uint8(sw.Labels, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint32(sw.OrigTTL, msg, off)
+	off, err = pack.Uint32(sw.OrigTTL, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint32(sw.Expiration, msg, off)
+	off, err = pack.Uint32(sw.Expiration, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint32(sw.Inception, msg, off)
+	off, err = pack.Uint32(sw.Inception, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint16(sw.KeyTag, msg, off)
+	off, err = pack.Uint16(sw.KeyTag, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Name(sw.SignerName, msg, off, nil, false)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
+	return pack.Name(sw.SignerName, buf, off, nil, false)
 }
 
-func packKeyWire(dw *dnskeyWireFmt, msg []byte) (int, error) {
+func (dw *dnskeyWireFmt) pack(buf []byte) (int, error) {
 	// copied from zmsg.go DNSKEY packing
-	off, err := pack.Uint16(dw.Flags, msg, 0)
+	off, err := pack.Uint16(dw.Flags, buf, 0)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint8(dw.Protocol, msg, off)
+	off, err = pack.Uint8(dw.Protocol, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Uint8(dw.Algorithm, msg, off)
+	off, err = pack.Uint8(dw.Algorithm, buf, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(dw.PublicKey, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
+	return packStringBase64(dw.PublicKey, buf, off)
 }
 
 // Helper function for packing and unpacking
