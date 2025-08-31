@@ -310,3 +310,7 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	}
 	return zunpack(r, msg, msg)
 }
+
+const (
+	msgArcount = 10 // offset in the message where the Arcount is, 2 octets.
+)

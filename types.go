@@ -774,6 +774,11 @@ type SIG struct {
 	RRSIG
 }
 
+// NewSIG0 return a new SIG with initial fields set. This can be used SIG0 transaction signing.
+func NewSIG0() *SIG {
+	return nil
+}
+
 // RRSIG RR. See RFC 4034 and RFC 3755.
 type RRSIG struct {
 	Hdr         Header
@@ -1641,7 +1646,7 @@ func (*IXFR) parse(c *zlexer, origin string) *ParseError {
 //	tsig := &dns.TSIG{Hdr: dns.Header{Name: "keyname.", Class: dns.ClassANY}, Algorithm: dns.HmacSHA512,
 //			TimeSigned: uint64(time.Now().Unix())}
 //
-// See [TSIG.Init] for an easier way of doing this.
+// See [NewTSIG] for an easier way of doing this.
 type TSIG struct {
 	Hdr        Header
 	Algorithm  string `dns:"domain-name"` // Algorithm is encoded as a name, see HmacSHAXXX contstants.

@@ -6,7 +6,8 @@ import (
 	"hash"
 )
 
-// identityHash will not hash, it only buffers the data written into it and returns it as-is.
+// identityHash will not hash, it only buffers the data written into it and returns it as-is. This is used for
+// ED25519.
 type identityHash struct {
 	b *bytes.Buffer
 }

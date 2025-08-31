@@ -19,7 +19,7 @@ const (
 	HmacMD5 = "hmac-md5.sig-alg.reg.int." // Deprecated: HmacMD5 is no longer supported.
 )
 
-// TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR with the algorithm, key name
+// TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR (see [TSIG.New]) with the algorithm, key name
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero).
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.
@@ -50,7 +50,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	m.Data = m.Data[:off]
 	arcount := uint16(len(m.Extra) + int(m.ps-1))
-	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
+	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the TSIG
 
 	macbuf, err := t.mac(m, *options)
 	if err != nil {
@@ -78,7 +78,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	m.Data = append(m.Data, tbuf...)
 	options.RequestMAC = t.MAC
 
-	pack.Uint16(arcount+1, m.Data, 10) // and +1 after we done for the new and improved TSIG that is added
+	pack.Uint16(arcount+1, m.Data, msgArcount) // and +1 after we done for the new and improved TSIG that is added
 	return nil
 }
 
@@ -120,7 +120,7 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	m.Data = m.Data[:off]
 	arcount := uint16(len(m.Extra) + int(m.ps-1))
-	pack.Uint16(arcount, m.Data, 10) // decrease additional section count, because we removed the TSIG
+	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the TSIG
 
 	// restore msg ID, as the origID is used to calculate hash, and set in m.Data.
 	pack.Uint16(t.OrigID, m.Data, 0)
@@ -147,7 +147,7 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	if uint64(t.Fudge) < fudge {
 		return ErrTime
 	}
-	pack.Uint16(arcount+1, m.Data, 10) // restore arcount
+	pack.Uint16(arcount+1, m.Data, msgArcount) // restore arcount
 	options.RequestMAC = t.MAC
 	return nil
 }
@@ -157,16 +157,14 @@ type TSIGOption struct {
 	RequestMAC string
 }
 
-type (
-	TSIGSigner interface {
-		// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return signature or an error.
-		Sign(t *TSIG, p []byte) ([]byte, error)
-		// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
-		Verify(t *TSIG, p []byte, options TSIGOption) error
-		// Key returns the key to sign or verify with.
-		Key() []byte
-	}
-)
+type TSIGSigner interface {
+	// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return the signature or an error.
+	Sign(t *TSIG, p []byte) ([]byte, error)
+	// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
+	Verify(t *TSIG, p []byte, options TSIGOption) error
+	// Key returns the key to sign or verify with.
+	Key() []byte
+}
 
 func hasTSIG(m *Msg) *TSIG {
 	for i := range m.Pseudo {
