@@ -38,6 +38,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"runtime/trace"
 	"strconv"
 	"syscall"
 
@@ -45,8 +46,8 @@ import (
 )
 
 var (
-	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-	printf     = flag.Bool("print", false, "print replies")
+	flagcpu   = flag.Bool("cpu", false, "write cpu profile to cpu.out")
+	flagtrace = flag.Bool("trace", false, "write trace profile to trace.out")
 )
 
 const dom = "whoami.miek.nl."
@@ -92,9 +93,6 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Extra = []dns.RR{t}
 	}
 
-	if *printf {
-		log.Println(r.String())
-	}
 	io.Copy(w, r)
 }
 
@@ -107,11 +105,23 @@ func serve(net string) {
 
 func main() {
 	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
+
+	if *flagtrace {
+		f, err := os.Create("trace.out")
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer f.Close()
+		trace.Start(f)
+		defer trace.Stop()
+	}
+
+	if *flagcpu {
+		f, err := os.Create("cpu.out")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
