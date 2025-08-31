@@ -124,6 +124,7 @@ type Server struct {
 	cancel   context.CancelFunc
 	exited   chan struct{}
 	shutdown chan bool
+	msgPool  *Pool
 }
 
 // NewServer return a new server initialized with some defaults
@@ -156,6 +157,33 @@ func (srv *Server) init() {
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
 	srv.shutdown = make(chan bool)
+	srv.msgPool = newPool(srv.UDPSize)
+}
+
+type Pool struct {
+	size int
+	pool sync.Pool
+}
+
+func (p *Pool) Get() []byte { return p.pool.Get().([]byte) }
+
+func (p *Pool) Put(b []byte) {
+	if len(b) > p.size {
+		return
+	}
+	if p == nil { // msg not created by the server
+		return
+	}
+	p.pool.Put(b)
+}
+
+func newPool(size int) *Pool {
+	return &Pool{
+		size: size,
+		pool: sync.Pool{
+			New: func() any { return make([]byte, MinMsgSize) },
+		},
+	}
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server. If TLS config is available a TLS
@@ -251,11 +279,13 @@ func (srv *Server) listenTCP(ln net.Listener) {
 	}
 }
 
-// batchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
+// If this is a not a const, but var, or worse a field in [Server] it's about 10k qps *slower*.
+// cd cmd/reflect; go test -v -count=1 # check the perf values, 15 does 360K on my M2 8-core with Asahi Linux
+
+// BatchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
 // needs to be made with how much memory needs to be pre-allocated and how fast things should go. It is
 // set to set to 15.
-// If this is a not a const, but var, or worse a field in [Server] it's about 10k qps *slower*.
-const batchSize = 15 // cd cmd/reflect; go test -v -count=1 # check the perf values, 15 does 360K on my M2 8-core with Asahi Linux
+const BatchSize = 15
 
 // listenUDP starts a UDP listener for the server.
 func (srv *Server) listenUDP(pc net.PacketConn) {
@@ -275,10 +305,11 @@ Read:
 			close(srv.exited)
 			return
 		default:
-			bufs := make([][]byte, batchSize, batchSize)
-			msgs := make([]ipv4.Message, batchSize, batchSize)
-			for i := range batchSize {
-				bufs[i] = make([]byte, srv.UDPSize)
+			bufs := make([][]byte, BatchSize, BatchSize)
+			msgs := make([]ipv4.Message, BatchSize, BatchSize)
+			for i := range BatchSize {
+				bufs[i] = srv.msgPool.Get()
+				// bufs[i] = make([]byte, srv.UDPSize)
 				msgs[i].Buffers = [][]byte{bufs[i]}
 				msgs[i].OOB = make([]byte, oobSize)
 			}
@@ -290,8 +321,7 @@ Read:
 			if err != nil {
 				continue Read
 			}
-			for i := range n {
-				msg := msgs[i]
+			for _, msg := range msgs[:n] {
 				raddr := msg.Addr
 				oob := msg.OOB[:msg.NN]
 
@@ -299,6 +329,9 @@ Read:
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr.(*net.UDPAddr), oob}, hijacked: new(atomic.Bool)}
 
 				go srv.serveUDP(&wg, w, r)
+			}
+			for j := n + 1; j < BatchSize; j++ {
+				srv.msgPool.Put(bufs[j])
 			}
 		}
 	}
@@ -355,6 +388,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 // serveDNS serves the message it skip the message handling if the received message has the response bit set.
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
+	r.msgPool = srv.msgPool
 	r.Options = MsgOptionUnpackQuestion | MsgOptionUnpackHeader
 
 	if err := r.Unpack(); err != nil {

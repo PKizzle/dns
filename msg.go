@@ -737,10 +737,14 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		if sess != nil {
 			oob := sourceFromOOB(sess.oobdata)
 			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
+			m.msgPool.Put(m.Data)
+			m.Data = nil
 			return int64(n), err
 		}
 
 		n, err := r.Conn().Write(m.Data)
+		m.msgPool.Put(m.Data)
+		m.Data = nil
 		return int64(n), err
 	}
 
@@ -748,6 +752,8 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
 	n, err := r.Write(l)
+	m.msgPool.Put(m.Data)
+	m.Data = nil
 	return int64(n), err
 }
 

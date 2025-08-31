@@ -205,6 +205,8 @@ type Msg struct {
 
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
 	Options MsgOption
+
+	msgPool *Pool
 }
 
 // Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
