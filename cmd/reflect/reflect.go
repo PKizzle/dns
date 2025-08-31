@@ -42,7 +42,6 @@ import (
 	"syscall"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 var (
@@ -62,8 +61,8 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
-	m := new(dns.Msg)
-	dnsutil.SetReply(m, r)
+	// reuse r
+	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
@@ -86,17 +85,17 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 
 	switch r.Question[0].(type) {
 	case *dns.TXT:
-		m.Answer = append(m.Answer, t)
-		m.Extra = append(m.Extra, rr)
+		r.Answer = []dns.RR{t}
+		r.Extra = []dns.RR{rr}
 	case *dns.AAAA, *dns.A:
-		m.Answer = append(m.Answer, rr)
-		m.Extra = append(m.Extra, t)
+		r.Answer = []dns.RR{rr}
+		r.Extra = []dns.RR{t}
 	}
 
 	if *printf {
-		log.Println(m.String())
+		log.Println(r.String())
 	}
-	io.Copy(w, m)
+	io.Copy(w, r)
 }
 
 func serve(net string) {

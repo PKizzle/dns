@@ -129,15 +129,7 @@ type Server struct {
 // NewServer return a new server initialized with some defaults
 func NewServer() *Server {
 	srv := new(Server)
-	srv.UDPSize = MinMsgSize
-	srv.MsgInvalidFunc = DefaultMsgInvalidFunc
-	srv.MsgAcceptFunc = DefaultMsgAcceptFunc
-	srv.Handler = DefaultServeMux
-	srv.ReadTimeout = 2 * time.Second
-	srv.IdleTimeout = 8 * time.Second
-	srv.ctx, srv.cancel = context.WithCancel(context.Background())
-	srv.exited = make(chan struct{})
-	srv.shutdown = make(chan bool)
+	srv.init()
 	return srv
 }
 
