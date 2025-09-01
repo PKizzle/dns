@@ -648,7 +648,7 @@ func (rr *CERT) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.Certificate, msg, off)
+	off, err = pack.StringBase64(rr.Certificate, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -666,7 +666,7 @@ func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Algorithm) {
 		return unpack.ErrOverflow
 	}
-	rr.Certificate, err = unpackStringBase64(&s, len(s))
+	rr.Certificate, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -913,7 +913,7 @@ func (rr *RRSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.Signature, msg, off)
+	off, err = pack.StringBase64(rr.Signature, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -947,7 +947,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.Signature, err = unpackStringBase64(&s, len(s))
+	rr.Signature, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1229,7 +1229,7 @@ func (rr *DNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off1
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1247,7 +1247,7 @@ func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Algorithm) {
 		return unpack.ErrOverflow
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1274,7 +1274,7 @@ func (rr *IPSECKEY) pack(msg []byte, off int, compression map[string]uint16) (of
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1296,7 +1296,7 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1353,7 +1353,7 @@ func (rr *RKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1371,7 +1371,7 @@ func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Algorithm) {
 		return unpack.ErrOverflow
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1429,7 +1429,7 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase32(rr.NextDomain, msg, off)
+	off, err = pack.StringBase32(rr.NextDomain, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1461,7 +1461,7 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.HashLength) {
 		return unpack.ErrOverflow
 	}
-	rr.NextDomain, err = unpackStringBase32(&s, int(rr.HashLength))
+	rr.NextDomain, err = unpack.StringBase32(&s, int(rr.HashLength))
 	if err != nil {
 		return err
 	}
@@ -1659,7 +1659,7 @@ func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DHCID) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringBase64(rr.Digest, msg, off)
+	off, err = pack.StringBase64(rr.Digest, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1668,7 +1668,7 @@ func (rr *DHCID) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Digest, err = unpackStringBase64(&s, len(s))
+	rr.Digest, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1777,7 +1777,7 @@ func (rr *HIP) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1803,7 +1803,7 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, int(rr.PublicKeyLength))
+	rr.PublicKey, err = unpack.StringBase64(&s, int(rr.PublicKeyLength))
 	if err != nil {
 		return err
 	}
@@ -2115,7 +2115,7 @@ func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *OPENPGPKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2124,7 +2124,7 @@ func (rr *OPENPGPKEY) pack(msg []byte, off int, compression map[string]uint16) (
 
 func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}

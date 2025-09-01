@@ -1,6 +1,8 @@
 package unpack
 
 import (
+	"encoding/base32"
+	"encoding/base64"
 	"net"
 	"strings"
 
@@ -174,3 +176,24 @@ func Offset(data, buf []byte) int {
 	}
 	return len(buf) - len(data)
 }
+
+func StringBase32(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", ErrOverflow
+	}
+	return Base32(b), nil
+}
+
+func StringBase64(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", ErrOverflow
+	}
+	return Base64(b), nil
+}
+
+var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
+
+func Base32(b []byte) string { return base32HexNoPadEncoding.EncodeToString(b) }
+func Base64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }

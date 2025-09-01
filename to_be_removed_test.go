@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"testing"
+
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 func TestClientExternal(t *testing.T) {
@@ -31,7 +33,7 @@ func TestClientExternal(t *testing.T) {
 func TestTransferInExternal(t *testing.T) {
 	t.Skip()
 	c := NewClient()
-	secret, _ := fromBase64([]byte("Vn37JPSCmaCHKJhghcpRg8m6PlQ="))
+	secret, _ := pack.Base64([]byte("Vn37JPSCmaCHKJhghcpRg8m6PlQ="))
 	c.TSIGSigner = HmacTSIG{Secret: secret}
 
 	m := NewMsg("ok.bad-dnssec.wb.sidnlabs.nl.", TypeAXFR)
@@ -52,7 +54,7 @@ func TestTransferInExternal(t *testing.T) {
 func TestTransferInExternalRoot(t *testing.T) {
 	t.Skip()
 	c := NewClient()
-	secret, _ := fromBase64([]byte("WhateverSecretYouUse"))
+	secret, _ := pack.Base64([]byte("WhateverSecretYouUse"))
 	c.TSIGSigner = HmacTSIG{Secret: secret}
 
 	m := NewMsg(".", TypeAXFR)

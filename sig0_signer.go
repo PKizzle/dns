@@ -6,6 +6,8 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"math/big"
+
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 type CryptoSIG0 struct {
@@ -64,7 +66,7 @@ func (c CryptoSIG0) Verify(s *SIG, p []byte) error {
 
 	h := hash.New()
 
-	binarysignature, _ := fromBase64([]byte(signature))
+	binarysignature, _ := pack.Base64([]byte(signature))
 	switch s.Algorithm {
 	case RSASHA1, RSASHA256, RSASHA512:
 		h.Write(sbuf)

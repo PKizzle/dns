@@ -10,6 +10,8 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 // NewPrivateKey returns a PrivateKey by parsing the string s.
@@ -79,7 +81,7 @@ func readPrivateKeyRSA(m map[string]string) (*rsa.PrivateKey, error) {
 	for k, v := range m {
 		switch k {
 		case "modulus", "publicexponent", "privateexponent", "prime1", "prime2":
-			v1, err := fromBase64([]byte(v))
+			v1, err := pack.Base64([]byte(v))
 			if err != nil {
 				return nil, err
 			}
@@ -112,7 +114,7 @@ func readPrivateKeyECDSA(m map[string]string) (*ecdsa.PrivateKey, error) {
 	for k, v := range m {
 		switch k {
 		case "privatekey":
-			v1, err := fromBase64([]byte(v))
+			v1, err := pack.Base64([]byte(v))
 			if err != nil {
 				return nil, err
 			}
@@ -130,7 +132,7 @@ func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 	for k, v := range m {
 		switch k {
 		case "privatekey":
-			p1, err := fromBase64([]byte(v))
+			p1, err := pack.Base64([]byte(v))
 			if err != nil {
 				return nil, err
 			}

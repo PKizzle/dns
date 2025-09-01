@@ -5,6 +5,7 @@ import (
 
 	"codeberg.org/miekg/dns/internal/jump"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 // SOG0Sign signs a dns.Msg. It fills the signature with the appropriate data.
@@ -44,7 +45,7 @@ func SIG0Sign(m *Msg, k SIG0Signer) error {
 		return err
 	}
 
-	s.Signature = toBase64(signature)
+	s.Signature = unpack.Base64(signature)
 
 	sbuf := make([]byte, s.Len())
 	if _, off, err = packRR(s, sbuf, 0, nil); err != nil {

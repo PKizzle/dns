@@ -1,8 +1,6 @@
 package dns
 
 import (
-	"encoding/base32"
-	"encoding/base64"
 	"encoding/hex"
 	"net"
 
@@ -60,79 +58,6 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 }
 
 // helper helper functions.
-
-var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
-
-func fromBase32(s []byte) (buf []byte, err error) {
-	for i, b := range s {
-		if b >= 'a' && b <= 'z' {
-			s[i] = b - 32
-		}
-	}
-	buflen := base32HexNoPadEncoding.DecodedLen(len(s))
-	buf = make([]byte, buflen)
-	n, err := base32HexNoPadEncoding.Decode(buf, s)
-	buf = buf[:n]
-	return
-}
-
-func toBase32(b []byte) string {
-	return base32HexNoPadEncoding.EncodeToString(b)
-}
-
-func fromBase64(s []byte) (buf []byte, err error) {
-	buflen := base64.StdEncoding.DecodedLen(len(s))
-	buf = make([]byte, buflen)
-	n, err := base64.StdEncoding.Decode(buf, s)
-	buf = buf[:n]
-	return
-}
-
-func toBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func unpackStringBase32(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", unpack.ErrOverflow
-	}
-	return toBase32(b), nil
-}
-
-func packStringBase32(s string, msg []byte, off int) (int, error) {
-	b32, err := fromBase32([]byte(s))
-	if err != nil {
-		return len(msg), err
-	}
-	if off+len(b32) > len(msg) {
-		return len(msg), &pack.Error{Err: "overflow base32"}
-	}
-	copy(msg[off:off+len(b32)], b32)
-	off += len(b32)
-	return off, nil
-}
-
-func unpackStringBase64(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", unpack.ErrOverflow
-	}
-	return toBase64(b), nil
-}
-
-func packStringBase64(s string, msg []byte, off int) (int, error) {
-	b64, err := fromBase64([]byte(s))
-	if err != nil {
-		return len(msg), err
-	}
-	if off+len(b64) > len(msg) {
-		return len(msg), &pack.Error{Err: "overflow base64"}
-	}
-	copy(msg[off:off+len(b64)], b64)
-	off += len(b64)
-	return off, nil
-}
 
 func unpackStringHex(s *cryptobyte.String, len int) (string, error) {
 	var b []byte

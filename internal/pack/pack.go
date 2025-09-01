@@ -1,6 +1,8 @@
 package pack
 
 import (
+	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
 	"net"
 
@@ -286,4 +288,53 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 	}
 
 	return end-off == 1 && bs[off] == '.'
+}
+
+func StringBase32(s string, msg []byte, off int) (int, error) {
+	b32, err := Base32([]byte(s))
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(b32) > len(msg) {
+		return len(msg), &Error{Err: "overflow base32"}
+	}
+	copy(msg[off:off+len(b32)], b32)
+	off += len(b32)
+	return off, nil
+}
+
+func StringBase64(s string, msg []byte, off int) (int, error) {
+	b64, err := Base64([]byte(s))
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(b64) > len(msg) {
+		return len(msg), &Error{Err: "overflow base64"}
+	}
+	copy(msg[off:off+len(b64)], b64)
+	off += len(b64)
+	return off, nil
+}
+
+var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
+
+func Base32(s []byte) (buf []byte, err error) {
+	for i, b := range s {
+		if b >= 'a' && b <= 'z' {
+			s[i] = b - 32
+		}
+	}
+	buflen := base32HexNoPadEncoding.DecodedLen(len(s))
+	buf = make([]byte, buflen)
+	n, err := base32HexNoPadEncoding.Decode(buf, s)
+	buf = buf[:n]
+	return
+}
+
+func Base64(s []byte) (buf []byte, err error) {
+	buflen := base64.StdEncoding.DecodedLen(len(s))
+	buf = make([]byte, buflen)
+	n, err := base64.StdEncoding.Decode(buf, s)
+	buf = buf[:n]
+	return
 }

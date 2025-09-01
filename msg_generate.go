@@ -123,12 +123,12 @@ func main() {
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
 			case tag == `dns:"base32"`:
-				o("off, err = packStringBase32(rr.%s, msg, off)\n")
+				o("off, err = pack.StringBase32(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(tag, `dns:"size-base64`): // size-base64 can be packed just like base64
 				fallthrough
 			case tag == `dns:"base64"`:
-				o("off, err = packStringBase64(rr.%s, msg, off)\n")
+				o("off, err = pack.StringBase64(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(tag, `dns:"size-hex:SaltLength`):
 				// directly write instead of using o() so we get the error check in the correct place
@@ -234,9 +234,9 @@ if rr.%s != "-" {
 				case "hex":
 					unpackFieldLength("unpackStringHex", structMember)
 				case "base32":
-					unpackFieldLength("unpackStringBase32", structMember)
+					unpackFieldLength("unpack.StringBase32", structMember)
 				case "base64":
-					unpackFieldLength("unpackStringBase64", structMember)
+					unpackFieldLength("unpack.StringBase64", structMember)
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
@@ -277,9 +277,9 @@ if rr.%s != "-" {
 			case `dns:"txt"`:
 				unpackField("unpack.String")
 			case `dns:"base32"`:
-				unpackFieldRest("unpackStringBase32")
+				unpackFieldRest("unpack.StringBase32")
 			case `dns:"base64"`:
-				unpackFieldRest("unpackStringBase64")
+				unpackFieldRest("unpack.StringBase64")
 			case `dns:"hex"`:
 				unpackFieldRest("unpackStringHex")
 			case `dns:"any"`:
