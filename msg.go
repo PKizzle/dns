@@ -687,6 +687,8 @@ func (m *Msg) setMsgHeader(dh header) {
 	m.Rcode = dh.Bits & 0xF
 }
 
+func (m *Msg) Hijack() { m.hijacked.Store(true) }
+
 // io.Reader and io.Writer interfaces implementation.
 
 // Write writes the buffer p to the m.Data. If m's Data buffer is empty Pack() is called.
@@ -703,6 +705,7 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 
 // Read reads the data from m.Data into p. If m's Data buffer is empty Pack() is called.
 func (m *Msg) Read(p []byte) (n int, err error) {
+	// TODO, pool??
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return 0, err
@@ -713,9 +716,12 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-// WriteTo writes the message to w. W must be a [ResponseWriter], when w contains a *net.TCPConn, the write is prefixed with an uint16 with the
-// length of the buffer, otherwise the m.Data is written as-is. If w is a [ResponseController] a write timeout
-// is applied. If W is also a [ResponseController] write timeouts are applied.
+// WriteTo writes the message to w. W must be a [ResponseWriter], when w contains a *net.TCPConn, the write is
+// prefixed with an uint16 with the length of the buffer, otherwise the m.Data is written as-is. If w is a
+// [ResponseController] a write timeout is applied.
+//
+// If the message has not be hijacked, and m was create by the server, the Data buffer is returned
+// to the server's pool and zeroed out in m.
 func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	r, ok := w.(ResponseWriter)
 	if !ok {
@@ -737,10 +743,18 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		if sess != nil {
 			oob := sourceFromOOB(sess.oobdata)
 			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
+			if m.msgPool != nil && !m.hijacked.Load() {
+				m.msgPool.Put(m.Data)
+				m.Data = nil
+			}
 			return int64(n), err
 		}
 
 		n, err := r.Conn().Write(m.Data)
+		if m.msgPool != nil && !m.hijacked.Load() {
+			m.msgPool.Put(m.Data)
+			m.Data = nil
+		}
 		return int64(n), err
 	}
 
@@ -748,6 +762,10 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
 	n, err := r.Write(l)
+	if m.msgPool != nil && !m.hijacked.Load() {
+		m.msgPool.Put(m.Data)
+		m.Data = nil
+	}
 	return int64(n), err
 }
 

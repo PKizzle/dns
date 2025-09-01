@@ -102,7 +102,7 @@ type Server struct {
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout time.Duration
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
-	// See [ResponseWriter.Hijack] to see how a handler can bypass this.
+	// See [ResponseWriter.Hijack] on how a handler can bypass this.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
@@ -119,6 +119,9 @@ type Server struct {
 	NotifyStartedFunc func()
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
+
+	// MsgPool is the default [Pooler] used for allocation.
+	MsgPool Pooler
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
@@ -151,6 +154,9 @@ func (srv *Server) init() {
 	}
 	if srv.IdleTimeout == 0 {
 		srv.IdleTimeout = 8 * time.Second
+	}
+	if srv.MsgPool == nil {
+		srv.MsgPool = newPool(srv.UDPSize)
 	}
 
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
@@ -251,11 +257,13 @@ func (srv *Server) listenTCP(ln net.Listener) {
 	}
 }
 
-// batchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
+// If this is a not a const, but var, or worse a field in [Server] it's about 10k qps *slower*.
+// cd cmd/reflect; go test -v -count=1 # check the perf values, 15 does 360K on my M2 8-core with Asahi Linux
+
+// BatchSize controls the maximum of packets we should read using recvmmsg, using ReadBatch, a tradeoff
 // needs to be made with how much memory needs to be pre-allocated and how fast things should go. It is
 // set to set to 15.
-// If this is a not a const, but var, or worse a field in [Server] it's about 10k qps *slower*.
-const batchSize = 15 // cd cmd/reflect; go test -v -count=1 # check the perf values, 15 does 360K on my M2 8-core with Asahi Linux
+const BatchSize = 15
 
 // listenUDP starts a UDP listener for the server.
 func (srv *Server) listenUDP(pc net.PacketConn) {
@@ -275,10 +283,10 @@ Read:
 			close(srv.exited)
 			return
 		default:
-			bufs := make([][]byte, batchSize, batchSize)
-			msgs := make([]ipv4.Message, batchSize, batchSize)
-			for i := range batchSize {
-				bufs[i] = make([]byte, srv.UDPSize)
+			bufs := make([][]byte, BatchSize, BatchSize)
+			msgs := make([]ipv4.Message, BatchSize, BatchSize)
+			for i := range BatchSize {
+				bufs[i] = srv.MsgPool.Get()
 				msgs[i].Buffers = [][]byte{bufs[i]}
 				msgs[i].OOB = make([]byte, oobSize)
 			}
@@ -290,8 +298,7 @@ Read:
 			if err != nil {
 				continue Read
 			}
-			for i := range n {
-				msg := msgs[i]
+			for _, msg := range msgs[:n] {
 				raddr := msg.Addr
 				oob := msg.OOB[:msg.NN]
 
@@ -299,6 +306,10 @@ Read:
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr.(*net.UDPAddr), oob}, hijacked: new(atomic.Bool)}
 
 				go srv.serveUDP(&wg, w, r)
+			}
+			// return if we over-allocated
+			for j := n + 1; j < BatchSize; j++ {
+				srv.MsgPool.Put(bufs[j])
 			}
 		}
 	}
@@ -323,7 +334,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
-		r := &Msg{Data: make([]byte, srv.UDPSize)}
+		r := &Msg{Data: srv.MsgPool.Get()} // not all TCP conns are because of TC, so this may help too
 		if _, err := r.ReadFrom(conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
 				break
@@ -355,6 +366,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 // serveDNS serves the message it skip the message handling if the received message has the response bit set.
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
+	r.msgPool = srv.MsgPool
 	r.Options = MsgOptionUnpackQuestion | MsgOptionUnpackHeader
 
 	if err := r.Unpack(); err != nil {
