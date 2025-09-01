@@ -102,7 +102,7 @@ type Server struct {
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout time.Duration
 	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
-	// See [ResponseWriter.Hijack] to see how a handler can bypass this.
+	// See [ResponseWriter.Hijack] on how a handler can bypass this.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
 	// It is only supported on certain GOOSes and when using ListenAndServe.
@@ -120,11 +120,13 @@ type Server struct {
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
 
+	// MsgPool is the default [Pooler] used for allocation.
+	MsgPool Pooler
+
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
 	exited   chan struct{}
 	shutdown chan bool
-	msgPool  *Pool
 }
 
 // NewServer return a new server initialized with some defaults
@@ -153,37 +155,13 @@ func (srv *Server) init() {
 	if srv.IdleTimeout == 0 {
 		srv.IdleTimeout = 8 * time.Second
 	}
+	if srv.MsgPool == nil {
+		srv.MsgPool = newPool(srv.UDPSize)
+	}
 
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())
 	srv.exited = make(chan struct{})
 	srv.shutdown = make(chan bool)
-	srv.msgPool = newPool(srv.UDPSize)
-}
-
-type Pool struct {
-	size int
-	pool sync.Pool
-}
-
-func (p *Pool) Get() []byte { return p.pool.Get().([]byte) }
-
-func (p *Pool) Put(b []byte) {
-	if len(b) > p.size {
-		return
-	}
-	if p == nil { // msg not created by the server
-		return
-	}
-	p.pool.Put(b)
-}
-
-func newPool(size int) *Pool {
-	return &Pool{
-		size: size,
-		pool: sync.Pool{
-			New: func() any { return make([]byte, MinMsgSize) },
-		},
-	}
 }
 
 // ListenAndServe starts a nameserver on the configured address in *Server. If TLS config is available a TLS
@@ -308,8 +286,7 @@ Read:
 			bufs := make([][]byte, BatchSize, BatchSize)
 			msgs := make([]ipv4.Message, BatchSize, BatchSize)
 			for i := range BatchSize {
-				bufs[i] = srv.msgPool.Get()
-				// bufs[i] = make([]byte, srv.UDPSize)
+				bufs[i] = srv.MsgPool.Get()
 				msgs[i].Buffers = [][]byte{bufs[i]}
 				msgs[i].OOB = make([]byte, oobSize)
 			}
@@ -330,8 +307,9 @@ Read:
 
 				go srv.serveUDP(&wg, w, r)
 			}
+			// return if we over-allocated
 			for j := n + 1; j < BatchSize; j++ {
-				srv.msgPool.Put(bufs[j])
+				srv.MsgPool.Put(bufs[j])
 			}
 		}
 	}
@@ -356,7 +334,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
-		r := &Msg{Data: make([]byte, srv.UDPSize)}
+		r := &Msg{Data: srv.MsgPool.Get()} // not all TCP conns are because of TC, so this may help too
 		if _, err := r.ReadFrom(conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
 				break
@@ -388,7 +366,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 // serveDNS serves the message it skip the message handling if the received message has the response bit set.
 func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
-	r.msgPool = srv.msgPool
+	r.msgPool = srv.MsgPool
 	r.Options = MsgOptionUnpackQuestion | MsgOptionUnpackHeader
 
 	if err := r.Unpack(); err != nil {

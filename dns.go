@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"strconv"
 	"strings"
+	"sync/atomic"
 )
 
 //go:generate go run rr_generate.go
@@ -166,7 +167,13 @@ type MsgHeader struct {
 	Delegation     bool   // DELEG RR, https://datatracker.ietf.org/doc/draft-ietf-deleg/
 }
 
-// Msg is a DNS message. Msg implements [iter.Seq] and [iter.Seq2], so you can range over it, when doing so
+// Msg is a DNS message. Each message has a Data field that contains the binary data. This is filled when
+// calling [Msg.Pack], it is read and parsed into a Msg by [Msg.Unpack]. When the server allocated Data when reading
+// from the wire the server owns the allocation. Whenever the message is written to the default
+// [ResponseWriter] it is returned to the server's pool. If you need to make the Msg the sole owner of the
+// allocation call [Msg.Hijack], the allocation will then not be returned.
+//
+// Msg implements [iter.Seq] and [iter.Seq2], so you can range over it, when doing so
 // the RRs of each section are returned, this includes the pseudo section.
 type Msg struct {
 	MsgHeader
@@ -189,8 +196,6 @@ type Msg struct {
 	// The OPT RR is completely hidden from view, on m.Data holds that.
 	ps uint8
 
-	// Next are the virtual sections
-
 	// The Pseudo section is a virtual section that holds the OPT EDNS0 options, that are interpreted (and shown) as RRs.
 	// The OPT RR will never be visible in Extra, nor in the Pseudo section, this is all handled transparently.
 	Pseudo []RR // Holds the RR(s) of the (virtual) pseudo section.
@@ -206,7 +211,9 @@ type Msg struct {
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
 	Options MsgOption
 
-	msgPool *Pool
+	// msgPool is the [Pooler] from the server, *iff* the message was created by reading data from the wire.
+	msgPool  Pooler
+	hijacked atomic.Bool // pool's allocation has been hijacked by caller
 }
 
 // Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
