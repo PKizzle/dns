@@ -3,6 +3,7 @@ package unpack
 import (
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/hex"
 	"net"
 	"strings"
 
@@ -197,3 +198,11 @@ var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
 
 func Base32(b []byte) string { return base32HexNoPadEncoding.EncodeToString(b) }
 func Base64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
+
+func StringHex(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", ErrOverflow
+	}
+	return hex.EncodeToString(b), nil
+}

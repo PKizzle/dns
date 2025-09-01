@@ -127,7 +127,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 }
 
 func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	h, rdlength, err := unpackRRHeader(msg, msgBuf)
+	h, rdlength, err := unpackHeader(msg, msgBuf)
 	if err != nil {
 		return nil, err
 	}

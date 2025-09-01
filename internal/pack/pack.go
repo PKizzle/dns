@@ -4,6 +4,7 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"net"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -337,4 +338,17 @@ func Base64(s []byte) (buf []byte, err error) {
 	n, err := base64.StdEncoding.Decode(buf, s)
 	buf = buf[:n]
 	return
+}
+
+func StringHex(s string, msg []byte, off int) (int, error) {
+	h, err := hex.DecodeString(s)
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(h) > len(msg) {
+		return len(msg), &Error{Err: "overflow hex"}
+	}
+	copy(msg[off:off+len(h)], h)
+	off += len(h)
+	return off, nil
 }

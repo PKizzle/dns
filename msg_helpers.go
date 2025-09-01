@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"encoding/hex"
 	"net"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -13,8 +12,8 @@ import (
 // helper functions called from the generated zmsg.go - among others
 // all need to move to internal/pack or internal/unpack
 
-// unpackRRHeader unpacks an RR header advancing msg.
-func unpackRRHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength uint16, err error) {
+// unpackHeader unpacks an RR header advancing msg.
+func unpackHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength uint16, err error) {
 	h.Name, err = unpack.Name(msg, msgBuf)
 	if err != nil {
 		return h, 0, err
@@ -58,27 +57,6 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 }
 
 // helper helper functions.
-
-func unpackStringHex(s *cryptobyte.String, len int) (string, error) {
-	var b []byte
-	if !s.ReadBytes(&b, len) {
-		return "", unpack.ErrOverflow
-	}
-	return hex.EncodeToString(b), nil
-}
-
-func packStringHex(s string, msg []byte, off int) (int, error) {
-	h, err := hex.DecodeString(s)
-	if err != nil {
-		return len(msg), err
-	}
-	if off+len(h) > len(msg) {
-		return len(msg), &pack.Error{Err: "overflow hex"}
-	}
-	copy(msg[off:off+len(h)], h)
-	off += len(h)
-	return off, nil
-}
 
 func unpackStringTxt(s *cryptobyte.String) ([]string, error) {
 	return unpackTxt(s)
