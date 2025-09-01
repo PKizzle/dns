@@ -243,11 +243,7 @@ func dnsutilSetReply(m, r *Msg) *Msg {
 // compareLabel compares a and b while ignoring case. It returns 0 when equal, -1 when a is smaller than b,
 // and +1 when a is greater then b. This ends up a compareLabel in the dns package too.
 func compareLabel(a, b string) int {
-	l := len(a)
-	if len(b) < l {
-		l = len(b)
-	}
-	for i := range l {
+	for i := range min(len(a), len(b)) {
 		ai := a[i]
 		bi := b[i]
 		if ai >= 'A' && ai <= 'Z' {
