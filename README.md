@@ -55,7 +55,7 @@ Send pull request if you want to be listed here.
 
 # Features
 
-- UDP/TCP queries, TCP query-pipelining, IPv4 and IPv6.
+- UDP/TCP queries, recvmmsg, TCP query-pipelining, IPv4 and IPv6.
 - Fast(er).
 - RFC 1035 zone file parsing ($INCLUDE, $ORIGIN, $TTL and $GENERATE - for _all_ record types) is supported.
 - Server side programming (mimicking the net/http package), with `dns.Handle` and `dns.HandleFunc` allowing
@@ -158,6 +158,7 @@ _all of them_
 - 9499 - DNS Terminology
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
+- 9660 - Zone version
 - draft-ietf-compact-denial - CO bit
 - draft-ietf-deleg - DELEG RR
 

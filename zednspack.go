@@ -255,3 +255,26 @@ func (o *ESU) unpack(s *cryptobyte.String) (err error) {
 	o.URI, err = unpackStringOctet(s)
 	return err
 }
+
+func (o *ZONEVERSION) pack(msg []byte, off int) (int, error) {
+	off, err := pack.Uint8(o.Labels, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = pack.Uint8(o.Type, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return packOctetString(o.Version, msg, off)
+}
+
+func (o *ZONEVERSION) unpack(s *cryptobyte.String) (err error) {
+	if !s.ReadUint8(&o.Labels) {
+		return unpack.ErrOverflow
+	}
+	if !s.ReadUint8(&o.Type) {
+		return unpack.ErrOverflow
+	}
+	o.Version, err = unpackStringOctet(s)
+	return err
+}

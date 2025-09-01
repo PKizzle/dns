@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -14,7 +15,7 @@ const (
 	CodeNone         uint16 = 0x0
 	CodeLLQ          uint16 = 0x1    // Long lived queries: http://tools.ietf.org/html/draft-sekar-dns-llq-01.
 	CodeUL           uint16 = 0x2    // Update lease draft: http://files.dns-sd.org/draft-sekar-dns-ul.txt.
-	CodeNSID         uint16 = 0x3    // Nsid (See RFC 5001).
+	CodeNSID         uint16 = 0x3    // Nsid (see RFC 5001).
 	CodeESU          uint16 = 0x4    // ENUM Source-URI draft: https://datatracker.ietf.org/doc/html/draft-kaplan-enum-source-uri-00.
 	CodeDAU          uint16 = 0x5    // DNSSEC Algorithm Understood.
 	CodeDHU          uint16 = 0x6    // DS Hash Understood.
@@ -26,6 +27,7 @@ const (
 	CodePADDING      uint16 = 0xc    // Padding (see RFC 7830).
 	CodeEDE          uint16 = 0xf    // Extended DNS errors (see RFC 8914).
 	CodeREPORTING    uint16 = 0x12   // EDNS0 reporting (see RFC 9567).
+	CodeZONEVERSION  uint16 = 0x13   // Zonne version (see RFC 9660).
 	CodeLOCALSTART   uint16 = 0xFDE9 // Beginning of range reserved for local/experimental use (see RFC 6891).
 	CodeLOCALEND     uint16 = 0xFFFE // End of range reserved for local/experimental use (see RFC 6891).
 )
@@ -296,6 +298,33 @@ func (o *ESU) String() string {
 	return sb.String()
 }
 
+// The ZONEVERSION option, see RFC 9660. Only a single type (0) has been allocated, if used the SOA serial
+// is put in Version.
+type ZONEVERSION struct {
+	Labels  uint8
+	Type    uint8
+	Version string
+}
+
+func (o *ZONEVERSION) Len() int { return tlv + 2 + len(o.Version) }
+func (o *ZONEVERSION) String() string {
+	sb := sprintOptionHeader(o)
+	switch o.Type {
+	case 0:
+		sb.WriteString("SOA-SERIAL")
+		sb.WriteByte(' ')
+		version := uint32(0)
+		binary.BigEndian.Uint32([]byte(o.Version))
+		sb.WriteString(strconv.Itoa(int(version)))
+	default:
+		sb.WriteString("TYPE")
+		sb.WriteString(strconv.Itoa(int(o.Type)))
+		sb.WriteByte(' ')
+		sb.WriteString(o.Version)
+	}
+	return sb.String()
+}
+
 // Extended DNS Error Codes (RFC 8914).
 const (
 	ExtendedErrorOther uint16 = iota
@@ -397,6 +426,8 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *ESU:
 		return x.unpack(s)
+	case *ZONEVERSION:
+		return x.unpack(s)
 	}
 	return fmt.Errorf("dns: no option unpack defined")
 }
@@ -428,6 +459,8 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *SUBNET:
 		return x.pack(msg, off)
 	case *ESU:
+		return x.pack(msg, off)
+	case *ZONEVERSION:
 		return x.pack(msg, off)
 	}
 	// Coder() check, abuse Type()?

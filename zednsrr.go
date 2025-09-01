@@ -28,6 +28,8 @@ func (rr *SUBNET) Header() *Header       { return &Header{Name: "."} }
 func (rr *SUBNET) Pseudo() bool          { return true }
 func (rr *ESU) Header() *Header          { return &Header{Name: "."} }
 func (rr *ESU) Pseudo() bool             { return true }
+func (rr *ZONEVERSION) Header() *Header  { return &Header{Name: "."} }
+func (rr *ZONEVERSION) Pseudo() bool     { return true }
 
 // CodeToRR is a map of constructors for each EDNS0 RR type.
 var CodeToRR = map[uint16]func() EDNS0{
@@ -44,6 +46,7 @@ var CodeToRR = map[uint16]func() EDNS0{
 	CodeEDE:          func() EDNS0 { return new(EDE) },
 	CodeSUBNET:       func() EDNS0 { return new(SUBNET) },
 	CodeESU:          func() EDNS0 { return new(ESU) },
+	CodeZONEVERSION:  func() EDNS0 { return new(ZONEVERSION) },
 }
 
 // RRToCode is the reverse of CodeToRR, implemented as a function.
@@ -75,6 +78,8 @@ func RRToCode(rr EDNS0) uint16 {
 		return CodeSUBNET
 	case *ESU:
 		return CodeESU
+	case *ZONEVERSION:
+		return CodeZONEVERSION
 	}
 	return CodeNone
 }
@@ -94,4 +99,5 @@ var CodeToString = map[uint16]string{
 	CodeEDE:          "EDE",
 	CodeSUBNET:       "SUBNET",
 	CodeESU:          "ESU",
+	CodeZONEVERSION:  "ZONEVERSION",
 }
