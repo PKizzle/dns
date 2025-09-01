@@ -6,6 +6,7 @@ import (
 )
 
 func TestSignVerify(t *testing.T) {
+	// Add wildcard, sorting of RRs. etc.
 	testcases := []struct {
 		name string
 		rrs  []RR
