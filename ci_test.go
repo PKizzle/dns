@@ -4,10 +4,16 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestReflect(t *testing.T) {
+	// don't let it linger if we do a top-level test
+	os.Remove("cmd/reflect/reflect")
+}
 
 func TestPrintln(t *testing.T) {
 	files, _ := filepath.Glob("*.go")
