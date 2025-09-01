@@ -62,8 +62,8 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
-	// reuse r
-	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
+	// Reuse r, do remember to call Pack yourself.
+	r.Response, r.Answer, r.Ns, r.Extra, r.Pseudo = true, nil, nil, nil, nil
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
@@ -93,6 +93,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Extra = []dns.RR{t}
 	}
 
+	r.Pack()
 	io.Copy(w, r)
 }
 
