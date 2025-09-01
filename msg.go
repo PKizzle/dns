@@ -743,7 +743,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		if sess != nil {
 			oob := sourceFromOOB(sess.oobdata)
 			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
-			if !m.hijacked.Load() {
+			if m.msgPool != nil && !m.hijacked.Load() {
 				m.msgPool.Put(m.Data)
 				m.Data = nil
 			}
@@ -751,7 +751,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		}
 
 		n, err := r.Conn().Write(m.Data)
-		if !m.hijacked.Load() {
+		if m.msgPool != nil && !m.hijacked.Load() {
 			m.msgPool.Put(m.Data)
 			m.Data = nil
 		}
@@ -762,7 +762,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
 	n, err := r.Write(l)
-	if !m.hijacked.Load() {
+	if m.msgPool != nil && !m.hijacked.Load() {
 		m.msgPool.Put(m.Data)
 		m.Data = nil
 	}

@@ -20,9 +20,6 @@ type Pool struct {
 func (p *Pool) Get() []byte { return p.pool.Get().([]byte) }
 
 func (p *Pool) Put(b []byte) {
-	if p == nil { // Msg not created by the server.
-		return
-	}
 	if len(b) > p.size {
 		return
 	}
