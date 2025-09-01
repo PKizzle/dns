@@ -14,6 +14,7 @@ import (
 	"encoding/asn1"
 	"encoding/binary"
 	"encoding/hex"
+	"hash"
 	"math/big"
 	"sort"
 	"strings"
@@ -298,20 +299,32 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		return err
 	}
 
-	h, cryptohash, err := hashFromAlgorithm(rr.Algorithm)
-	if err != nil {
-		return err
+	var h hash.Hash
+	hash, ok := AlgorithmToHash[rr.Algorithm]
+	if !ok && rr.Algorithm != ED25519 {
+		return ErrAlg
 	}
+	h = hash.New()
 
 	switch rr.Algorithm {
 	case RSAMD5, DSA, DSANSEC3SHA1:
 		// See RFC 6944.
 		return ErrAlg
+
+	case ED25519:
+		signature, err := sign(k, append(signdata, wire...), hash, rr.Algorithm)
+		if err != nil {
+			return err
+		}
+
+		rr.Signature = toBase64(signature)
+		return nil
+
 	default:
 		h.Write(signdata)
 		h.Write(wire)
 
-		signature, err := sign(k, h.Sum(nil), cryptohash, rr.Algorithm)
+		signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
 		if err != nil {
 			return err
 		}
@@ -412,19 +425,16 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	}
 
 	sigbuf := rr.sigBuf() // Get the binary signature data
-	// TODO(miek)
-	// remove the domain name and assume its ours?
-	// if rr.Algorithm == PRIVATEDNS { // PRIVATEOID
-	// }
 
-	h, cryptohash, err := hashFromAlgorithm(rr.Algorithm)
-	if err != nil {
-		return err
+	var h hash.Hash
+	hash, ok := AlgorithmToHash[rr.Algorithm]
+	if !ok && rr.Algorithm != ED25519 {
+		return ErrAlg
 	}
+	h = hash.New()
 
 	switch rr.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512:
-		// TODO(mg): this can be done quicker, ie. cache the pubkey data somewhere??
 		pubkey := k.publicKeyRSA() // Get the key
 		if pubkey == nil {
 			return ErrKey
@@ -432,7 +442,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 
 		h.Write(signeddata)
 		h.Write(wire)
-		return rsa.VerifyPKCS1v15(pubkey, cryptohash, h.Sum(nil), sigbuf)
+		return rsa.VerifyPKCS1v15(pubkey, hash, h.Sum(nil), sigbuf)
 
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		pubkey := k.publicKeyECDSA()
