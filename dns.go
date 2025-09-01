@@ -167,14 +167,15 @@ type MsgHeader struct {
 	Delegation     bool   // DELEG RR, https://datatracker.ietf.org/doc/draft-ietf-deleg/
 }
 
-// Msg is a DNS message. Each message has a Data field that contains the binary data. This is filled when
+// Msg is a DNS message. Each message has a Data field that contains the binary data buffer. This is filled when
 // calling [Msg.Pack], it is read and parsed into a Msg by [Msg.Unpack]. When the server allocated Data when reading
-// from the wire the server owns the allocation. Whenever the message is written to the default
+// from the wire, the server owns the allocation. Whenever the message is written to the default
 // [ResponseWriter] it is returned to the server's pool. If you need to make the Msg the sole owner of the
-// allocation call [Msg.Hijack], the allocation will then not be returned.
+// allocation call [Msg.Hijack], the allocation will then not be returned. When you create a new Msg, you are
+// in full control over the buffer as there is no relation to whatever server.
 //
-// Msg implements [iter.Seq] and [iter.Seq2], so you can range over it, when doing so
-// the RRs of each section are returned, this includes the pseudo section.
+// Msg implements [iter.Seq], so you can range over it, when doing so the RRs of each section are returned,
+// this includes the pseudo section.
 type Msg struct {
 	MsgHeader
 
@@ -185,7 +186,7 @@ type Msg struct {
 	// Question holds a single "RR", in quotes because it is only the domain name, type and class that is
 	// actually encoded here. This package takes care of taking and returning the right bit of an RR.
 	// Setting the question is done like so: msg.Question = []RR{&MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}}
-	// This sets it to "miek.nl.", TypeMX, ClassINET.
+	// This sets it to "miek.nl.", TypeMX, ClassINET. Just like all the other sections.
 	Question []RR
 	Answer   []RR // Holds the RR(s) of the answer section.
 	Ns       []RR // Holds the RR(s) of the authority section.
