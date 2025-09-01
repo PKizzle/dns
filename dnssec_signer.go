@@ -136,7 +136,7 @@ func (dw *dnskeyWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	return packStringBase64(dw.PublicKey, buf, off)
+	return pack.StringBase64(dw.PublicKey, buf, off)
 }
 
 // Helper function for packing and unpacking

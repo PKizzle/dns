@@ -119,7 +119,7 @@ func (mw *macWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(mw.MAC, buf, off)
+	off, err = pack.StringHex(mw.MAC, buf, off)
 	if err != nil {
 		return off, err
 	}
@@ -197,7 +197,7 @@ func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(tw.OtherData, buf, off)
+	off, err = pack.StringHex(tw.OtherData, buf, off)
 	if err != nil {
 		return off, err
 	}

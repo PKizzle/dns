@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -116,7 +117,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 		// This algorithm has been deprecated, but keep this key-tag calculation.
 		// Look at the bottom two bytes of the modules, which the last item in the pubkey.
 		// See https://www.rfc-editor.org/errata/eid193 .
-		modulus, _ := fromBase64([]byte(k.PublicKey))
+		modulus, _ := pack.Base64([]byte(k.PublicKey))
 		if len(modulus) > 1 {
 			x := binary.BigEndian.Uint16(modulus[len(modulus)-3:])
 			keytag = int(x)
@@ -290,7 +291,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 			return err
 		}
 
-		rr.Signature = toBase64(signature)
+		rr.Signature = unpack.Base64(signature)
 		return nil
 
 	default:
@@ -302,7 +303,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 			return err
 		}
 
-		rr.Signature = toBase64(signature)
+		rr.Signature = unpack.Base64(signature)
 		return nil
 	}
 }
@@ -470,7 +471,7 @@ func (rr *RRSIG) ValidityPeriod(t time.Time) bool {
 
 // Return the signatures base64 encoding sigdata as a byte slice.
 func (rr *RRSIG) sigBuf() []byte {
-	sigbuf, err := fromBase64([]byte(rr.Signature))
+	sigbuf, err := pack.Base64([]byte(rr.Signature))
 	if err != nil {
 		return nil
 	}
@@ -479,7 +480,7 @@ func (rr *RRSIG) sigBuf() []byte {
 
 // publicKeyRSA returns the RSA public key from a DNSKEY record.
 func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
-	keybuf, err := fromBase64([]byte(k.PublicKey))
+	keybuf, err := pack.Base64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
 	}
@@ -532,7 +533,7 @@ func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
 
 // publicKeyECDSA returns the Curve public key from the DNSKEY record.
 func (k *DNSKEY) publicKeyECDSA() *ecdsa.PublicKey {
-	keybuf, err := fromBase64([]byte(k.PublicKey))
+	keybuf, err := pack.Base64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
 	}
@@ -557,7 +558,7 @@ func (k *DNSKEY) publicKeyECDSA() *ecdsa.PublicKey {
 }
 
 func (k *DNSKEY) publicKeyED25519() ed25519.PublicKey {
-	keybuf, err := fromBase64([]byte(k.PublicKey))
+	keybuf, err := pack.Base64([]byte(k.PublicKey))
 	if err != nil {
 		return nil
 	}

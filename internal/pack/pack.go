@@ -1,7 +1,10 @@
 package pack
 
 import (
+	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"net"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -66,6 +69,32 @@ func StringAny(s string, msg []byte, off int) (int, error) {
 	}
 	copy(msg[off:off+len(s)], s)
 	off += len(s)
+	return off, nil
+}
+
+func StringTxt(s []string, msg []byte, off int) (int, error) {
+	off, err := Txt(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}
+
+func Txt(txt []string, msg []byte, off int) (int, error) {
+	if len(txt) == 0 {
+		if off >= len(msg) {
+			return len(msg), ErrBuf
+		}
+		msg[off] = 0
+		return off, nil
+	}
+	var err error
+	for _, s := range txt {
+		off, err = TxtString(s, msg, off)
+		if err != nil {
+			return len(msg), err
+		}
+	}
 	return off, nil
 }
 
@@ -286,4 +315,113 @@ func isRootLabel(s string, bs []byte, off, end int) bool {
 	}
 
 	return end-off == 1 && bs[off] == '.'
+}
+
+func StringBase32(s string, msg []byte, off int) (int, error) {
+	b32, err := Base32([]byte(s))
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(b32) > len(msg) {
+		return len(msg), &Error{Err: "overflow base32"}
+	}
+	copy(msg[off:off+len(b32)], b32)
+	off += len(b32)
+	return off, nil
+}
+
+func StringBase64(s string, msg []byte, off int) (int, error) {
+	b64, err := Base64([]byte(s))
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(b64) > len(msg) {
+		return len(msg), &Error{Err: "overflow base64"}
+	}
+	copy(msg[off:off+len(b64)], b64)
+	off += len(b64)
+	return off, nil
+}
+
+var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
+
+func Base32(s []byte) (buf []byte, err error) {
+	for i, b := range s {
+		if b >= 'a' && b <= 'z' {
+			s[i] = b - 32
+		}
+	}
+	buflen := base32HexNoPadEncoding.DecodedLen(len(s))
+	buf = make([]byte, buflen)
+	n, err := base32HexNoPadEncoding.Decode(buf, s)
+	buf = buf[:n]
+	return
+}
+
+func Base64(s []byte) (buf []byte, err error) {
+	buflen := base64.StdEncoding.DecodedLen(len(s))
+	buf = make([]byte, buflen)
+	n, err := base64.StdEncoding.Decode(buf, s)
+	buf = buf[:n]
+	return
+}
+
+func StringHex(s string, msg []byte, off int) (int, error) {
+	h, err := hex.DecodeString(s)
+	if err != nil {
+		return len(msg), err
+	}
+	if off+len(h) > len(msg) {
+		return len(msg), &Error{Err: "overflow hex"}
+	}
+	copy(msg[off:off+len(h)], h)
+	off += len(h)
+	return off, nil
+}
+
+func OctetString(s string, msg []byte, off int) (int, error) {
+	if off >= len(msg) || len(s) > 256*4+1 {
+		return len(msg), ErrBuf
+	}
+	for i := 0; i < len(s); i++ {
+		if len(msg) <= off {
+			return len(msg), ErrBuf
+		}
+		if s[i] == '\\' {
+			i++
+			if i == len(s) {
+				break
+			}
+			// check for \DDD
+			if ddd.Is(s[i:]) {
+				msg[off] = ddd.ToByte(s[i:])
+				i += 2
+			} else {
+				msg[off] = s[i]
+			}
+		} else {
+			msg[off] = s[i]
+		}
+		off++
+	}
+	return off, nil
+}
+
+func StringOctet(s string, msg []byte, off int) (int, error) {
+	off, err := OctetString(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}
+
+func Names(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
+	var err error
+	for _, name := range names {
+		off, err = Name(name, msg, off, compress, false)
+		if err != nil {
+			return len(msg), err
+		}
+	}
+	return off, nil
 }

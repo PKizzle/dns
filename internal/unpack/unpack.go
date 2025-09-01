@@ -1,6 +1,9 @@
 package unpack
 
 import (
+	"encoding/base32"
+	"encoding/base64"
+	"encoding/hex"
 	"net"
 	"strings"
 
@@ -44,6 +47,20 @@ func StringAny(s *cryptobyte.String, len int) (string, error) {
 		return "", &Error{"overflow string anything"}
 	}
 	return string(b), nil
+}
+
+func StringTxt(s *cryptobyte.String) ([]string, error) { return Txt(s) }
+
+func Txt(s *cryptobyte.String) ([]string, error) {
+	var strs []string
+	for !s.Empty() {
+		str, err := String(s)
+		if err != nil {
+			return strs, err
+		}
+		strs = append(strs, str)
+	}
+	return strs, nil
 }
 
 func String(s *cryptobyte.String) (string, error) {
@@ -173,4 +190,47 @@ func Offset(data, buf []byte) int {
 		panic("dns: internal error: cannot compute off")
 	}
 	return len(buf) - len(data)
+}
+
+func StringBase32(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", ErrOverflow
+	}
+	return Base32(b), nil
+}
+
+func StringBase64(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", ErrOverflow
+	}
+	return Base64(b), nil
+}
+
+var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
+
+func Base32(b []byte) string { return base32HexNoPadEncoding.EncodeToString(b) }
+func Base64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
+
+func StringHex(s *cryptobyte.String, len int) (string, error) {
+	var b []byte
+	if !s.ReadBytes(&b, len) {
+		return "", ErrOverflow
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func StringOctet(s *cryptobyte.String) (string, error) { return StringAny(s, len(*s)) }
+
+func Names(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
+	var names []string
+	for !s.Empty() {
+		name, err := Name(s, msgBuf)
+		if err != nil {
+			return names, err
+		}
+		names = append(names, name)
+	}
+	return names, nil
 }

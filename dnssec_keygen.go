@@ -8,6 +8,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"math/big"
+
+	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 // Generate generates a DNSKEY of the given bit size. The public part is put inside the DNSKEY record.
@@ -80,7 +82,7 @@ func (k *DNSKEY) setPublicKeyRSA(E int, N *big.Int) bool {
 	}
 	buf := exponentToBuf(E)
 	buf = append(buf, N.Bytes()...)
-	k.PublicKey = toBase64(buf)
+	k.PublicKey = unpack.Base64(buf)
 	return true
 }
 
@@ -96,7 +98,7 @@ func (k *DNSKEY) setPublicKeyECDSA(X, Y *big.Int) bool {
 	case ECDSAP384SHA384:
 		intlen = 48
 	}
-	k.PublicKey = toBase64(curveToBuf(X, Y, intlen))
+	k.PublicKey = unpack.Base64(curveToBuf(X, Y, intlen))
 	return true
 }
 
@@ -105,7 +107,7 @@ func (k *DNSKEY) setPublicKeyED25519(_K ed25519.PublicKey) bool {
 	if _K == nil {
 		return false
 	}
-	k.PublicKey = toBase64(_K)
+	k.PublicKey = unpack.Base64(_K)
 	return true
 }
 

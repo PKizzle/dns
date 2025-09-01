@@ -477,7 +477,7 @@ func (rr *SOA) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *TXT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringTxt(rr.Txt, msg, off)
+	off, err = pack.StringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -486,7 +486,7 @@ func (rr *TXT) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Txt, err = unpackStringTxt(&s)
+	rr.Txt, err = unpack.StringTxt(&s)
 	if err != nil {
 		return err
 	}
@@ -497,7 +497,7 @@ func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SPF) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringTxt(rr.Txt, msg, off)
+	off, err = pack.StringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -506,7 +506,7 @@ func (rr *SPF) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Txt, err = unpackStringTxt(&s)
+	rr.Txt, err = unpack.StringTxt(&s)
 	if err != nil {
 		return err
 	}
@@ -517,7 +517,7 @@ func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *AVC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringTxt(rr.Txt, msg, off)
+	off, err = pack.StringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -526,7 +526,7 @@ func (rr *AVC) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Txt, err = unpackStringTxt(&s)
+	rr.Txt, err = unpack.StringTxt(&s)
 	if err != nil {
 		return err
 	}
@@ -648,7 +648,7 @@ func (rr *CERT) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.Certificate, msg, off)
+	off, err = pack.StringBase64(rr.Certificate, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -666,7 +666,7 @@ func (rr *CERT) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Algorithm) {
 		return unpack.ErrOverflow
 	}
-	rr.Certificate, err = unpackStringBase64(&s, len(s))
+	rr.Certificate, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -913,7 +913,7 @@ func (rr *RRSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.Signature, msg, off)
+	off, err = pack.StringBase64(rr.Signature, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -947,7 +947,7 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.Signature, err = unpackStringBase64(&s, len(s))
+	rr.Signature, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1034,7 +1034,7 @@ func (rr *DS) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Digest, msg, off)
+	off, err = pack.StringHex(rr.Digest, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1052,7 +1052,7 @@ func (rr *DS) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.DigestType) {
 		return unpack.ErrOverflow
 	}
-	rr.Digest, err = unpackStringHex(&s, len(s))
+	rr.Digest, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1102,7 +1102,7 @@ func (rr *TA) pack(msg []byte, off int, compression map[string]uint16) (off1 int
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Digest, msg, off)
+	off, err = pack.StringHex(rr.Digest, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1120,7 +1120,7 @@ func (rr *TA) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.DigestType) {
 		return unpack.ErrOverflow
 	}
-	rr.Digest, err = unpackStringHex(&s, len(s))
+	rr.Digest, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1167,7 +1167,7 @@ func (rr *SSHFP) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.FingerPrint, msg, off)
+	off, err = pack.StringHex(rr.FingerPrint, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1182,7 +1182,7 @@ func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Type) {
 		return unpack.ErrOverflow
 	}
-	rr.FingerPrint, err = unpackStringHex(&s, len(s))
+	rr.FingerPrint, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1229,7 +1229,7 @@ func (rr *DNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off1
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1247,7 +1247,7 @@ func (rr *DNSKEY) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Algorithm) {
 		return unpack.ErrOverflow
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1274,7 +1274,7 @@ func (rr *IPSECKEY) pack(msg []byte, off int, compression map[string]uint16) (of
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1296,7 +1296,7 @@ func (rr *IPSECKEY) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1353,7 +1353,7 @@ func (rr *RKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1371,7 +1371,7 @@ func (rr *RKEY) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Algorithm) {
 		return unpack.ErrOverflow
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1420,7 +1420,7 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	}
 	// Only pack salt if value is not "-", i.e. empty
 	if rr.Salt != "-" {
-		off, err = packStringHex(rr.Salt, msg, off)
+		off, err = pack.StringHex(rr.Salt, msg, off)
 		if err != nil {
 			return off, err
 		}
@@ -1429,7 +1429,7 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase32(rr.NextDomain, msg, off)
+	off, err = pack.StringBase32(rr.NextDomain, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1454,14 +1454,14 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.SaltLength) {
 		return unpack.ErrOverflow
 	}
-	rr.Salt, err = unpackStringHex(&s, int(rr.SaltLength))
+	rr.Salt, err = unpack.StringHex(&s, int(rr.SaltLength))
 	if err != nil {
 		return err
 	}
 	if !s.ReadUint8(&rr.HashLength) {
 		return unpack.ErrOverflow
 	}
-	rr.NextDomain, err = unpackStringBase32(&s, int(rr.HashLength))
+	rr.NextDomain, err = unpack.StringBase32(&s, int(rr.HashLength))
 	if err != nil {
 		return err
 	}
@@ -1494,7 +1494,7 @@ func (rr *NSEC3PARAM) pack(msg []byte, off int, compression map[string]uint16) (
 	}
 	// Only pack salt if value is not "-", i.e. empty
 	if rr.Salt != "-" {
-		off, err = packStringHex(rr.Salt, msg, off)
+		off, err = pack.StringHex(rr.Salt, msg, off)
 		if err != nil {
 			return off, err
 		}
@@ -1516,7 +1516,7 @@ func (rr *NSEC3PARAM) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.SaltLength) {
 		return unpack.ErrOverflow
 	}
-	rr.Salt, err = unpackStringHex(&s, int(rr.SaltLength))
+	rr.Salt, err = unpack.StringHex(&s, int(rr.SaltLength))
 	if err != nil {
 		return err
 	}
@@ -1551,7 +1551,7 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Key, msg, off)
+	off, err = pack.StringHex(rr.Key, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1559,7 +1559,7 @@ func (rr *TKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.OtherData, msg, off)
+	off, err = pack.StringHex(rr.OtherData, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1587,14 +1587,14 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.KeySize) {
 		return unpack.ErrOverflow
 	}
-	rr.Key, err = unpackStringHex(&s, int(rr.KeySize))
+	rr.Key, err = unpack.StringHex(&s, int(rr.KeySize))
 	if err != nil {
 		return err
 	}
 	if !s.ReadUint16(&rr.OtherLen) {
 		return unpack.ErrOverflow
 	}
-	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
+	rr.OtherData, err = unpack.StringHex(&s, int(rr.OtherLen))
 	if err != nil {
 		return err
 	}
@@ -1605,7 +1605,7 @@ func (rr *TKEY) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *RFC3597) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringHex(rr.Rdata, msg, off)
+	off, err = pack.StringHex(rr.Rdata, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1614,7 +1614,7 @@ func (rr *RFC3597) pack(msg []byte, off int, compression map[string]uint16) (off
 
 func (rr *RFC3597) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Rdata, err = unpackStringHex(&s, len(s))
+	rr.Rdata, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1633,7 +1633,7 @@ func (rr *URI) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringOctet(rr.Target, msg, off)
+	off, err = pack.StringOctet(rr.Target, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1648,7 +1648,7 @@ func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Weight) {
 		return unpack.ErrOverflow
 	}
-	rr.Target, err = unpackStringOctet(&s)
+	rr.Target, err = unpack.StringOctet(&s)
 	if err != nil {
 		return err
 	}
@@ -1659,7 +1659,7 @@ func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DHCID) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringBase64(rr.Digest, msg, off)
+	off, err = pack.StringBase64(rr.Digest, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1668,7 +1668,7 @@ func (rr *DHCID) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *DHCID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Digest, err = unpackStringBase64(&s, len(s))
+	rr.Digest, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1691,7 +1691,7 @@ func (rr *TLSA) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Certificate, msg, off)
+	off, err = pack.StringHex(rr.Certificate, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1709,7 +1709,7 @@ func (rr *TLSA) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.MatchingType) {
 		return unpack.ErrOverflow
 	}
-	rr.Certificate, err = unpackStringHex(&s, len(s))
+	rr.Certificate, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1732,7 +1732,7 @@ func (rr *SMIMEA) pack(msg []byte, off int, compression map[string]uint16) (off1
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Certificate, msg, off)
+	off, err = pack.StringHex(rr.Certificate, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1750,7 +1750,7 @@ func (rr *SMIMEA) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.MatchingType) {
 		return unpack.ErrOverflow
 	}
-	rr.Certificate, err = unpackStringHex(&s, len(s))
+	rr.Certificate, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1773,15 +1773,15 @@ func (rr *HIP) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Hit, msg, off)
+	off, err = pack.StringHex(rr.Hit, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
-	off, err = packNames(rr.RendezvousServers, msg, off, compression)
+	off, err = pack.Names(rr.RendezvousServers, msg, off, compression)
 	if err != nil {
 		return off, err
 	}
@@ -1799,15 +1799,15 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.PublicKeyLength) {
 		return unpack.ErrOverflow
 	}
-	rr.Hit, err = unpackStringHex(&s, int(rr.HitLength))
+	rr.Hit, err = unpack.StringHex(&s, int(rr.HitLength))
 	if err != nil {
 		return err
 	}
-	rr.PublicKey, err = unpackStringBase64(&s, int(rr.PublicKeyLength))
+	rr.PublicKey, err = unpack.StringBase64(&s, int(rr.PublicKeyLength))
 	if err != nil {
 		return err
 	}
-	rr.RendezvousServers, err = unpackNames(&s, msgBuf)
+	rr.RendezvousServers, err = unpack.Names(&s, msgBuf)
 	if err != nil {
 		return err
 	}
@@ -1818,7 +1818,7 @@ func (rr *HIP) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringTxt(rr.ZSData, msg, off)
+	off, err = pack.StringTxt(rr.ZSData, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1827,7 +1827,7 @@ func (rr *NINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *NINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.ZSData, err = unpackStringTxt(&s)
+	rr.ZSData, err = unpack.StringTxt(&s)
 	if err != nil {
 		return err
 	}
@@ -1990,7 +1990,7 @@ func (rr *CAA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringOctet(rr.Value, msg, off)
+	off, err = pack.StringOctet(rr.Value, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2006,7 +2006,7 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.Value, err = unpackStringOctet(&s)
+	rr.Value, err = unpack.StringOctet(&s)
 	if err != nil {
 		return err
 	}
@@ -2075,7 +2075,7 @@ func (rr *UINFO) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *EID) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringHex(rr.Endpoint, msg, off)
+	off, err = pack.StringHex(rr.Endpoint, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2084,7 +2084,7 @@ func (rr *EID) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Endpoint, err = unpackStringHex(&s, len(s))
+	rr.Endpoint, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -2095,7 +2095,7 @@ func (rr *EID) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NIMLOC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringHex(rr.Locator, msg, off)
+	off, err = pack.StringHex(rr.Locator, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2104,7 +2104,7 @@ func (rr *NIMLOC) pack(msg []byte, off int, compression map[string]uint16) (off1
 
 func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Locator, err = unpackStringHex(&s, len(s))
+	rr.Locator, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -2115,7 +2115,7 @@ func (rr *NIMLOC) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *OPENPGPKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringBase64(rr.PublicKey, msg, off)
+	off, err = pack.StringBase64(rr.PublicKey, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2124,7 +2124,7 @@ func (rr *OPENPGPKEY) pack(msg []byte, off int, compression map[string]uint16) (
 
 func (rr *OPENPGPKEY) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.PublicKey, err = unpackStringBase64(&s, len(s))
+	rr.PublicKey, err = unpack.StringBase64(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -2181,7 +2181,7 @@ func (rr *ZONEMD) pack(msg []byte, off int, compression map[string]uint16) (off1
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.Digest, msg, off)
+	off, err = pack.StringHex(rr.Digest, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2199,7 +2199,7 @@ func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint8(&rr.Hash) {
 		return unpack.ErrOverflow
 	}
-	rr.Digest, err = unpackStringHex(&s, len(s))
+	rr.Digest, err = unpack.StringHex(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -2230,7 +2230,7 @@ func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *RESINFO) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packStringTxt(rr.Txt, msg, off)
+	off, err = pack.StringTxt(rr.Txt, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2239,7 +2239,7 @@ func (rr *RESINFO) pack(msg []byte, off int, compression map[string]uint16) (off
 
 func (rr *RESINFO) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Txt, err = unpackStringTxt(&s)
+	rr.Txt, err = unpack.StringTxt(&s)
 	if err != nil {
 		return err
 	}
@@ -2369,7 +2369,7 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.MAC, msg, off)
+	off, err = pack.StringHex(rr.MAC, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2385,7 +2385,7 @@ func (rr *TSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packStringHex(rr.OtherData, msg, off)
+	off, err = pack.StringHex(rr.OtherData, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2407,7 +2407,7 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.MACSize) {
 		return unpack.ErrOverflow
 	}
-	rr.MAC, err = unpackStringHex(&s, int(rr.MACSize))
+	rr.MAC, err = unpack.StringHex(&s, int(rr.MACSize))
 	if err != nil {
 		return err
 	}
@@ -2420,7 +2420,7 @@ func (rr *TSIG) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.OtherLen) {
 		return unpack.ErrOverflow
 	}
-	rr.OtherData, err = unpackStringHex(&s, int(rr.OtherLen))
+	rr.OtherData, err = unpack.StringHex(&s, int(rr.OtherLen))
 	if err != nil {
 		return err
 	}

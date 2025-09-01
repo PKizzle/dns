@@ -7,6 +7,8 @@ import (
 	"crypto/rsa"
 	"math/big"
 	"strconv"
+
+	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 const format = "Private-key-format: v1.3\n"
@@ -23,12 +25,12 @@ func (r *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
 
 	switch p := p.(type) {
 	case *rsa.PrivateKey:
-		modulus := toBase64(p.PublicKey.N.Bytes())
+		modulus := unpack.Base64(p.PublicKey.N.Bytes())
 		e := big.NewInt(int64(p.PublicKey.E))
-		publicExponent := toBase64(e.Bytes())
-		privateExponent := toBase64(p.D.Bytes())
-		prime1 := toBase64(p.Primes[0].Bytes())
-		prime2 := toBase64(p.Primes[1].Bytes())
+		publicExponent := unpack.Base64(e.Bytes())
+		privateExponent := unpack.Base64(p.D.Bytes())
+		prime1 := unpack.Base64(p.Primes[0].Bytes())
+		prime2 := unpack.Base64(p.Primes[1].Bytes())
 		// Calculate Exponent1/2 and Coefficient as per: http://en.wikipedia.org/wiki/RSA#Using_the_Chinese_remainder_algorithm
 		// and from: http://code.google.com/p/go/issues/detail?id=987
 		p1 := new(big.Int).Sub(p.Primes[0], bigIntOne)
@@ -37,9 +39,9 @@ func (r *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
 		exp2 := new(big.Int).Mod(p.D, q1)
 		coeff := new(big.Int).ModInverse(p.Primes[1], p.Primes[0])
 
-		exponent1 := toBase64(exp1.Bytes())
-		exponent2 := toBase64(exp2.Bytes())
-		coefficient := toBase64(coeff.Bytes())
+		exponent1 := unpack.Base64(exp1.Bytes())
+		exponent2 := unpack.Base64(exp2.Bytes())
+		coefficient := unpack.Base64(coeff.Bytes())
 
 		return format +
 			"Algorithm: " + algorithm + "\n" +
@@ -60,13 +62,13 @@ func (r *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
 		case ECDSAP384SHA384:
 			intlen = 48
 		}
-		private := toBase64(intToBytes(p.D, intlen))
+		private := unpack.Base64(intToBytes(p.D, intlen))
 		return format +
 			"Algorithm: " + algorithm + "\n" +
 			"PrivateKey: " + private + "\n"
 
 	case ed25519.PrivateKey:
-		private := toBase64(p.Seed())
+		private := unpack.Base64(p.Seed())
 		return format +
 			"Algorithm: " + algorithm + "\n" +
 			"PrivateKey: " + private + "\n"

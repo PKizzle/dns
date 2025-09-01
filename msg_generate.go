@@ -86,7 +86,7 @@ func main() {
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-					o("off, err = packStringTxt(rr.%s, msg, off)\n")
+					o("off, err = pack.StringTxt(rr.%s, msg, off)\n")
 				case `dns:"opt"`:
 					o("off, err = packOpt(rr.%s, msg, off)\n")
 				case `dns:"nsec"`:
@@ -94,7 +94,7 @@ func main() {
 				case `dns:"pairs"`:
 					o("off, err = packSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
-					o("off, err = packNames(rr.%s, msg, off, compression)\n")
+					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
 				case `dns:"apl"`:
 					o("off, err = packApl(rr.%s, msg, off)\n")
 				default:
@@ -123,18 +123,18 @@ func main() {
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
 			case tag == `dns:"base32"`:
-				o("off, err = packStringBase32(rr.%s, msg, off)\n")
+				o("off, err = pack.StringBase32(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(tag, `dns:"size-base64`): // size-base64 can be packed just like base64
 				fallthrough
 			case tag == `dns:"base64"`:
-				o("off, err = packStringBase64(rr.%s, msg, off)\n")
+				o("off, err = pack.StringBase64(rr.%s, msg, off)\n")
 
 			case strings.HasPrefix(tag, `dns:"size-hex:SaltLength`):
 				// directly write instead of using o() so we get the error check in the correct place
 				fmt.Fprintf(b, `// Only pack salt if value is not "-", i.e. empty
 if rr.%s != "-" {
-  off, err = packStringHex(rr.%s, msg, off)
+  off, err = pack.StringHex(rr.%s, msg, off)
   if err != nil {
     return off, err
   }
@@ -144,11 +144,11 @@ if rr.%s != "-" {
 			case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
 			case tag == `dns:"hex"`:
-				o("off, err = packStringHex(rr.%s, msg, off)\n")
+				o("off, err = pack.StringHex(rr.%s, msg, off)\n")
 			case tag == `dns:"any"`:
 				o("off, err = pack.StringAny(rr.%s, msg, off)\n")
 			case tag == `dns:"octet"`:
-				o("off, err = packStringOctet(rr.%s, msg, off)\n")
+				o("off, err = pack.StringOctet(rr.%s, msg, off)\n")
 			case tag == `dns:"ipsechost"` || tag == `dns:"amtrelayhost"`:
 				o("off, err = packIPSECGateway(rr.GatewayAddr, rr.%s, msg, off, rr.GatewayType, compression, false)\n")
 			case tag == "":
@@ -232,11 +232,11 @@ if rr.%s != "-" {
 				structTag := structTag(tag)
 				switch structTag {
 				case "hex":
-					unpackFieldLength("unpackStringHex", structMember)
+					unpackFieldLength("unpack.StringHex", structMember)
 				case "base32":
-					unpackFieldLength("unpackStringBase32", structMember)
+					unpackFieldLength("unpack.StringBase32", structMember)
 				case "base64":
-					unpackFieldLength("unpackStringBase64", structMember)
+					unpackFieldLength("unpack.StringBase64", structMember)
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
@@ -247,7 +247,7 @@ if rr.%s != "-" {
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-					unpackField("unpackStringTxt")
+					unpackField("unpack.StringTxt")
 				case `dns:"opt"`:
 					unpackField("unpackOpt")
 				case `dns:"nsec"`:
@@ -255,7 +255,7 @@ if rr.%s != "-" {
 				case `dns:"pairs"`:
 					unpackField("unpackSVCB")
 				case `dns:"domain-name"`:
-					unpackFieldBuf("unpackNames")
+					unpackFieldBuf("unpack.Names")
 				case `dns:"apl"`:
 					unpackField("unpackApl")
 				default:
@@ -277,15 +277,15 @@ if rr.%s != "-" {
 			case `dns:"txt"`:
 				unpackField("unpack.String")
 			case `dns:"base32"`:
-				unpackFieldRest("unpackStringBase32")
+				unpackFieldRest("unpack.StringBase32")
 			case `dns:"base64"`:
-				unpackFieldRest("unpackStringBase64")
+				unpackFieldRest("unpack.StringBase64")
 			case `dns:"hex"`:
-				unpackFieldRest("unpackStringHex")
+				unpackFieldRest("unpack.StringHex")
 			case `dns:"any"`:
 				unpackFieldRest("unpack.StringAny")
 			case `dns:"octet"`:
-				unpackField("unpackStringOctet")
+				unpackField("unpack.StringOctet")
 			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
 				// TODO(tmthrgd): This is a particular unpleasant way of dealing with this. Can we do better? Probably not with the structs as they are.
 				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)")
