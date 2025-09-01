@@ -73,20 +73,20 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 	}
 }
 
-// Set the public key (the value E and N)
-func (k *DNSKEY) setPublicKeyRSA(_E int, _N *big.Int) bool {
-	if _E == 0 || _N == nil {
+// Set the public key (the value E and N).
+func (k *DNSKEY) setPublicKeyRSA(E int, N *big.Int) bool {
+	if E == 0 || N == nil {
 		return false
 	}
-	buf := exponentToBuf(_E)
-	buf = append(buf, _N.Bytes()...)
+	buf := exponentToBuf(E)
+	buf = append(buf, N.Bytes()...)
 	k.PublicKey = toBase64(buf)
 	return true
 }
 
-// Set the public key for Elliptic Curves
-func (k *DNSKEY) setPublicKeyECDSA(_X, _Y *big.Int) bool {
-	if _X == nil || _Y == nil {
+// Set the public key for Elliptic Curves.
+func (k *DNSKEY) setPublicKeyECDSA(X, Y *big.Int) bool {
+	if X == nil || Y == nil {
 		return false
 	}
 	var intlen int
@@ -96,7 +96,7 @@ func (k *DNSKEY) setPublicKeyECDSA(_X, _Y *big.Int) bool {
 	case ECDSAP384SHA384:
 		intlen = 48
 	}
-	k.PublicKey = toBase64(curveToBuf(_X, _Y, intlen))
+	k.PublicKey = toBase64(curveToBuf(X, Y, intlen))
 	return true
 }
 
@@ -109,11 +109,10 @@ func (k *DNSKEY) setPublicKeyED25519(_K ed25519.PublicKey) bool {
 	return true
 }
 
-// Set the public key (the values E and N) for RSA
-// RFC 3110: Section 2. RSA Public KEY Resource Records
-func exponentToBuf(_E int) []byte {
+// Set the public key (the values E and N) for RSA, see RFC 3110: Section 2. RSA Public KEY Resource Records
+func exponentToBuf(E int) []byte {
 	var buf []byte
-	i := big.NewInt(int64(_E)).Bytes()
+	i := big.NewInt(int64(E)).Bytes()
 	if len(i) < 256 {
 		buf = make([]byte, 1, 1+len(i))
 		buf[0] = uint8(len(i))
@@ -127,8 +126,7 @@ func exponentToBuf(_E int) []byte {
 	return buf
 }
 
-// Set the public key for X and Y for Curve. The two
-// values are just concatenated.
+// Set the public key for X and Y for Curve. The two values are just concatenated.
 func curveToBuf(_X, _Y *big.Int, intlen int) []byte {
 	buf := intToBytes(_X, intlen)
 	buf = append(buf, intToBytes(_Y, intlen)...)

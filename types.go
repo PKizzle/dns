@@ -776,6 +776,7 @@ type SIG struct {
 
 // NewSIG0 return a new SIG with initial fields set. This can be used SIG0 transaction signing.
 func NewSIG0() *SIG {
+	// TODO(miek)
 	return nil
 }
 
@@ -805,6 +806,30 @@ func (rr *RRSIG) String() string {
 		sprintName(rr.SignerName),
 		rr.Signature)
 	return sb.String()
+}
+
+// NewRRSIG returns a NEW RRSIG with many fields set. That can be used as a "stub" RRSIG before generating the
+// signature. If incepexp, the inception and expiration are not the given, now-300s and now+2w is used.
+// The the signer name, z is also used.
+func NewRRSIG(z string, algorithm uint8, covered, keytag uint16, labels uint8, ttl uint32, incepexp ...uint32) *RRSIG {
+	s := new(RRSIG)
+	s.Hdr.Name = z
+	s.Hdr.Class = ClassINET
+	s.Algorithm = algorithm
+	s.KeyTag = keytag
+	s.TypeCovered = covered
+	s.Labels = labels
+	s.OrigTTL = ttl
+	s.SignerName = z
+	if len(incepexp) == 0 {
+		now := time.Now().Unix()
+		s.Expiration = uint32(now - 300)
+		s.Inception = uint32(now + (14 * 86400))
+	} else {
+		s.Expiration = incepexp[0]
+		s.Inception = incepexp[1]
+	}
+	return s
 }
 
 // NXT RR. See RFC 2535.
@@ -946,6 +971,17 @@ func (rr *DNSKEY) String() string {
 		strconv.Itoa(int(rr.Algorithm)),
 		rr.PublicKey)
 	return sb.String()
+}
+
+// NewDNSKEY returns a DNSKEY with good defaults for some fields. The keys flags are set to 256.
+func NewDNSKEY(z string, algorithm uint8) *DNSKEY {
+	k := new(DNSKEY)
+	k.Hdr.Name = z
+	k.Hdr.Class = ClassINET
+	k.Algorithm = algorithm
+	k.Flags = 256
+	k.Protocol = 3
+	return k
 }
 
 // IPSECKEY RR. See RFC 4025.

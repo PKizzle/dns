@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
@@ -14,13 +13,13 @@ import (
 	"encoding/asn1"
 	"encoding/binary"
 	"encoding/hex"
+	"hash"
 	"math/big"
 	"sort"
 	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/pack"
-	"codeberg.org/miekg/dns/internal/unpack"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -68,9 +67,7 @@ var AlgorithmToString = map[uint8]string{
 }
 
 // AlgorithmToHash is a map of algorithm crypto hash IDs to crypto.Hash's.
-// For newer algorithm that do their own hashing (i.e. ED25519) the returned value
-// is 0, implying no (external) hashing should occur. The non-exported identityHash is then
-// used.
+// Newer algorithm that do their own hashing (i.e. ED25519) are not present here.
 var AlgorithmToHash = map[uint8]crypto.Hash{
 	RSAMD5:           crypto.MD5, // Deprecated in RFC 6725
 	DSA:              crypto.SHA1,
@@ -80,7 +77,6 @@ var AlgorithmToHash = map[uint8]crypto.Hash{
 	ECDSAP256SHA256:  crypto.SHA256,
 	ECDSAP384SHA384:  crypto.SHA384,
 	RSASHA512:        crypto.SHA512,
-	ED25519:          0,
 }
 
 // DNSSEC hashing algorithm codes.
@@ -109,28 +105,6 @@ const (
 	ZONE   = 1 << 8
 )
 
-// The RRSIG needs to be converted to wireformat with some of the rdata (the signature) missing.
-type rrsigWireFmt struct {
-	TypeCovered uint16
-	Algorithm   uint8
-	Labels      uint8
-	OrigTTL     uint32
-	Expiration  uint32
-	Inception   uint32
-	KeyTag      uint16
-	SignerName  string `dns:"domain-name"`
-	/* No Signature */
-}
-
-// Used for converting DNSKEY's rdata to wirefmt.
-type dnskeyWireFmt struct {
-	Flags     uint16
-	Protocol  uint8
-	Algorithm uint8
-	PublicKey string `dns:"base64"`
-	/* Nothing is left out */
-}
-
 // KeyTag calculates the keytag (or key-id) of the DNSKEY.
 func (k *DNSKEY) KeyTag() uint16 {
 	if k == nil {
@@ -153,7 +127,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 		keywire.Protocol = k.Protocol
 		keywire.Algorithm = k.Algorithm
 		keywire.PublicKey = k.PublicKey
-		wire := make([]byte, DefaultMsgSize)
+		wire := make([]byte, MinMsgSize)
 		n, err := keywire.pack(wire)
 		if err != nil {
 			return 0
@@ -191,7 +165,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	keywire.Protocol = k.Protocol
 	keywire.Algorithm = k.Algorithm
 	keywire.PublicKey = k.PublicKey
-	wire := make([]byte, DefaultMsgSize)
+	wire := make([]byte, MinMsgSize)
 	n, err := keywire.pack(wire)
 	if err != nil {
 		return nil
@@ -287,7 +261,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
 
 	// Create the desired binary blob
-	signdata := make([]byte, DefaultMsgSize)
+	signdata := make([]byte, MinMsgSize)
 	n, err := sigwire.pack(signdata)
 	if err != nil {
 		return err
@@ -298,20 +272,32 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		return err
 	}
 
-	h, cryptohash, err := hashFromAlgorithm(rr.Algorithm)
-	if err != nil {
-		return err
+	var h hash.Hash
+	hash, ok := AlgorithmToHash[rr.Algorithm]
+	if !ok && rr.Algorithm != ED25519 {
+		return ErrAlg
 	}
+	h = hash.New()
 
 	switch rr.Algorithm {
 	case RSAMD5, DSA, DSANSEC3SHA1:
 		// See RFC 6944.
 		return ErrAlg
+
+	case ED25519:
+		signature, err := sign(k, append(signdata, wire...), hash, rr.Algorithm)
+		if err != nil {
+			return err
+		}
+
+		rr.Signature = toBase64(signature)
+		return nil
+
 	default:
 		h.Write(signdata)
 		h.Write(wire)
 
-		signature, err := sign(k, h.Sum(nil), cryptohash, rr.Algorithm)
+		signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
 		if err != nil {
 			return err
 		}
@@ -412,19 +398,16 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	}
 
 	sigbuf := rr.sigBuf() // Get the binary signature data
-	// TODO(miek)
-	// remove the domain name and assume its ours?
-	// if rr.Algorithm == PRIVATEDNS { // PRIVATEOID
-	// }
 
-	h, cryptohash, err := hashFromAlgorithm(rr.Algorithm)
-	if err != nil {
-		return err
+	var h hash.Hash
+	hash, ok := AlgorithmToHash[rr.Algorithm]
+	if !ok && rr.Algorithm != ED25519 {
+		return ErrAlg
 	}
+	h = hash.New()
 
 	switch rr.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512:
-		// TODO(mg): this can be done quicker, ie. cache the pubkey data somewhere??
 		pubkey := k.publicKeyRSA() // Get the key
 		if pubkey == nil {
 			return ErrKey
@@ -432,7 +415,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 
 		h.Write(signeddata)
 		h.Write(wire)
-		return rsa.VerifyPKCS1v15(pubkey, cryptohash, h.Sum(nil), sigbuf)
+		return rsa.VerifyPKCS1v15(pubkey, hash, h.Sum(nil), sigbuf)
 
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		pubkey := k.publicKeyECDSA()
@@ -584,167 +567,34 @@ func (k *DNSKEY) publicKeyED25519() ed25519.PublicKey {
 	return keybuf
 }
 
-type wireSlice [][]byte
-
-func (p wireSlice) Len() int      { return len(p) }
-func (p wireSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p wireSlice) Less(i, j int) bool {
-	_, ioff, _ := unpack.NameOnlyUsedInDNSSEC(p[i], 0)
-	_, joff, _ := unpack.NameOnlyUsedInDNSSEC(p[j], 0)
-	return bytes.Compare(p[i][ioff+10:], p[j][joff+10:]) < 0
-}
-
 // Return the raw signature data.
 func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
-	wires := make(wireSlice, len(rrset))
-	for i, r := range rrset {
-		//		r1 := r.copy()
-		r1 := r
-		h := r1.Header()
-		h.TTL = s.OrigTTL
-		/*
-			labels := SplitDomainName(h.Name)
+	l := 0
+	off := 0
+	for _, rr := range rrset {
+		rr.Header().TTL = s.OrigTTL
+		labels := dnsutilCount(rr.Header().Name)
+		if skip := labels - int(s.Labels); skip > 0 {
+			orig := rr.Header().Name
 			// 6.2. Canonical RR Form. (4) - wildcards
-			if len(labels) > int(s.Labels) {
-				// Wildcard
-				h.Name = "*." + strings.Join(labels[len(labels)-int(s.Labels):], ".") + "."
+			// Wildcard, trim to s.Labels from the left and substitute '*'
+			for range skip {
+				off, _ = dnsutilNext(rr.Header().Name, off)
 			}
-			// TODO
-		*/
-		// RFC 4034: 6.2.  Canonical RR Form. (2) - domain name to lowercase
-		h.Name = dnsutilCanonical(h.Name)
-		// 6.2. Canonical RR Form. (3) - domain rdata to lowercase.
-		//   NS, MD, MF, CNAME, SOA, MB, MG, MR, PTR,
-		//   HINFO, MINFO, MX, RP, AFSDB, RT, SIG, PX, NXT, NAPTR, KX,
-		//   SRV, DNAME, A6
-		//
-		// RFC 6840 - Clarifications and Implementation Notes for DNS Security (DNSSEC):
-		//	Section 6.2 of [RFC4034] also erroneously lists HINFO as a record
-		//	that needs conversion to lowercase, and twice at that.  Since HINFO
-		//	records contain no domain names, they are not subject to case
-		//	conversion.
-		switch x := r1.(type) {
-		case *NS:
-			x.Ns = dnsutilCanonical(x.Ns)
-		case *MD:
-			x.Md = dnsutilCanonical(x.Md)
-		case *MF:
-			x.Mf = dnsutilCanonical(x.Mf)
-		case *CNAME:
-			x.Target = dnsutilCanonical(x.Target)
-		case *SOA:
-			x.Ns = dnsutilCanonical(x.Ns)
-			x.Mbox = dnsutilCanonical(x.Mbox)
-		case *MB:
-			x.Mb = dnsutilCanonical(x.Mb)
-		case *MG:
-			x.Mg = dnsutilCanonical(x.Mg)
-		case *MR:
-			x.Mr = dnsutilCanonical(x.Mr)
-		case *PTR:
-			x.Ptr = dnsutilCanonical(x.Ptr)
-		case *MINFO:
-			x.Rmail = dnsutilCanonical(x.Rmail)
-			x.Email = dnsutilCanonical(x.Email)
-		case *MX:
-			x.Mx = dnsutilCanonical(x.Mx)
-		case *RP:
-			x.Mbox = dnsutilCanonical(x.Mbox)
-			x.Txt = dnsutilCanonical(x.Txt)
-		case *AFSDB:
-			x.Hostname = dnsutilCanonical(x.Hostname)
-		case *RT:
-			x.Host = dnsutilCanonical(x.Host)
-		case *SIG:
-			x.SignerName = dnsutilCanonical(x.SignerName)
-		case *PX:
-			x.Map822 = dnsutilCanonical(x.Map822)
-			x.Mapx400 = dnsutilCanonical(x.Mapx400)
-		case *NAPTR:
-			x.Replacement = dnsutilCanonical(x.Replacement)
-		case *KX:
-			x.Exchanger = dnsutilCanonical(x.Exchanger)
-		case *SRV:
-			x.Target = dnsutilCanonical(x.Target)
-		case *DNAME:
-			x.Target = dnsutilCanonical(x.Target)
-		}
-		// 6.2. Canonical RR Form. (5) - origTTL
-		wire := make([]byte, r1.Len()+1) // +1 to be safe(r)
-		_, off, err1 := packRR(r1, wire, 0, nil)
-		if err1 != nil {
-			return nil, err1
-		}
-		wire = wire[:off]
-		wires[i] = wire
-	}
-	sort.Sort(wires)
-	for i, wire := range wires {
-		if i > 0 && bytes.Equal(wire, wires[i-1]) {
-			continue
-		}
-		buf = append(buf, wire...)
-	}
-	return buf, nil
-}
+			rr.Header().Name = "*." + rr.Header().Name[off:]
+			defer func() { rr.Header().Name = orig }()
 
-func (sw *rrsigWireFmt) pack(buf []byte) (int, error) {
-	// copied from zmsg.go RRSIG packing
-	off, err := pack.Uint16(sw.TypeCovered, buf, 0)
-	if err != nil {
-		return off, err
+		}
+		canonicalize(rr)
+		l += rr.Len()
 	}
-	off, err = pack.Uint8(sw.Algorithm, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(sw.Labels, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint32(sw.OrigTTL, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint32(sw.Expiration, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint32(sw.Inception, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint16(sw.KeyTag, buf, off)
-	if err != nil {
-		return off, err
-	}
-	return pack.Name(sw.SignerName, buf, off, nil, false)
-}
 
-func (dw *dnskeyWireFmt) pack(buf []byte) (int, error) {
-	// copied from zmsg.go DNSKEY packing
-	off, err := pack.Uint16(dw.Flags, buf, 0)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(dw.Protocol, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(dw.Algorithm, buf, off)
-	if err != nil {
-		return off, err
-	}
-	return packStringBase64(dw.PublicKey, buf, off)
-}
+	sort.Sort(RRset(rrset))
 
-// Helper function for packing and unpacking
-func intToBytes(i *big.Int, length int) []byte {
-	buf := i.Bytes()
-	if len(buf) < length {
-		b := make([]byte, length)
-		copy(b[length-len(buf):], buf)
-		return b
+	rrbuf := make([]byte, l)
+	off = 0
+	for _, rr := range rrset {
+		_, off, _ = packRR(rr, rrbuf, off, nil)
 	}
-	return buf
+	return rrbuf, nil
 }

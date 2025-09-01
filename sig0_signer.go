@@ -24,22 +24,22 @@ func (c CryptoSIG0) Sign(s *SIG, p []byte) ([]byte, error) {
 		err error
 	)
 
-	h, cryptohash, err := hashFromAlgorithm(s.Algorithm)
-	if err != nil {
-		return nil, err
+	hash, ok := AlgorithmToHash[s.Algorithm]
+	if !ok {
+		return nil, ErrAlg
 	}
+
 	sbuf := make([]byte, s.Len())
 	if _, off, err = packRR(s, sbuf, 0, nil); err != nil {
 		return nil, err
 	}
 	sbuf = sbuf[:off]
 
-	// Write SIG rdata
+	h := hash.New()
 	h.Write(sbuf)
-	// Write message
 	h.Write(p)
 
-	return sign(c.Signer(), h.Sum(nil), cryptohash, s.Algorithm)
+	return sign(c.Signer(), h.Sum(nil), hash, s.Algorithm)
 }
 
 func (c CryptoSIG0) Verify(s *SIG, p []byte) error {
@@ -47,9 +47,9 @@ func (c CryptoSIG0) Verify(s *SIG, p []byte) error {
 		off int
 		err error
 	)
-	h, cryptohash, err := hashFromAlgorithm(s.Algorithm)
-	if err != nil {
-		return err
+	hash, ok := AlgorithmToHash[s.Algorithm]
+	if !ok {
+		return ErrAlg
 	}
 
 	signature := s.Signature
@@ -62,17 +62,18 @@ func (c CryptoSIG0) Verify(s *SIG, p []byte) error {
 	}
 	sbuf = sbuf[:off]
 
-	// Write SIG rdata
-	h.Write(sbuf)
-	// Write message
-	h.Write(p)
+	h := hash.New()
 
 	binarysignature, _ := fromBase64([]byte(signature))
 	switch s.Algorithm {
 	case RSASHA1, RSASHA256, RSASHA512:
-		return rsa.VerifyPKCS1v15(c.Key().publicKeyRSA(), cryptohash, h.Sum(nil), binarysignature)
+		h.Write(sbuf)
+		h.Write(p)
+		return rsa.VerifyPKCS1v15(c.Key().publicKeyRSA(), hash, h.Sum(nil), binarysignature)
 
 	case ECDSAP256SHA256, ECDSAP384SHA384:
+		h.Write(sbuf)
+		h.Write(p)
 		r := new(big.Int).SetBytes(binarysignature[:len(binarysignature)/2])
 		s := new(big.Int).SetBytes(binarysignature[len(binarysignature)/2:])
 		if ecdsa.Verify(c.Key().publicKeyECDSA(), h.Sum(nil), r, s) {
@@ -81,7 +82,9 @@ func (c CryptoSIG0) Verify(s *SIG, p []byte) error {
 		return ErrSig
 
 	case ED25519:
-		if ed25519.Verify(c.Key().publicKeyED25519(), h.Sum(nil), binarysignature) {
+		h.Write(sbuf)
+		h.Write(p)
+		if ed25519.Verify(c.Key().publicKeyED25519(), append(sbuf, p...), binarysignature) {
 			return nil
 		}
 		return ErrSig
