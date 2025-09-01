@@ -23,7 +23,7 @@ type Config struct {
 	Attempts int      // Lost packets before giving up on server.
 }
 
-// FromFile parses a resolv.conf(5) like file and returns a *Config.
+// FromFile parses a resolv.conf(5) like file and returns a [*Config].
 func FromFile(resolvconf string) (*Config, error) {
 	file, err := os.Open(resolvconf)
 	if err != nil {
@@ -33,7 +33,7 @@ func FromFile(resolvconf string) (*Config, error) {
 	return FromReader(file)
 }
 
-// FromReader works like FromFile but takes an io.Reader as argument.
+// FromReader works like [FromFile] but takes an io.Reader as argument.
 func FromReader(resolvconf io.Reader) (*Config, error) {
 	c := new(Config)
 	scanner := bufio.NewScanner(resolvconf)
