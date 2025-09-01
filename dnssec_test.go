@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"testing"
 )
@@ -8,27 +10,48 @@ import (
 func TestSignVerify(t *testing.T) {
 	// Add wildcard, sorting of RRs. etc.
 	testcases := []struct {
-		name string
-		rrs  []RR
-		err  error
+		name      string
+		algorithm uint8
+		bitsize   int
+		rrs       []RR
 	}{
 		{
-			"1rr",
+			"rsasha256", RSASHA256, 1024,
 			[]RR{
 				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
 				//				&HINFO{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Cpu: "Pentium", Os: "Linux"},
 			},
-			nil,
+		},
+		{
+			"ecdsap256sha256", ECDSAP256SHA256, 256,
+			[]RR{
+				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+			},
+		},
+		{
+			"ed25519", ED25519, 256,
+			[]RR{
+				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+			},
 		},
 	}
 
-	key := NewDNSKEY("miek.nl.", RSASHA256)
-	priv, _ := key.Generate(1024)
-
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			sig := NewRRSIG("miek.nl", RSASHA256, RRToType(tc.rrs[0]), key.KeyTag(), uint8(dnsutilCount(tc.rrs[0].Header().Name)), 3600)
-			err := sig.Sign(priv.(*rsa.PrivateKey), tc.rrs)
+			var err error
+
+			key := NewDNSKEY("miek.nl.", tc.algorithm)
+			priv, _ := key.Generate(tc.bitsize)
+
+			sig := NewRRSIG("miek.nl", tc.algorithm, RRToType(tc.rrs[0]), key.KeyTag(), uint8(dnsutilCount(tc.rrs[0].Header().Name)), 3600)
+			switch tc.algorithm {
+			case RSASHA256:
+				err = sig.Sign(priv.(*rsa.PrivateKey), tc.rrs)
+			case ECDSAP256SHA256:
+				err = sig.Sign(priv.(*ecdsa.PrivateKey), tc.rrs)
+			case ED25519:
+				sig.Sign(priv.(ed25519.PrivateKey), tc.rrs)
+			}
 			if err != nil {
 				t.Fatalf("failure to sign: %s", err)
 			}

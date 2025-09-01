@@ -173,7 +173,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	}
 	wire = wire[:n]
 
-	owner := make([]byte, 255)
+	owner := make([]byte, len(k.Hdr.Name))
 	off, err1 := pack.Name(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
@@ -278,7 +278,6 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 	if !ok && rr.Algorithm != ED25519 {
 		return ErrAlg
 	}
-	h = hash.New()
 
 	switch rr.Algorithm {
 	case RSAMD5, DSA, DSANSEC3SHA1:
@@ -295,6 +294,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR) error {
 		return nil
 
 	default:
+		h = hash.New()
 		h.Write(signdata)
 		h.Write(wire)
 
@@ -405,7 +405,6 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 	if !ok && rr.Algorithm != ED25519 {
 		return ErrAlg
 	}
-	h = hash.New()
 
 	switch rr.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512:
@@ -414,6 +413,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 			return ErrKey
 		}
 
+		h = hash.New()
 		h.Write(signeddata)
 		h.Write(wire)
 		return rsa.VerifyPKCS1v15(pubkey, hash, h.Sum(nil), sigbuf)
@@ -428,6 +428,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR) error {
 		r := new(big.Int).SetBytes(sigbuf[:len(sigbuf)/2])
 		s := new(big.Int).SetBytes(sigbuf[len(sigbuf)/2:])
 
+		h = hash.New()
 		h.Write(signeddata)
 		h.Write(wire)
 		if ecdsa.Verify(pubkey, h.Sum(nil), r, s) {
