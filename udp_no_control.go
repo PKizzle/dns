@@ -1,8 +1,4 @@
 //go:build windows || darwin
-// +build windows darwin
-
-// TODO(tmthrgd): Remove this Windows-specific code if go.dev/issue/7175 and
-//   go.dev/issue/7174 are ever fixed.
 
 // NOTICE(stek29): darwin supports PKTINFO in sendmsg, but it unbinds sockets, see https://github.com/miekg/dns/issues/724
 
@@ -10,28 +6,17 @@ package dns
 
 import "net"
 
-// SessionUDP holds the remote address
-type SessionUDP struct {
-	raddr *net.UDPAddr
+// Session is a small strucures that keep track of where the (potential) UDP message came from.
+type Session struct {
+	raddr *net.UDPAddr // address from [net.ReadMsgUDP]
+	// oob data also returned, this is needed to route to the correct interface. As these are small fixed
+	// slices it makes sense to use a sync.Pool, to be able to override this behavior an
+	oobdata []byte
 }
 
-// RemoteAddr returns the remote network address.
-func (s *SessionUDP) RemoteAddr() net.Addr { return s.raddr }
+func (s *Session) RemoteAddr() net.Addr { return s.raddr }
 
-// ReadFromSessionUDP acts just like net.UDPConn.ReadFrom(), but returns a session object instead of a
-// net.UDPAddr.
-func ReadFromSessionUDP(conn *net.UDPConn, b []byte) (int, *SessionUDP, error) {
-	n, raddr, err := conn.ReadFrom(b)
-	if err != nil {
-		return n, nil, err
-	}
-	return n, &SessionUDP{raddr.(*net.UDPAddr)}, err
-}
-
-// WriteToSessionUDP acts just like net.UDPConn.WriteTo(), but uses a *SessionUDP instead of a net.Addr.
-func WriteToSessionUDP(conn *net.UDPConn, b []byte, session *SessionUDP) (int, error) {
-	return conn.WriteTo(b, session.raddr)
-}
+var oobSize = func() int { return 0 }()
 
 func setUDPSocketOptions(*net.UDPConn) error { return nil }
 func parseDstFromOOB([]byte, net.IP) net.IP  { return nil }
