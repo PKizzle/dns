@@ -180,29 +180,3 @@ func TestTransferTSIG(t *testing.T) {
 		}
 	}
 }
-
-/*
-func axfrTestingSuiteWithMsgNotSigned(t *testing.T, addrstr string, provider TsigProvider) {
-	tr := new(Transfer)
-	m := new(Msg)
-	var err error
-	tr.Conn, err = Dial("tcp", addrstr)
-	if err != nil {
-		t.Fatal("failed to dial", err)
-	}
-	tr.TsigProvider = provider
-	m.SetAxfr(testTransferZone)
-
-	c, err := tr.In(m, addrstr)
-	if err != nil {
-		t.Fatal("failed to zone transfer in", err)
-	}
-
-	for msg := range c {
-		if !errors.Is(msg.Error, ErrNoSig) {
-			t.Fatal("expecting ErrNoSig error")
-		}
-	}
-}
-
-*/
