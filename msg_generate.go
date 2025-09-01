@@ -86,7 +86,7 @@ func main() {
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-					o("off, err = packStringTxt(rr.%s, msg, off)\n")
+					o("off, err = pack.StringTxt(rr.%s, msg, off)\n")
 				case `dns:"opt"`:
 					o("off, err = packOpt(rr.%s, msg, off)\n")
 				case `dns:"nsec"`:
@@ -94,7 +94,7 @@ func main() {
 				case `dns:"pairs"`:
 					o("off, err = packSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
-					o("off, err = packNames(rr.%s, msg, off, compression)\n")
+					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
 				case `dns:"apl"`:
 					o("off, err = packApl(rr.%s, msg, off)\n")
 				default:
@@ -148,7 +148,7 @@ if rr.%s != "-" {
 			case tag == `dns:"any"`:
 				o("off, err = pack.StringAny(rr.%s, msg, off)\n")
 			case tag == `dns:"octet"`:
-				o("off, err = packStringOctet(rr.%s, msg, off)\n")
+				o("off, err = pack.StringOctet(rr.%s, msg, off)\n")
 			case tag == `dns:"ipsechost"` || tag == `dns:"amtrelayhost"`:
 				o("off, err = packIPSECGateway(rr.GatewayAddr, rr.%s, msg, off, rr.GatewayType, compression, false)\n")
 			case tag == "":
@@ -247,7 +247,7 @@ if rr.%s != "-" {
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-					unpackField("unpackStringTxt")
+					unpackField("unpack.StringTxt")
 				case `dns:"opt"`:
 					unpackField("unpackOpt")
 				case `dns:"nsec"`:
@@ -255,7 +255,7 @@ if rr.%s != "-" {
 				case `dns:"pairs"`:
 					unpackField("unpackSVCB")
 				case `dns:"domain-name"`:
-					unpackFieldBuf("unpackNames")
+					unpackFieldBuf("unpack.Names")
 				case `dns:"apl"`:
 					unpackField("unpackApl")
 				default:
@@ -285,7 +285,7 @@ if rr.%s != "-" {
 			case `dns:"any"`:
 				unpackFieldRest("unpack.StringAny")
 			case `dns:"octet"`:
-				unpackField("unpackStringOctet")
+				unpackField("unpack.StringOctet")
 			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
 				// TODO(tmthrgd): This is a particular unpleasant way of dealing with this. Can we do better? Probably not with the structs as they are.
 				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)")

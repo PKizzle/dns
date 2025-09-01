@@ -3,7 +3,6 @@ package dns
 import (
 	"net"
 
-	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
@@ -56,20 +55,6 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	return off, nil
 }
 
-// helper helper functions.
-
-func unpackStringTxt(s *cryptobyte.String) ([]string, error) {
-	return unpackTxt(s)
-}
-
-func packStringTxt(s []string, msg []byte, off int) (int, error) {
-	off, err := packTxt(s, msg, off)
-	if err != nil {
-		return len(msg), err
-	}
-	return off, nil
-}
-
 func unpackOpt(s *cryptobyte.String) ([]EDNS0, error) {
 	edns0 := []EDNS0{}
 	for !s.Empty() {
@@ -110,16 +95,6 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 		}
 
 		off += optionoff + l
-	}
-	return off, nil
-}
-
-func unpackStringOctet(s *cryptobyte.String) (string, error) { return unpack.StringAny(s, len(*s)) }
-
-func packStringOctet(s string, msg []byte, off int) (int, error) {
-	off, err := packOctetString(s, msg, off)
-	if err != nil {
-		return len(msg), err
 	}
 	return off, nil
 }
@@ -223,29 +198,6 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 		lastwindow, lastlength = window, length
 	}
 	off += int(lastlength) + 2
-	return off, nil
-}
-
-func unpackNames(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
-	var names []string
-	for !s.Empty() {
-		name, err := unpack.Name(s, msgBuf)
-		if err != nil {
-			return names, err
-		}
-		names = append(names, name)
-	}
-	return names, nil
-}
-
-func packNames(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
-	var err error
-	for _, name := range names {
-		off, err = pack.Name(name, msg, off, compress, false)
-		if err != nil {
-			return len(msg), err
-		}
-	}
 	return off, nil
 }
 
@@ -400,62 +352,4 @@ func packIPSECGateway(gatewayAddr net.IP, gatewayString string, msg []byte, off 
 	}
 
 	return off, err
-}
-
-func packTxt(txt []string, msg []byte, off int) (int, error) {
-	if len(txt) == 0 {
-		if off >= len(msg) {
-			return len(msg), pack.ErrBuf
-		}
-		msg[off] = 0
-		return off, nil
-	}
-	var err error
-	for _, s := range txt {
-		off, err = pack.TxtString(s, msg, off)
-		if err != nil {
-			return len(msg), err
-		}
-	}
-	return off, nil
-}
-
-func packOctetString(s string, msg []byte, off int) (int, error) {
-	if off >= len(msg) || len(s) > 256*4+1 {
-		return len(msg), pack.ErrBuf
-	}
-	for i := 0; i < len(s); i++ {
-		if len(msg) <= off {
-			return len(msg), pack.ErrBuf
-		}
-		if s[i] == '\\' {
-			i++
-			if i == len(s) {
-				break
-			}
-			// check for \DDD
-			if ddd.Is(s[i:]) {
-				msg[off] = ddd.ToByte(s[i:])
-				i += 2
-			} else {
-				msg[off] = s[i]
-			}
-		} else {
-			msg[off] = s[i]
-		}
-		off++
-	}
-	return off, nil
-}
-
-func unpackTxt(s *cryptobyte.String) ([]string, error) {
-	var strs []string
-	for !s.Empty() {
-		str, err := unpack.String(s)
-		if err != nil {
-			return strs, err
-		}
-		strs = append(strs, str)
-	}
-	return strs, nil
 }

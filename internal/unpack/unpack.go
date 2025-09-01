@@ -49,6 +49,20 @@ func StringAny(s *cryptobyte.String, len int) (string, error) {
 	return string(b), nil
 }
 
+func StringTxt(s *cryptobyte.String) ([]string, error) { return Txt(s) }
+
+func Txt(s *cryptobyte.String) ([]string, error) {
+	var strs []string
+	for !s.Empty() {
+		str, err := String(s)
+		if err != nil {
+			return strs, err
+		}
+		strs = append(strs, str)
+	}
+	return strs, nil
+}
+
 func String(s *cryptobyte.String) (string, error) {
 	var txt cryptobyte.String
 	if !s.ReadUint8LengthPrefixed(&txt) {
@@ -205,4 +219,18 @@ func StringHex(s *cryptobyte.String, len int) (string, error) {
 		return "", ErrOverflow
 	}
 	return hex.EncodeToString(b), nil
+}
+
+func StringOctet(s *cryptobyte.String) (string, error) { return StringAny(s, len(*s)) }
+
+func Names(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
+	var names []string
+	for !s.Empty() {
+		name, err := Name(s, msgBuf)
+		if err != nil {
+			return names, err
+		}
+		names = append(names, name)
+	}
+	return names, nil
 }

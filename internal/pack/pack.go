@@ -72,6 +72,32 @@ func StringAny(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+func StringTxt(s []string, msg []byte, off int) (int, error) {
+	off, err := Txt(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}
+
+func Txt(txt []string, msg []byte, off int) (int, error) {
+	if len(txt) == 0 {
+		if off >= len(msg) {
+			return len(msg), ErrBuf
+		}
+		msg[off] = 0
+		return off, nil
+	}
+	var err error
+	for _, s := range txt {
+		off, err = TxtString(s, msg, off)
+		if err != nil {
+			return len(msg), err
+		}
+	}
+	return off, nil
+}
+
 func String(s string, msg []byte, off int) (int, error) {
 	off, err := TxtString(s, msg, off)
 	if err != nil {
@@ -350,5 +376,52 @@ func StringHex(s string, msg []byte, off int) (int, error) {
 	}
 	copy(msg[off:off+len(h)], h)
 	off += len(h)
+	return off, nil
+}
+
+func OctetString(s string, msg []byte, off int) (int, error) {
+	if off >= len(msg) || len(s) > 256*4+1 {
+		return len(msg), ErrBuf
+	}
+	for i := 0; i < len(s); i++ {
+		if len(msg) <= off {
+			return len(msg), ErrBuf
+		}
+		if s[i] == '\\' {
+			i++
+			if i == len(s) {
+				break
+			}
+			// check for \DDD
+			if ddd.Is(s[i:]) {
+				msg[off] = ddd.ToByte(s[i:])
+				i += 2
+			} else {
+				msg[off] = s[i]
+			}
+		} else {
+			msg[off] = s[i]
+		}
+		off++
+	}
+	return off, nil
+}
+
+func StringOctet(s string, msg []byte, off int) (int, error) {
+	off, err := OctetString(s, msg, off)
+	if err != nil {
+		return len(msg), err
+	}
+	return off, nil
+}
+
+func Names(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
+	var err error
+	for _, name := range names {
+		off, err = Name(name, msg, off, compress, false)
+		if err != nil {
+			return len(msg), err
+		}
+	}
 	return off, nil
 }
