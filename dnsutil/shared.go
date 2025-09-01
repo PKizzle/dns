@@ -92,6 +92,7 @@ func Prev(s string, n int) (i int, start bool) {
 // IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
 // This means the RRs need to have the same type, name, and class.
 func IsRRset(rrset []dns.RR) bool {
+	// duplicates... ?
 	if len(rrset) == 0 {
 		return false
 	}
