@@ -8,6 +8,8 @@
 
 - All basics work.
 - Fast(er); recvmmsg and pipeling suppport.
+  - Since a46996c I can get 400K qps on my laptop (M2/Asahi Linux).
+  - On intel/amd it is lower - yet to understand why.
 - More convenience functions included in _dns_ or otherwise in _dnsutils_.
 - Test helper function included _dnstest_.
 - Example programs included _and_ benchmarked in `cmd/`.
