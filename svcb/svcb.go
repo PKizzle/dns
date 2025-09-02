@@ -1,4 +1,4 @@
-// Package svcb deals with all the intricacies of the SVCB/HTTPS package. All the sub-types ([Pairs]) used in
+// Package svcb deals with all the intricacies of the SVCB/HTTPS RR. All the sub-types ([Pairs]) used in
 // the RR are defined here.
 package svcb
 
@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/internal/reverse"
 )
 
 // Keys as defined in RFC 9460.
@@ -62,7 +63,7 @@ func StringToKey(s string) uint16 {
 	return KeyReserved
 }
 
-var stringToKey = reverse(keyToString)
+var stringToKey = reverse.Int16(keyToString)
 
 func KeyToPair(k uint16) func() Pair {
 	switch k {
@@ -118,8 +119,7 @@ func PairToKey(p Pair) uint16 {
 	return KeyReserved
 }
 
-// Pair defines a key=value pair for the SVCB RR type.
-// An SVCB RR can have multiple pairs appended to it.
+// Pair defines a key=value pair for the SVCB RR type. An SVCB RR can have multiple pairs appended to it.
 // The numerical key code is derived from the type, see [PairToKey].
 type Pair interface {
 	String() string // String returns the string representation of the value.
@@ -131,13 +131,13 @@ type Pair interface {
 // "port" and "no-default-alpn" are mandatory by default if present,
 // so they shouldn't be included here.
 //
-// It is incumbent upon the user of this library to reject the RRSet if
-// or avoid constructing such an RRSet that:
-// - "mandatory" is included as one of the keys of mandatory
-// - no key is listed multiple times in mandatory
-// - all keys listed in mandatory are present
-// - escape sequences are not used in mandatory
-// - mandatory, when present, lists at least one key
+// It is incumbent upon the user of this library to reject the RRSet if or avoid constructing such an RRSet that:
+//
+//   - "mandatory" is included as one of the keys of mandatory
+//   - no key is listed multiple times in mandatory
+//   - all keys listed in mandatory are present
+//   - escape sequences are not used in mandatory
+//   - mandatory, when present, lists at least one key
 //
 // Basic use pattern for creating a mandatory option in a SVCB RR, called s:
 //
@@ -377,13 +377,5 @@ type LOCAL struct {
 func (s *LOCAL) String() string { return pairToString(s.Data) }
 
 func (s *LOCAL) Len() int { return tlv + len(s.Data) }
-
-func reverse(m map[uint16]string) map[string]uint16 {
-	n := make(map[string]uint16, len(m))
-	for u, s := range m {
-		n[s] = u
-	}
-	return n
-}
 
 const tlv = 4

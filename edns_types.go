@@ -7,6 +7,7 @@ import (
 	"net"
 	"strconv"
 
+	"codeberg.org/miekg/dns/internal/reverse"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -396,7 +397,7 @@ var ExtendedErrorToString = map[uint16]string{
 }
 
 // StringToExtendedError is a map from human readable descriptions to extended error info codes.
-var StringToExtendedError = reverseInt16(ExtendedErrorToString)
+var StringToExtendedError = reverse.Int16(ExtendedErrorToString)
 
 func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	switch x := option.(type) {
