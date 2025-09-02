@@ -225,7 +225,7 @@ func (d *DS) ToCDS() *CDS {
 // There is no check if RRSet is a proper (RFC 2181) RRSet.  If OrigTTL is non
 // zero, it is used as-is, otherwise the TTL of the RRset is used as the
 // OrigTTL.
-func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options SignOption) error {
+func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	if k == nil {
 		return ErrPrivKey
 	}
@@ -270,7 +270,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options SignOption) error {
 		return err
 	}
 	signdata = signdata[:n]
-	wire, err := rawSignatureData(rrset, rr, options)
+	wire, err := rawSignatureData(rrset, rr, *options)
 	defer options.Pooler.Put(wire)
 	if err != nil {
 		return err
@@ -349,7 +349,7 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 // It also checks that the Zone Key bit (RFC 4034 2.1.1) is set on the DNSKEY
 // and that the Protocol field is set to 3 (RFC 4034 2.1.2).
-func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options SignOption) error {
+func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	if !dnsutilIsRRset(rrset) {
 		return ErrRRset
 	}
@@ -400,7 +400,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options SignOption) error {
 		return err
 	}
 	signeddata = signeddata[:n]
-	wire, err := rawSignatureData(rrset, rr, options)
+	wire, err := rawSignatureData(rrset, rr, *options)
 	defer options.Pooler.Put(wire)
 	if err != nil {
 		return err

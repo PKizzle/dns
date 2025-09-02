@@ -21,12 +21,6 @@ type Transport struct {
 	// TLSClientConfig specifies the TLS configuration to use with DialTLS, if TLSConfig is not nil it will
 	// be used to dial.
 	TLSConfig *tls.Config
-
-	// If non zero, TSIG signing and verification is done on messages that have a TSIG record in the pseudo section.
-	TSIGSigner
-
-	// If non zero SIG0 signing and verification is done on messages that have a SIG0 record in the pseudo section.
-	// SIG0Signer
 }
 
 // defaultTransport is the default transport in client, when none is set. Note changing this value has global
@@ -68,4 +62,12 @@ func isEOFOrClosedNetwork(err error) bool {
 		}
 	}
 	return false
+}
+
+// Tranfer defines the signing parameters that are used during a zone transfer.
+type Transfer struct {
+	// If non zero, TSIG signing and verification is done on messages that have a TSIG record in the pseudo section.
+	TSIGSigner
+	// If non zero SIG0 signing and verification is done on messages that have a SIG0 record in the pseudo section.
+	SIG0Signer
 }
