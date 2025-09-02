@@ -11,7 +11,7 @@ import (
 // SOG0Sign signs a dns.Msg. It fills the signature with the appropriate data.
 // The SIG record should have the SignerName, KeyTag, Algorithm, Inception
 // and Expiration set.
-func SIG0Sign(m *Msg, k SIG0Signer, options SIG0Option) error {
+func SIG0Sign(m *Msg, k SIG0Signer, options *SIG0Option) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return err
@@ -40,7 +40,7 @@ func SIG0Sign(m *Msg, k SIG0Signer, options SIG0Option) error {
 	arcount := uint16(len(m.Extra) + int(m.ps-1))
 	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the TSIG
 
-	signature, err := k.Sign(s, m.Data, options)
+	signature, err := k.Sign(s, m.Data, *options)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func SIG0Sign(m *Msg, k SIG0Signer, options SIG0Option) error {
 }
 
 // Verify validates the message buf using the key k.
-func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options SIG0Option) error {
+func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options *SIG0Option) error {
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return err
@@ -88,7 +88,7 @@ func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options SIG0Option) error {
 	arcount := uint16(len(m.Extra) + int(m.ps-1))
 	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the TSIG
 
-	err := k.Verify(s, m.Data, options)
+	err := k.Verify(s, m.Data, *options)
 
 	pack.Uint16(arcount+1, m.Data, msgArcount) // restore arcount
 	return err

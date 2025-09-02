@@ -144,7 +144,7 @@ func TestTransferTSIG(t *testing.T) {
 		var wg sync.WaitGroup
 		env := make(chan *dns.Envelope)
 		c := dns.NewClient()
-		c.TSIGSigner = dns.HmacTSIG{[]byte("geheim")}
+		c.Transfer = &dns.Transfer{TSIGSigner: dns.HmacTSIG{[]byte("geheim")}}
 		wg.Go(func() {
 			err := c.TransferOut(w, r, env)
 			if err != nil {
@@ -164,7 +164,7 @@ func TestTransferTSIG(t *testing.T) {
 	defer cancel()
 
 	c := dns.NewClient()
-	c.TSIGSigner = dns.HmacTSIG{[]byte("geheim")}
+	c.Transfer = &dns.Transfer{TSIGSigner: dns.HmacTSIG{[]byte("geheim")}}
 
 	m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
 	m.Pseudo = []dns.RR{dns.NewTSIG(".", dns.HmacSHA512, 0)}

@@ -36,7 +36,7 @@ func TestSignVerify(t *testing.T) {
 		},
 	}
 
-	options := SignOption{}
+	options := &SignOption{}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
@@ -51,7 +51,7 @@ func TestSignVerify(t *testing.T) {
 			case ECDSAP256SHA256:
 				err = sig.Sign(priv.(*ecdsa.PrivateKey), tc.rrs, options)
 			case ED25519:
-				sig.Sign(priv.(ed25519.PrivateKey), tc.rrs, options)
+				err = sig.Sign(priv.(ed25519.PrivateKey), tc.rrs, options)
 			}
 			if err != nil {
 				t.Fatalf("failure to sign: %s", err)

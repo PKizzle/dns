@@ -17,7 +17,7 @@ type Envelope struct {
 // should have an [AXFR] or [IXFR] RR in the question section.  For doing an IXFR a SOA record needs to be
 // present in the [Ns] section of the [Msg], see RFC 1995.
 //
-// If the pseudo section contains a (stub) TSIG or
+// If the pseudo section contains a (stub) TSIG or in the future.
 // SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs. For
 // this the client also need a [TSIGSigner] or [SIG0Signer].
 //
@@ -75,8 +75,8 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 		}
 	}
 
-	if c.TSIGSigner != nil && hasTSIG(m) != nil {
-		if err := TSIGSign(m, c.TSIGSigner, &TSIGOption{}); err != nil {
+	if c.Transfer != nil && c.Transfer.TSIGSigner != nil && hasTSIG(m) != nil {
+		if err := TSIGSign(m, c.Transfer.TSIGSigner, &TSIGOption{}); err != nil {
 			return nil, err
 		}
 	}
@@ -158,8 +158,8 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
+		if c.Transfer != nil && c.Transfer.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, c.Transfer.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
@@ -257,8 +257,8 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
+		if c.Transfer != nil && c.Transfer.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, c.Transfer.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
@@ -331,8 +331,8 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		if err = m.Pack(); err != nil {
 			return err
 		}
-		if c.TSIGSigner != nil && t != nil {
-			if err = TSIGSign(m, c.TSIGSigner, &options); err != nil {
+		if c.Transfer != nil && c.Transfer.TSIGSigner != nil && t != nil {
+			if err = TSIGSign(m, c.Transfer.TSIGSigner, &options); err != nil {
 				return err
 			}
 		}
