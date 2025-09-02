@@ -55,7 +55,7 @@ func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[stri
 	return off, nil
 }
 
-func unpackOpt(s *cryptobyte.String) ([]EDNS0, error) {
+func unpackOPT(s *cryptobyte.String) ([]EDNS0, error) {
 	edns0 := []EDNS0{}
 	for !s.Empty() {
 		var (
@@ -79,7 +79,7 @@ func unpackOpt(s *cryptobyte.String) ([]EDNS0, error) {
 	return edns0, nil
 }
 
-func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
+func packOPT(options []EDNS0, msg []byte, off int) (int, error) {
 	for _, option := range options {
 		l := option.Len()
 		if off+l >= len(msg) {
@@ -99,7 +99,7 @@ func packOpt(options []EDNS0, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackNsec(s *cryptobyte.String) ([]uint16, error) {
+func unpackNSEC(s *cryptobyte.String) ([]uint16, error) {
 	var nsec []uint16
 	lastwindow := -1
 	for !s.Empty() {
@@ -161,7 +161,7 @@ func typeBitMapLen(bitmap []uint16) int {
 	return l
 }
 
-func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
+func packNSEC(bitmap []uint16, msg []byte, off int) (int, error) {
 	if len(bitmap) == 0 {
 		return off, nil
 	}
@@ -201,10 +201,10 @@ func packNsec(bitmap []uint16, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func packApl(data []APLPrefix, msg []byte, off int) (int, error) {
+func packAPL(data []APLPrefix, msg []byte, off int) (int, error) {
 	var err error
 	for i := range data {
-		off, err = packAplPrefix(&data[i], msg, off)
+		off, err = packAPLPrefix(&data[i], msg, off)
 		if err != nil {
 			return len(msg), err
 		}
@@ -212,7 +212,7 @@ func packApl(data []APLPrefix, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
+func packAPLPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	if len(p.Network.IP) != len(p.Network.Mask) {
 		return len(msg), &pack.Error{Err: "address and mask lengths don't match"}
 	}
@@ -263,10 +263,10 @@ func packAplPrefix(p *APLPrefix, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func unpackApl(s *cryptobyte.String) ([]APLPrefix, error) {
+func unpackAPL(s *cryptobyte.String) ([]APLPrefix, error) {
 	var prefixes []APLPrefix
 	for !s.Empty() {
-		prefix, err := unpackAplPrefix(s)
+		prefix, err := unpackAPLPrefix(s)
 		if err != nil {
 			return nil, err
 		}
@@ -275,7 +275,7 @@ func unpackApl(s *cryptobyte.String) ([]APLPrefix, error) {
 	return prefixes, nil
 }
 
-func unpackAplPrefix(s *cryptobyte.String) (APLPrefix, error) {
+func unpackAPLPrefix(s *cryptobyte.String) (APLPrefix, error) {
 	var (
 		family       uint16
 		prefix, nlen byte

@@ -974,7 +974,7 @@ func (rr *NSEC) pack(msg []byte, off int, compression map[string]uint16) (off1 i
 	if err != nil {
 		return off, err
 	}
-	off, err = packNsec(rr.TypeBitMap, msg, off)
+	off, err = packNSEC(rr.TypeBitMap, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -987,7 +987,7 @@ func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.TypeBitMap, err = unpackNsec(&s)
+	rr.TypeBitMap, err = unpackNSEC(&s)
 	if err != nil {
 		return err
 	}
@@ -1433,7 +1433,7 @@ func (rr *NSEC3) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packNsec(rr.TypeBitMap, msg, off)
+	off, err = packNSEC(rr.TypeBitMap, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1465,7 +1465,7 @@ func (rr *NSEC3) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.TypeBitMap, err = unpackNsec(&s)
+	rr.TypeBitMap, err = unpackNSEC(&s)
 	if err != nil {
 		return err
 	}
@@ -2143,7 +2143,7 @@ func (rr *CSYNC) pack(msg []byte, off int, compression map[string]uint16) (off1 
 	if err != nil {
 		return off, err
 	}
-	off, err = packNsec(rr.TypeBitMap, msg, off)
+	off, err = packNSEC(rr.TypeBitMap, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2158,7 +2158,7 @@ func (rr *CSYNC) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Flags) {
 		return unpack.ErrOverflow
 	}
-	rr.TypeBitMap, err = unpackNsec(&s)
+	rr.TypeBitMap, err = unpackNSEC(&s)
 	if err != nil {
 		return err
 	}
@@ -2210,7 +2210,7 @@ func (rr *ZONEMD) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *OPT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packOpt(rr.Options, msg, off)
+	off, err = packOPT(rr.Options, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2219,7 +2219,7 @@ func (rr *OPT) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *OPT) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Options, err = unpackOpt(&s)
+	rr.Options, err = unpackOPT(&s)
 	if err != nil {
 		return err
 	}
@@ -2250,7 +2250,7 @@ func (rr *RESINFO) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *APL) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packApl(rr.Prefixes, msg, off)
+	off, err = packAPL(rr.Prefixes, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2259,7 +2259,7 @@ func (rr *APL) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 
 func (rr *APL) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Prefixes, err = unpackApl(&s)
+	rr.Prefixes, err = unpackAPL(&s)
 	if err != nil {
 		return err
 	}

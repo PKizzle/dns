@@ -88,15 +88,15 @@ func main() {
 				case `dns:"txt"`:
 					o("off, err = pack.StringTxt(rr.%s, msg, off)\n")
 				case `dns:"opt"`:
-					o("off, err = packOpt(rr.%s, msg, off)\n")
+					o("off, err = packOPT(rr.%s, msg, off)\n")
 				case `dns:"nsec"`:
-					o("off, err = packNsec(rr.%s, msg, off)\n")
+					o("off, err = packNSEC(rr.%s, msg, off)\n")
 				case `dns:"pairs"`:
 					o("off, err = packSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
 				case `dns:"apl"`:
-					o("off, err = packApl(rr.%s, msg, off)\n")
+					o("off, err = packAPL(rr.%s, msg, off)\n")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
@@ -249,15 +249,15 @@ if rr.%s != "-" {
 				case `dns:"txt"`:
 					unpackField("unpack.StringTxt")
 				case `dns:"opt"`:
-					unpackField("unpackOpt")
+					unpackField("unpackOPT")
 				case `dns:"nsec"`:
-					unpackField("unpackNsec")
+					unpackField("unpackNSEC")
 				case `dns:"pairs"`:
 					unpackField("unpackSVCB")
 				case `dns:"domain-name"`:
 					unpackFieldBuf("unpack.Names")
 				case `dns:"apl"`:
-					unpackField("unpackApl")
+					unpackField("unpackAPL")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
