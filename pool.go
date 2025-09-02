@@ -34,3 +34,13 @@ func newPool(size int) *Pool {
 		},
 	}
 }
+
+// noopPool is a Pooler that just allocates and does not cache.
+type noopPool struct {
+	size int
+}
+
+func (n *noopPool) Get() []byte { return make([]byte, n.size) }
+func (n *noopPool) Put([]byte)  {}
+
+func newNoopPool(size int) *noopPool { return &noopPool{size: size} }

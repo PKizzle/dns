@@ -233,6 +233,9 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options SignOption) error {
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
 	}
+	if options.Pooler == nil {
+		options.Pooler = newNoopPool(DefaultMsgSize)
+	}
 
 	h0 := rrset[0].Header()
 	rr.Hdr.t = TypeRRSIG
@@ -260,13 +263,15 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options SignOption) error {
 	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
 
 	// Create the desired binary blob
-	signdata := make([]byte, DefaultMsgSize)
+	signdata := options.Pooler.Get()
+	defer options.Pooler.Put(signdata)
 	n, err := sigwire.pack(signdata)
 	if err != nil {
 		return err
 	}
 	signdata = signdata[:n]
-	wire, err := rawSignatureData(rrset, rr)
+	wire, err := rawSignatureData(rrset, rr, options)
+	defer options.Pooler.Put(wire)
 	if err != nil {
 		return err
 	}
@@ -373,6 +378,9 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options SignOption) error {
 		return ErrKey
 	}
 
+	if options.Pooler == nil {
+		options.Pooler = newNoopPool(DefaultMsgSize)
+	}
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
 	sigwire := new(rrsigWireFmt)
@@ -385,13 +393,15 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options SignOption) error {
 	sigwire.KeyTag = rr.KeyTag
 	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
 	// Create the desired binary blob
-	signeddata := make([]byte, DefaultMsgSize)
+	signeddata := options.Pooler.Get()
+	defer options.Pooler.Put(signeddata)
 	n, err := sigwire.pack(signeddata)
 	if err != nil {
 		return err
 	}
 	signeddata = signeddata[:n]
-	wire, err := rawSignatureData(rrset, rr)
+	wire, err := rawSignatureData(rrset, rr, options)
+	defer options.Pooler.Put(wire)
 	if err != nil {
 		return err
 	}
