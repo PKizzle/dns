@@ -36,6 +36,7 @@ func TestSignVerify(t *testing.T) {
 		},
 	}
 
+	options := SignOption{}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			var err error
@@ -43,20 +44,20 @@ func TestSignVerify(t *testing.T) {
 			key := NewDNSKEY("miek.nl.", tc.algorithm)
 			priv, _ := key.Generate(tc.bitsize)
 
-			sig := NewRRSIG("miek.nl", tc.algorithm, RRToType(tc.rrs[0]), key.KeyTag(), uint8(dnsutilCount(tc.rrs[0].Header().Name)), 3600)
+			sig := NewRRSIG("miek.nl", tc.algorithm, key.KeyTag())
 			switch tc.algorithm {
 			case RSASHA256:
-				err = sig.Sign(priv.(*rsa.PrivateKey), tc.rrs)
+				err = sig.Sign(priv.(*rsa.PrivateKey), tc.rrs, options)
 			case ECDSAP256SHA256:
-				err = sig.Sign(priv.(*ecdsa.PrivateKey), tc.rrs)
+				err = sig.Sign(priv.(*ecdsa.PrivateKey), tc.rrs, options)
 			case ED25519:
-				sig.Sign(priv.(ed25519.PrivateKey), tc.rrs)
+				sig.Sign(priv.(ed25519.PrivateKey), tc.rrs, options)
 			}
 			if err != nil {
 				t.Fatalf("failure to sign: %s", err)
 			}
 
-			err = sig.Verify(key, tc.rrs)
+			err = sig.Verify(key, tc.rrs, options)
 			if err != nil {
 				t.Fatalf("failure to verify: %s", err)
 			}

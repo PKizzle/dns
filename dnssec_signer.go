@@ -1,7 +1,12 @@
 package dns
 
 import (
+	"crypto/ecdsa"
+	"crypto/ed25519"
+	"crypto/elliptic"
+	"crypto/rsa"
 	"math/big"
+	"sort"
 
 	"codeberg.org/miekg/dns/internal/pack"
 )
@@ -148,4 +153,126 @@ func intToBytes(i *big.Int, length int) []byte {
 		return b
 	}
 	return buf
+}
+
+// publicKeyRSA returns the RSA public key from a DNSKEY record.
+func (k *DNSKEY) publicKeyRSA() *rsa.PublicKey {
+	keybuf, err := pack.Base64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+
+	if len(keybuf) < 1+1+64 {
+		// Exponent must be at least 1 byte and modulus at least 64
+		return nil
+	}
+
+	// RFC 2537/3110, section 2. RSA Public KEY Resource Records
+	// Length is in the 0th byte, unless its zero, then it
+	// it in bytes 1 and 2 and its a 16 bit number
+	explen := uint16(keybuf[0])
+	keyoff := 1
+	if explen == 0 {
+		explen = uint16(keybuf[1])<<8 | uint16(keybuf[2])
+		keyoff = 3
+	}
+
+	if explen > 4 || explen == 0 || keybuf[keyoff] == 0 {
+		// Exponent larger than supported by the crypto package,
+		// empty, or contains prohibited leading zero.
+		return nil
+	}
+
+	modoff := keyoff + int(explen)
+	modlen := len(keybuf) - modoff
+	if modlen < 64 || modlen > 512 || keybuf[modoff] == 0 {
+		// Modulus is too small, large, or contains prohibited leading zero.
+		return nil
+	}
+
+	pubkey := new(rsa.PublicKey)
+
+	var expo uint64
+	// The exponent of length explen is between keyoff and modoff.
+	for _, v := range keybuf[keyoff:modoff] {
+		expo <<= 8
+		expo |= uint64(v)
+	}
+	if expo > 1<<31-1 {
+		// Larger exponent than supported by the crypto package.
+		return nil
+	}
+
+	pubkey.E = int(expo)
+	pubkey.N = new(big.Int).SetBytes(keybuf[modoff:])
+	return pubkey
+}
+
+// publicKeyECDSA returns the Curve public key from the DNSKEY record.
+func (k *DNSKEY) publicKeyECDSA() *ecdsa.PublicKey {
+	keybuf, err := pack.Base64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+	pubkey := new(ecdsa.PublicKey)
+	switch k.Algorithm {
+	case ECDSAP256SHA256:
+		pubkey.Curve = elliptic.P256()
+		if len(keybuf) != 64 {
+			// wrongly encoded key
+			return nil
+		}
+	case ECDSAP384SHA384:
+		pubkey.Curve = elliptic.P384()
+		if len(keybuf) != 96 {
+			// Wrongly encoded key
+			return nil
+		}
+	}
+	pubkey.X = new(big.Int).SetBytes(keybuf[:len(keybuf)/2])
+	pubkey.Y = new(big.Int).SetBytes(keybuf[len(keybuf)/2:])
+	return pubkey
+}
+
+func (k *DNSKEY) publicKeyED25519() ed25519.PublicKey {
+	keybuf, err := pack.Base64([]byte(k.PublicKey))
+	if err != nil {
+		return nil
+	}
+	if len(keybuf) != ed25519.PublicKeySize {
+		return nil
+	}
+	return keybuf
+}
+
+// Return the raw signature data.
+func rawSignatureData(rrset []RR, s *RRSIG) (buf []byte, err error) {
+	l := 0
+	off := 0
+	for _, rr := range rrset {
+		rr.Header().TTL = s.OrigTTL
+		labels := dnsutilCount(rr.Header().Name)
+		if skip := labels - int(s.Labels); skip > 0 {
+			orig := rr.Header().Name
+			// 6.2. Canonical RR Form. (4) - wildcards
+			// Wildcard, trim to s.Labels from the left and substitute '*'
+			for range skip {
+				off, _ = dnsutilNext(rr.Header().Name, off)
+			}
+			rr.Header().Name = "*." + rr.Header().Name[off:]
+			defer func() { rr.Header().Name = orig }()
+
+		}
+		canonicalize(rr)
+		l += rr.Len()
+	}
+
+	sort.Sort(RRset(rrset))
+
+	rrbuf := make([]byte, l)
+	off = 0
+	for _, rr := range rrset {
+		_, off, _ = packRR(rr, rrbuf, off, nil)
+	}
+	return rrbuf, nil
 }
