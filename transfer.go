@@ -30,6 +30,7 @@ type Envelope struct {
 // Setting up a transfer is done as follows:
 //
 //	c := dns.NewClient()
+//	c.Transfer = &dns.Transfer{TSIGSigner: dns.HmacTSIG{[]byte("secret")}} // optionally set up TSIG with hmac
 //	m := dns.NewMsg("example.org.", dns.TypeAXFR)
 //	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 //	if err != nil {

@@ -30,7 +30,7 @@
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
 - More:
   - msg is a io.Writer.
-  - msg.Data is re-used between request and reply in Exchange.
+  - msg.Data can be re-used between request and reply in Exchange.
   - private RRs are easier.
   - private EDNS0 are implementable.
 - SVCB record got its own package _dns/svcb_ where all the key-values (called `svcb.Pair`) now reside.

@@ -299,12 +299,8 @@ Read:
 				continue Read
 			}
 			for _, msg := range msgs[:n] {
-				raddr := msg.Addr
-				oob := msg.OOB[:msg.NN]
-
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
-				w := &response{conn: pc.(*net.UDPConn), session: &Session{raddr.(*net.UDPAddr), oob}, hijacked: new(atomic.Bool)}
-
+				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}, hijacked: new(atomic.Bool)}
 				go srv.serveUDP(&wg, w, r)
 			}
 			// return if we over-allocated

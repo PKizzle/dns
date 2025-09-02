@@ -80,7 +80,7 @@ func (w *response) RemoteAddr() net.Addr {
 	}
 	switch sock := w.conn.(type) {
 	case *net.UDPConn:
-		return w.Session().RemoteAddr()
+		return w.Session().Addr
 	case *net.TCPConn:
 		return sock.RemoteAddr()
 	default:

@@ -16,8 +16,7 @@ import (
 // * [[ttl][class]]
 // * type
 // * rhs (rdata)
-// But we are lazy here, only the range is parsed *all* occurrences
-// of $ after that are interpreted.
+// But we are lazy here, only the range is parsed *all* occurrences of $ after that are interpreted.
 func (zp *ZoneParser) generate(l lex) (RR, bool) {
 	token := l.token
 	step := int64(1)
@@ -123,7 +122,7 @@ func (r *generateReader) Read(p []byte) (int, error) {
 	// NewZLexer, through NewZoneParser, should use ReadByte and
 	// not end up here.
 
-	panic("not implemented")
+	panic("dns: not implemented")
 }
 
 func (r *generateReader) ReadByte() (byte, error) {

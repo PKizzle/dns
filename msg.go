@@ -411,6 +411,10 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
 			m.Version = opt.Version()
 			m.UDPSize = opt.UDPSize()
+			// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
+			if m.UDPSize < MinMsgSize {
+				m.UDPSize = MinMsgSize
+			}
 
 			m.Pseudo = make([]RR, len(opt.Options))
 			for i, o := range opt.Options {
@@ -741,8 +745,8 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	if sock, ok := r.Conn().(*net.UDPConn); ok {
 		sess := r.Session()
 		if sess != nil {
-			oob := sourceFromOOB(sess.oobdata)
-			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.raddr)
+			oob := sourceFromOOB(sess.OOB)
+			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.Addr)
 			if m.msgPool != nil && !m.hijacked.Load() {
 				m.msgPool.Put(m.Data)
 				m.Data = nil

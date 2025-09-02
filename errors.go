@@ -22,8 +22,8 @@ var (
 	ErrKey     = &Error{err: "bad key"}
 	ErrPrivKey = &Error{err: "bad private key"}
 	ErrKeySize = &Error{err: "bad key size"}
-	ErrNoTSIG  = &Error{err: "no TSIG signature found"}
-	ErrNoSIG0  = &Error{err: "no SIG(0) signature found"}
+	ErrNoTSIG  = &Error{err: "no TSIG signature"}
+	ErrNoSIG0  = &Error{err: "no SIG(0) signature"}
 	ErrRcode   = &Error{err: "bad rcode"}
 	ErrRRset   = &Error{err: "bad rrset"}
 	ErrSOA     = &Error{err: "no SOA"}   // ErrSOA indicates that no SOA RR was seen when doing zone transfers.
