@@ -2,34 +2,34 @@
 
 package dns
 
-func (rr *LLQ) Header() *Header          { return &Header{Name: "."} }
-func (rr *LLQ) Pseudo() bool             { return true }
-func (rr *REPORTING) Header() *Header    { return &Header{Name: "."} }
-func (rr *REPORTING) Pseudo() bool       { return true }
-func (rr *COOKIE) Header() *Header       { return &Header{Name: "."} }
-func (rr *COOKIE) Pseudo() bool          { return true }
-func (rr *NSID) Header() *Header         { return &Header{Name: "."} }
-func (rr *NSID) Pseudo() bool            { return true }
-func (rr *PADDING) Header() *Header      { return &Header{Name: "."} }
-func (rr *PADDING) Pseudo() bool         { return true }
-func (rr *EXPIRE) Header() *Header       { return &Header{Name: "."} }
-func (rr *EXPIRE) Pseudo() bool          { return true }
-func (rr *DAU) Header() *Header          { return &Header{Name: "."} }
-func (rr *DAU) Pseudo() bool             { return true }
-func (rr *DHU) Header() *Header          { return &Header{Name: "."} }
-func (rr *DHU) Pseudo() bool             { return true }
-func (rr *N3U) Header() *Header          { return &Header{Name: "."} }
-func (rr *N3U) Pseudo() bool             { return true }
-func (rr *TCPKEEPALIVE) Header() *Header { return &Header{Name: "."} }
-func (rr *TCPKEEPALIVE) Pseudo() bool    { return true }
-func (rr *EDE) Header() *Header          { return &Header{Name: "."} }
-func (rr *EDE) Pseudo() bool             { return true }
-func (rr *SUBNET) Header() *Header       { return &Header{Name: "."} }
-func (rr *SUBNET) Pseudo() bool          { return true }
-func (rr *ESU) Header() *Header          { return &Header{Name: "."} }
-func (rr *ESU) Pseudo() bool             { return true }
-func (rr *ZONEVERSION) Header() *Header  { return &Header{Name: "."} }
-func (rr *ZONEVERSION) Pseudo() bool     { return true }
+func (o *LLQ) Header() *Header          { return &Header{Name: "."} }
+func (o *LLQ) Pseudo() bool             { return true }
+func (o *REPORTING) Header() *Header    { return &Header{Name: "."} }
+func (o *REPORTING) Pseudo() bool       { return true }
+func (o *COOKIE) Header() *Header       { return &Header{Name: "."} }
+func (o *COOKIE) Pseudo() bool          { return true }
+func (o *NSID) Header() *Header         { return &Header{Name: "."} }
+func (o *NSID) Pseudo() bool            { return true }
+func (o *PADDING) Header() *Header      { return &Header{Name: "."} }
+func (o *PADDING) Pseudo() bool         { return true }
+func (o *EXPIRE) Header() *Header       { return &Header{Name: "."} }
+func (o *EXPIRE) Pseudo() bool          { return true }
+func (o *DAU) Header() *Header          { return &Header{Name: "."} }
+func (o *DAU) Pseudo() bool             { return true }
+func (o *DHU) Header() *Header          { return &Header{Name: "."} }
+func (o *DHU) Pseudo() bool             { return true }
+func (o *N3U) Header() *Header          { return &Header{Name: "."} }
+func (o *N3U) Pseudo() bool             { return true }
+func (o *TCPKEEPALIVE) Header() *Header { return &Header{Name: "."} }
+func (o *TCPKEEPALIVE) Pseudo() bool    { return true }
+func (o *EDE) Header() *Header          { return &Header{Name: "."} }
+func (o *EDE) Pseudo() bool             { return true }
+func (o *SUBNET) Header() *Header       { return &Header{Name: "."} }
+func (o *SUBNET) Pseudo() bool          { return true }
+func (o *ESU) Header() *Header          { return &Header{Name: "."} }
+func (o *ESU) Pseudo() bool             { return true }
+func (o *ZONEVERSION) Header() *Header  { return &Header{Name: "."} }
+func (o *ZONEVERSION) Pseudo() bool     { return true }
 
 // CodeToRR is a map of constructors for each EDNS0 RR type.
 var CodeToRR = map[uint16]func() EDNS0{
@@ -50,8 +50,8 @@ var CodeToRR = map[uint16]func() EDNS0{
 }
 
 // RRToCode is the reverse of CodeToRR, implemented as a function.
-func RRToCode(rr EDNS0) uint16 {
-	switch rr.(type) {
+func RRToCode(o EDNS0) uint16 {
+	switch o.(type) {
 	case *LLQ:
 		return CodeLLQ
 	case *REPORTING:

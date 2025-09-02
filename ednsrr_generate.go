@@ -28,8 +28,8 @@ var CodeToRR = map[uint16]func() EDNS0{
 
 var RRToCode = template.Must(template.New("RRToCode").Parse(`
 // RRToCode is the reverse of CodeToRR, implemented as a function.
-func RRToCode(rr EDNS0) uint16 {
-    switch rr.(type) {
+func RRToCode(o EDNS0) uint16 {
+    switch o.(type) {
 {{range .}}  case *{{.}}:
 	return Code{{.}}
 {{end}} }
@@ -48,8 +48,8 @@ var CodeToString = map[uint16]string{
 `))
 
 var interfaceFunc = template.Must(template.New("interfaceFunc").Parse(`
-	{{range .}}  func (rr *{{.}}) Header() *Header { return &Header{Name:"."} }
-func (rr *{{.}}) Pseudo() bool { return true }
+	{{range .}}  func (o *{{.}}) Header() *Header { return &Header{Name:"."} }
+func (o *{{.}}) Pseudo() bool { return true }
 {{end}}
 
 `))
