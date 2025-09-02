@@ -19,7 +19,7 @@ type HmacTSIG struct {
 
 func (h HmacTSIG) Key() []byte { return h.Secret }
 
-func (h HmacTSIG) Sign(t *TSIG, p []byte) ([]byte, error) {
+func (h HmacTSIG) Sign(t *TSIG, p []byte, options TSIGOption) ([]byte, error) {
 	secret := h.Key()
 	if secret == nil {
 		return nil, ErrKey.Fmt(": HMAC sign")
@@ -45,7 +45,7 @@ func (h HmacTSIG) Sign(t *TSIG, p []byte) ([]byte, error) {
 }
 
 func (h HmacTSIG) Verify(t *TSIG, p []byte, options TSIGOption) error {
-	buf, err := h.Sign(t, p)
+	buf, err := h.Sign(t, p, options)
 	if err != nil {
 		return err
 	}

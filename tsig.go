@@ -57,7 +57,7 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 		return err
 	}
 
-	mac, err := k.Sign(t, macbuf)
+	mac, err := k.Sign(t, macbuf, *options)
 	if err != nil {
 		return err
 	}
@@ -152,14 +152,16 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	return nil
 }
 
+// TSIGOption are options that are given to the signer and verifier.
 type TSIGOption struct {
-	TimersOnly bool
-	RequestMAC string
+	TimersOnly bool   // Only use the timer information to create the TSIG.
+	RequestMAC string // The RequestMAC is the previous MAC to use in this TSIG calculation.
 }
 
+// TSIGigner defines an interface that allows for pluggeable signers and verifiers.
 type TSIGSigner interface {
 	// Sign is passed the to-be-signed binary data extracted from the DNS message in p. It should return the signature or an error.
-	Sign(t *TSIG, p []byte) ([]byte, error)
+	Sign(t *TSIG, p []byte, options TSIGOption) ([]byte, error)
 	// Verify is passed the binary data with the TSIG octets and the TSIG RR. If the signature is valid it will return nil, otherwise an error.
 	Verify(t *TSIG, p []byte, options TSIGOption) error
 	// Key returns the key to sign or verify with.
