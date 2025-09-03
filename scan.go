@@ -91,9 +91,16 @@ type lex struct {
 	err    bool   // when true, token text has lexer error
 	value  uint8  // value: zString, zBlank, etc.
 	torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
+	as     uint8  // create an RR (asRR), an EDNS0 (asCode) or DSO RR (asStateful)
 	line   int    // line in the file
 	column int    // column in the file
 }
+
+const (
+	asRR uint8 = iota
+	asCode
+	asStateful // todo
+)
 
 // ttlState describes the state necessary to fill in an omitted RR TTL
 type ttlState struct {
@@ -635,21 +642,31 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				rr             RR
 				parseAsRFC3597 bool
 			)
-			if newFn, ok := TypeToRR[h.t]; ok {
+			switch l.as {
+			case asRR:
+				if newFn, ok := TypeToRR[h.t]; ok {
+					rr = newFn()
+					*rr.Header() = *h
+
+					// We may be parsing a known RR type using the RFC3597 format.
+					// If so, we handle that here in a generic way.
+					//
+					// This is also true for PrivateRR types which will have the
+					// RFC3597 parsing done for them and the Unpack method called
+					// to populate the RR instead of simply deferring to Parse.
+					if zp.c.Peek().token == "\\#" {
+						parseAsRFC3597 = true
+					}
+				} else {
+					rr = &RFC3597{Hdr: *h}
+				}
+			case asCode:
+				newFn, ok := CodeToRR[h.t]
+				if !ok {
+					return zp.setParseError("unknown EDNS0 type", l)
+				}
 				rr = newFn()
 				*rr.Header() = *h
-
-				// We may be parsing a known RR type using the RFC3597 format.
-				// If so, we handle that here in a generic way.
-				//
-				// This is also true for PrivateRR types which will have the
-				// RFC3597 parsing done for them and the Unpack method called
-				// to populate the RR instead of simply deferring to Parse.
-				if zp.c.Peek().token == "\\#" {
-					parseAsRFC3597 = true
-				}
-			} else {
-				rr = &RFC3597{Hdr: *h}
 			}
 
 			if zp.c.Peek().token == "" {
@@ -827,6 +844,7 @@ func (zl *zlexer) Next() (lex, bool) {
 	}
 
 	zl.comment = ""
+	l.as = asRR
 
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.line, l.column = zl.line, zl.column
@@ -889,6 +907,11 @@ func (zl *zlexer) Next() (lex, bool) {
 						l.torc = t
 
 						zl.rrtype = true
+					} else if t, ok := StringToCode[tokenUpper]; ok {
+						zl.rrtype = true
+						l.as = asCode
+						l.value = zRrtpe
+						l.torc = t
 					} else if strings.HasPrefix(tokenUpper, "TYPE") {
 						t, ok := typeToInt(l.token)
 						if !ok {
@@ -1024,7 +1047,11 @@ func (zl *zlexer) Next() (lex, bool) {
 						tokenUpper := strings.ToUpper(l.token)
 						if t, ok := StringToType[tokenUpper]; ok {
 							zl.rrtype = true
-
+							l.value = zRrtpe
+							l.torc = t
+						} else if t, ok := StringToCode[tokenUpper]; ok {
+							zl.rrtype = true
+							l.as = asCode
 							l.value = zRrtpe
 							l.torc = t
 						}
