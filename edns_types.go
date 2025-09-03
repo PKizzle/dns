@@ -302,7 +302,10 @@ func (o *ESU) String() string {
 }
 
 // The ZONEVERSION option, see RFC 9660. Only a single type (0) has been allocated, if used the SOA serial
-// is put in Version.
+// is put in Version. Example on how to create a ZONEVERSION:
+//
+//	z := &ZONEVERSION{Labels: 8, Type: 0, Version: make([]byte, 4)}
+//	binary.BigEndian.PutUint32(z.Version, serial)
 //
 // This record must be put in the pseudo section.
 type ZONEVERSION struct {
@@ -314,12 +317,13 @@ type ZONEVERSION struct {
 func (o *ZONEVERSION) Len() int { return tlv + 2 + len(o.Version) }
 func (o *ZONEVERSION) String() string {
 	sb := sprintOptionHeader(o)
+	sb.WriteString(strconv.Itoa(int(o.Labels)))
+	sb.WriteByte(' ')
 	switch o.Type {
 	case 0:
 		sb.WriteString("SOA-SERIAL")
 		sb.WriteByte(' ')
-		version := uint32(0)
-		binary.BigEndian.Uint32([]byte(o.Version))
+		version := binary.BigEndian.Uint32([]byte(o.Version))
 		sb.WriteString(strconv.Itoa(int(version)))
 	default:
 		sb.WriteString("TYPE")

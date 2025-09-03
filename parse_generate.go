@@ -45,6 +45,14 @@ func main() {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
 
+	etypes, err := generate.Types("edns_types.go")
+	if err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
+	etypes = []string{"ZONEVERSION"} // overwrite with the ones we have done
+
+	types = append(types, etypes...)
+
 	source := &bytes.Buffer{}
 	source.WriteString(hdr)
 

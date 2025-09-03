@@ -10,42 +10,76 @@ import (
 	"testing/fstest"
 )
 
-func TestZoneParserGenerate(t *testing.T) {
-	zone := "$ORIGIN example.org.\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$"
-
-	wantRRs := []RR{
-		&A{Hdr: Header{Name: "foo012.example.org."}, A: net.ParseIP("127.0.0.10")},
-		&A{Hdr: Header{Name: "foo013.example.org."}, A: net.ParseIP("127.0.0.11")},
-		&A{Hdr: Header{Name: "foo014.example.org."}, A: net.ParseIP("127.0.0.12")},
+func TestZoneParser(t *testing.T) {
+	testcases := []struct {
+		name   string
+		input  string
+		output []RR
+		err    error
+	}{
+		{
+			"$generate",
+			"$ORIGIN example.org.\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$",
+			[]RR{
+				&A{Hdr: Header{Name: "foo012.example.org.", Class: ClassINET}, A: net.ParseIP("127.0.0.10")},
+				&A{Hdr: Header{Name: "foo013.example.org.", Class: ClassINET}, A: net.ParseIP("127.0.0.11")},
+				&A{Hdr: Header{Name: "foo014.example.org.", Class: ClassINET}, A: net.ParseIP("127.0.0.12")},
+			},
+			nil,
+		},
+		{
+			"aaaa",
+			"1.example.org. 600 IN AAAA ::1\n2.example.org. 600 IN AAAA ::FFFF:127.0.0.1",
+			[]RR{
+				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: net.IPv6loopback},
+				&AAAA{Hdr: Header{Name: "2.example.org.", Class: ClassINET}, AAAA: net.ParseIP("::FFFF:127.0.0.1")},
+			},
+			nil,
+		},
+		{"badaddr1", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A A: "::1"`}},
+		{"baddaddr2", "2.bad.example.org. 600 IN A ::FFFF:127.0.0.1", nil, &Error{`bad A A:`}},
+		{"badaddr3", "3.bad.example.org. 600 IN AAAA 127.0.0.1", nil, &Error{`bad AAAA AAAA:`}},
+		{
+			"unknown-rdata",
+			"example. 3600 tYpe44 \\# 03 75  0100",
+			[]RR{&SSHFP{Hdr: Header{Name: "example.", Class: ClassINET}, Algorithm: 117, Type: 1, FingerPrint: ""}},
+			nil,
+		},
+		{
+			"unknown-without-rdata",
+			"example. 3600 CLASS1 TYPE1 \\# 0",
+			[]RR{&A{Hdr: Header{Name: "example.", Class: ClassINET}}},
+			nil,
+		},
+		{
+			"unknown-toolong",
+			"example. 3600 CLASS1 TYPE1 \\# 65536 " + strings.Repeat("00 ", 65536),
+			nil,
+			&Error{err: "bad RFC3597 Rdata"},
+		},
+		{"openescape", "example.net IN CNAME example.net.", nil, nil},
+		{"bad-openescape", "example.net IN CNAME example.org\\", nil, &Error{"bad owner name:"}},
+		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{"missing TTL with no"}},
+		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{"missing TTL with no"}},
+		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{"missing TTL with no"}},
+		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{"missing TTL with no"}},
 	}
-
-	wantIdx := 0
-
-	z := NewZoneParser(strings.NewReader(zone), "", "")
-
-	for rr, ok := z.Next(); ok; rr, ok = z.Next() {
-		if wantIdx >= len(wantRRs) {
-			t.Fatalf("expected %d RRs, but got more", len(wantRRs))
-		}
-		if got, want := rr.Header().Name, wantRRs[wantIdx].Header().Name; got != want {
-			t.Fatalf("expected name %s, but got %s", want, got)
-		}
-		a, okA := rr.(*A)
-		if !okA {
-			t.Fatalf("expected *A RR, but got %T", rr)
-		}
-		if got, want := a.A, wantRRs[wantIdx].(*A).A; !got.Equal(want) {
-			t.Fatalf("expected A with IP %v, but got %v", got, want)
-		}
-		wantIdx++
-	}
-
-	if err := z.Err(); err != nil {
-		t.Fatalf("expected no error, but got %s", err)
-	}
-
-	if wantIdx != len(wantRRs) {
-		t.Errorf("too few records, expected %d, got %d", len(wantRRs), wantIdx)
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			z := NewZoneParser(strings.NewReader(tc.input), "", "")
+			i := 0
+			for rr, ok := z.Next(); ok; rr, ok = z.Next() {
+				if !Equal(rr, tc.output[i]) {
+					t.Errorf("expected %s to equal to %s", rr, tc.output[i])
+				}
+				i++
+			}
+			if tc.err != nil {
+				if !strings.Contains(z.Err().Error(), tc.err.Error()) {
+					t.Errorf("expected err to be %s, got %s", tc.err, z.Err())
+				}
+			}
+		})
 	}
 }
 
@@ -192,83 +226,6 @@ func TestZoneParserIncludeDisallowed(t *testing.T) {
 	}
 }
 
-func TestZoneParserAddressAAAA(t *testing.T) {
-	tests := []struct {
-		record string
-		want   *AAAA
-	}{
-		{
-			record: "1.example.org. 600 IN AAAA ::1",
-			want:   &AAAA{Hdr: Header{Name: "1.example.org."}, AAAA: net.IPv6loopback},
-		},
-		{
-			record: "2.example.org. 600 IN AAAA ::FFFF:127.0.0.1",
-			want:   &AAAA{Hdr: Header{Name: "2.example.org."}, AAAA: net.ParseIP("::FFFF:127.0.0.1")},
-		},
-	}
-
-	for _, tc := range tests {
-		got, err := New(tc.record)
-		if err != nil {
-			t.Fatalf("expected no error, but got %s", err)
-		}
-		aaaa, ok := got.(*AAAA)
-		if !ok {
-			t.Fatalf("expected *AAAA RR, but got %T", got)
-		}
-		if !aaaa.AAAA.Equal(tc.want.AAAA) {
-			t.Fatalf("expected AAAA with IP %v, but got %v", tc.want.AAAA, aaaa.AAAA)
-		}
-	}
-}
-
-func TestZoneParserTargetBad(t *testing.T) {
-	records := []string{
-		"bad.example.org. CNAME ; bad cname",
-		"bad.example.org. HTTPS 10 ; bad https",
-		"bad.example.org. MX 10 ; bad mx",
-		"bad.example.org. SRV 1 0 80 ; bad srv",
-	}
-
-	const expect = "bad "
-	for _, record := range records {
-		if got, err := New(record); err == nil || !strings.Contains(err.Error(), expect) {
-			t.Errorf("New(%v) = %v, want err to contain %q", record, got, expect)
-		}
-	}
-}
-
-func TestZoneParserAddressBad(t *testing.T) {
-	records := []string{
-		"1.bad.example.org. 600 IN A ::1",
-		"2.bad.example.org. 600 IN A ::FFFF:127.0.0.1",
-		"3.bad.example.org. 600 IN AAAA 127.0.0.1",
-	}
-
-	for _, record := range records {
-		const expect = "bad A"
-		if got, err := New(record); err == nil || !strings.Contains(err.Error(), expect) {
-			t.Errorf("New(%v) = %v, want err to contain %q", record, got, expect)
-		}
-	}
-}
-
-var errTestReadError = &Error{"test error"}
-
-type errReader struct{}
-
-func (errReader) Read(p []byte) (int, error) { return 0, errTestReadError }
-
-func TestParseZoneReadError(t *testing.T) {
-	rr, err := readRR(errReader{}, "")
-	if err == nil || !strings.Contains(err.Error(), errTestReadError.Error()) {
-		t.Errorf("expected error to contain %q, but got %v", errTestReadError, err)
-	}
-	if rr != nil {
-		t.Errorf("expected a nil RR, but got %v", rr)
-	}
-}
-
 func TestZoneParserUnexpectedNewline(t *testing.T) {
 	zone := `
 example.com. 60 PX
@@ -304,73 +261,8 @@ example.com. 60 PX (
 	}
 }
 
-func TestZoneParserRFC3597InvalidLength(t *testing.T) {
-	// We need to space separate the 00s otherwise it will exceed the maximum token size
-	// of the zone lexer.
-	_, err := New("example. 3600 CLASS1 TYPE1 \\# 65536 " + strings.Repeat("00 ", 65536))
-	if err == nil {
-		t.Error("should not have parsed excessively long RFC3579 record")
-	}
-}
-
-func TestZoneParserKnownRRAsRFC3597(t *testing.T) {
-	t.Run("with RDATA", func(t *testing.T) { // This was found by oss-fuzz.
-		_, err := New("example. 3600 tYpe44 \\# 03 75  0100")
-		if err != nil {
-			t.Errorf("failed to parse RFC3579 format: %v", err)
-		}
-
-		rr, err := New("example. 3600 CLASS1 TYPE1 \\# 4 7f000001")
-		if err != nil {
-			t.Fatalf("failed to parse RFC3579 format: %v", err)
-		}
-
-		if rr.Header().t != TypeA {
-			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
-		}
-
-		a, ok := rr.(*A)
-		if !ok {
-			t.Fatalf("expected *A RR, but got %T", rr)
-		}
-
-		localhost := net.IPv4(127, 0, 0, 1)
-		if !a.A.Equal(localhost) {
-			t.Errorf("expected A with IP %v, but got %v", localhost, a.A)
-		}
-	})
-	t.Run("without RDATA", func(t *testing.T) {
-		rr, err := New("example. 3600 CLASS1 TYPE1 \\# 0")
-		if err != nil {
-			t.Fatalf("failed to parse RFC3579 format: %v", err)
-		}
-
-		if rr.Header().t != TypeA {
-			t.Errorf("expected TypeA (1) Rrtype, but got %v", rr.Header().t)
-		}
-
-		a, ok := rr.(*A)
-		if !ok {
-			t.Fatalf("expected *A RR, but got %T", rr)
-		}
-
-		if len(a.A) != 0 {
-			t.Errorf("expected A with empty IP, but got %v", a.A)
-		}
-	})
-}
-
-func TestZoneParserOpenEscape(t *testing.T) {
-	if _, err := New("example.net IN CNAME example.net."); err != nil {
-		t.Fatalf("expected no error, but got: %s", err)
-	}
-	if _, err := New("example.net IN CNAME example.org\\"); err == nil {
-		t.Fatalf("expected an error, but got none")
-	}
-}
-
 func TestZoneParserEscapedStringOffset(t *testing.T) {
-	cases := []struct {
+	testcases := []struct {
 		input          string
 		inputOffset    int
 		expectedOffset int
@@ -392,18 +284,18 @@ func TestZoneParserEscapedStringOffset(t *testing.T) {
 		{`aaa\`, 3, 3, true},
 		{`aaaa\`, 3, 3, true},
 	}
-	for i, test := range cases {
-		outputOffset, outputOK := escapedStringOffset(test.input, test.inputOffset)
-		if outputOffset != test.expectedOffset {
+	for i, tc := range testcases {
+		outputOffset, outputOK := escapedStringOffset(tc.input, tc.inputOffset)
+		if outputOffset != tc.expectedOffset {
 			t.Errorf(
 				"Test %d (input %#q offset %d) returned offset %d but expected %d",
-				i, test.input, test.inputOffset, outputOffset, test.expectedOffset,
+				i, tc.input, tc.inputOffset, outputOffset, tc.expectedOffset,
 			)
 		}
-		if outputOK != test.expectedOK {
+		if outputOK != tc.expectedOK {
 			t.Errorf(
 				"Test %d (input %#q offset %d) returned ok=%t but expected %t",
-				i, test.input, test.inputOffset, outputOK, test.expectedOK,
+				i, tc.input, tc.inputOffset, outputOK, tc.expectedOK,
 			)
 		}
 	}

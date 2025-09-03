@@ -128,6 +128,9 @@ func (h *Header) String() string {
 // EDNS0 determines if the "RR" is posing as an EDNS0 option. EDNS0 options are considered just RRs and must
 // be added to the [Pseudo] section of a DNS message. The Len method must return the length of the octets in
 // the [OPT] [RR], which is four (2 octets for the type, and 2 octets for the length) plus the encoded lengh of the option itself.
+//
+// Note that these types has (in this package) a presentation format and can also be parsed from a string via
+// [New]. That means you can create EDNS0 options directly from a string.
 type EDNS0 interface {
 	RR
 	// Pseudo signal that the type implementing this interface is an EDNS0 sub-type.
