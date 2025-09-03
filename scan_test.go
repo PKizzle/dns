@@ -287,16 +287,45 @@ func TestZoneParserEscapedStringOffset(t *testing.T) {
 	for i, tc := range testcases {
 		outputOffset, outputOK := escapedStringOffset(tc.input, tc.inputOffset)
 		if outputOffset != tc.expectedOffset {
-			t.Errorf(
-				"Test %d (input %#q offset %d) returned offset %d but expected %d",
+			t.Errorf("test %d (input %#q offset %d) returned offset %d but expected %d",
 				i, tc.input, tc.inputOffset, outputOffset, tc.expectedOffset,
 			)
 		}
 		if outputOK != tc.expectedOK {
-			t.Errorf(
-				"Test %d (input %#q offset %d) returned ok=%t but expected %t",
+			t.Errorf("test %d (input %#q offset %d) returned ok=%t but expected %t",
 				i, tc.input, tc.inputOffset, outputOK, tc.expectedOK,
 			)
 		}
+	}
+}
+
+func TestZoneParserEDNS0(t *testing.T) {
+	testcases := []struct {
+		name string
+		in   EDNS0
+		exp  string
+	}{
+		{
+			"zoneversion", &ZONEVERSION{Labels: 4, Type: 0, Version: []byte{1, 2, 3, 4}},
+			".  CLASS0 ZONEVERSION 4 SOA-SERIAL 16909060",
+		},
+		{
+			"ede-extratext", &EDE{InfoCode: 15, ExtraText: "bla"},
+			`.  CLASS0 EDE 15 "Blocked": "bla"`,
+		},
+		{
+			"ede", &EDE{InfoCode: 15},
+			`.  CLASS0 EDE 15 "Blocked": ""`,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ednsrr := tc.in.String()
+			parsed := dnstestNew(ednsrr)
+			s := strings.Replace(parsed.String(), "\t", " ", -1)
+			if s != tc.exp {
+				t.Errorf("expected %s, got %s", tc.exp, s)
+			}
+		})
 	}
 }

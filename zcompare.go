@@ -2,8 +2,6 @@
 
 package dns
 
-import "bytes"
-
 func compare(a, b RR) int {
 	switch x := a.(type) {
 	case *NULL:
@@ -536,11 +534,11 @@ func (rr *DNAME) compare(b RR) (x int) {
 }
 
 func (rr *A) compare(b RR) (x int) {
-	return bytes.Compare(rr.A, b.(*A).A)
+	return 0
 }
 
 func (rr *AAAA) compare(b RR) (x int) {
-	return bytes.Compare(rr.AAAA, b.(*AAAA).AAAA)
+	return 0
 }
 
 func (rr *PX) compare(b RR) (x int) {

@@ -172,6 +172,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *ZONEVERSION:
 		return x.parse(c, o)
+	case *EDE:
+		return x.parse(c, o)
 	}
 	// If here we need to setup the channel and send the elements.
 	// if here, we don't have the RR in our pkg, check if it does Packer.

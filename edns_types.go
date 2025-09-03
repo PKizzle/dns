@@ -243,17 +243,20 @@ type EDE struct {
 }
 
 func (o *EDE) Len() int { return tlv + 2 + len(o.ExtraText) }
+
+// String outputs something like: "EDE     15 "Blocked": "", where ExtraText is always printed, even if it's
+// empty.
 func (o *EDE) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(strconv.FormatUint(uint64(o.InfoCode), 10))
 	if s, ok := ExtendedErrorToString[o.InfoCode]; ok {
-		sb.WriteString(" (")
+		sb.WriteString(" \"")
 		sb.WriteString(s)
-		sb.WriteByte(')')
+		sb.WriteByte('"')
 	}
-	sb.WriteString(" : (")
+	sb.WriteString(": \"")
 	sb.WriteString(o.ExtraText)
-	sb.WriteByte(')')
+	sb.WriteByte('"')
 	return sb.String()
 }
 
@@ -307,6 +310,8 @@ func (o *ESU) String() string {
 //	z := &ZONEVERSION{Labels: 8, Type: 0, Version: make([]byte, 4)}
 //	binary.BigEndian.PutUint32(z.Version, serial)
 //
+// Or if you know your binary: &ZONEVERSION{Labels: 8, Type: 0, Version: {1,2,3,4}}
+//
 // This record must be put in the pseudo section.
 type ZONEVERSION struct {
 	Labels  uint8
@@ -315,6 +320,8 @@ type ZONEVERSION struct {
 }
 
 func (o *ZONEVERSION) Len() int { return tlv + 2 + len(o.Version) }
+
+// Strings output something like "ZONEVERSION     4 SOA-SERIAL 1002".
 func (o *ZONEVERSION) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(strconv.Itoa(int(o.Labels)))
