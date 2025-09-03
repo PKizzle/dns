@@ -23,8 +23,15 @@ The `type Key uint16` looks nice and _is_ more type-safe, but then you need to c
 over the place - negating the type safety entirely. It might be helpful for documenting a type, but that
 uint16 is probably not the most important details of your new resource record.
 
-## Values like Rcode, Class etc.
+## Naming
+
+### Values like Rcode, Class etc.
 
 If you have a bunch of values that certain types can take the are named: `ValueThing` and will need a
 `ValueToString`/`StringToValue` map or function. `Thing` may or may not be capitalized. E.g. we have
 `RcodeScucces` and `ClassINET`.
+
+### Tests
+
+For tests name them after the sub-system and the something more specific. This makes it easy to just run the
+tests for that sub-system. `TestZoneParserXXX`, `TestMsgXXX`, etc.
