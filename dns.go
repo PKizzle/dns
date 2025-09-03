@@ -16,6 +16,7 @@ import (
 //go:generate go run len_generate.go
 //go:generate go run dsolen_generate.go
 //go:generate go run dnsutil_generate.go
+//go:generate go run dnstest_generate.go
 //go:generate go run compare_generate.go
 
 const (
