@@ -2,7 +2,9 @@
 
 package dns
 
-import "bytes"
+import (
+	"bytes"
+)
 
 func compare(a, b RR) int {
 	switch x := a.(type) {
@@ -536,11 +538,25 @@ func (rr *DNAME) compare(b RR) (x int) {
 }
 
 func (rr *A) compare(b RR) (x int) {
-	return bytes.Compare(rr.A, b.(*A).A)
+	x = bytes.Compare(rr.A, b.(*A).A)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	return 0
 }
 
 func (rr *AAAA) compare(b RR) (x int) {
-	return bytes.Compare(rr.AAAA, b.(*AAAA).AAAA)
+	x = bytes.Compare(rr.AAAA, b.(*AAAA).AAAA)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	return 0
 }
 
 func (rr *PX) compare(b RR) (x int) {
@@ -1177,6 +1193,13 @@ func (rr *NID) compare(b RR) (x int) {
 
 func (rr *L32) compare(b RR) (x int) {
 	x = int(rr.Preference) - int(b.(*L32).Preference)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = bytes.Compare(rr.Locator32, b.(*L32).Locator32)
 	if x != 0 {
 		if x < 0 {
 			return -1
