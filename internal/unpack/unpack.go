@@ -104,17 +104,6 @@ func String(s *cryptobyte.String) (string, error) {
 // Note that if we jump elsewhere in the packet, we record the last offset we read from when we found the first pointer,
 // which is where the next record or record field will start. We enforce that pointers always point backwards into the message.
 
-// Name unpacks a domain name into a string. It returns the name, the new offset into msg and any error that occurred.
-// When an error is encountered, the unpacked name will be discarded and len(msg) will be returned as the offset.
-func NameOnlyUsedInDNSSEC(msg []byte, off int) (string, int, error) {
-	s := cryptobyte.String(msg[off:])
-	name, err := Name(&s, msg)
-	if err != nil {
-		return "", len(msg), err
-	}
-	return name, Offset(s, msg), nil
-}
-
 // Name unpacks a name in a cryptobyte.String.
 func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?

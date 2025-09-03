@@ -28,7 +28,7 @@ const (
 	CodePADDING      uint16 = 0xc    // Padding (see RFC 7830).
 	CodeEDE          uint16 = 0xf    // Extended DNS errors (see RFC 8914).
 	CodeREPORTING    uint16 = 0x12   // EDNS0 reporting (see RFC 9567).
-	CodeZONEVERSION  uint16 = 0x13   // Zonne version (see RFC 9660).
+	CodeZONEVERSION  uint16 = 0x13   // Zone version (see RFC 9660).
 	CodeLOCALSTART   uint16 = 0xFDE9 // Beginning of range reserved for local/experimental use (see RFC 6891).
 	CodeLOCALEND     uint16 = 0xFFFE // End of range reserved for local/experimental use (see RFC 6891).
 )
@@ -260,6 +260,8 @@ func (o *EDE) String() string {
 // SUBNET is the subnet option that is used to give the remote nameserver
 // an idea of where the client is, see RFC 7871. It can give back a different
 // answer depending on the location or network topology.
+//
+// This record must be put in the pseudo section.
 type SUBNET struct {
 	Family        uint16 // 1 for IP, 2 for IP6.
 	SourceNetmask uint8  // 32 for IPV4, 128 for IPv6.
@@ -301,10 +303,12 @@ func (o *ESU) String() string {
 
 // The ZONEVERSION option, see RFC 9660. Only a single type (0) has been allocated, if used the SOA serial
 // is put in Version.
+//
+// This record must be put in the pseudo section.
 type ZONEVERSION struct {
 	Labels  uint8
 	Type    uint8
-	Version string
+	Version []byte
 }
 
 func (o *ZONEVERSION) Len() int { return tlv + 2 + len(o.Version) }
@@ -321,7 +325,7 @@ func (o *ZONEVERSION) String() string {
 		sb.WriteString("TYPE")
 		sb.WriteString(strconv.Itoa(int(o.Type)))
 		sb.WriteByte(' ')
-		sb.WriteString(o.Version)
+		sb.Write(o.Version)
 	}
 	return sb.String()
 }

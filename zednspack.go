@@ -265,7 +265,7 @@ func (o *ZONEVERSION) pack(msg []byte, off int) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	return pack.OctetString(o.Version, msg, off)
+	return pack.StringOctet(string(o.Version), msg, off)
 }
 
 func (o *ZONEVERSION) unpack(s *cryptobyte.String) (err error) {
@@ -275,6 +275,7 @@ func (o *ZONEVERSION) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint8(&o.Type) {
 		return unpack.ErrOverflow
 	}
-	o.Version, err = unpack.StringOctet(s)
+	v, err := unpack.StringOctet(s)
+	o.Version = []byte(v)
 	return err
 }
