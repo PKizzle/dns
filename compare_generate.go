@@ -19,6 +19,10 @@ var hdr = `
 
 package dns
 
+import (
+	"bytes"
+)
+
 `
 
 var compareFunc = template.Must(template.New("compareFunc").Parse(`
@@ -131,11 +135,9 @@ return 1
 			case tag == `dns:"domain-name"`:
 				o("x = CompareName(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"a"`:
-				//		sort.Slice(realIPs, func(i, j int) bool {
-				//     return bytes.Compare(realIPs[i], realIPs[j]) < 0
-
+				o("x = bytes.Compare(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"aaaa"`:
-
+				o("x = bytes.Compare(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"uint48"`:
 
 			case tag == `dns:"txt"`:
