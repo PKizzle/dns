@@ -59,10 +59,10 @@ func TestZoneParser(t *testing.T) {
 		},
 		{"openescape", "example.net IN CNAME example.net.", nil, nil},
 		{"bad-openescape", "example.net IN CNAME example.org\\", nil, &Error{"bad owner name:"}},
-		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{"bad "}},
-		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{"bad "}},
-		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{"bad "}},
-		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{"bad "}},
+		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{"missing TTL with no"}},
+		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{"missing TTL with no"}},
+		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{"missing TTL with no"}},
+		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{"missing TTL with no"}},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -76,7 +76,7 @@ func TestZoneParser(t *testing.T) {
 			}
 			if tc.err != nil {
 				if !strings.Contains(z.Err().Error(), tc.err.Error()) {
-					t.Errorf("expected err to %s, got %s", tc.err, z.Err())
+					t.Errorf("expected err to be %s, got %s", tc.err, z.Err())
 				}
 			}
 		})
