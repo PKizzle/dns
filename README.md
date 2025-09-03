@@ -6,7 +6,8 @@
 
 # Status
 
-- All basics work.
+- Everything from github.com/miekg/dns should work
+  - ... and more.
 - Fast(er); recvmmsg and pipeling suppport.
   - Since a46996c I can get 400K qps on my laptop (M2/Asahi Linux).
   - On intel/amd it is lower - yet to understand why.
