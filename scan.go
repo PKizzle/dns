@@ -97,9 +97,9 @@ type lex struct {
 }
 
 const (
-	asRR uint8 = iota
-	asCode
-	asStateful // todo
+	asRR       uint8 = iota // parse the string as an RR.
+	asCode                  // parse the string as an EDNS RR.
+	asStateful              // TODO, but parse the string as an DSO RR.
 )
 
 // ttlState describes the state necessary to fill in an omitted RR TTL
