@@ -10,13 +10,9 @@ import (
 	"syscall"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers"
 )
 
-var (
-	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-	printf     = flag.Bool("print", false, "print replies")
-)
+var cpuprofile = flag.Bool("cpuprofile", false, "write cpu profile to cpu.out")
 
 const dom = "whoami.miek.nl."
 
@@ -29,8 +25,8 @@ func serve(server *dns.Server, net string) {
 
 func main() {
 	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
+	if *cpuprofile {
+		f, err := os.Create("cpu.out")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -40,17 +36,9 @@ func main() {
 
 	mux := dns.NewServeMux()
 
-	h1 := []string{"log", "any", "whoami"} // logs both any and whoami queries
-	mux.HandleFunc("any.miek.nl.", handlers.Compile(h1))
-
-	h2 := []string{"log", "any", "whoami"} // logs whoami, but not any queries
-	mux.HandleFunc("log.miek.nl.", handlers.Compile(h2))
-
-	h3 := []string{"whoami"} // whoami, no loging
-	mux.HandleFunc("whoami.miek.nl.", handlers.Compile(h3))
-
-	h4 := []string{"twiddle", "whoami"} // whoami, no loging
-	mux.HandleFunc("twiddle.miek.nl.", handlers.Compile(h4))
+	if err := parse(mux); err != nil {
+		log.Fatal(err)
+	}
 
 	srv := &dns.Server{
 		Handler:       mux,
