@@ -22,7 +22,7 @@ any.miek.nl {
 }
 
 chaos1.miek.nl {
-    chaos {
+    chaos testserv-01 {
         authors {
             "Miek Gieben"
             "Henk"
@@ -34,9 +34,9 @@ chaos1.miek.nl {
 chaos2.miek.nl {
     chaos {
         authors {
-            "Miek Gieben"
-            "Henk"
-            "Piet"
+            "Bloep"
+            "bla"
+            "blargh"
         }
     }
 }

@@ -28,7 +28,7 @@ type Handler interface {
 // Setupper holds a single method that is called when this Handler has configuration that needs to be parsed
 // from the config file.
 type Setupper interface {
-	Setup(conffile.Dispenser) Handler
+	Setup(conffile.Dispenser) error
 }
 
 // todo generate: lowercase type name of the handler is the name.

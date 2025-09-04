@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -12,6 +13,7 @@ import (
 )
 
 // Chaos allows sndns to reply to CH TXT queries and return author or version information.
+// If the name starts with authors. the authors are returned if with version. the version is returned.
 type Chaos struct {
 	Version string
 	Authors []string
@@ -29,30 +31,30 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 
-		qname := r.Question[0].Header().Name
+		qname := dnsutil.Canonical(r.Question[0].Header().Name)
 		m := &dns.Msg{Data: r.Data} // reuse buffer
 		dnsutil.SetReply(m, r)
-
 		hdr := dns.Header{Name: qname, Class: dns.ClassCHAOS}
-		switch dnsutil.Canonical(qname) {
-		default:
-			next.ServeDNS(ctx, w, r)
-			return
-		case "authors.bind.":
-			rnd := rand.New(rand.NewSource(time.Now().Unix()))
 
+		switch {
+		case strings.HasPrefix(qname, "authors."):
+			rnd := rand.New(rand.NewSource(time.Now().Unix()))
 			for _, i := range rnd.Perm(len(c.Authors)) {
 				m.Answer = append(m.Answer, &dns.TXT{Hdr: hdr, Txt: []string{c.Authors[i]}})
 			}
-		case "version.bind.", "version.server.":
-			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{c.Version}}}
-		case "hostname.bind.", "id.server.":
+		case strings.HasPrefix(qname, "hostname."):
+			fallthrough
+		case strings.HasPrefix(qname, "id."):
 			hostname, err := os.Hostname()
 			if err != nil {
 				hostname = "localhost"
 			}
 			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{hostname}}}
+
+		default:
+			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{c.Version}}}
 		}
+
 		m.Pack()
 		io.Copy(w, m)
 	})

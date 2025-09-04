@@ -65,14 +65,14 @@ func (p *parser) parseAll() ([]ServerBlock, error) {
 			return blocks, err
 		}
 		// block with no keys is a global block, there can only be one of those
-		if len(p.block.Keys) == 0 {
+		if len(p.block.Keys) == 0 && len(p.block.Tokens) > 0 {
 			for i := range blocks {
 				if len(blocks[i].Keys) == 0 {
 					return nil, p.Err("redeclaration of global block")
 				}
 			}
 		}
-		if len(p.block.Keys) > 0 && len(p.block.Tokens) > 0 {
+		if len(p.block.Tokens) > 0 {
 			blocks = append(blocks, p.block)
 		}
 	}

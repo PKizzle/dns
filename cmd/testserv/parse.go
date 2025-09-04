@@ -15,7 +15,6 @@ import (
 func parse(mux *dns.ServeMux) error {
 	f, _ := os.Open("conf")
 	defer f.Close()
-	// globals TODO
 	blocks, err := conffile.Parse("conf", f, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -24,6 +23,9 @@ func parse(mux *dns.ServeMux) error {
 	for _, b := range blocks {
 		hs := []handlers.Handler{}
 		names := []string{}
+		if b.Keys == nil {
+			// TODO: global
+		}
 		for name, tokens := range b.Tokens {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
@@ -31,10 +33,12 @@ func parse(mux *dns.ServeMux) error {
 				return fmt.Errorf("unknown handler: %s", name)
 			}
 			handler := newFn()
-			s, ok := handler.(handlers.Setupper)
-			if ok {
+			if s, ok := handler.(handlers.Setupper); ok {
 				d := conffile.NewDispenser("conf", tokens)
-				handler = s.Setup(d)
+				err := s.Setup(d)
+				if err != nil {
+					return fmt.Errorf("could not parse config for handler: %q: %s", name, err)
+				}
 			}
 			hs = append(hs, handler)
 		}
