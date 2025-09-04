@@ -23,7 +23,7 @@ const (
 	CodeN3U          uint16 = 0x7    // NSEC3 Hash Understood.
 	CodeSUBNET       uint16 = 0x8    // Client-subnet, see RFC 7871.
 	CodeEXPIRE       uint16 = 0x9    // Expire, RFC 7314.
-	CodeCOOKIE       uint16 = 0xa    // Cookie.
+	CodeCOOKIE       uint16 = 0xa    // Cookie, RFC 7873.
 	CodeTCPKEEPALIVE uint16 = 0xb    // TCP keep alive (see RFC 7828).
 	CodePADDING      uint16 = 0xc    // Padding (see RFC 7830).
 	CodeEDE          uint16 = 0xf    // Extended DNS errors (see RFC 8914).
@@ -91,7 +91,7 @@ func (o *COOKIE) String() string {
 	return sb.String()
 }
 
-// NSID EDNS0 option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
+// NSID option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
 // The identifier is an opaque string encoded as hex.
 //
 // This record must be put in the pseudo section.
@@ -244,8 +244,8 @@ type EDE struct {
 
 func (o *EDE) Len() int { return tlv + 2 + len(o.ExtraText) }
 
-// String outputs something like: "EDE     15 "Blocked": "", where ExtraText is always printed, even if it's
-// empty.
+// String outputs: "EDE 15 "Blocked": "", where ExtraText is always printed, even if it's
+// empty. This is the presentation format.
 func (o *EDE) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(strconv.FormatUint(uint64(o.InfoCode), 10))
@@ -321,7 +321,7 @@ type ZONEVERSION struct {
 
 func (o *ZONEVERSION) Len() int { return tlv + 2 + len(o.Version) }
 
-// Strings output something like "ZONEVERSION     4 SOA-SERIAL 1002".
+// Strings outputs "ZONEVERSION 4 SOA-SERIAL 1002" as the presentation format.
 func (o *ZONEVERSION) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(strconv.Itoa(int(o.Labels)))

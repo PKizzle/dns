@@ -29,7 +29,7 @@ func NewRecorder(w dns.ResponseWriter) *Recorder {
 }
 
 func (r *Recorder) Write(b []byte) (int, error) {
-	// See [Msg.WriteTo] that defaults to TCP
+	// See [Msg.WriteTo] that defaults to TCP.
 	msg := &dns.Msg{Data: b[2:]}
 	err := msg.Unpack()
 	if err != nil {
@@ -47,11 +47,14 @@ func (r *Recorder) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
+// Implement the net.Conn interface.
+func (r *Recorder) Read(b []byte) (int, error)       { return len(b), nil }
+func (r *Recorder) SetDeadline(time.Time) error      { return nil }
+func (r *Recorder) SetReadDeadline(time.Time) error  { return nil }
+func (r *Recorder) SetWriteDeadline(time.Time) error { return nil }
+
 func (r *Recorder) Conn() net.Conn {
-	if r.w != nil {
-		return r.w.Conn()
-	}
-	return nil
+	return r // we are a net.Conn ourselves
 }
 
 func (r *Recorder) Hijack() {
