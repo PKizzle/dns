@@ -20,13 +20,8 @@ type Recorder struct {
 
 var _ dns.ResponseWriter = &Recorder{}
 
-// NewRecorder makes and returns a new Recorder, with start time set to now.
-func NewRecorder(w dns.ResponseWriter) *Recorder {
-	if w == nil {
-		return &Recorder{Start: time.Now()}
-	}
-	return &Recorder{w: w, Start: time.Now()}
-}
+// NewRecorder makes and returns a new Recorder that wraps the given ResponseWriter. Start time set to now.
+func NewRecorder(w dns.ResponseWriter) *Recorder { return &Recorder{w: w, Start: time.Now()} }
 
 func (r *Recorder) Write(b []byte) (int, error) {
 	// See [Msg.WriteTo] that defaults to TCP.

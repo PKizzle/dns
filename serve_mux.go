@@ -97,7 +97,8 @@ func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 	return nil, ""
 }
 
-// Handle adds a handler to the ServeMux for pattern.
+// Handle adds a handler to the ServeMux for pattern. An identical patterns silently overwrites earlier
+// handlers.
 func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if dnsutilCanonical(pattern) != pattern || pattern == "" {
 		panic("dns: pattern should be in canonical form: " + pattern)
