@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/testserv/conffile"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/any"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/chaos"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/log"
@@ -24,6 +25,12 @@ type Handler interface {
 	HandlerFunc(dns.HandlerFunc) dns.HandlerFunc
 }
 
+// Setupper holds a single method that is called when this Handler has configuration that needs to be parsed
+// from the config file.
+type Setupper interface {
+	Setup(conffile.Dispenser) Handler
+}
+
 // todo generate: lowercase type name of the handler is the name.
 var StringToHandler = map[string]func() Handler{
 	"chaos":   func() Handler { return new(chaos.Chaos) },
@@ -33,23 +40,16 @@ var StringToHandler = map[string]func() Handler{
 	"twiddle": func() Handler { return new(twiddle.Twiddle) },
 }
 
-// Compile takes the base http.HandlerFunc h and wraps it around the given list of Handlers h.
-func Compile(h []string) dns.HandlerFunc {
-	if len(h) < 1 {
+// Compile takes the Handlers hs and creates a wrapped handle func.
+func Compile(hs []Handler) dns.HandlerFunc {
+	if len(hs) < 1 {
 		panic("testserv: need something compile")
-	}
-
-	stack := make([]Handler, len(h))
-	for i := range h {
-		newFn := StringToHandler[h[i]]
-		stack[i] = newFn()
 	}
 
 	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { /*mux does this too */ }
 	// loop in reverse to preserve middleware order
-	for i := len(h) - 1; i >= 0; i-- {
-		wrapped = stack[i].HandlerFunc(wrapped)
+	for i := len(hs) - 1; i >= 0; i-- {
+		wrapped = hs[i].HandlerFunc(wrapped)
 	}
-
 	return wrapped
 }

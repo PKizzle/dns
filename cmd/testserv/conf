@@ -1,0 +1,42 @@
+# global option, for metrics etc.
+{
+   log
+}
+
+(base) {
+    log
+}
+
+# log both any and whoami
+log.miek.nl {
+    log
+    any
+    whoami
+}
+
+# log whoami only, order matters
+any.miek.nl {
+    any
+    log
+    whoami
+}
+
+chaos1.miek.nl {
+    chaos {
+        authors {
+            "Miek Gieben"
+            "Henk"
+            "Piet"
+        }
+    }
+}
+
+chaos2.miek.nl {
+    chaos {
+        authors {
+            "Miek Gieben"
+            "Henk"
+            "Piet"
+        }
+    }
+}
