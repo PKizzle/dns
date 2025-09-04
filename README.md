@@ -143,7 +143,7 @@ _all of them_
 - 7043 - EUI48/EUI64 records
 - 7314 - DNS (EDNS) EXPIRE Option
 - 7477 - CSYNC RR
-- 7828 - edns-tcp-keepalive EDNS0 Option
+- 7828 - tcp-keepalive EDNS0 Option
 - 7553 - URI record
 - 7719 - DNS Terminology
 - 7858 - DNS over TLS: Initiation and Performance Considerations
