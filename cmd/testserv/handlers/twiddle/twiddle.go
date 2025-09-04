@@ -14,7 +14,7 @@ type Twiddle int
 func (t *Twiddle) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		rec := dnstest.NewRecorder(w)
-		//		rec.Discard = true
+		rec.Discard = true
 
 		next.ServeDNS(ctx, rec, r)
 
