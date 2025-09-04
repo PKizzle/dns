@@ -26,6 +26,7 @@ import (
 // some really convenient methods.
 type Dispenser struct {
 	filename string
+	keys     []string
 	tokens   []Token
 	cursor   int
 	nesting  int
@@ -44,9 +45,10 @@ func newDispenser(filename string, input io.Reader) Dispenser {
 // Add Keys() for toplevel keys.
 
 // NewDispenser returns a Dispenser filled with the given tokens.
-func NewDispenser(filename string, tokens []Token) Dispenser {
+func NewDispenser(filename string, keys []string, tokens []Token) Dispenser {
 	return Dispenser{
 		filename: filename,
+		keys:     keys,
 		tokens:   tokens,
 		cursor:   -1,
 	}
@@ -165,6 +167,9 @@ func (d *Dispenser) File() string {
 	}
 	return d.filename
 }
+
+// Keys returns the keys of the block we are parsing right now.
+func (d *Dispenser) Keys() []string { return d.keys }
 
 // Args is a convenience function that loads the next arguments
 // (tokens on the same line) into an arbitrary number of strings
