@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers"
 )
 
 var (
@@ -39,14 +40,17 @@ func main() {
 
 	mux := dns.NewServeMux()
 
-	p1 := []string{"log", "any", "whoami"} // logs both any and whoami queries
-	mux.HandleFunc("any.miek.nl.", Compile(p1))
+	h1 := []string{"log", "any", "whoami"} // logs both any and whoami queries
+	mux.HandleFunc("any.miek.nl.", handlers.Compile(h1))
 
-	p2 := []string{"log", "any", "whoami"} // logs whoami, but not any queries
-	mux.HandleFunc("log.miek.nl.", Compile(p2))
+	h2 := []string{"log", "any", "whoami"} // logs whoami, but not any queries
+	mux.HandleFunc("log.miek.nl.", handlers.Compile(h2))
 
-	p3 := []string{"whoami"} // logs whoami, but not any queries
-	mux.HandleFunc("whoami.miek.nl.", Compile(p3))
+	h3 := []string{"whoami"} // whoami, no loging
+	mux.HandleFunc("whoami.miek.nl.", handlers.Compile(h3))
+
+	h4 := []string{"twiddle", "whoami"} // whoami, no loging
+	mux.HandleFunc("twiddle.miek.nl.", handlers.Compile(h4))
 
 	srv := &dns.Server{
 		Handler:       mux,
