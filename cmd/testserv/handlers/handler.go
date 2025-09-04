@@ -8,6 +8,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/any"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/chaos"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/log"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/refused"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/twiddle"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/whoami"
 )
@@ -38,6 +39,7 @@ var StringToHandler = map[string]func() Handler{
 	"any":     func() Handler { return new(any.Any) },
 	"whoami":  func() Handler { return new(whoami.Whoami) },
 	"twiddle": func() Handler { return new(twiddle.Twiddle) },
+	"refused": func() Handler { return new(refused.Refused) },
 }
 
 // Compile takes the Handlers hs and creates a wrapped handle func.
@@ -46,7 +48,7 @@ func Compile(hs []Handler) dns.HandlerFunc {
 		panic("testserv: need something compile")
 	}
 
-	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { /*mux does this too */ }
+	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {}
 	// loop in reverse to preserve middleware order
 	for i := len(hs) - 1; i >= 0; i-- {
 		wrapped = hs[i].HandlerFunc(wrapped)

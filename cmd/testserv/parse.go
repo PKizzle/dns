@@ -9,6 +9,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/conffile"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/refused"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -42,6 +43,8 @@ func parse(mux *dns.ServeMux) error {
 			}
 			hs = append(hs, handler)
 		}
+		// append refuse
+		hs = append(hs, new(refused.Refused))
 		// for all keys (=zones) add this chain
 		for _, k := range b.Keys {
 			k = dnsutil.Fqdn(k)
