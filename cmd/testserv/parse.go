@@ -34,7 +34,7 @@ func parse(mux *dns.ServeMux) error {
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
-				d := conffile.NewDispenser("conf", tokens)
+				d := conffile.NewDispenser("conf", b.Keys, tokens)
 				err := s.Setup(d)
 				if err != nil {
 					return fmt.Errorf("could not parse config for handler: %q: %s", name, err)

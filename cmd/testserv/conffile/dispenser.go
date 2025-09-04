@@ -213,27 +213,32 @@ func (d *Dispenser) RemainingArgs() []string {
 // an argument.
 func (d *Dispenser) ArgErr() error {
 	if d.Val() == "{" {
-		return d.Err("Unexpected token '{', expecting argument")
+		return d.Err("unexpected token '{', expecting argument")
 	}
-	return d.Errf("Wrong argument count or unexpected line ending after '%s'", d.Val())
+	return d.Errf("wrong argument count or unexpected line ending after '%s'", d.Val())
+}
+
+// PropErr return a property error, meaning that x was expect but we got y.
+func (d *Dispenser) PropErr() error {
+	return d.Errf("unexpected property: '%s'", d.Val())
 }
 
 // SyntaxErr creates a generic syntax error which explains what was
 // found and what was expected.
 func (d *Dispenser) SyntaxErr(expected string) error {
-	msg := fmt.Sprintf("%s:%d - Syntax error: Unexpected token '%s', expecting '%s'", d.File(), d.Line(), d.Val(), expected)
+	msg := fmt.Sprintf("%s:%d - syntax error: unexpected token '%s', expecting '%s'", d.File(), d.Line(), d.Val(), expected)
 	return errors.New(msg)
 }
 
 // EOFErr returns an error indicating that the dispenser reached
 // the end of the input when searching for the next token.
 func (d *Dispenser) EOFErr() error {
-	return d.Errf("Unexpected EOF")
+	return d.Errf("unexpected EOF")
 }
 
 // Err generates a custom parse-time error with a message of msg.
 func (d *Dispenser) Err(msg string) error {
-	msg = fmt.Sprintf("%s:%d - Error during parsing: %s", d.File(), d.Line(), msg)
+	msg = fmt.Sprintf("%s:%d - error during parsing: %s", d.File(), d.Line(), msg)
 	return errors.New(msg)
 }
 

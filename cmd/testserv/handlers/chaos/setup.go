@@ -25,7 +25,7 @@ func (c *Chaos) Setup(d conffile.Dispenser) error {
 				}
 
 			default:
-				return d.ArgErr()
+				return d.PropErr()
 			}
 		}
 		if len(authors) > 0 {
