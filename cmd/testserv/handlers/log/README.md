@@ -2,7 +2,7 @@
 
 ## Name
 
-_log_ - enables query logging to standard output.
+_log_ - log queries
 
 ## Description
 
