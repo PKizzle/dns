@@ -352,6 +352,7 @@ func (p *parser) directive() error {
 
 	// The directive itself is appended as a relevant token
 	p.block.Tokens[dir] = append(p.block.Tokens[dir], p.tokens[p.cursor])
+	p.block.Directives = append(p.block.Directives, dir)
 
 	for p.Next() {
 		if p.Val() == "{" {
@@ -448,8 +449,14 @@ func replaceEnvReferences(s, refStart, refEnd string) string {
 // ServerBlock associates any number of keys (usually addresses
 // of some sort) with tokens (grouped by directive name).
 type ServerBlock struct {
-	Keys   []string
-	Tokens map[string][]Token
+	Keys       []string
+	Tokens     map[string][]Token
+	Directives []string // Directives tracks the original order of the directives.
+}
+
+type Directives struct {
+	Name   string
+	Tokens []Token
 }
 
 func (p *parser) isSnippet() (bool, string) {

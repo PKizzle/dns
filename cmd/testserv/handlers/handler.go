@@ -7,6 +7,9 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/conffile"
 )
 
+//go:generate go run string_generate.go
+//go:generate go run err_generate.go
+
 // A Handler is a dns.HandlerFunc that has a handler func (the next when to call in the middleware stack) as
 // input and returns a handle func which is the handler itself.
 //

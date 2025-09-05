@@ -13,10 +13,10 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func parse(mux *dns.ServeMux) error {
-	f, _ := os.Open("conf")
+func parse(mux *dns.ServeMux, conf string) error {
+	f, _ := os.Open(conf)
 	defer f.Close()
-	blocks, err := conffile.Parse("conf", f, nil)
+	blocks, err := conffile.Parse(conf, f, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func parse(mux *dns.ServeMux) error {
 		if b.Keys == nil {
 			// TODO: global
 		}
-		for name, tokens := range b.Tokens {
+		for _, name := range b.Directives {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
 			if !ok {
@@ -35,7 +35,7 @@ func parse(mux *dns.ServeMux) error {
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
-				d := conffile.NewDispenser("conf", b.Keys, tokens)
+				d := conffile.NewDispenser(conf, b.Keys, b.Tokens[name])
 				err := s.Setup(d)
 				if err != nil {
 					return fmt.Errorf("could not parse config for handler: %q: %s", name, err)

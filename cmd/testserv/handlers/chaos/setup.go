@@ -8,7 +8,7 @@ func (c *Chaos) Setup(d conffile.Dispenser) error {
 	if d.Next() {
 		args := d.RemainingArgs()
 		if len(args) > 1 {
-			return d.ArgErr()
+			return c.Err(d.ArgErr())
 		}
 		authors := []string{}
 		for d.NextBlock() {
@@ -25,7 +25,7 @@ func (c *Chaos) Setup(d conffile.Dispenser) error {
 				}
 
 			default:
-				return d.PropErr()
+				return c.Err(d.PropErr())
 			}
 		}
 		if len(authors) > 0 {
