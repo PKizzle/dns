@@ -32,26 +32,27 @@ log [FORMAT]
 You can specify a custom log format with any placeholder values. Log supports both request and
 response placeholders.
 
-The following place holders are supported, placeholders referencing header bits start with a `>`
+The following place holders are supported:
 
 - `{{type}}`: question type
 - `{{name}}`: question name
+- `{{class}}`: question class
 - `{{network}}`: network used (tcp or udp)
 - `{{remote}}`: client's IP address, for IPv6 addresses these are enclosed in brackets: `[::1]`
 - `{{local}}`: server's IP address, for IPv6 addresses these are enclosed in brackets: `[::1]`
 - `{{size}}`: request size in bytes
 - `{{port}}`: client's port
-- `{{>flags}}`: response flags, each set flag will be displayed, e.g. "aa, tc". This includes the
+- `{{flags}}`: response flags, each set flag will be displayed, e.g. "aa, tc". This includes the
   DNSSEC OK (do), compact answers (co), etc. too.
   bit as well
-- `{{>bufsize}}`: the udp buffer size advertised in the query
-- `{{>id}}`: query ID
-- `{{>opcode}}`: query opcode
+- `{{bufsize}}`: the udp buffer size advertised in the query
+- `{{id}}`: query ID
+- `{{opcode}}`: query opcode
 
 The default log format is:
 
 ```txt
-`{remote}:{port} - {>id} "{type} {class} {name} {network} {size} {>bufsize}" {>rcode} {>flags} {>opcode}`
+`{{remote}}:{{port}} - {{id}} "{{type}} {{class}} {{name}} {{network}} {{size}} {{bufsize}}" {{flags}} {{opcode}}`
 ```
 
 Each of these logs will be outputted with `log.Infof`, so a typical example looks like this:

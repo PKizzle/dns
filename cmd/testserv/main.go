@@ -55,7 +55,7 @@ func main() {
 
 	mux := dns.NewServeMux()
 
-	if err := parse(mux); err != nil {
+	if err := parse(mux, *flagConf); err != nil {
 		log.Fatal(err)
 	}
 
