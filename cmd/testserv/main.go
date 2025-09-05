@@ -6,15 +6,24 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/pprof"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers"
 )
 
-var cpuprofile = flag.Bool("cpuprofile", false, "write cpu profile to cpu.out")
+const Version = "001"
 
-const dom = "whoami.miek.nl."
+var (
+	flagProfile = flag.Bool("cpuprofile", false, "write cpu profile to cpu.out")
+	flagConf    = flag.String("conf", "Conffile", "config to load")
+	flagPlug    = flag.Bool("handlers", false, "list installed handlers")
+	flagVersion = flag.Bool("version", false, "show version")
+	flagQuiet   = flag.Bool("quiet", false, "quiet mode (no initialization output)")
+	flagPort    = flag.String("port", "53", "default port")
+)
 
 func serve(server *dns.Server, net string) {
 	server.Net = net
@@ -25,13 +34,23 @@ func serve(server *dns.Server, net string) {
 
 func main() {
 	flag.Parse()
-	if *cpuprofile {
+	if *flagVersion {
+		fmt.Println(Version)
+		return
+	}
+	if *flagProfile {
 		f, err := os.Create("cpu.out")
 		if err != nil {
 			log.Fatal(err)
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
+	}
+	if *flagPlug {
+		for h := range handlers.StringToHandler {
+			fmt.Println(h)
+		}
+		return
 	}
 
 	mux := dns.NewServeMux()
@@ -42,12 +61,12 @@ func main() {
 
 	srv := &dns.Server{
 		Handler:       mux,
-		Addr:          "[::]:8054",
+		Addr:          "[::]:" + *flagPort,
 		ReusePort:     true,
 		MaxTCPQueries: -1,
 	}
 
-	for range 10 {
+	for range runtime.NumCPU() * 3 {
 		go serve(srv, "tcp")
 		go serve(srv, "udp")
 	}

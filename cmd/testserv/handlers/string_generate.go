@@ -8,8 +8,6 @@ import (
 	"bytes"
 	"html/template"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"codeberg.org/miekg/dns/cmd/testserv/internal/generate"
@@ -41,24 +39,12 @@ var StringToHandler = map[string]func() Handler {
 const out = "zstring.go"
 
 func main() {
-	subdirs, err := os.ReadDir(".")
+	handlers, err := generate.Handlers()
 	if err != nil {
 		log.Fatal(err)
 	}
-	handlers := []string{}
 	source := &bytes.Buffer{}
 	source.WriteString(hdr)
-	for _, d := range subdirs {
-		if !d.IsDir() {
-			continue
-		}
-		handler := filepath.Join(d.Name(), d.Name()+".go")
-		types, err := generate.Types(handler)
-		if err != nil {
-			log.Fatal(err)
-		}
-		handlers = append(handlers, types...)
-	}
 
 	if err := StringToHandler.Execute(source, handlers); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
