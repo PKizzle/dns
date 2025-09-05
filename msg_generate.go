@@ -39,9 +39,6 @@ func main() {
 
 	for _, spec := range specs {
 		rrname := spec.Name.Name
-		if rrname == "APLPrefix" {
-			continue
-		}
 
 		//
 		// Pack functions
@@ -95,8 +92,6 @@ func main() {
 					o("off, err = packSVCB(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
-				case `dns:"apl"`:
-					o("off, err = packAPL(rr.%s, msg, off)\n")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
@@ -256,8 +251,6 @@ if rr.%s != "-" {
 					unpackField("unpackSVCB")
 				case `dns:"domain-name"`:
 					unpackFieldBuf("unpack.Names")
-				case `dns:"apl"`:
-					unpackField("unpackAPL")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}

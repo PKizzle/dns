@@ -158,8 +158,6 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 		return x.pack(msg, off, compression)
 	case *RESINFO:
 		return x.pack(msg, off, compression)
-	case *APL:
-		return x.pack(msg, off, compression)
 	case *SVCB:
 		return x.pack(msg, off, compression)
 	case *HTTPS:
@@ -331,8 +329,6 @@ func zunpack(rr RR, data, msgBuf []byte) error {
 	case *OPT:
 		return x.unpack(data, msgBuf)
 	case *RESINFO:
-		return x.unpack(data, msgBuf)
-	case *APL:
 		return x.unpack(data, msgBuf)
 	case *SVCB:
 		return x.unpack(data, msgBuf)

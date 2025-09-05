@@ -78,7 +78,6 @@ func (rr *CSYNC) Header() *Header      { return &rr.Hdr }
 func (rr *ZONEMD) Header() *Header     { return &rr.Hdr }
 func (rr *OPT) Header() *Header        { return &rr.Hdr }
 func (rr *RESINFO) Header() *Header    { return &rr.Hdr }
-func (rr *APL) Header() *Header        { return &rr.Hdr }
 func (rr *SVCB) Header() *Header       { return &rr.Hdr }
 func (rr *HTTPS) Header() *Header      { return &rr.Hdr }
 func (rr *ANY) Header() *Header        { return &rr.Hdr }
@@ -163,7 +162,6 @@ var TypeToRR = map[uint16]func() RR{
 	TypeZONEMD:     func() RR { return new(ZONEMD) },
 	TypeOPT:        func() RR { return new(OPT) },
 	TypeRESINFO:    func() RR { return new(RESINFO) },
-	TypeAPL:        func() RR { return new(APL) },
 	TypeSVCB:       func() RR { return new(SVCB) },
 	TypeHTTPS:      func() RR { return new(HTTPS) },
 	TypeANY:        func() RR { return new(ANY) },
@@ -325,8 +323,6 @@ func RRToType(rr RR) uint16 {
 		return TypeOPT
 	case *RESINFO:
 		return TypeRESINFO
-	case *APL:
-		return TypeAPL
 	case *SVCB:
 		return TypeSVCB
 	case *HTTPS:
@@ -423,7 +419,6 @@ var TypeToString = map[uint16]string{
 	TypeZONEMD:     "ZONEMD",
 	TypeOPT:        "OPT",
 	TypeRESINFO:    "RESINFO",
-	TypeAPL:        "APL",
 	TypeSVCB:       "SVCB",
 	TypeHTTPS:      "HTTPS",
 	TypeANY:        "ANY",

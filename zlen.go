@@ -562,14 +562,6 @@ func (rr *RESINFO) Len() int {
 	return l
 }
 
-func (rr *APL) Len() int {
-	l := rr.Hdr.Len()
-	for _, x := range rr.Prefixes {
-		l += x.len()
-	}
-	return l
-}
-
 func (rr *SVCB) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Priority

@@ -5,6 +5,7 @@ package svcb
 import (
 	"encoding/base64"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -125,6 +126,7 @@ func PairToKey(p Pair) uint16 {
 type Pair interface {
 	String() string // String returns the string representation of the value.
 	Len() int       // Len returns the length of value in the wire format.
+	Copy() Pair     // Copy returns a deep copy of the Pair.
 }
 
 // MANDATORY pair adds to required keys that must be interpreted for the RR
@@ -380,3 +382,30 @@ func (s *LOCAL) String() string { return pairToString(s.Data) }
 func (s *LOCAL) Len() int { return tlv + len(s.Data) }
 
 const tlv = 4
+
+// Copy()
+
+func (s *MANDATORY) Copy() Pair     { return &MANDATORY{slices.Clone(s.Key)} }
+func (s *ALPN) Copy() Pair          { return &ALPN{slices.Clone(s.Alpn)} }
+func (_ *NODEFAULTALPN) Copy() Pair { return &NODEFAULTALPN{} }
+func (s *PORT) Copy() Pair          { return &PORT{s.Port} }
+func (s *ECHCONFIG) Copy() Pair     { return &ECHCONFIG{slices.Clone(s.ECH)} }
+func (_ *OHTTP) Copy() Pair         { return &OHTTP{} }
+func (s *DOHPATH) Copy() Pair       { return &DOHPATH{Template: s.Template} }
+func (s *LOCAL) Copy() Pair         { return &LOCAL{s.KeyCode, slices.Clone(s.Data)} }
+
+func (s *IPV4HINT) Copy() Pair {
+	hint := make([]net.IP, len(s.Hint))
+	for i, ip := range s.Hint {
+		hint[i] = slices.Clone(ip)
+	}
+	return &IPV4HINT{Hint: hint}
+}
+
+func (s *IPV6HINT) Copy() Pair {
+	hint := make([]net.IP, len(s.Hint))
+	for i, ip := range s.Hint {
+		hint[i] = slices.Clone(ip)
+	}
+	return &IPV6HINT{Hint: hint}
+}
