@@ -54,7 +54,7 @@ const (
 	TypeCERT       uint16 = 37
 	TypeDNAME      uint16 = 39
 	TypeOPT        uint16 = 41
-	TypeAPL        uint16 = 42 // Not implemented
+	TypeAPL        uint16 = 42 // Not implemented.
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
 	TypeIPSECKEY   uint16 = 45

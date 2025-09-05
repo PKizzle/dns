@@ -383,8 +383,6 @@ func (s *LOCAL) Len() int { return tlv + len(s.Data) }
 
 const tlv = 4
 
-// Copy()
-
 func (s *MANDATORY) Copy() Pair     { return &MANDATORY{slices.Clone(s.Key)} }
 func (s *ALPN) Copy() Pair          { return &ALPN{slices.Clone(s.Alpn)} }
 func (_ *NODEFAULTALPN) Copy() Pair { return &NODEFAULTALPN{} }
