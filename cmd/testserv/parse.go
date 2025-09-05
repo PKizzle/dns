@@ -43,7 +43,7 @@ func parse(mux *dns.ServeMux) error {
 			}
 			hs = append(hs, handler)
 		}
-		// append refuse
+		// append refuse as a guard
 		hs = append(hs, new(refused.Refused))
 		// for all keys (=zones) add this chain
 		for _, k := range b.Keys {

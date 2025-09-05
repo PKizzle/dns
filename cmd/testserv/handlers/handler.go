@@ -5,12 +5,6 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/conffile"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/any"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/chaos"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/log"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/refused"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/twiddle"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/whoami"
 )
 
 // A Handler is a dns.HandlerFunc that has a handler func (the next when to call in the middleware stack) as
@@ -30,16 +24,6 @@ type Handler interface {
 // from the config file.
 type Setupper interface {
 	Setup(conffile.Dispenser) error
-}
-
-// todo generate: lowercase type name of the handler is the name.
-var StringToHandler = map[string]func() Handler{
-	"chaos":   func() Handler { return new(chaos.Chaos) },
-	"log":     func() Handler { return new(log.Log) },
-	"any":     func() Handler { return new(any.Any) },
-	"whoami":  func() Handler { return new(whoami.Whoami) },
-	"twiddle": func() Handler { return new(twiddle.Twiddle) },
-	"refused": func() Handler { return new(refused.Refused) },
 }
 
 // Compile takes the Handlers hs and creates a wrapped handle func.
