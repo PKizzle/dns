@@ -65,19 +65,22 @@ var zones = map[string]dns.RR{
 	"31.172.in-addr.arpa.":  dnstest.New("$ORIGIN 31.172.in-addr.arpa.\n" + SOA),
 }
 
-func (a *As112) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
+func (a *As112) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		qname, _ := dnsutil.Question(r)
 		for z, rr := range zones {
-			dns.HandleFunc(z, func(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
-				r.Unpack()
-
+			if dnsutil.IsBelow(z, qname) {
+				// r.Unpack() - we don't care
 				m := new(dns.Msg)
 				m.Data = r.Data
 				dnsutil.SetReply(m, r)
 				m.Authoritative = true
 				m.Ns = []dns.RR{rr}
 				io.Copy(w, m)
-			})
+
+				return
+			}
 		}
+		next.ServeDNS(ctx, w, r)
 	})
 }
