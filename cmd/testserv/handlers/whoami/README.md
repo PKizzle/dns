@@ -2,7 +2,7 @@
 
 ## Name
 
-_whoami_ - returns your resolver's local IP address, port and transport.
+_whoami_ - return your resolver's local IP address, port and transport
 
 ## Description
 

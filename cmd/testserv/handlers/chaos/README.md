@@ -2,7 +2,7 @@
 
 ## Name
 
-_chaos_ - allows for responding to TXT queries in the CH class.
+_chaos_ - respond to TXT queries in the CH class
 
 ## Description
 

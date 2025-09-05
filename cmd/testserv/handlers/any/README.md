@@ -2,7 +2,7 @@
 
 ## Name
 
-_any_ - gives a minimal response to ANY queries.
+_any_ - give a minimal response to ANY queries
 
 ## Description
 
