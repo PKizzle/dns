@@ -37,12 +37,13 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
-	"strconv"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 var (
@@ -54,10 +55,8 @@ const dom = "whoami.miek.nl."
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	var (
-		v4  bool
-		rr  dns.RR
-		str string
-		a   net.IP
+		rr dns.RR
+		a  net.IP
 	)
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
@@ -66,22 +65,19 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
-		str = "Port: " + strconv.Itoa(ip.Port) + " (udp)"
 		a = ip.IP
-		v4 = a.To4() != nil
 	}
 	if ip, ok := w.RemoteAddr().(*net.TCPAddr); ok {
-		str = "Port: " + strconv.Itoa(ip.Port) + " (tcp)"
 		a = ip.IP
-		v4 = a.To4() != nil
 	}
 
-	if v4 {
+	if dnsutil.Family(w) == 1 {
 		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: a.To4()}
 	} else {
 		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: a}
 	}
 
+	str := "Port: " + dnsutil.RemotePort(w) + " (" + dnsutil.Network(w) + ")"
 	t := &dns.TXT{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, Txt: []string{str}}
 
 	switch r.Question[0].(type) {
@@ -128,7 +124,7 @@ func main() {
 	}
 
 	dns.HandleFunc("miek.nl.", reflect)
-	for range 10 {
+	for range runtime.NumCPU() * 4 { // there is lock contention when writing back
 		go serve("tcp")
 		go serve("udp")
 	}

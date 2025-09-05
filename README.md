@@ -10,7 +10,8 @@
   - ... and more.
 - Fast(er); recvmmsg and pipeling suppport.
   - Since a46996c I can get 400K qps on my laptop (M2/Asahi Linux).
-  - On intel/amd it is lower - yet to understand why.
+  - On intel/amd it is lower (200K qps) - yet to understand why.
+  - See `cmd/reflect` and do a `go build; go test -v`. Requires `dnsperf` to be installed.
 - More convenience functions included in _dns_ or otherwise in _dnsutils_.
 - Test helper function included _dnstest_.
 - Example programs included _and_ benchmarked in `cmd/`.
