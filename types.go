@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"strconv"
@@ -55,7 +54,7 @@ const (
 	TypeCERT       uint16 = 37
 	TypeDNAME      uint16 = 39
 	TypeOPT        uint16 = 41
-	TypeAPL        uint16 = 42
+	TypeAPL        uint16 = 42 // Not implemented.
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
 	TypeIPSECKEY   uint16 = 45
@@ -1532,79 +1531,6 @@ type RESINFO struct {
 }
 
 func (rr *RESINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
-
-// APL RR. See RFC 3123.
-type APL struct {
-	Hdr      Header
-	Prefixes []APLPrefix `dns:"apl"`
-}
-
-// APLPrefix is an address prefix hold by an APL record.
-type APLPrefix struct {
-	Negation bool
-	Network  net.IPNet
-}
-
-// String returns presentation form of the APL record.
-func (rr *APL) String() string {
-	sb := sprintHeader(rr)
-	for i, p := range rr.Prefixes {
-		if i > 0 {
-			sb.WriteByte(' ')
-		}
-		sb.WriteString(p.str())
-	}
-	return sb.String()
-}
-
-// str returns presentation form of the APL prefix.
-func (a *APLPrefix) str() string {
-	sb := strings.Builder{}
-	if a.Negation {
-		sb.WriteByte('!')
-	}
-
-	switch len(a.Network.IP) {
-	case net.IPv4len:
-		sb.WriteByte('1')
-	case net.IPv6len:
-		sb.WriteByte('2')
-	}
-
-	sb.WriteByte(':')
-
-	switch len(a.Network.IP) {
-	case net.IPv4len:
-		sb.WriteString(a.Network.IP.String())
-	case net.IPv6len:
-		// add prefix for IPv4-mapped IPv6
-		if v4 := a.Network.IP.To4(); v4 != nil {
-			sb.WriteString(ipv4InIPv6Prefix)
-		}
-		sb.WriteString(a.Network.IP.String())
-	}
-
-	sb.WriteByte('/')
-
-	prefix, _ := a.Network.Mask.Size()
-	sb.WriteString(strconv.Itoa(prefix))
-
-	return sb.String()
-}
-
-// equals reports whether two APL prefixes are identical.
-func (a *APLPrefix) equals(b *APLPrefix) bool {
-	return a.Negation == b.Negation &&
-		a.Network.IP.Equal(b.Network.IP) &&
-		bytes.Equal(a.Network.Mask, b.Network.Mask)
-}
-
-// len returns size of the prefix in wire format.
-func (a *APLPrefix) len() int {
-	// 4-byte header and the network address prefix (see Section 4 of RFC 3123)
-	prefix, _ := a.Network.Mask.Size()
-	return 4 + (prefix+7)/8
-}
 
 // SVCB RR. See RFC 9460.
 type SVCB struct {

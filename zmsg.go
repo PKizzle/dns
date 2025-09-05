@@ -2249,26 +2249,6 @@ func (rr *RESINFO) unpack(data, msgBuf []byte) (err error) {
 	return nil
 }
 
-func (rr *APL) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packAPL(rr.Prefixes, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
-}
-
-func (rr *APL) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	rr.Prefixes, err = unpackAPL(&s)
-	if err != nil {
-		return err
-	}
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "APL")
-	}
-	return nil
-}
-
 func (rr *SVCB) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {

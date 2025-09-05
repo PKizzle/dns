@@ -158,8 +158,6 @@ func compare(a, b RR) int {
 		return x.compare(b)
 	case *RESINFO:
 		return x.compare(b)
-	case *APL:
-		return x.compare(b)
 	case *SVCB:
 		return x.compare(b)
 	case *HTTPS:
@@ -1357,10 +1355,6 @@ func (rr *OPT) compare(b RR) (x int) {
 }
 
 func (rr *RESINFO) compare(b RR) (x int) {
-	return 0
-}
-
-func (rr *APL) compare(b RR) (x int) {
 	return 0
 }
 

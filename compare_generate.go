@@ -64,10 +64,6 @@ func main() {
 
 	for _, spec := range specs {
 		rrname := spec.Name.Name
-		if rrname == "APLPrefix" {
-			continue
-		}
-
 		//
 		// Compare functions, does compare(a, b RR) as a.compare(b)
 		//
