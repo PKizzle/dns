@@ -16,9 +16,32 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
+// As112 returns refused for queries below the following zone, for other it calls the next handler
+//
+// - 10.in-addr.arpa.
+// - 254.169.in-addr.arpa.
+// - 168.192.in-addr.arpa.
+// - 16.172.in-addr.arpa.
+// - 17.172.in-addr.arpa.
+// - 18.172.in-addr.arpa.
+// - 19.172.in-addr.arpa.
+// - 20.172.in-addr.arpa.
+// - 21.172.in-addr.arpa.
+// - 22.172.in-addr.arpa.
+// - 23.172.in-addr.arpa.
+// - 24.172.in-addr.arpa.
+// - 25.172.in-addr.arpa.
+// - 26.172.in-addr.arpa.
+// - 27.172.in-addr.arpa.
+// - 28.172.in-addr.arpa.
+// - 29.172.in-addr.arpa.
+// - 30.172.in-addr.arpa.
+// - 31.172.in-addr.arpa.
+//
+// See https://www.as112.net/.
 type As112 int
 
-const SOA string = "@ SOA prisoner.iana.org. hostmaster.root-servers.org. 2002040800 1800 900 0604800 604800"
+const SOA string = "@ SOA localhost. root. 1 604800 86400 2419200 604800"
 
 var zones = map[string]dns.RR{
 	"10.in-addr.arpa.":      dnstest.New("$ORIGIN 10.in-addr.arpa.\n" + SOA),
@@ -45,7 +68,6 @@ var zones = map[string]dns.RR{
 func (a *As112) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		for z, rr := range zones {
-			rrx := rr.(*dns.SOA) // Needed to create the actual RR, and not an reference.
 			dns.HandleFunc(z, func(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
 				r.Unpack()
 
@@ -53,7 +75,7 @@ func (a *As112) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 				m.Data = r.Data
 				dnsutil.SetReply(m, r)
 				m.Authoritative = true
-				m.Ns = []dns.RR{rrx}
+				m.Ns = []dns.RR{rr}
 				io.Copy(w, m)
 			})
 		}
