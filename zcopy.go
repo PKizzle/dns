@@ -767,3 +767,10 @@ func (rr *ZONEVERSION) Copy() RR {
 		slices.Clone(rr.Version),
 	}
 }
+
+func (rr *KEEPALIVE) Copy() RR {
+	return &KEEPALIVE{
+		rr.InactivityTimeout,
+		rr.KeepAliveInterval,
+	}
+}

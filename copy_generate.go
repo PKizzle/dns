@@ -42,7 +42,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
+	dspecs, err := generate.StructTypeSpecs("dso_types.go")
+	if err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
 	specs = append(specs, especs...)
+	specs = append(specs, dspecs...)
 
 	b := &bytes.Buffer{}
 	b.WriteString(hdr)

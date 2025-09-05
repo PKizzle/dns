@@ -44,7 +44,7 @@ type RR interface {
 	// a slightly too large value is OK.
 	Len() int
 
-	// Copier
+	Copier
 }
 
 // If an RR implements the Typer interface it will be used to return the type of RR in the RRToType function.
