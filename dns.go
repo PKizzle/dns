@@ -78,11 +78,6 @@ type Token {
 type: TokenBlank, TokenString, TokenQuote, not TokenEOF or TokenNewline
 */
 
-// The Copier interface defines a copy function that returns a deep copy of the RR.
-type Copier interface {
-	Copy() RR
-}
-
 // Comparer interface defines a compare function that returns -1, 0, or +1.
 type Comparer interface {
 	Compare(b RR) int

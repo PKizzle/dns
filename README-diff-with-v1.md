@@ -37,7 +37,7 @@
 - IsDuplicate is gone in favor of Compare and a full support for the `sort.Interface`, so you can just
   sort RRs in an RRset.
 - Copy is gone... I think this was only use the message level and can be emulated by copying the buffer and
-  calling `Unpack`.
+  calling `Unpack`. Or use the generic <https://pkg.go.dev/github.com/mitchellh/copystructure>.
 - Copied, sanitized and removed tests that accumulated over 16 years of development.
 
 ## Setting EDNS0
