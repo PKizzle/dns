@@ -1,4 +1,4 @@
-package refused
+package refuse
 
 import (
 	"context"

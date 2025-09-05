@@ -6,17 +6,15 @@ import "codeberg.org/miekg/dns/cmd/testserv/handlers/any"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/as112"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/chaos"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/log"
-import "codeberg.org/miekg/dns/cmd/testserv/handlers/refused"
-import "codeberg.org/miekg/dns/cmd/testserv/handlers/twiddle"
+import "codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/whoami"
 
 // StringToHandler is a map of strings to a handler creation function..
 var StringToHandler = map[string]func() Handler{
-	"any":     func() Handler { return new(any.Any) },
-	"as112":   func() Handler { return new(as112.As112) },
-	"chaos":   func() Handler { return new(chaos.Chaos) },
-	"log":     func() Handler { return new(log.Log) },
-	"refused": func() Handler { return new(refused.Refused) },
-	"twiddle": func() Handler { return new(twiddle.Twiddle) },
-	"whoami":  func() Handler { return new(whoami.Whoami) },
+	"any":    func() Handler { return new(any.Any) },
+	"as112":  func() Handler { return new(as112.As112) },
+	"chaos":  func() Handler { return new(chaos.Chaos) },
+	"log":    func() Handler { return new(log.Log) },
+	"refuse": func() Handler { return new(refuse.Refuse) },
+	"whoami": func() Handler { return new(whoami.Whoami) },
 }
