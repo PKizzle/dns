@@ -42,6 +42,9 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 			m.Extra = []dns.RR{t}
 		}
 
+		// ik skip een sectie
+		println("WHOAMI", m.String())
+
 		m.Pack()
 		io.Copy(w, m)
 	})

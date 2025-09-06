@@ -15,6 +15,7 @@ type Nsid struct {
 
 func (n *Nsid) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
 		// if we don't find a nsid we just skip the whole thing
 		found := false
 		for _, o := range r.Pseudo {
@@ -31,10 +32,10 @@ func (n *Nsid) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		rw := dnstest.NewRecorder(w)
 		next.ServeDNS(ctx, rw, r)
 		m := rw.Msg
+		println(m.String())
 		o := &dns.NSID{Nsid: hex.EncodeToString([]byte(n.Data))}
 		m.Pseudo = append(m.Pseudo, o)
 		// additional is set for some reason
-		println(m.String())
 		m.Pack()
 		io.Copy(w, m)
 	})

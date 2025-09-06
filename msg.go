@@ -212,6 +212,10 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	dh.Ancount = uint16(len(m.Answer))
 	dh.Nscount = uint16(len(m.Ns))
 	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
+	println(dh.Qdcount)
+	println(dh.Ancount)
+	println(dh.Nscount)
+	println(dh.Arcount)
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
@@ -270,7 +274,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 				opt.Options = append(opt.Options, edns0)
 			}
 		}
-		// Only pack opt if something has been put into it, otherwise we may a TSIG/SIG0.
+		// Only pack opt if something has been put into it, otherwise we may have a TSIG/SIG0.
 		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
 		// Also OPT may be anywhere in m.Extra, here it will be first.
 		if opt.Hdr.Name == "." {
@@ -282,6 +286,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	m.ps = 0
 
 	for _, r := range m.Extra {
+		println(r.String())
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
 		}
