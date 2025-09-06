@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -18,7 +18,7 @@ func parse(mux *dns.ServeMux, conf string) error {
 	defer f.Close()
 	blocks, err := conffile.Parse(conf, f, nil)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, b := range blocks {
@@ -48,7 +48,7 @@ func parse(mux *dns.ServeMux, conf string) error {
 		// for all keys (=zones) add this chain
 		for _, k := range b.Keys {
 			k = dnsutil.Fqdn(k)
-			log.Printf("%s with %q\n", k, strings.Join(names, ","))
+			slog.Info(k, "handlers", strings.Join(names, ","))
 			mux.HandleFunc(k, handlers.Compile(hs))
 		}
 	}

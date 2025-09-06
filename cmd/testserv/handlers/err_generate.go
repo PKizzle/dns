@@ -21,6 +21,7 @@ const hdr = `
 package %s
 
 import "fmt"
+import "log/slog"
 
 `
 
@@ -29,7 +30,15 @@ var funcmap = template.FuncMap{
 }
 
 var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
-func (h *{{.}}) Err(err error) error { return fmt.Errorf("handler/{{tolower .}}: %s", err.Error()) }
+func (h *{{.}}) Err(err error) error { return fmt.Errorf("handler.{{tolower .}}: %s", err.Error()) }
+`))
+
+var LogVar = template.Must(template.New("logVar").Funcs(funcmap).Parse(`
+{{if eq . "Log"}}
+	var _log = slog.Default().With("handler", "{{tolower .}}")
+{{else}}
+	var log = slog.Default().With("handler", "{{tolower .}}")
+{{end}}
 `))
 
 func main() {
@@ -43,6 +52,9 @@ func main() {
 		source.WriteString(fmt.Sprintf(hdr, strings.ToLower(handler)))
 		out := filepath.Join(strings.ToLower(handler), "zerr.go")
 		if err := ErrFunc.Execute(source, handler); err != nil {
+			log.Fatalf("Failed to generate %s: %v", out, err)
+		}
+		if err := LogVar.Execute(source, handler); err != nil {
 			log.Fatalf("Failed to generate %s: %v", out, err)
 		}
 		generate.Write(source, out)

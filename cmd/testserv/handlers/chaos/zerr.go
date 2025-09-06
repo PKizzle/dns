@@ -3,5 +3,8 @@
 package chaos
 
 import "fmt"
+import "log/slog"
 
-func (h *Chaos) Err(err error) error { return fmt.Errorf("handler/chaos: %s", err.Error()) }
+func (h *Chaos) Err(err error) error { return fmt.Errorf("handler.chaos: %s", err.Error()) }
+
+var log = slog.Default().With("handler", "chaos")
