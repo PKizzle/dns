@@ -245,7 +245,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 		rr.OrigTTL = h0.TTL
 	}
 	rr.TypeCovered = h0.t
-	rr.Labels = uint8(dnsutilCount(h0.Name))
+	rr.Labels = uint8(dnsutilLabels(h0.Name))
 
 	if strings.HasPrefix(h0.Name, "*") {
 		rr.Labels-- // wildcard, remove from label count

@@ -11,8 +11,8 @@ import (
 // This is copied to zdnsutil.go in the main package to also have access to these functions and not have an
 // import cycle. See dnsutil_generate.go.
 
-// Count returns the number of labels in the name s.
-func dnsutilCount(s string) (labels int) {
+// Labels returns the number of labels in the name s.
+func dnsutilLabels(s string) (labels int) {
 	if s == "." {
 		return
 	}

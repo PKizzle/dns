@@ -73,7 +73,7 @@ func TestPrev(t *testing.T) {
 	}
 }
 
-func TestCount(t *testing.T) {
+func TestLabels(t *testing.T) {
 	splitter := map[string]int{
 		"www.miek.nl.": 3,
 		"www.miek.nl":  3,
@@ -81,9 +81,9 @@ func TestCount(t *testing.T) {
 		".":            0,
 	}
 	for s, i := range splitter {
-		x := Count(s)
+		x := Labels(s)
 		if x != i {
-			t.Errorf("count should have %d, got %d", i, x)
+			t.Errorf("labels should have %d, got %d", i, x)
 		}
 	}
 }
