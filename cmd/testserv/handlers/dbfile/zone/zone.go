@@ -27,7 +27,7 @@ func less(a, b []dns.RR) bool {
 func New(origin, path string) *Zone {
 	return &Zone{
 		Origin: dnsutil.Canonical(origin),
-		Labels: dnsutil.Count(dnsutil.Canonical(origin)),
+		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
 		Path:   path,
 		Tree:   btree.NewBTreeG(less),
 	}

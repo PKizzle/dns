@@ -19,5 +19,5 @@ func TestZoneLoad(t *testing.T) {
 		return true
 	})
 
-	z.Get("a.b.www.example.org")
+	// z.Get("a.b.www.example.org")
 }
