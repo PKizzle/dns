@@ -2,9 +2,10 @@ package chaos
 
 import (
 	"codeberg.org/miekg/dns/cmd/testserv/conffile"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
 )
 
-func (c *Chaos) Setup(d conffile.Dispenser) error {
+func (c *Chaos) Setup(d conffile.Dispenser, conf global.Global) error {
 	if d.Next() {
 		args := d.RemainingArgs()
 		if len(args) > 1 {

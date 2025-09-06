@@ -42,8 +42,6 @@ func newDispenser(filename string, input io.Reader) Dispenser {
 	}
 }
 
-// Add Keys() for toplevel keys.
-
 // NewDispenser returns a Dispenser filled with the given tokens.
 func NewDispenser(filename string, keys []string, tokens []Token) Dispenser {
 	return Dispenser{

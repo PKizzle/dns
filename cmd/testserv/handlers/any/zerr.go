@@ -3,5 +3,8 @@
 package any
 
 import "fmt"
+import "log/slog"
 
-func (h *Any) Err(err error) error { return fmt.Errorf("handler/any: %s", err.Error()) }
+func (h *Any) Err(err error) error { return fmt.Errorf("handler.any: %s", err.Error()) }
+
+var log = slog.Default().With("handler", "any")

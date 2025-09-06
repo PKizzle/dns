@@ -3,5 +3,8 @@
 package refuse
 
 import "fmt"
+import "log/slog"
 
-func (h *Refuse) Err(err error) error { return fmt.Errorf("handler/refuse: %s", err.Error()) }
+func (h *Refuse) Err(err error) error { return fmt.Errorf("handler.refuse: %s", err.Error()) }
+
+var log = slog.Default().With("handler", "refuse")

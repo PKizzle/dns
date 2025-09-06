@@ -4,21 +4,20 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Whoami ...
 type Whoami int
 
 func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var rr dns.RR
 		if err := r.Unpack(); err != nil {
-			log.Fatalf("%s", err.Error())
+			log.Error(err.Error())
+			return
 		}
 		m := &dns.Msg{Data: r.Data} // reuse buffer
 		dnsutil.SetReply(m, r)
