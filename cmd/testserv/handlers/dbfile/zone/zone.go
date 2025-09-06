@@ -66,6 +66,7 @@ func Load(origin, path string) (*Zone, error) {
 	return z, nil
 }
 
+/*
 // Get looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA respones the message will also contain the correct
 // information.
@@ -75,12 +76,15 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	//	qname, qtype := dnsutil.Question(m)
 	labels := z.Labels
 	q := m.Question[0]
+	set := []dns.RR{}
 	for idx, start := dnsutil.Prev(q.Header().Name, labels); !start; idx, start = dnsutil.Prev(q.Header().Name, labels) {
 		q.Header().Name = qname[idx:]
 		set, ok := z.Tree.Get([]dns.RR{q})
+
 		println(qname[idx:])
 
 		labels++
 	}
 	return nil
 }
+*/

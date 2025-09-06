@@ -217,7 +217,10 @@ func (d *Dispenser) ArgErr() error {
 }
 
 // PropErr return a property error, meaning that x was expect but we got y.
-func (d *Dispenser) PropErr() error {
+func (d *Dispenser) PropErr(err ...error) error {
+	if len(err) > 0 {
+		return d.Errf("unexpected property: %q: %s", d.Val(), err[0].Error())
+	}
 	return d.Errf("unexpected property: '%s'", d.Val())
 }
 
