@@ -10,8 +10,11 @@ import (
 )
 
 // Zone holds the main zone and some meta data of the DNS zone we are serving.
+// There is no locking, because after creation this structure is basically read-only.
+// Tree will be used to write, but that has its own locking.
 type Zone struct {
 	Origin string
+	Labels int
 	Path   string
 	Tree   *btree.BTreeG[[]dns.RR]
 }
@@ -22,7 +25,12 @@ func less(a, b []dns.RR) bool {
 }
 
 func New(origin, path string) *Zone {
-	return &Zone{Origin: origin, Path: path, Tree: btree.NewBTreeG(less)}
+	return &Zone{
+		Origin: dnsutil.Canonical(origin),
+		Labels: dnsutil.Count(dnsutil.Canonical(origin)),
+		Path:   path,
+		Tree:   btree.NewBTreeG(less),
+	}
 }
 
 // Load loads a new zone with origin from path.
@@ -56,4 +64,23 @@ func Load(origin, path string) (*Zone, error) {
 		return nil, fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", path, origin)
 	}
 	return z, nil
+}
+
+// Get looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
+// correct places. In case of NXDOMAIN or NODATA respones the message will also contain the correct
+// information.
+func (z *Zone) Get(m *dns.Msg) *dns.Msg {
+	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
+	// so we should be able to Prev to the first label that should fall in this zone.
+	//	qname, qtype := dnsutil.Question(m)
+	labels := z.Labels
+	q := m.Question[0]
+	for idx, start := dnsutil.Prev(q.Header().Name, labels); !start; idx, start = dnsutil.Prev(q.Header().Name, labels) {
+		q.Header().Name = qname[idx:]
+		set, ok := z.Tree.Get([]dns.RR{q})
+		println(qname[idx:])
+
+		labels++
+	}
+	return nil
 }
