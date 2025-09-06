@@ -1,6 +1,6 @@
-# global option, for metrics etc.
 {
-   log
+   root /tmp
+   prometheus :1053
 }
 
 (base) {

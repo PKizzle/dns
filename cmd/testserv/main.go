@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"runtime"
@@ -28,7 +28,8 @@ var (
 func serve(server *dns.Server, net string) {
 	server.Net = net
 	if err := server.ListenAndServe(); err != nil {
-		log.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
+		slog.Error("Failed to setup the " + net + " server: " + err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -41,7 +42,8 @@ func main() {
 	if *flagProfile {
 		f, err := os.Create("cpu.out")
 		if err != nil {
-			log.Fatal(err)
+			slog.Error(err.Error())
+			os.Exit(1)
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
@@ -56,7 +58,8 @@ func main() {
 	mux := dns.NewServeMux()
 
 	if err := parse(mux, *flagConf); err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	srv := &dns.Server{

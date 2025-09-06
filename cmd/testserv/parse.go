@@ -9,6 +9,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/conffile"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -24,8 +25,17 @@ func parse(mux *dns.ServeMux, conf string) error {
 	for _, b := range blocks {
 		hs := []handlers.Handler{}
 		names := []string{}
+		global := &global.Global{}
 		if b.Keys == nil {
-			// TODO: global
+			for _, dir := range b.Directives {
+				d := conffile.NewDispenser(conf, nil, b.Tokens[dir])
+				err := global.Setup(d)
+				if err != nil {
+					return fmt.Errorf("could not parse config for handler: %q: %s", "global", err)
+				}
+			}
+			fmt.Printf("global %+v\n", global)
+			continue
 		}
 		for _, name := range b.Directives {
 			names = append(names, name)
