@@ -3,7 +3,7 @@ package log
 import (
 	"bytes"
 	"context"
-	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,12 +15,14 @@ import (
 
 type Log int
 
+var logger = slog.Default()
+
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		b := bufPool.Get().(*bytes.Buffer)
 
 		logtmpl.Execute(b, logWrap{w, r})
-		log.Print(b.String())
+		logger.Info(b.String())
 
 		b.Reset()
 		bufPool.Put(b)
