@@ -1,38 +1,34 @@
 package chaos
 
-import (
-	"codeberg.org/miekg/dns/cmd/testserv/conffile"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
-)
+import "codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 
-func (c *Chaos) Setup(d conffile.Dispenser, conf global.Global) error {
-	if d.Next() {
-		args := d.RemainingArgs()
+func (c *Chaos) Setup(co dnsserver.Controller) error {
+	if co.Next() {
+		args := co.RemainingArgs()
 		if len(args) > 1 {
-			return c.Err(d.ArgErr())
+			return c.Err(co.ArgErr())
 		}
 		authors := []string{}
-		for d.NextBlock() {
-			switch d.Val() {
+		for co.NextBlock() {
+			switch co.Val() {
 			case "authors":
-				for d.Next() {
-					if d.Val() == "}" {
+				for co.Next() {
+					if co.Val() == "}" {
 						break
 					}
-					if d.Val() == "{" {
+					if co.Val() == "{" {
 						continue
 					}
-					authors = append(authors, d.Val())
+					authors = append(authors, co.Val())
 				}
 
 			default:
-				return c.Err(d.PropErr())
+				return c.Err(co.PropErr())
 			}
 		}
 		if len(authors) > 0 {
 			c.Authors = authors
 		}
-
 	}
 	return nil
 }

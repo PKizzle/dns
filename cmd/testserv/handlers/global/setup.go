@@ -1,6 +1,6 @@
 package global
 
-import "codeberg.org/miekg/dns/cmd/testserv/conffile"
+import "codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
 
 func (g *Global) Setup(d conffile.Dispenser) error {
 	if d.Next() {

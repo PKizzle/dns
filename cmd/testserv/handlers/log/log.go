@@ -5,7 +5,6 @@ import (
 	"context"
 	"log/slog"
 	"strconv"
-	"strings"
 	"sync"
 	"text/template"
 
@@ -44,7 +43,7 @@ var funcmap = template.FuncMap{
 		}
 		return strconv.Itoa(int(l.Msg.UDPSize))
 	},
-	"flags": func(l logWrap) string { return msgHeaderFlags(l) },
+	"flags": func(l logWrap) string { return flags(l) },
 	"size":  func(l logWrap) string { return strconv.Itoa(len(l.Msg.Data)) },
 	"type": func(l logWrap) string {
 		_, t := dnsutil.Question(l.Msg)
@@ -68,41 +67,45 @@ var bufPool = &sync.Pool{
 	},
 }
 
-func msgHeaderFlags(l logWrap) string {
+func flags(l logWrap) string {
 	h := l.Msg.MsgHeader
-	sb := strings.Builder{}
+	b := bufPool.Get().(*bytes.Buffer)
+	defer func() {
+		b.Reset()
+		bufPool.Put(b)
+	}()
 	if h.Response {
-		sb.WriteString(" qr")
+		b.WriteString(" qr")
 	}
 	if h.Authoritative {
-		sb.WriteString(" aa")
+		b.WriteString(" aa")
 	}
 	if h.Truncated {
-		sb.WriteString(" tc")
+		b.WriteString(" tc")
 	}
 	if h.RecursionDesired {
-		sb.WriteString(" rd")
+		b.WriteString(" rd")
 	}
 	if h.RecursionAvailable {
-		sb.WriteString(" ra")
+		b.WriteString(" ra")
 	}
 	if h.Zero {
-		sb.WriteString(" z")
+		b.WriteString(" z")
 	}
 	if h.AuthenticatedData {
-		sb.WriteString(" ad")
+		b.WriteString(" ad")
 	}
 	if h.CheckingDisabled {
-		sb.WriteString(" cd")
+		b.WriteString(" cd")
 	}
 	if h.Security {
-		sb.WriteString(" do")
+		b.WriteString(" do")
 	}
 	if h.CompactAnswers {
-		sb.WriteString(" co")
+		b.WriteString(" co")
 	}
 	if h.Delegation {
-		sb.WriteString(" de")
+		b.WriteString(" de")
 	}
-	return sb.String()[1:]
+	return string(b.Bytes()[1:])
 }

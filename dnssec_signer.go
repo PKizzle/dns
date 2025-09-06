@@ -251,7 +251,7 @@ func rawSignatureData(rrset []RR, s *RRSIG, options SignOption) (buf []byte, err
 	off := 0
 	for _, rr := range rrset {
 		rr.Header().TTL = s.OrigTTL
-		labels := dnsutilCount(rr.Header().Name)
+		labels := dnsutilLabels(rr.Header().Name)
 		if skip := labels - int(s.Labels); skip > 0 {
 			orig := rr.Header().Name
 			// 6.2. Canonical RR Form. (4) - wildcards

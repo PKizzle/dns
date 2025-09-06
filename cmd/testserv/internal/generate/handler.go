@@ -16,6 +16,9 @@ func Handlers() ([]string, error) {
 		if !d.IsDir() {
 			continue
 		}
+		if d.Name() == "global" {
+			continue
+		}
 		handler := filepath.Join(d.Name(), d.Name()+".go")
 		types, err := Types(handler)
 		if err != nil {
