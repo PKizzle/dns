@@ -7,10 +7,11 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/testserv/conffile"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -51,8 +52,11 @@ func parse(mux *dns.ServeMux, conf string) error {
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
-				d := conffile.NewDispenser(conf, b.Keys, b.Tokens[name])
-				err := s.Setup(d, config)
+				c := dnsserver.Controller{
+					Dispenser: conffile.NewDispenser(conf, b.Keys, b.Tokens[name]),
+					Config:    config,
+				}
+				err := s.Setup(c)
 				if err != nil {
 					return fmt.Errorf("could not parse config for handler: %q: %s", name, err)
 				}

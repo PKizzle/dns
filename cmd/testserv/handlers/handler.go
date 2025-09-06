@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/testserv/conffile"
-	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 )
 
 //go:generate go run string_generate.go
@@ -27,7 +26,7 @@ type Handler interface {
 // Setupper holds a single method that is called when this Handler has configuration that needs to be parsed
 // from the config file. The options global.Global holds the server's global config.
 type Setupper interface {
-	Setup(conffile.Dispenser, ...*global.Global) error
+	Setup(dnsserver.Controller) error
 }
 
 // Compile takes the Handlers hs and creates a wrapped handle func.
