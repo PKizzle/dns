@@ -10,3 +10,9 @@ type Controller struct {
 	conffile.Dispenser
 	Config *global.Global
 }
+
+// NewTestController create a controller useful for tests.
+func NewTestController(input string) Controller {
+	d := conffile.NewTestDispenser(input)
+	return Controller{Dispenser: d, Config: &global.Global{}}
+}

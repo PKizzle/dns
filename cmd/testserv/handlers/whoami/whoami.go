@@ -15,11 +15,8 @@ type Whoami int
 func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var rr dns.RR
-		if err := r.Unpack(); err != nil {
-			log.Error(err.Error())
-			return
-		}
 		m := &dns.Msg{Data: r.Data} // reuse buffer
+		m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
 		dnsutil.SetReply(m, r)
 
 		family := dnsutil.Family(w)

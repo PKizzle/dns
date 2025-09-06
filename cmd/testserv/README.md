@@ -1,5 +1,7 @@
 testserv is a DNS server/router, written in Go, that chains handlers. Each handler performs a (DNS) function.
-It architecture is identical to HTTP servers with middleware.
+It architecture is identical to HTTP servers with middleware. The order if the handlers in the configuration
+determines the order in which they are executed. (If you know CoreDNS; you might know that has a fixed order -
+testserv is _different_).
 
 testserv is a fast and flexible DNS server. The key word here is _flexible_: with testserv you
 are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
@@ -7,15 +9,14 @@ provided out of the box you can add it by writing a handler.
 
 Currently testserv is able to:
 
-- Serve zone data from a file; with DNSSEC support (_file_), plus:
+- Serve zone data from a file; with DNSSEC support (_dbfile_), plus:
   - Zone tranfers.
   - DNSSEC signing.
-- Load balancing of responses (_loadbalance_).
-- Serve as a router to router queries to some other (recursive) nameserver (_route_).
+- Load balancing of responses (_loadbalance_). [TODO]
+- Serve as a router to router queries to some other (recursive) nameserver (_route_). [TODO]
 - Provide query logging (_log_).
-- Provide DNS64 IPv6 Translation (_dns64_).
+- Provide DNS64 IPv6 Translation (_dns64_). [TODO]
 - Provide metrics (by using Prometheus) (_prometheus_).
-- Profiling support (_pprof_).
 - ... and more.
 
 ## Compilation from Source

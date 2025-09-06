@@ -10,10 +10,7 @@
 # log whoami only, order matters
 miek.nl {
     any
-    dbfile /tmp/blaa {
-        reload 9s
-
-    }
+    nsid Use the force
     log
     whoami
 }

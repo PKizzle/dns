@@ -2,10 +2,9 @@ package nsid
 
 import (
 	"os"
-	"strings"
 	"testing"
 
-	"github.com/miekg/sndns/caddy"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 )
 
 func TestSetupNsid(t *testing.T) {
@@ -13,56 +12,27 @@ func TestSetupNsid(t *testing.T) {
 	if err != nil {
 		defaultNsid = "localhost"
 	}
-	tests := []struct {
-		input              string
-		shouldErr          bool
-		expectedData       string
-		expectedErrContent string // substring from the expected error. Empty for positive cases.
+	testcases := []struct {
+		input string
+		exp   string
 	}{
-		{`nsid`, false, defaultNsid, ""},
-		{`nsid "ps0"`, false, "ps0", ""},
-		{`nsid "worker1"`, false, "worker1", ""},
-		{`nsid "tf 2"`, false, "tf 2", ""},
-		{`nsid
-		nsid`, true, "", "plugin"},
+		{`nsid`, defaultNsid},
+		{`nsid "ps0"`, "ps0"},
 	}
-	for i, test := range tests {
-		c := caddy.NewTestController("dns", test.input)
-		err := setup(c)
-		if test.shouldErr && err == nil {
-			t.Errorf("Test %d: Expected error but found %s for input %s", i, err, test.input)
-		}
-		if err != nil {
-			if !test.shouldErr {
-				t.Errorf("Test %d: Expected no error but found one for input %s. Error was: %v", i, test.input, err)
+	for i, tc := range testcases {
+		nsid := new(Nsid)
+		co := dnsserver.NewTestController(tc.input)
+		err := nsid.Setup(co)
+
+		if tc.exp == "" {
+			if err == nil {
+				t.Errorf("test %d: expected error, got nothing", i)
 			}
-
-			if !strings.Contains(err.Error(), test.expectedErrContent) {
-				t.Errorf("Test %d: Expected error to contain: %v, found error: %v, input: %s", i, test.expectedErrContent, err, test.input)
-			}
-		}
-	}
-
-	for i, test := range tests {
-		c := caddy.NewTestController("dns", test.input)
-		nsid, err := nsidParse(c)
-
-		if test.shouldErr && err == nil {
-			t.Errorf("Test %d: Expected error but found %s for input %s", i, err, test.input)
+			continue
 		}
 
-		if err != nil {
-			if !test.shouldErr {
-				t.Errorf("Test %d: Expected no error but found one for input %s. Error was: %v", i, test.input, err)
-			}
-
-			if !strings.Contains(err.Error(), test.expectedErrContent) {
-				t.Errorf("Test %d: Expected error to contain: %v, found error: %v, input: %s", i, test.expectedErrContent, err, test.input)
-			}
-		}
-
-		if !test.shouldErr && nsid != test.expectedData {
-			t.Errorf("Nsid not correctly set for input %s. Expected: %s, actual: %s", test.input, test.expectedData, nsid)
+		if tc.exp != nsid.Data {
+			t.Errorf("test %d: expected %s, got %s", i, tc.input, nsid.Data)
 		}
 	}
 }

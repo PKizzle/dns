@@ -35,10 +35,16 @@ func Compile(hs []Handler) dns.HandlerFunc {
 		panic("testserv: need something compile")
 	}
 
-	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {}
+	unpack := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		err := r.Unpack()
+		if err != nil {
+			// slog.Debug... TODO
+			return
+		}
+	}
 	// loop in reverse to preserve middleware order
 	for i := len(hs) - 1; i >= 0; i-- {
-		wrapped = hs[i].HandlerFunc(wrapped)
+		unpack = hs[i].HandlerFunc(unpack)
 	}
-	return wrapped
+	return unpack
 }

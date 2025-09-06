@@ -32,7 +32,7 @@ func Parse(filename string, input io.Reader, validDirectives []string) ([]Server
 	return p.parseAll()
 }
 
-// allTokens lexes the entire input, but does not parse it.
+// AllTokens lexes the entire input, but does not parse it.
 // It returns all the tokens from the input, unstructured
 // and in order.
 func allTokens(input io.Reader) ([]Token, error) {

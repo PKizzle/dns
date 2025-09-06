@@ -7,6 +7,7 @@ import "codeberg.org/miekg/dns/cmd/testserv/handlers/as112"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/chaos"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/log"
+import "codeberg.org/miekg/dns/cmd/testserv/handlers/nsid"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/whoami"
 
@@ -17,6 +18,7 @@ var StringToHandler = map[string]func() Handler{
 	"chaos":  func() Handler { return new(chaos.Chaos) },
 	"dbfile": func() Handler { return new(dbfile.Dbfile) },
 	"log":    func() Handler { return new(log.Log) },
+	"nsid":   func() Handler { return new(nsid.Nsid) },
 	"refuse": func() Handler { return new(refuse.Refuse) },
 	"whoami": func() Handler { return new(whoami.Whoami) },
 }
