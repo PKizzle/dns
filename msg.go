@@ -574,7 +574,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Ns) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[2])
+		sb.WriteString(sections[3])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Ns {
 			sb.WriteString(r.String())
@@ -583,7 +583,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Extra) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[3])
+		sb.WriteString(sections[4])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Extra {
 			sb.WriteString(r.String())
