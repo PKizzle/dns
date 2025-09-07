@@ -2,10 +2,8 @@
 
 package whoami
 
-import (
-	"fmt"
-	"log/slog"
-)
+import "fmt"
+import "log/slog"
 
 func (h *Whoami) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 
