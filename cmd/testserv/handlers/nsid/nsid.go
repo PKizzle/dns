@@ -14,7 +14,6 @@ type Nsid struct {
 
 func (n *Nsid) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		r.Unpack()
 		for _, o := range r.Pseudo {
 			if _, ok := o.(*dns.NSID); ok {
 				ctx = dnsmsg.WithValue(ctx, n.Key(),

@@ -70,7 +70,6 @@ func (a *As112) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		qname, _ := dnsutil.Question(r)
 		for z, rr := range zones {
 			if dnsutil.IsBelow(z, qname) {
-				// r.Unpack() - we don't care
 				m := new(dns.Msg)
 				m.Data = r.Data
 				dnsutil.SetReply(m, r)
