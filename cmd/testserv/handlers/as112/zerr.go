@@ -5,6 +5,8 @@ package as112
 import "fmt"
 import "log/slog"
 
-func (h *As112) Err(err error) error { return fmt.Errorf("handler.as112: %s", err.Error()) }
+func (h *As112) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+
+func (h *As112) Key() string { return "as112" }
 
 var log = slog.Default().With("handler", "as112")

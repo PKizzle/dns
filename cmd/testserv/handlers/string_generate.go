@@ -28,7 +28,7 @@ var StringToHandler = template.Must(template.New("stringToHandler").Funcs(funcma
 {{range .}} import "codeberg.org/miekg/dns/cmd/testserv/handlers/{{tolower .}}"
 {{end}}
 
-// StringToHandler is a map of strings to a handler creation function..
+// StringToHandler is a map of strings to a handler creation function.
 var StringToHandler = map[string]func() Handler {
 {{range .}} "{{tolower .}}": func() Handler { return new({{tolower .}}.{{.}}) },
 {{end}}

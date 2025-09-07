@@ -5,6 +5,8 @@ package dbfile
 import "fmt"
 import "log/slog"
 
-func (h *Dbfile) Err(err error) error { return fmt.Errorf("handler.dbfile: %s", err.Error()) }
+func (h *Dbfile) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+
+func (h *Dbfile) Key() string { return "dbfile" }
 
 var log = slog.Default().With("handler", "dbfile")

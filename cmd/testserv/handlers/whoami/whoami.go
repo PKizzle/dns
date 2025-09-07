@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsmsg"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -15,10 +16,6 @@ type Whoami int
 func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		var rr dns.RR
-		if err := r.Unpack(); err != nil {
-			log.Error(err.Error())
-			return
-		}
 		m := &dns.Msg{Data: r.Data} // reuse buffer
 		dnsutil.SetReply(m, r)
 
@@ -44,6 +41,8 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 			m.Answer = []dns.RR{rr}
 			m.Extra = []dns.RR{t}
 		}
+
+		m = dnsmsg.Funcs(ctx, m)
 
 		m.Pack()
 		io.Copy(w, m)

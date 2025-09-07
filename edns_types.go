@@ -100,13 +100,16 @@ type NSID struct {
 }
 
 func (o *NSID) Len() int { return tlv + len(o.Nsid)/2 }
+
+// String outputs: "NSID 5573652074686520666f726365: "Use the force"
+// This is the presentation format.
 func (o *NSID) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Nsid)
 	if x, err := hex.DecodeString(o.Nsid); err == nil { // == nil
-		sb.WriteString(" ; (\"")
+		sb.WriteString(": \"")
 		sb.Write(x)
-		sb.WriteString("\")")
+		sb.WriteString("\"")
 	}
 	return sb.String()
 }

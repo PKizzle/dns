@@ -10,6 +10,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -42,7 +43,8 @@ func parse(mux *dns.ServeMux, conf string) error {
 		if b.Keys == nil {
 			continue
 		}
-		hs := []handlers.Handler{}
+		// prepend unpack to start
+		hs := []handlers.Handler{new(unpack.Unpack)}
 		names := []string{}
 		for _, name := range b.Directives {
 			names = append(names, name)

@@ -241,6 +241,12 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		}
 	}
 
+	for _, r := range m.Extra {
+		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+			return err
+		}
+	}
+
 	// Add an OPT RR if we see any of these.
 	if m.isPseudo() > 0 {
 		opt := &OPT{} // hack, empty name, that gets filled if we did something
@@ -270,7 +276,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 				opt.Options = append(opt.Options, edns0)
 			}
 		}
-		// Only pack opt if something has been put into it, otherwise we may a TSIG/SIG0.
+		// Only pack opt if something has been put into it, otherwise we may have a TSIG/SIG0.
 		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
 		// Also OPT may be anywhere in m.Extra, here it will be first.
 		if opt.Hdr.Name == "." {
@@ -280,12 +286,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		}
 	}
 	m.ps = 0
-
-	for _, r := range m.Extra {
-		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
-			return err
-		}
-	}
 
 	// records that really need to be last, TSIG or SGI0
 	for _, r := range m.Pseudo {
@@ -569,7 +569,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Ns) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[2])
+		sb.WriteString(sections[3])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Ns {
 			sb.WriteString(r.String())
@@ -578,7 +578,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Extra) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[3])
+		sb.WriteString(sections[4])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Extra {
 			sb.WriteString(r.String())

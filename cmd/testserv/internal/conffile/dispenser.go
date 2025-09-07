@@ -32,9 +32,18 @@ type Dispenser struct {
 	nesting  int
 }
 
+func NewTestDispenser(input string) Dispenser {
+	tokens, _ := allTokens(strings.NewReader(input))
+	return Dispenser{
+		filename: "Testfile",
+		tokens:   tokens,
+		cursor:   -1,
+	}
+}
+
 // newDispenser returns a Dispenser, ready to use for parsing the given input.
 func newDispenser(filename string, input io.Reader) Dispenser {
-	tokens, _ := allTokens(input) // ignoring error because nothing to do with it
+	tokens, _ := allTokens(input)
 	return Dispenser{
 		filename: filename,
 		tokens:   tokens,

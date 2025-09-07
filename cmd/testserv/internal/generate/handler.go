@@ -6,8 +6,13 @@ import (
 	"path/filepath"
 )
 
-func Handlers() ([]string, error) {
-	subdirs, err := os.ReadDir(".")
+func Handlers(path ...string) ([]string, error) {
+	dir := "."
+	if len(path) > 0 {
+		dir = path[0]
+	}
+
+	subdirs, err := os.ReadDir(dir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -19,7 +24,7 @@ func Handlers() ([]string, error) {
 		if d.Name() == "global" {
 			continue
 		}
-		handler := filepath.Join(d.Name(), d.Name()+".go")
+		handler := dir + "/" + filepath.Join(d.Name(), d.Name()+".go")
 		types, err := Types(handler)
 		if err != nil {
 			return nil, err
