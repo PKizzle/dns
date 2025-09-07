@@ -82,6 +82,7 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 		set, ok := z.Tree.Get([]dns.RR{q})
 
 		println(qname[idx:])
+		// If delegated, returns the delegation
 
 		labels++
 	}
