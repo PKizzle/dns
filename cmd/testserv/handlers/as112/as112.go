@@ -75,6 +75,10 @@ func (a *As112) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				dnsutil.SetReply(m, r)
 				m.Authoritative = true
 				m.Ns = []dns.RR{rr}
+
+				if err := m.Pack(); err != nil {
+					log.Debug(err.Error())
+				}
 				io.Copy(w, m)
 
 				return

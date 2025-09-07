@@ -22,7 +22,9 @@ func (a *Any) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		hdr := dns.Header{Name: r.Question[0].Header().Name, TTL: 8482, Class: dns.ClassINET}
 		m.Answer = []dns.RR{&dns.HINFO{Hdr: hdr, Cpu: "ANY obsoleted", Os: "See RFC 8482"}}
 
-		m.Pack()
+		if err := m.Pack(); err != nil {
+			log.Debug(err.Error())
+		}
 		io.Copy(w, m)
 	})
 }
