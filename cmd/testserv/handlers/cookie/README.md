@@ -2,7 +2,7 @@
 
 ## Name
 
-\_cookie - adds an DNS cookie of this server to each reply
+_cookie_ - adds an DNS cookie of this server to each reply
 
 ## Description
 
