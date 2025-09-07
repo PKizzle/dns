@@ -32,5 +32,7 @@ func TestZoneLoad(t *testing.T) {
 		return true
 	})
 
-	// z.Get("a.b.www.example.org")
+	m := dns.NewMsg("a.example.org.", dns.TypeA)
+	r := z.Get(m)
+	println(r.String())
 }

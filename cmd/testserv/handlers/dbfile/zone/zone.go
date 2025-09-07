@@ -13,23 +13,26 @@ import (
 // There is no locking, because after creation this structure is basically read-only.
 // Tree will be used to write, but that has its own locking.
 type Zone struct {
-	Origin string
-	Labels int
-	Path   string
-	Tree   *btree.BTreeG[[]dns.RR]
+	Origin  string
+	Labels  int
+	Path    string
+	Minimal bool
+	Tree    *btree.BTreeG[[]dns.RR]
 }
 
 func less(a, b []dns.RR) bool {
+	println("COMP", a[0].Header().Name, b[0].Header().Name)
 	x := dns.CompareName(a[0].Header().Name, b[0].Header().Name)
 	return x == -1
 }
 
 func New(origin, path string) *Zone {
 	return &Zone{
-		Origin: dnsutil.Canonical(origin),
-		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
-		Path:   path,
-		Tree:   btree.NewBTreeG(less),
+		Origin:  dnsutil.Canonical(origin),
+		Labels:  dnsutil.Labels(dnsutil.Canonical(origin)),
+		Path:    path,
+		Tree:    btree.NewBTreeG(less),
+		Minimal: true,
 	}
 }
 
@@ -66,26 +69,41 @@ func Load(origin, path string) (*Zone, error) {
 	return z, nil
 }
 
-/*
 // Get looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA respones the message will also contain the correct
 // information.
 func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
 	// so we should be able to Prev to the first label that should fall in this zone.
-	//	qname, qtype := dnsutil.Question(m)
+	r := new(dns.Msg)
+	dnsutil.SetReply(r, m)
+
+	qname, qtype := dnsutil.Question(r)
+
 	labels := z.Labels
-	q := m.Question[0]
-	set := []dns.RR{}
-	for idx, start := dnsutil.Prev(q.Header().Name, labels); !start; idx, start = dnsutil.Prev(q.Header().Name, labels) {
+	found := []dns.RR{}
+
+	q := r.Question[0]
+	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
 		q.Header().Name = qname[idx:]
 		set, ok := z.Tree.Get([]dns.RR{q})
-
-		println(qname[idx:])
-		// If delegated, returns the delegation
-
+		if ok {
+			found = set
+		} else {
+			// check for wildcard of the correct type
+		}
+		// If delegated, returns the delegation, wildcard, DELEG. a lot of complexity will be in this function.
 		labels++
+	}
+	if len(found) > 0 {
+		// here we need to copy these out of the zone because they are going to be written to, TTL, among other things
+		for _, rr := range found {
+			if dns.RRToType(rr) == qtype {
+				r.Answer = append(r.Answer, rr.Copy())
+			}
+			// if dnssec
+		}
+		return r
 	}
 	return nil
 }
-*/

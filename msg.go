@@ -857,8 +857,8 @@ func (m *Msg) RRs() iter.Seq[RR] {
 	}
 }
 
-// NewMsg returns a new message with the question section sets to z and the type t. If the type isn't know nil
-// is returned. Furhter more recursion desired is set.
+// NewMsg returns a new message with the question section sets to z (z is made fully qualified) and the type t. If the type isn't know nil
+// is returned, the recursion desired bit is set.
 func NewMsg(z string, t uint16) *Msg {
 	var rr RR
 	newFn, ok := TypeToRR[t]
@@ -869,7 +869,7 @@ func NewMsg(z string, t uint16) *Msg {
 	m.ID = ID()
 	m.RecursionDesired = true
 	rr = newFn()
-	rr.Header().Name = z
+	rr.Header().Name = dnsutilFqdn(z)
 	rr.Header().Class = ClassINET
 	m.Question = []RR{rr}
 	return m
