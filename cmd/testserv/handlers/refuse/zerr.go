@@ -5,6 +5,8 @@ package refuse
 import "fmt"
 import "log/slog"
 
-func (h *Refuse) Err(err error) error { return fmt.Errorf("handler.refuse: %s", err.Error()) }
+func (h *Refuse) Err(err error) error { return fmt.Errorf("%s: %s", Refuse.Key(), err.Error()) }
+
+func (h *Refuse) Key() string { return "handler.refuse" }
 
 var log = slog.Default().With("handler", "refuse")

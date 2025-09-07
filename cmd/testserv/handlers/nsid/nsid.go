@@ -32,10 +32,8 @@ func (n *Nsid) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		rw := dnstest.NewRecorder(w)
 		next.ServeDNS(ctx, rw, r)
 		m := rw.Msg
-		println(m.String())
 		o := &dns.NSID{Nsid: hex.EncodeToString([]byte(n.Data))}
 		m.Pseudo = append(m.Pseudo, o)
-		// additional is set for some reason
 		m.Pack()
 		io.Copy(w, m)
 	})

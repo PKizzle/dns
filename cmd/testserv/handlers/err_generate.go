@@ -30,7 +30,11 @@ var funcmap = template.FuncMap{
 }
 
 var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
-func (h *{{.}}) Err(err error) error { return fmt.Errorf("handler.{{tolower .}}: %s", err.Error()) }
+func (h *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", {{.}}.Key(), err.Error()) }
+`))
+
+var KeyFunc = template.Must(template.New("keyFunc").Funcs(funcmap).Parse(`
+func (h *{{.}}) Key() string { return "handler.{{tolower .}}" }
 `))
 
 var LogVar = template.Must(template.New("logVar").Funcs(funcmap).Parse(`
@@ -52,6 +56,9 @@ func main() {
 		source.WriteString(fmt.Sprintf(hdr, strings.ToLower(handler)))
 		out := filepath.Join(strings.ToLower(handler), "zerr.go")
 		if err := ErrFunc.Execute(source, handler); err != nil {
+			log.Fatalf("Failed to generate %s: %v", out, err)
+		}
+		if err := KeyFunc.Execute(source, handler); err != nil {
 			log.Fatalf("Failed to generate %s: %v", out, err)
 		}
 		if err := LogVar.Execute(source, handler); err != nil {

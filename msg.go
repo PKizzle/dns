@@ -212,10 +212,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 	dh.Ancount = uint16(len(m.Answer))
 	dh.Nscount = uint16(len(m.Ns))
 	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
-	println(dh.Qdcount)
-	println(dh.Ancount)
-	println(dh.Nscount)
-	println(dh.Arcount)
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
@@ -240,6 +236,12 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		}
 	}
 	for _, r := range m.Ns {
+		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+			return err
+		}
+	}
+
+	for _, r := range m.Extra {
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
 		}
@@ -284,13 +286,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		}
 	}
 	m.ps = 0
-
-	for _, r := range m.Extra {
-		println(r.String())
-		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
-			return err
-		}
-	}
 
 	// records that really need to be last, TSIG or SGI0
 	for _, r := range m.Pseudo {

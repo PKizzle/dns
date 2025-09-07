@@ -5,6 +5,8 @@ package nsid
 import "fmt"
 import "log/slog"
 
-func (h *Nsid) Err(err error) error { return fmt.Errorf("handler.nsid: %s", err.Error()) }
+func (h *Nsid) Err(err error) error { return fmt.Errorf("%s: %s", Nsid.Key(), err.Error()) }
+
+func (h *Nsid) Key() string { return "handler.nsid" }
 
 var log = slog.Default().With("handler", "nsid")

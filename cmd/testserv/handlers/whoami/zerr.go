@@ -5,6 +5,8 @@ package whoami
 import "fmt"
 import "log/slog"
 
-func (h *Whoami) Err(err error) error { return fmt.Errorf("handler.whoami: %s", err.Error()) }
+func (h *Whoami) Err(err error) error { return fmt.Errorf("%s: %s", Whoami.Key(), err.Error()) }
+
+func (h *Whoami) Key() string { return "handler.whoami" }
 
 var log = slog.Default().With("handler", "whoami")
