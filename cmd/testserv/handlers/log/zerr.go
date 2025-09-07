@@ -5,8 +5,8 @@ package log
 import "fmt"
 import "log/slog"
 
-func (h *Log) Err(err error) error { return fmt.Errorf("%s: %s", Log.Key(), err.Error()) }
+func (h *Log) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 
-func (h *Log) Key() string { return "handler.log" }
+func (h *Log) Key() string { return "log" }
 
 var _log = slog.Default().With("handler", "log")

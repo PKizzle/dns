@@ -30,11 +30,11 @@ var funcmap = template.FuncMap{
 }
 
 var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
-func (h *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", {{.}}.Key(), err.Error()) }
+func (h *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 `))
 
 var KeyFunc = template.Must(template.New("keyFunc").Funcs(funcmap).Parse(`
-func (h *{{.}}) Key() string { return "handler.{{tolower .}}" }
+func (h *{{.}}) Key() string { return "{{tolower .}}" }
 `))
 
 var LogVar = template.Must(template.New("logVar").Funcs(funcmap).Parse(`

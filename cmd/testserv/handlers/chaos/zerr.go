@@ -5,8 +5,8 @@ package chaos
 import "fmt"
 import "log/slog"
 
-func (h *Chaos) Err(err error) error { return fmt.Errorf("%s: %s", Chaos.Key(), err.Error()) }
+func (h *Chaos) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 
-func (h *Chaos) Key() string { return "handler.chaos" }
+func (h *Chaos) Key() string { return "chaos" }
 
 var log = slog.Default().With("handler", "chaos")

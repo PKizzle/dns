@@ -11,7 +11,7 @@ import "codeberg.org/miekg/dns/cmd/testserv/handlers/nsid"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/whoami"
 
-// StringToHandler is a map of strings to a handler creation function..
+// StringToHandler is a map of strings to a handler creation function.
 var StringToHandler = map[string]func() Handler{
 	"any":    func() Handler { return new(any.Any) },
 	"as112":  func() Handler { return new(as112.As112) },

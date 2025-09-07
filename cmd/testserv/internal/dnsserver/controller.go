@@ -5,6 +5,8 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
 )
 
+//go:generate go run string_generate.go
+
 // Controller is used by handlers to parse their config.
 type Controller struct {
 	conffile.Dispenser
