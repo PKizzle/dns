@@ -21,7 +21,11 @@ func Handlers(path ...string) ([]string, error) {
 		if !d.IsDir() {
 			continue
 		}
+		// some handlers that are "special"
 		if d.Name() == "global" {
+			continue
+		}
+		if d.Name() == "unpack" {
 			continue
 		}
 		handler := dir + "/" + filepath.Join(d.Name(), d.Name()+".go")

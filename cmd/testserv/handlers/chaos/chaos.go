@@ -55,7 +55,9 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{c.Version}}}
 		}
 
-		m.Pack()
+		if err := m.Pack(); err != nil {
+			log.Debug(err.Error())
+		}
 		io.Copy(w, m)
 	})
 }

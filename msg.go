@@ -447,7 +447,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	}
 
 	if !s.Empty() {
-		return pack.Errorf(": %d more octets", len(s))
+		return unpack.Errorf(": %d more octets", len(s))
 	}
 	return nil
 }
@@ -709,7 +709,7 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 
 // Read reads the data from m.Data into p. If m's Data buffer is empty Pack() is called.
 func (m *Msg) Read(p []byte) (n int, err error) {
-	// TODO, pool??
+	// TODO(miek): pool allocation here?
 	if len(m.Data) == 0 {
 		if err := m.Pack(); err != nil {
 			return 0, err

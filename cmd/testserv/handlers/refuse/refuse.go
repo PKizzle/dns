@@ -17,7 +17,9 @@ func (r *Refuse) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m := &dns.Msg{Data: r.Data}
 		dnsutil.SetReply(m, r)
 		m.Rcode = dns.RcodeRefused
-		m.Pack()
+		if err := m.Pack(); err != nil {
+			log.Debug(err.Error())
+		}
 		io.Copy(w, m)
 	})
 }
