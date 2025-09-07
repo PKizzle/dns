@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"fmt"
+
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
@@ -36,9 +38,9 @@ func packOPT(options []EDNS0, msg []byte, off int) (int, error) {
 		if off+l >= len(msg) {
 			return len(msg), pack.ErrBuf
 		}
-		code := RRToCode(option)
+		code := RRToCode(option) // TODO(miek): Use Coder for externally supplied option code
 		if code == CodeNone {
-			continue // TODO(miek): make some noise?
+			return len(msg), fmt.Errorf("unknown option code seen")
 		}
 
 		pack.Uint16(code, msg, off)
