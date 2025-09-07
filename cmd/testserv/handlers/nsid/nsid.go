@@ -2,7 +2,6 @@ package nsid
 
 import (
 	"context"
-	"encoding/hex"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsmsg"
@@ -18,7 +17,7 @@ func (n *Nsid) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			if _, ok := o.(*dns.NSID); ok {
 				ctx = dnsmsg.WithValue(ctx, n.Key(),
 					func(m *dns.Msg) *dns.Msg {
-						nsid := &dns.NSID{Nsid: hex.EncodeToString([]byte(n.Data))}
+						nsid := &dns.NSID{Nsid: n.Data}
 						m.Pseudo = append(m.Pseudo, nsid)
 						return m
 					})

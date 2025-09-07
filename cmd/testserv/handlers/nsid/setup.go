@@ -1,6 +1,7 @@
 package nsid
 
 import (
+	"encoding/hex"
 	"os"
 	"strings"
 
@@ -18,6 +19,6 @@ func (n *Nsid) Setup(co dnsserver.Controller) error {
 			data = strings.Join(args, " ")
 		}
 	}
-	n.Data = data
+	n.Data = hex.EncodeToString([]byte(data))
 	return nil
 }
