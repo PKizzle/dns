@@ -36,16 +36,18 @@ func packOPT(options []EDNS0, msg []byte, off int) (int, error) {
 		if off+l >= len(msg) {
 			return len(msg), pack.ErrBuf
 		}
-		code := RRToCode(option) // TODO(miek): unknown codes, caught later
+		code := RRToCode(option)
+		if code == CodeNone {
+			continue // TODO(miek): make some noise?
+		}
 
 		pack.Uint16(code, msg, off)
 		pack.Uint16(uint16(l-tlv), msg, off+2)
-		optionoff, err := packOptionCode(option, msg, off+4)
-		if err != nil {
+		if /*optionoff*/ _, err := packOptionCode(option, msg, off+4); err != nil {
 			return len(msg), err
 		}
-
-		off += optionoff + l
+		// TODO(miek): if l != opentionoff ? We overestimated l, but that's the length we've packed
+		off += l
 	}
 	return off, nil
 }
