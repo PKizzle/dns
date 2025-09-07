@@ -1,23 +1,24 @@
 package nsid
 
 import (
+	"encoding/hex"
 	"os"
 	"testing"
 
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 )
 
-func TestSetupNsid(t *testing.T) {
-	defaultNsid, err := os.Hostname()
+func TestSetup(t *testing.T) {
+	def, err := os.Hostname()
 	if err != nil {
-		defaultNsid = "localhost"
+		def = "localhost"
 	}
 	testcases := []struct {
 		input string
 		exp   string
 	}{
-		{`nsid`, defaultNsid},
-		{`nsid "ps0"`, "ps0"},
+		{`nsid`, hex.EncodeToString([]byte(def))},
+		{`nsid "ps0"`, hex.EncodeToString([]byte("ps0"))},
 	}
 	for i, tc := range testcases {
 		nsid := new(Nsid)
