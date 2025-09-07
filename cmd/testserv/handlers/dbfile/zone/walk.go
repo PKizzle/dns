@@ -16,7 +16,7 @@ func (z *Zone) AuthoritativeWalk(fn func(rrs []dns.RR, auth bool) bool) {
 
 	z.Walk(func(rrs []dns.RR) bool {
 		name := rrs[0].Header().Name
-		if len(name) > len(z.Origin) { // apex also has NSes, if we add those the entire zone is delegated
+		if len(name) > len(z.Origin) { // apex also has NSes, if we add those the entire zone would be delegated
 			println(name, z.Origin)
 			for _, rr := range rrs {
 				if _, ok := rr.(*dns.NS); ok {
@@ -25,15 +25,12 @@ func (z *Zone) AuthoritativeWalk(fn func(rrs []dns.RR, auth bool) bool) {
 				}
 			}
 		}
-		auth := true
-		i := 0
-		j := 0
-		end := false
+		auth, end := true, false
+		i, j := 0, 0
 		for ; !end; j, end = dnsutil.Next(name, i) {
 			if len(name[j:]) < len(z.Origin) {
 				break
 			}
-			println("CHECKING: ", name[j:], len(name[j:]), len(z.Origin))
 			if _, ok := delegated[name[j:]]; ok {
 				auth = false
 				break
