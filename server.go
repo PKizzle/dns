@@ -117,11 +117,12 @@ type Server struct {
 	MsgAcceptFunc MsgAcceptFunc
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc
-	// If NotifyStartedFunc is set it is called once the server has started listening.
-	NotifyStartedFunc func()
+	// If NotifyStartedFunc is set it is called once the server has started listening. Both NotifyStartedFunc
+	// and NotifyStartedFunc get a copy of the server's context.
+	NotifyStartedFunc func(context.Context)
 	// If NotifyShutdownFunc is set is is called when a server shutdown is initiated. The server will wait for
 	// this function to return before stopping the server.
-	NotifyShutdownFunc func()
+	NotifyShutdownFunc func(context.Context)
 
 	// MsgPool is the default [Pooler] used for allocation.
 	MsgPool Pooler
@@ -225,10 +226,6 @@ func (srv *Server) ActivateAndServe() error {
 // Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and ActivateAndServe will return.
 // A context.Context may be passed to limit how long to wait for connections to terminate. Not used at the moment.
 func (srv *Server) Shutdown(ctx context.Context) {
-	if f := srv.NotifyShutdownFunc; f != nil {
-		f()
-	}
-
 	srv.cancel()
 	if srv.Listener != nil {
 		srv.Listener.Close()
@@ -236,6 +233,11 @@ func (srv *Server) Shutdown(ctx context.Context) {
 	if srv.PacketConn != nil {
 		srv.PacketConn.Close()
 	}
+
+	if f := srv.NotifyShutdownFunc; f != nil {
+		f(srv.ctx)
+	}
+
 	close(srv.shutdown)
 	<-srv.exited
 }
@@ -243,7 +245,7 @@ func (srv *Server) Shutdown(ctx context.Context) {
 // listenTCP starts a TCP listener for the server.
 func (srv *Server) listenTCP(ln net.Listener) {
 	if f := srv.NotifyStartedFunc; f != nil {
-		f()
+		f(srv.ctx)
 	}
 	var wg sync.WaitGroup
 
@@ -275,7 +277,7 @@ const BatchSize = 15
 // listenUDP starts a UDP listener for the server.
 func (srv *Server) listenUDP(pc net.PacketConn) {
 	if f := srv.NotifyStartedFunc; f != nil {
-		f()
+		f(srv.ctx)
 	}
 
 	var wg sync.WaitGroup
