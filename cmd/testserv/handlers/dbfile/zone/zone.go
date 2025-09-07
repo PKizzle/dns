@@ -9,6 +9,19 @@ import (
 	"github.com/tidwall/btree"
 )
 
+// Interface defines the methods for each db* implementation. This is currently unused, and if used
+// this needs to live in the pkg/db or something, not tucked away here.
+//
+// This is the interface dbfile implements on top of the b-tree.
+type Interface interface {
+	New(origin, path string) Interface
+	Load(origin, path string) Interface
+	Set([]dns.RR) ([]dns.RR, bool)
+	Get([]dns.RR) ([]dns.RR, bool)
+	Walk(func([]dns.RR) bool)
+	AuthoritativeWalk(func([]dns.RR, bool) bool)
+}
+
 // Zone holds the main zone and some meta data of the DNS zone we are serving.
 // There is no locking, because after creation this structure is basically read-only.
 // Tree will be used to write, but that has its own locking.
