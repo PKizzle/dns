@@ -26,15 +26,15 @@ For extra control you can open the block are define multipe properties.
 ```
 dbfile FILE {
     reload DURATION
-    no-minimal
+    minimal disable
 }
 ```
 
 - `reload` will reload the zone every **DURATION** to check for SOA version changes. Default is one minute
   (`1m`). A value of `0` means to not scan for changes. For example, `30s` checks the zonefile every 30 seconds
   and reloads the zone when serial changes.
-- `no-minimal` makes _dbfile_ return larger and more complete answer, the default is to omit the authoritative
-  section in positive answers.
+- `minimal disable` makes _dbfile_ return larger and more complete answers, the default is to omit the authoritative
+  section in positive answers. Almost all clients should be able to handle these kind of replies.
 - `transfer` ...
 
 ## Examples

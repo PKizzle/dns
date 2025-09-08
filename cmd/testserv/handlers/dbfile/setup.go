@@ -26,7 +26,11 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 					return d.Err(co.PropErr(fmt.Errorf("reload duration must be > 10s")))
 				}
 				d.Reload = dur
-			case "no-minimal":
+			case "minimal":
+				co.Next()
+				if co.Val() != "disable" {
+					return d.Err(co.PropErr(fmt.Errorf("only valid value is %q", "disable")))
+				}
 				d.NoMinimal = true
 			default:
 				return d.Err(co.PropErr())
