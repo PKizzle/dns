@@ -13,8 +13,8 @@ import (
 
 const Conffile = `
 whoami.example.org {
-	# metrics
-	# any
+	metrics
+	any
     whoami
 }
 `

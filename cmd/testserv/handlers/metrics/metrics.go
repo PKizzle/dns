@@ -17,6 +17,9 @@ import (
 
 type Metrics struct {
 	disable bool
+
+	i uint64
+	N uint64
 }
 
 func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
@@ -25,6 +28,11 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
+		if m.i%m.N != 0 {
+			next.ServeDNS(ctx, w, r)
+			return
+		}
+		m.i++
 
 		net := dnsutil.Network(w)
 		fam := strconv.Itoa(dnsutil.Family(w))

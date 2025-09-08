@@ -2,26 +2,37 @@ package metrics
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
-	"codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 )
 
-func (m *Metrics) Setup(co conffile.Dispenser) error {
+func (m *Metrics) Setup(co dnsserver.Controller) error {
+	m.N = 10
 	if co.Next() {
-		for co.NextBlock() {
-			switch co.Val() {
-			case "metrics":
-				co.Next()
-				switch co.Val() {
-				case "disable":
-					m.disable = true
-				case "enable", "":
-					// nothing
-				default:
-					return co.PropErr(fmt.Errorf("only valid value is %q", co.Val()))
-				}
-			default:
-				return co.PropErr()
+		co.Next() // metrics
+		if co.Val() == "disable" || co.Val() == "enable" || co.Val() == "" {
+			if co.Val() == "disable" {
+				m.disable = true
+			}
+			return nil
+		}
+
+		if !strings.HasPrefix(co.Val(), "/") {
+			return co.PropErr(fmt.Errorf("invalid value: %q", co.Val()))
+		}
+		n, err := strconv.Atoi(co.Val()[1:])
+		if err != nil {
+			return co.PropErr(fmt.Errorf("not a number: %q", co.Val()[1:]))
+		}
+		m.N = uint64(n)
+
+		co.Next()
+
+		if co.Val() == "disable" || co.Val() == "enable" || co.Val() == "" {
+			if co.Val() == "disable" {
+				m.disable = true
 			}
 		}
 	}
