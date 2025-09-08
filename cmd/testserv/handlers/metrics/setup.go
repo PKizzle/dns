@@ -11,7 +11,9 @@ import (
 func (m *Metrics) Setup(co dnsserver.Controller) error {
 	m.N = 10
 	if co.Next() {
-		co.Next() // "metrics"
+		if !co.NextArg() {
+			return nil
+		}
 		if co.Val() == "disable" || co.Val() == "enable" || co.Val() == "" {
 			if co.Val() == "disable" {
 				m.disable = true
@@ -28,7 +30,9 @@ func (m *Metrics) Setup(co dnsserver.Controller) error {
 		}
 		m.N = uint64(n)
 
-		co.Next()
+		if !co.NextArg() {
+			return nil
+		}
 
 		if co.Val() == "disable" || co.Val() == "enable" || co.Val() == "" {
 			if co.Val() == "disable" {

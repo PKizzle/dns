@@ -32,7 +32,8 @@ client](https://prometheus.io/docs/guides/go-application/), the following metric
 * The address family (`family`) of the transport (1 = IP (IP version 4), 2 = IP6 (IP version 6)).
 * `flags` is a string that consists out of header flags mnemonics seperated by spaces:
   - `flags="co do"` means the CO (compact answers) and DO (dnssec ok) are set.
-  - The recognized flags are: co - compact answers, do - dnssec ok and de - deleg ok.
+  - The recognized flags are: co - compact answers, do - dnssec ok, de - deleg ok, ad - authenticated data,
+    and cd - checking disabled.
 
 If a server want to not partake in the metrics collection it sets `metrics disable` in the configuration. The default is
 to allow metrics gathering.

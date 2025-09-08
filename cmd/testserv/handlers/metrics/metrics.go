@@ -29,6 +29,7 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 		if m.i%m.N != 0 {
+			m.i++
 			next.ServeDNS(ctx, w, r)
 			return
 		}
@@ -45,6 +46,12 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		if r.Delegation {
 			flags.WriteString(" de")
+		}
+		if r.AuthenticatedData {
+			flags.WriteString(" ad")
+		}
+		if r.CheckingDisabled {
+			flags.WriteString(" cd")
 		}
 		if flags.Len() > 1 {
 			Requests.WithLabelValues(dns.Zone(ctx), net, fam, flags.String()[1:]).Inc()

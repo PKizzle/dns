@@ -13,7 +13,7 @@ func TestSetup(t *testing.T) {
 		disabled bool
 	}{
 		{`metrics /11`, 11, false},
-		{`metrics /12 enable"`, 12, false},
+		{`metrics /12 enable`, 12, false},
 		{`metrics enable`, 10, false},
 		{`metrics disable`, 10, true},
 		{`metrics /13 disable`, 13, true},
