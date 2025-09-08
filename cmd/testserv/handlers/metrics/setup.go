@@ -11,7 +11,7 @@ import (
 func (m *Metrics) Setup(co dnsserver.Controller) error {
 	m.N = 10
 	if co.Next() {
-		co.Next() // metrics
+		co.Next() // "metrics"
 		if co.Val() == "disable" || co.Val() == "enable" || co.Val() == "" {
 			if co.Val() == "disable" {
 				m.disable = true
@@ -23,8 +23,8 @@ func (m *Metrics) Setup(co dnsserver.Controller) error {
 			return co.PropErr(fmt.Errorf("invalid value: %q", co.Val()))
 		}
 		n, err := strconv.Atoi(co.Val()[1:])
-		if err != nil {
-			return co.PropErr(fmt.Errorf("not a number: %q", co.Val()[1:]))
+		if err != nil || n < 0 {
+			return co.PropErr(fmt.Errorf("not a (positive) number: %q", co.Val()[1:]))
 		}
 		m.N = uint64(n)
 
