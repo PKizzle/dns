@@ -84,7 +84,7 @@ type COOKIE struct {
 	Cookie string `dns:"hex"`
 }
 
-func (o *COOKIE) Len() int { return tlv + len(o.Cookie) }
+func (o *COOKIE) Len() int { return tlv + len(o.Cookie)/2 }
 func (o *COOKIE) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Cookie)

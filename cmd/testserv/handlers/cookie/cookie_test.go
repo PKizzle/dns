@@ -1,8 +1,10 @@
-package nsid
+package cookie
 
 import (
 	"context"
 	"encoding/hex"
+	"hash/fnv"
+	"io"
 	"log/slog"
 	"testing"
 
@@ -11,15 +13,20 @@ import (
 	"codeberg.org/miekg/dns/dnstest"
 )
 
-func TestNsid(t *testing.T) {
+func TestCookie(t *testing.T) {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
-	in := "Use the force"
-	h := &Nsid{Data: hex.EncodeToString([]byte(in))}
+	h := &Cookie{Secret: "geheim"}
+
+	f := fnv.New64()
+	io.WriteString(f, "::1")
+	io.WriteString(f, "::1")
+	io.WriteString(f, "ook geheim")
+	cookie := &dns.COOKIE{Cookie: hex.EncodeToString(f.Sum(nil))}
 
 	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
 	r.ID = 3
-	r.Pseudo = []dns.RR{&dns.NSID{}}
+	r.Pseudo = []dns.RR{cookie}
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
@@ -29,7 +36,7 @@ func TestNsid(t *testing.T) {
 	if len(w.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")
 	}
-	if w.Msg.Pseudo[0].(*dns.NSID).Nsid != hex.EncodeToString([]byte(in)) {
-		t.Fatalf("expected NSID RR contain: %s", in)
+	if _, ok := w.Msg.Pseudo[0].(*dns.COOKIE); !ok {
+		t.Fatal("expected COOKIE RR")
 	}
 }

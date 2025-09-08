@@ -19,20 +19,25 @@ func (c *Cookie) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		for _, o := range r.Pseudo {
 			if cc, ok := o.(*dns.COOKIE); ok {
-				if len(cc.Cookie) < 16 {
-					// return formerr
-					break
+				if len(cc.Cookie) < 16 || len(cc.Cookie) > 40 {
+					m := &dns.Msg{Data: r.Data}
+					dnsutil.SetReply(m, r)
+					m.Rcode = dns.RcodeFormatError
+					m.Pack()
+					io.Copy(w, m)
+					return
 				}
 
-				// assume welformed
-				h := fnv.New64()
-				io.WriteString(h, dnsutil.RemoteIP(w))
-				io.WriteString(h, cc.Cookie[:16])
-				io.WriteString(h, c.Secret)
+				// TODO(miek): if a longer client cookie we can actually check if this is our server cookie
+
+				f := fnv.New64()
+				io.WriteString(f, dnsutil.RemoteIP(w))
+				io.WriteString(f, cc.Cookie[:16])
+				io.WriteString(f, c.Secret)
 
 				ctx = dnsmsg.WithValue(ctx, c.Key(),
 					func(m *dns.Msg) *dns.Msg {
-						cookie := &dns.COOKIE{Cookie: hex.EncodeToString(h.Sum(nil))}
+						cookie := &dns.COOKIE{Cookie: cc.Cookie[:16] + hex.EncodeToString(f.Sum(nil))}
 						m.Pseudo = append(m.Pseudo, cookie)
 						return m
 					})
