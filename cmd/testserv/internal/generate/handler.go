@@ -6,7 +6,13 @@ import (
 	"path/filepath"
 )
 
-func Handlers(path ...string) ([]string, error) {
+// Handlers returns the handlers, except global and unpack.
+func Handlers(path ...string) ([]string, error) { return handlers(false, path...) }
+
+// AllHandlers returns all handlers.
+func AllHandlers(path ...string) ([]string, error) { return handlers(true, path...) }
+
+func handlers(all bool, path ...string) ([]string, error) {
 	dir := "."
 	if len(path) > 0 {
 		dir = path[0]
@@ -21,12 +27,14 @@ func Handlers(path ...string) ([]string, error) {
 		if !d.IsDir() {
 			continue
 		}
-		// some handlers that are "special"
-		if d.Name() == "global" {
-			continue
-		}
-		if d.Name() == "unpack" {
-			continue
+		if !all {
+			// some handlers that are "special"
+			if d.Name() == "global" {
+				continue
+			}
+			if d.Name() == "unpack" {
+				continue
+			}
 		}
 		handler := dir + "/" + filepath.Join(d.Name(), d.Name()+".go")
 		types, err := Types(handler)
