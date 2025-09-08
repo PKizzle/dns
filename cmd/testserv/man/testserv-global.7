@@ -17,7 +17,7 @@ It only implements the \fB\fCSetupper\fR interface and it's not a handler and yo
 
 .nf
 root DIRECTORY
-prometheus ADDRRES
+metrics [ADDRRES]
 debug
 
 .fi
@@ -29,7 +29,9 @@ get this directory prefixed.
 .IP \(bu 4
 with \fIdebug\fP the global log level is to debug.
 .IP \(bu 4
-The \fIprometheus\fP property allows setting the listening \fBADDRESS\fP.
+The \fImetrics\fP property allows setting the listening \fBADDRESS\fP for the promtheus metrics. This defaults to \fB\fClocalhost:9153\fR.
+Without \fImetrics\fP no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
+metrics gathering \fImetrics\fP must be enabled in the global section.
 
 
 .SH "EXAMPLES"
@@ -39,6 +41,7 @@ The \fIprometheus\fP property allows setting the listening \fBADDRESS\fP.
 .nf
 {
     root /var/lib/testserv
+    metrics localhost:9152
 }
 
 .fi
