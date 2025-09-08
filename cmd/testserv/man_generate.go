@@ -6,24 +6,24 @@ package main
 
 import (
 	"fmt"
-	"go/ast"
 	"log"
 	"os"
 	"strings"
 
 	"codeberg.org/miekg/dns/cmd/testserv/internal/generate"
 	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/parser"
-	"github.com/mmarkdown/mmark/mparser"
-	"github.com/mmarkdown/mmark/render/man"
+	"github.com/mmarkdown/mmark/v2/mparser"
+	"github.com/mmarkdown/mmark/v2/render/man"
 )
 
-// title: handler 7
 const format = `%%%%%%
 title = "%s 7"
 area = "Testserver Handlers"
 workgroup = "Testserv Authors"
 %%%%%%
+
 `
 
 func main() {
