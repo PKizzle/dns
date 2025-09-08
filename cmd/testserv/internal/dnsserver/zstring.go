@@ -7,6 +7,7 @@ var Handlers = []string{
 	"any",
 	"as112",
 	"chaos",
+	"cookie",
 	"dbfile",
 	"log",
 	"nsid",

@@ -5,6 +5,7 @@ package handlers
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/any"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/as112"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/chaos"
+import "codeberg.org/miekg/dns/cmd/testserv/handlers/cookie"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/log"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/nsid"
@@ -16,6 +17,7 @@ var StringToHandler = map[string]func() Handler{
 	"any":    func() Handler { return new(any.Any) },
 	"as112":  func() Handler { return new(as112.As112) },
 	"chaos":  func() Handler { return new(chaos.Chaos) },
+	"cookie": func() Handler { return new(cookie.Cookie) },
 	"dbfile": func() Handler { return new(dbfile.Dbfile) },
 	"log":    func() Handler { return new(log.Log) },
 	"nsid":   func() Handler { return new(nsid.Nsid) },
