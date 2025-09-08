@@ -50,6 +50,6 @@ func main() {
 		doc := markdown.Parse(b, p)
 		renderer := man.NewRenderer(man.RendererOptions{})
 		md := markdown.Render(doc, renderer)
-		os.WriteFile(fmt.Sprintf("man/%s.7", h), md, 0644)
+		os.WriteFile(fmt.Sprintf("man/testserv-%s.7", h), md, 0644)
 	}
 }
