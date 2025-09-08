@@ -51,15 +51,10 @@ type response struct {
 func (w *response) SetWriteDeadline() error {
 	return w.conn.SetWriteDeadline(time.Now().Add(2 * time.Second))
 }
-
-func (w *response) Conn() net.Conn    { return w.conn }
-func (w *response) Session() *Session { return w.session }
-
-// Write writes the buffer p to w.conn.
+func (w *response) Conn() net.Conn                    { return w.conn }
+func (w *response) Session() *Session                 { return w.session }
 func (w *response) Write(p []byte) (n int, err error) { return w.conn.Write(p) }
-
-// Read read the data from w.conn  into p.
-func (w *response) Read(p []byte) (n int, err error) { return w.conn.Read(p) }
+func (w *response) Read(p []byte) (n int, err error)  { return w.conn.Read(p) }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
 func (w *response) LocalAddr() net.Addr {

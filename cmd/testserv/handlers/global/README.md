@@ -13,19 +13,20 @@ It only implements the `Setupper` interface and it's not a handler and you can n
 
 ```txt
 root DIRECTORY
-prometheus ADDRRES
+metrics [ADDRRES]
 debug
 ```
 
 - with _root_ **DIRECTORY** is the directory to use as the root directory for the server. Any relative path names will
   get this directory prefixed.
 - with _debug_ the global log level is to debug.
-- The _prometheus_ property allows setting the listening **ADDRESS**.
+- The _metrics_ property allows setting the listening **ADDRESS** for the promtheus metrics. This default to `localhost:9153`.
 
 ## Examples
 
 ```conffile
 {
     root /var/lib/testserv
+    metrics localhost:9152
 }
 ```

@@ -31,7 +31,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 				if co.Val() != "disable" {
 					return co.PropErr(fmt.Errorf("only valid value is %q", "disable"))
 				}
-				d.NoMinimal = true
+				d.DisableMinimal = true
 			default:
 				return co.PropErr()
 			}

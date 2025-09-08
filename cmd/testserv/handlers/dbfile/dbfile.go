@@ -8,9 +8,9 @@ import (
 )
 
 type Dbfile struct {
-	Path      string
-	Reload    time.Duration
-	NoMinimal bool
+	Path           string
+	Reload         time.Duration
+	DisableMinimal bool
 }
 
 func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
