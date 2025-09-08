@@ -15,7 +15,7 @@ import (
 //
 //	rw := dnstest.NewRecorder(w)
 //	ServeDNS(ctx, rw, r)
-//	io.Copy(w, rw.Msg
+//	io.Copy(w, rw.Msg) // work on the original writer
 //
 // Due to how we handle UDP sockets, it's impossible (hard?) to make the recorder write to the wrapped writer.
 type Recorder struct {
