@@ -14,6 +14,8 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
 )
 
+//go:generate go run man_generate.go
+
 const Version = "001"
 
 var (
