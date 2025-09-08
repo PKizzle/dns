@@ -11,6 +11,8 @@ You can not use it in the configuration.
 
 ## Syntax
 
+For documentation purposes the syntax is shown here.
+
 ```txt
 unpack
 ```

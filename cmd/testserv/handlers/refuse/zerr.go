@@ -2,8 +2,10 @@
 
 package refuse
 
-import "fmt"
-import "log/slog"
+import (
+	"fmt"
+	"log/slog"
+)
 
 func (h *Refuse) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 

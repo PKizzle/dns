@@ -20,8 +20,10 @@ const hdr = `
 
 package %s
 
-import "fmt"
-import "log/slog"
+import (
+	"fmt"
+	"log/slog"
+)
 
 `
 
