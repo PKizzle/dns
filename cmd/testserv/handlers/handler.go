@@ -21,6 +21,7 @@ import (
 //     cookie.
 type Handler interface {
 	HandlerFunc(dns.HandlerFunc) dns.HandlerFunc
+	Err(error) error
 }
 
 // Setupper holds a single method that is called when this Handler has configuration that needs to be parsed

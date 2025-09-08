@@ -11,7 +11,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		switch d.Val() {
 		case "root":
 			if !d.NextArg() {
-				g.Err(d.PropErr())
+				d.PropErr()
 			}
 			g.Root = d.Val()
 		case "debug":

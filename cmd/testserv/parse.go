@@ -60,7 +60,7 @@ func parse(mux *dns.ServeMux, conf string) error {
 				}
 				err := s.Setup(c)
 				if err != nil {
-					return fmt.Errorf("could not parse config: %s", err)
+					return handler.Err(err)
 				}
 			}
 			hs = append(hs, handler)

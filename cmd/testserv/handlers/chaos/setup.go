@@ -6,7 +6,7 @@ func (c *Chaos) Setup(co dnsserver.Controller) error {
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) > 1 {
-			return c.Err(co.ArgErr())
+			return co.ArgErr()
 		}
 		authors := []string{}
 		for co.NextBlock() {
@@ -23,7 +23,7 @@ func (c *Chaos) Setup(co dnsserver.Controller) error {
 				}
 
 			default:
-				return c.Err(co.PropErr())
+				return co.PropErr()
 			}
 		}
 		if len(authors) > 0 {
