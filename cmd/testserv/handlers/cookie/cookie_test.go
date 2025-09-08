@@ -39,5 +39,4 @@ func TestCookie(t *testing.T) {
 	if _, ok := w.Msg.Pseudo[0].(*dns.COOKIE); !ok {
 		t.Fatal("expected COOKIE RR")
 	}
-	println(w.Msg.String())
 }
