@@ -85,6 +85,9 @@ type COOKIE struct {
 }
 
 func (o *COOKIE) Len() int { return tlv + len(o.Cookie)/2 }
+
+// String outputs: "COOKIE 962d3a4c596914578386a9a1dbbebf9e" (depending on the cookie size). This is the presentation
+// format.
 func (o *COOKIE) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Cookie)
