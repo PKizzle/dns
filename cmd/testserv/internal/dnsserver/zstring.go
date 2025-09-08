@@ -10,6 +10,7 @@ var Handlers = []string{
 	"cookie",
 	"dbfile",
 	"log",
+	"metrics",
 	"nsid",
 	"refuse",
 	"whoami",

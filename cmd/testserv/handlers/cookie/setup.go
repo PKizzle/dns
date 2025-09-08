@@ -11,7 +11,7 @@ func (c *Cookie) Setup(co dnsserver.Controller) error {
 	for co.Next() {
 		args := co.RemainingArgs()
 		if len(args) == 0 {
-			return c.Err(co.PropErr(fmt.Errorf("need a secret")))
+			return co.PropErr(fmt.Errorf("need a secret"))
 		}
 		c.Secret = strings.Join(args, " ")
 	}

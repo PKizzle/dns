@@ -19,7 +19,7 @@ func TestResponseWriter(t *testing.T) {
 	h := reflect{}
 
 	h.ServeDNS(context.TODO(), rec, m)
-	if x := rec.Msgs[0].Answer[0].(*dns.A).A.String(); x != IPv4.String() {
+	if x := rec.Msg.Answer[0].(*dns.A).A.String(); x != IPv4.String() {
 		t.Errorf("expected %s in answer, got %s", IPv4.String(), x)
 	}
 }

@@ -1,6 +1,6 @@
 {
    root /tmp
-   prometheus :1053
+   metrics
 }
 
 (base) {
@@ -9,10 +9,11 @@
 
 # log whoami only, order matters
 miek.nl {
+    metrics
     any
+    log
     cookie geheim
     nsid Use the force
-    log
     whoami
 }
 

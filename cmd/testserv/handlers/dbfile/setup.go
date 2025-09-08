@@ -11,7 +11,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
-			return d.Err(co.ArgErr())
+			return co.ArgErr()
 		}
 		d.Path = args[0]
 		for co.NextBlock() {
@@ -20,20 +20,20 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 				co.Next()
 				dur, err := time.ParseDuration(co.Val())
 				if err != nil {
-					d.Err(co.PropErr(err))
+					return co.PropErr(err)
 				}
 				if dur < time.Second*10 {
-					return d.Err(co.PropErr(fmt.Errorf("reload duration must be > 10s")))
+					return co.PropErr(fmt.Errorf("reload duration must be > 10s"))
 				}
 				d.Reload = dur
 			case "minimal":
 				co.Next()
 				if co.Val() != "disable" {
-					return d.Err(co.PropErr(fmt.Errorf("only valid value is %q", "disable")))
+					return co.PropErr(fmt.Errorf("only valid value is %q", "disable"))
 				}
-				d.NoMinimal = true
+				d.DisableMinimal = true
 			default:
-				return d.Err(co.PropErr())
+				return co.PropErr()
 			}
 		}
 	}

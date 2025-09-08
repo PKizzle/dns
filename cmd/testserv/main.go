@@ -12,6 +12,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/metrics"
 )
 
 //go:generate go run man_generate.go
@@ -29,6 +30,7 @@ var (
 
 func serve(server *dns.Server, net string) {
 	server.Net = net
+	server.MsgInvalidFunc = func(_ *dns.Msg, _ error) { metrics.Dropped.Inc() }
 	if err := server.ListenAndServe(); err != nil {
 		slog.Error("Failed to setup the " + net + " server: " + err.Error())
 		os.Exit(1)

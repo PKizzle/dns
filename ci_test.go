@@ -11,8 +11,9 @@ import (
 )
 
 func TestReflect(t *testing.T) {
-	// don't let it linger if we do a top-level test
+	// don't let it linger if we do a top-level test, takes 16+s
 	os.Remove("cmd/reflect/reflect")
+	os.Remove("cmd/testserv/testserv")
 }
 
 func TestPrintln(t *testing.T) {

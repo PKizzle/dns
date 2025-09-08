@@ -8,14 +8,20 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-// Recorder is a type of ResponseWriter that captures the all the messages written to it.
-// If Discard is true, this effectively an [io.Discard] writer.
+// Recorder is a type of ResponseWriter that captures the the message written to it. It will never perform a
+// actual write. This effectively an [io.Discard] writer, and it's the caller's responsibility to write to the
+// original dns.ResponseWriter.
+// Use case in a handler:
+//
+//	rw := dnstest.NewRecorder(w)
+//	ServeDNS(ctx, rw, r)
+//	io.Copy(w, rw.Msg) // work on the original writer
+//
+// Due to how we handle UDP sockets, it's impossible (hard?) to make the recorder write to the wrapped writer.
 type Recorder struct {
-	w       dns.ResponseWriter
-	Discard bool       // When true the message is recorded, but not written to the underlaying connection.
-	Msgs    []*dns.Msg // All messages written to it.
-	Msg     *dns.Msg   // Msg contains the last message written.
-	Start   time.Time  // Time when the recorder was created.
+	w     dns.ResponseWriter
+	Msg   *dns.Msg  // Msg contains the last message written.
+	Start time.Time // Time when the recorder was created.
 }
 
 var _ dns.ResponseWriter = &Recorder{}
@@ -31,14 +37,7 @@ func (r *Recorder) Write(b []byte) (int, error) {
 		return 0, err
 	}
 	r.Msg = msg
-	r.Msgs = append(r.Msgs, msg)
 
-	if r.Discard {
-		return len(b), nil
-	}
-	if r.w != nil {
-		return r.w.Write(b)
-	}
 	return len(b), nil
 }
 
