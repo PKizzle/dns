@@ -90,11 +90,13 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	found := []dns.RR{}
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
-	// record set from the zone. The second loop in (z.Msg) then creates a message with the correct RRs in the sections.
+	// record set from the zone. The second loop (in z.Msg) then creates a message with the correct RRs in the sections.
 	// This might involve even more zone lookups for cname and glue records. The returned message can be written to the client.
 	q := r.Question[0]
 	qname := q.Header().Name
 	hint := answer
+
+	// Doing apex queries seperate simplifies the loop below, so it makes sense to do so.
 
 Search:
 	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
