@@ -31,9 +31,4 @@ func TestZoneLoad(t *testing.T) {
 		fmt.Println("*****")
 		return true
 	})
-
-	m := dns.NewMsg("a.example.org.", dns.TypeA)
-	m.Security = true
-	r := z.Get(m)
-	println(r.String())
 }
