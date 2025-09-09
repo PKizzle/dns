@@ -75,6 +75,7 @@ const (
 	delegetion
 	cname
 	dname
+	wildcard
 )
 
 // Get looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
@@ -94,27 +95,44 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	// This might involve even more zone lookups for cname and glue records. The returned message can be written to the client.
 	q := r.Question[0]
 	qname := q.Header().Name
+
+	// Doing apex queries seperate simplifies the loop below as we can not have delegation, wildcards, etc.
+	if z.Labels == dnsutil.Labels(qname) {
+		println("APEX LOOKUP", qname)
+		found, _ = z.Tree.Get([]dns.RR{q}) // by definition we must have a set
+		return z.Msg(r, found, answer)
+	}
+
+	labels++
 	hint := answer
-
-	// Doing apex queries seperate simplifies the loop below, so it makes sense to do so.
-
 Search:
-	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
-		q.Header().Name = qname[idx:]
+	for i, start := dnsutil.Prev(qname, labels); !start; i, start = dnsutil.Prev(qname, labels) {
+		q.Header().Name = qname[i:]
 		set, ok := z.Tree.Get([]dns.RR{q})
 		if ok {
-			// Check for delegation, thus NS and (later?) DELEG records. If this set contain NS records we put those
-			// in the authority section + look for glue if in baliwick.
 			found = set
 
+			// Check for delegation, thus NS and (later?) DELEG records. If this set contain NS records we put those
+			// in the authority section + look for glue if in baliwick.
 			for _, rr := range found {
 				if _, ok := rr.(*dns.NS); ok {
 					// we loop through 'found' again, so we can just break
 					break Search
 				}
 			}
+
 		} else {
-			// check for wildcard of the correct type
+
+			// skip a label to the right again and replace with '*', this should work by definition.
+			j, _ := dnsutil.Next(qname, 0)
+			q.Header().Name = "*." + qname[j:]
+			set, ok := z.Tree.Get([]dns.RR{q})
+			if ok {
+				found = set
+				break Search
+			}
+
+			q.Header().Name = qname[i:] // reset name
 		}
 
 		labels++
@@ -122,6 +140,8 @@ Search:
 
 	return z.Msg(r, found, hint)
 }
+
+// glue, soa apex
 
 func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 	// Copy because there RRs _will_ be modified at some point.

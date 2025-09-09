@@ -18,6 +18,17 @@ func TestZone(t *testing.T) {
 		exp  func() *dns.Msg
 	}{
 		{
+			"dns:apex",
+			func() *dns.Msg { m := dns.NewMsg("example.org.", dns.TypeNS); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeNS)
+				m.Answer = make([]dns.RR, 2)
+				m.Answer[0] = dnstest.New("example.org.    1800    IN      NS      a.iana-servers.net.")
+				m.Answer[1] = dnstest.New("example.org.    1800    IN      NS      b.iana-servers.net.")
+				return m
+			},
+		},
+		{
 			"dns:exact",
 			func() *dns.Msg { m := dns.NewMsg("a.example.org.", dns.TypeA); return m },
 			func() *dns.Msg {
