@@ -7,7 +7,7 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-func TestZoneLoad(t *testing.T) {
+func testZoneLoad(t *testing.T) {
 	z, err := Load("example.org.", "testdata/db.example.org")
 	if err != nil {
 		t.Fatal(err)

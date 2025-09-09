@@ -95,6 +95,8 @@ type Comparer interface {
 // RRset is a just list of RRs. There is no guarantee that this is an official RRset as defined in
 // RFC 7719, Section 4 "RRset", use [dnsutil.IsRRset] to make that determination.
 // The type is defined here to implement the [sort.Interface].
+//
+// Typical use for sort a slice of RRs: sort.Sort(dns.RRset(....)).
 type RRset []RR
 
 // Header is the header in a DNS resource record. It implements the RR interface, as a header is the RR

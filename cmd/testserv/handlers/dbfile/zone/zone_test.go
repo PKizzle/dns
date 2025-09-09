@@ -1,6 +1,7 @@
 package zone
 
 import (
+	"sort"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -49,6 +50,17 @@ func TestZone(t *testing.T) {
 				return m
 			},
 		},
+		{
+			"dns:delegation",
+			func() *dns.Msg { m := dns.NewMsg("a.delegated.example.org.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("a.delegated.example.org.", dns.TypeA)
+				m.Answer = make([]dns.RR, 2)
+				m.Answer[0] = dnstest.New("delegated.example.org.  1800    IN NS   a.delegated.example.org.")
+				m.Answer[1] = dnstest.New("delegated.example.org.  1800    IN NS   ns-ext.nlnetlabs.nl.")
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -58,12 +70,18 @@ func TestZone(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 			rmsg := z.Get(tc.in())
-			i := 0
+			allrrs := []dns.RR{}
 			for rr := range rmsg.All() {
-				if !dns.Equal(rr, exprrs[i]) {
-					t.Errorf("expected %s and %s to be equal", rr, exprrs[i])
+				allrrs = append(allrrs, rr)
+			}
+			sort.Sort(dns.RRset(allrrs))
+			if len(exprrs) != len(allrrs) {
+				t.Errorf("expected %d RRs, got %d", len(exprrs), len(allrrs))
+			}
+			for i := range allrrs {
+				if !dns.Equal(allrrs[i], exprrs[i]) {
+					t.Errorf("expected %s and %s to be equal", allrrs[i], exprrs[i])
 				}
-				i++
 			}
 		})
 	}
