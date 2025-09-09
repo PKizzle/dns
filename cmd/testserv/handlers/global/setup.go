@@ -1,8 +1,11 @@
 package global
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,13 +22,24 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		case "debug":
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "metrics":
+			g.MetricsN = 10
 			addr := "localhost:9153"
+			if d.NextArg() {
+				if !strings.HasPrefix(d.Val(), "/") {
+					addr = d.Val()
+				} else {
+					n, err := strconv.Atoi(d.Val()[1:])
+					if err != nil || n < 0 {
+						return d.PropErr(fmt.Errorf("not a (positive) number: %q", d.Val()[1:]))
+					}
+				}
+			}
 			if d.NextArg() {
 				addr = d.Val()
 			}
 			http.Handle("/metrics", promhttp.Handler())
 			go func() {
-				// TODO(miek): tie into global shutdown
+				// TODO(miek): tie into global shutdown?
 				if err := http.ListenAndServe(addr, nil); err != nil {
 					slog.Error("Failed to setup metrics handler failed: " + err.Error())
 				}

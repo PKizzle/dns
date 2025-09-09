@@ -41,13 +41,11 @@ to allow metrics gathering.
 ## Syntax
 
 ```txt
-metrics [/N] [|enable|disable]
+metrics [|enable|disable]
 ```
 
 Where:
 
-- The optional **/N** tells the metric handler to monitor 1 in **N** queries. The default is 10. This needs to
-  be a positive integer > 0.
 - _empty_ or `enable`, `disable` will enable or disable the metrics gathering completely.
 
 ## Examples

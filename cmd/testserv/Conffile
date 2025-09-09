@@ -1,6 +1,6 @@
 {
    root /tmp
-   metrics
+   metrics /10
 }
 
 (base) {

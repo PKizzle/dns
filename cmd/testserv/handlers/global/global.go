@@ -1,5 +1,6 @@
 package global
 
 type Global struct {
-	Root string
+	Root     string
+	MetricsN uint64
 }
