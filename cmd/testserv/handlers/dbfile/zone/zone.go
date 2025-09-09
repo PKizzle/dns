@@ -83,22 +83,31 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	q := r.Question[0]
 	qname := q.Header().Name
 	qtype := dns.RRToType(q)
+Search:
 	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
 		q.Header().Name = qname[idx:]
 		set, ok := z.Tree.Get([]dns.RR{q})
 		if ok {
 			// Check for delegation, thus NS and (later?) DELEG records. If this set contain NS records we put those
 			// in the authority section + look for glue if in baliwick.
-
 			found = set
+
+			for _, rr := range found {
+				if _, ok := rr.(*dns.NS); ok {
+					// we loop through 'found' again, so we can just break
+					break Search
+				}
+			}
 		} else {
 			// check for wildcard of the correct type
 		}
+
 		// If delegated, returns the delegation, wildcard, DELEG. a lot of complexity will be in this function.
 		labels++
 	}
+
+	// Copy because there RRs _will_ be modified at some point.
 	if len(found) > 0 {
-		// here we need to copy these out of the zone because they are going to be written to, TTL, among other things
 		for _, rr := range found {
 			if dns.RRToType(rr) == qtype {
 				r.Answer = append(r.Answer, rr.Copy())
