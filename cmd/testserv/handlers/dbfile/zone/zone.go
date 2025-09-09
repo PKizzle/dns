@@ -162,34 +162,40 @@ func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 		section = &r.Ns
 		qtype = dns.TypeNS
 	}
-
-	if len(found) > 0 {
-		for _, rr := range found {
-			if dns.RRToType(rr) == qtype {
-				*section = append(*section, rr.Copy())
-			}
-			switch {
-			case hint == hintDelegation && r.Security:
-				if _, ok := rr.(*dns.DS); ok {
-					*section = append(*section, rr.Copy())
-				}
-			}
-		}
-		if r.Security {
-			for _, rr := range found {
-				if s, ok := rr.(*dns.RRSIG); ok {
-					if s.TypeCovered == qtype {
-						*section = append(*section, rr.Copy())
-					}
-					if hint == hintDelegation {
-						if s.TypeCovered == dns.TypeDS {
-							*section = append(*section, rr.Copy())
-						}
-					}
-				}
-			}
-		}
+	if len(found) == 0 {
+		// nxdomain response.
 		return r
 	}
-	return nil
+
+	for _, rr := range found {
+		if dns.RRToType(rr) == qtype {
+			*section = append(*section, rr.Copy())
+		}
+		switch {
+		case hint == hintDelegation && r.Security:
+			if _, ok := rr.(*dns.DS); ok {
+				*section = append(*section, rr.Copy())
+			}
+		}
+	}
+	if r.Security {
+		for _, rr := range found {
+			if s, ok := rr.(*dns.RRSIG); ok {
+				if s.TypeCovered == qtype {
+					*section = append(*section, rr.Copy())
+				}
+				if hint == hintDelegation {
+					if s.TypeCovered == dns.TypeDS {
+						*section = append(*section, rr.Copy())
+					}
+				}
+			}
+		}
+	}
+
+	if len(*section) == 0 {
+		// no data response.
+	}
+
+	return r
 }
