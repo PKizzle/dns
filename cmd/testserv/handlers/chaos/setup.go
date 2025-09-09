@@ -1,6 +1,10 @@
 package chaos
 
-import "codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
+import (
+	"strings"
+
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
+)
 
 func (c *Chaos) Setup(co dnsserver.Controller) error {
 	if co.Next() {
@@ -8,20 +12,21 @@ func (c *Chaos) Setup(co dnsserver.Controller) error {
 		if len(args) > 1 {
 			return co.ArgErr()
 		}
+		if len(args) == 1 {
+			c.Version = args[0]
+		}
 		authors := []string{}
 		for co.NextBlock() {
 			switch co.Val() {
 			case "authors":
-				for co.Next() {
-					if co.Val() == "}" {
-						break
+				for co.NextBlock() {
+					for co.NextLine() {
+						if co.Val() == "}" {
+							break
+						}
+						authors = append(authors, strings.TrimSpace(co.Val()))
 					}
-					if co.Val() == "{" {
-						continue
-					}
-					authors = append(authors, co.Val())
 				}
-
 			default:
 				return co.PropErr()
 			}
