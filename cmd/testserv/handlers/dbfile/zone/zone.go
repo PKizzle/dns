@@ -142,6 +142,7 @@ Search:
 }
 
 // glue, soa apex
+// cname, dname
 
 func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 	// Copy because there RRs _will_ be modified at some point.

@@ -16,6 +16,7 @@ type Interface interface {
 	Load(origin, path string) Interface
 	Set([]dns.RR) ([]dns.RR, bool)
 	Get([]dns.RR) ([]dns.RR, bool)
+	Apex() []dns.RR
 	Walk(func([]dns.RR) bool)
 	AuthoritativeWalk(func([]dns.RR, bool) bool)
 }
