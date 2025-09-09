@@ -37,5 +37,8 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 			}
 		}
 	}
+	// for all co.Keys() we are now loading the zone in a go-routine, might do co.OnStartup
+	// where this is added, so we get a generic - can also copy that from old caddy as well.
+
 	return nil
 }
