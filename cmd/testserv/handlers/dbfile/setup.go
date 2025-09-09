@@ -17,7 +17,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		for co.NextBlock() {
 			switch co.Val() {
 			case "reload":
-				co.Next()
+				co.NextArg()
 				dur, err := time.ParseDuration(co.Val())
 				if err != nil {
 					return co.PropErr(err)
@@ -27,7 +27,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 				}
 				d.Reload = dur
 			case "minimal":
-				co.Next()
+				co.NextArg()
 				if co.Val() != "disable" {
 					return co.PropErr(fmt.Errorf("only valid value is %q", "disable"))
 				}
