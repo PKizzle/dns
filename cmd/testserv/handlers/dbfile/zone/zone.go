@@ -9,19 +9,6 @@ import (
 	"github.com/tidwall/btree"
 )
 
-// Interface defines the methods for each db* implementation. This is currently unused, and if used
-// this needs to live in the pkg/db or something, not tucked away here.
-//
-// This is the interface dbfile implements on top of the b-tree.
-type Interface interface {
-	New(origin, path string) Interface
-	Load(origin, path string) Interface
-	Set([]dns.RR) ([]dns.RR, bool)
-	Get([]dns.RR) ([]dns.RR, bool)
-	Walk(func([]dns.RR) bool)
-	AuthoritativeWalk(func([]dns.RR, bool) bool)
-}
-
 // Zone holds the main zone and some meta data of the DNS zone we are serving.
 // There is no locking, because after creation this structure is basically read-only.
 // Tree will be used to write, but that has its own locking.
@@ -34,7 +21,6 @@ type Zone struct {
 }
 
 func less(a, b []dns.RR) bool {
-	println("COMP", a[0].Header().Name, b[0].Header().Name)
 	x := dns.CompareName(a[0].Header().Name, b[0].Header().Name)
 	return x == -1
 }
@@ -91,16 +77,19 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	r := new(dns.Msg)
 	dnsutil.SetReply(r, m)
 
-	qname, qtype := dnsutil.Question(r)
-
 	labels := z.Labels
 	found := []dns.RR{}
 
 	q := r.Question[0]
+	qname := q.Header().Name
+	qtype := dns.RRToType(q)
 	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
 		q.Header().Name = qname[idx:]
 		set, ok := z.Tree.Get([]dns.RR{q})
 		if ok {
+			// Check for delegation, thus NS and (later?) DELEG records. If this set contain NS records we put those
+			// in the authority section + look for glue if in baliwick.
+
 			found = set
 		} else {
 			// check for wildcard of the correct type
