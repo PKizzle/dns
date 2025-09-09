@@ -16,12 +16,12 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func parse(mux *dns.ServeMux, conf string) error {
+func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
 	f, _ := os.Open(conf)
 	defer f.Close()
 	blocks, err := conffile.Parse(conf, f, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	config := &global.Global{}
@@ -33,7 +33,7 @@ func parse(mux *dns.ServeMux, conf string) error {
 			d := conffile.NewDispenser(conf, nil, b.Tokens[dir])
 			err := config.Setup(d)
 			if err != nil {
-				return fmt.Errorf("could not parse global config: %s", err)
+				return config, fmt.Errorf("could not parse global config: %s", err)
 			}
 		}
 		break
@@ -50,7 +50,7 @@ func parse(mux *dns.ServeMux, conf string) error {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
 			if !ok {
-				return fmt.Errorf("unknown handler: %s", name)
+				return config, fmt.Errorf("unknown handler: %s", name)
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
@@ -60,7 +60,7 @@ func parse(mux *dns.ServeMux, conf string) error {
 				}
 				err := s.Setup(c)
 				if err != nil {
-					return handler.Err(err)
+					return config, handler.Err(err)
 				}
 			}
 			hs = append(hs, handler)
@@ -74,5 +74,5 @@ func parse(mux *dns.ServeMux, conf string) error {
 			mux.HandleFunc(k, handlers.Compile(hs))
 		}
 	}
-	return nil
+	return config, nil
 }

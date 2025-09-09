@@ -12,6 +12,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/global"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/metrics"
 )
 
@@ -28,11 +29,12 @@ var (
 	flagPort    = flag.String("port", "53", "default port")
 )
 
-func serve(server *dns.Server, net string) {
+func serve(server *dns.Server, net string, global *global.Global) {
 	server.Net = net
-	i := 0
+	i := uint64(0)
+	N := global.MetricsN
 	server.MsgInvalidFunc = func(_ *dns.Msg, _ error) {
-		if i%10 == 0 {
+		if i%N == 0 {
 			metrics.Dropped.Inc()
 		}
 		i++
@@ -67,7 +69,8 @@ func main() {
 
 	mux := dns.NewServeMux()
 
-	if err := parse(mux, *flagConf); err != nil {
+	global, err := parse(mux, *flagConf)
+	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
@@ -80,8 +83,8 @@ func main() {
 	}
 
 	for range runtime.NumCPU() * 3 {
-		go serve(srv, "tcp")
-		go serve(srv, "udp")
+		go serve(srv, "tcp", global)
+		go serve(srv, "udp", global)
 	}
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
