@@ -80,9 +80,19 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	labels := z.Labels
 	found := []dns.RR{}
 
+	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
+	// record set from the zone. The found loop then creates a message with the correct RRs in the sections.
+	// This might involve even more zone lookups for cname and glue records.
+	// The returned message can be written to the client.
+	type Hint int
+	const delegetion Hint = 0
+	const cname Hint = 1
+	const dname Hint = 2
+
 	q := r.Question[0]
 	qname := q.Header().Name
 	qtype := dns.RRToType(q)
+
 Search:
 	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
 		q.Header().Name = qname[idx:]
@@ -102,7 +112,6 @@ Search:
 			// check for wildcard of the correct type
 		}
 
-		// If delegated, returns the delegation, wildcard, DELEG. a lot of complexity will be in this function.
 		labels++
 	}
 
