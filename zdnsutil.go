@@ -226,8 +226,8 @@ func dnsutilIsName(s string) bool {
 	return true
 }
 
-// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question and sets query
-// response bit to true. R's Data buffer is not copied.
+// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question, r's Data buffer is not copied.
+// In the header the RecursionDesired, CheckingDisabled and Security are copied.
 func dnsutilSetReply(m, r *Msg) *Msg {
 	m.ID = r.ID
 	m.Response = true
@@ -235,6 +235,7 @@ func dnsutilSetReply(m, r *Msg) *Msg {
 	if m.Opcode == OpcodeQuery {
 		m.RecursionDesired = r.RecursionDesired
 		m.CheckingDisabled = r.CheckingDisabled
+		m.Security = r.Security
 	}
 	m.Rcode = RcodeSuccess
 	m.Question = r.Question
