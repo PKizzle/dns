@@ -30,7 +30,13 @@ var (
 
 func serve(server *dns.Server, net string) {
 	server.Net = net
-	server.MsgInvalidFunc = func(_ *dns.Msg, _ error) { metrics.Dropped.Inc() }
+	i := 0
+	server.MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+		if i%10 == 0 {
+			metrics.Dropped.Inc()
+		}
+		i++
+	}
 	if err := server.ListenAndServe(); err != nil {
 		slog.Error("Failed to setup the " + net + " server: " + err.Error())
 		os.Exit(1)
