@@ -156,23 +156,35 @@ Search:
 
 func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 	// Copy because there RRs _will_ be modified at some point, even here for dname and cname post processing.
-	section := r.Answer
+	section := &r.Answer
+	qtype := dns.RRToType(r.Question[0])
 	if hint == hintDelegation {
-		section = r.Ns
+		section = &r.Ns
+		qtype = dns.TypeNS
 	}
 
-	qtype := dns.RRToType(r.Question[0])
 	if len(found) > 0 {
 		for _, rr := range found {
 			if dns.RRToType(rr) == qtype {
-				section = append(section, rr.Copy())
+				*section = append(*section, rr.Copy())
+			}
+			switch {
+			case hint == hintDelegation && r.Security:
+				if _, ok := rr.(*dns.DS); ok {
+					*section = append(*section, rr.Copy())
+				}
 			}
 		}
 		if r.Security {
 			for _, rr := range found {
 				if s, ok := rr.(*dns.RRSIG); ok {
 					if s.TypeCovered == qtype {
-						r.Answer = append(r.Answer, rr.Copy())
+						*section = append(*section, rr.Copy())
+					}
+					if hint == hintDelegation {
+						if s.TypeCovered == dns.TypeDS {
+							*section = append(*section, rr.Copy())
+						}
 					}
 				}
 			}
