@@ -54,7 +54,7 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			flags.WriteString(" cd")
 		}
 		if flags.Len() > 1 {
-			Requests.WithLabelValues(dns.Zone(ctx), net, fam, flags.String()[1:]).Inc()
+			Requests.WithLabelValues(dns.Zone(ctx), net, fam, string(flags.Bytes()[1:])).Inc()
 		} else {
 			Requests.WithLabelValues(dns.Zone(ctx), net, fam, "").Inc()
 		}
@@ -75,7 +75,7 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 }
 
 var bufPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return new(bytes.Buffer)
 	},
 }
