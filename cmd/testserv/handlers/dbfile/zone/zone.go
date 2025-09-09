@@ -103,7 +103,15 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 			if dns.RRToType(rr) == qtype {
 				r.Answer = append(r.Answer, rr.Copy())
 			}
-			// if dnssec
+		}
+		if m.Security {
+			for _, rr := range found {
+				if s, ok := rr.(*dns.RRSIG); ok {
+					if s.TypeCovered == qtype {
+						r.Answer = append(r.Answer, rr.Copy())
+					}
+				}
+			}
 		}
 		return r
 	}
