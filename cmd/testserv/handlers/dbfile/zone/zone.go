@@ -68,6 +68,15 @@ func Load(origin, path string) (*Zone, error) {
 	return z, nil
 }
 
+type Hint int
+
+const (
+	answer Hint = iota
+	delegetion
+	cname
+	dname
+)
+
 // Get looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA respones the message will also contain the correct
 // information.
@@ -81,17 +90,11 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 	found := []dns.RR{}
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
-	// record set from the zone. The found loop then creates a message with the correct RRs in the sections.
-	// This might involve even more zone lookups for cname and glue records.
-	// The returned message can be written to the client.
-	type Hint int
-	const delegetion Hint = 0
-	const cname Hint = 1
-	const dname Hint = 2
-
+	// record set from the zone. The second loop in (z.Msg) then creates a message with the correct RRs in the sections.
+	// This might involve even more zone lookups for cname and glue records. The returned message can be written to the client.
 	q := r.Question[0]
 	qname := q.Header().Name
-	qtype := dns.RRToType(q)
+	hint := answer
 
 Search:
 	for idx, start := dnsutil.Prev(qname, labels); !start; idx, start = dnsutil.Prev(qname, labels) {
@@ -115,14 +118,20 @@ Search:
 		labels++
 	}
 
+	return z.Msg(r, found, hint)
+}
+
+func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 	// Copy because there RRs _will_ be modified at some point.
+
+	qtype := dns.RRToType(r.Question[0])
 	if len(found) > 0 {
 		for _, rr := range found {
 			if dns.RRToType(rr) == qtype {
 				r.Answer = append(r.Answer, rr.Copy())
 			}
 		}
-		if m.Security {
+		if r.Security {
 			for _, rr := range found {
 				if s, ok := rr.(*dns.RRSIG); ok {
 					if s.TypeCovered == qtype {
