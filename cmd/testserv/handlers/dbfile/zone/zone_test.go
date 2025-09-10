@@ -104,6 +104,17 @@ func TestZone(t *testing.T) {
 				return m
 			},
 		},
+		{
+			"dns:nxdomain",
+			func() *dns.Msg { m := dns.NewMsg("www1.example.org.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("www1.example.org.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("example.org. IN SOA  a.iana-servers.net. devnull.example.org. 1282630057 14400 3600 604800 14400"),
+				}
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

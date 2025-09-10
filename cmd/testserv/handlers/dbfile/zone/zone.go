@@ -108,17 +108,19 @@ func (z *Zone) Get(m *dns.Msg) *dns.Msg {
 
 	// Doing apex queries seperate simplifies the loop below as we can not have delegation, wildcards, etc.
 	if z.Labels == dnsutil.Labels(qname) {
-		return z.Msg(r, z.Apex(), hintAnswer)
+		return z.Msg(r, z.Apex(), hintAnswer, "" /* closest can remain empty */)
 	}
 
 	labels++
 	hint := hintAnswer
+	closest := z.Origin // closest contains the last matching name, this is closet encloser, we start with the zone's origin
 Search:
 	for i, start := dnsutil.Prev(qname, labels); !start; i, start = dnsutil.Prev(qname, labels) {
 		q.Header().Name = qname[i:]
 		set, ok := z.Tree.Get([]dns.RR{q})
 		if ok {
 			found = set
+			closest = qname[i:]
 
 			// Check for delegation, thus NS and (later?) DELEG records. If this set contain NS records we
 			// have a delegation.
@@ -138,7 +140,10 @@ Search:
 			set, ok := z.Tree.Get([]dns.RR{q})
 			if ok {
 				found = set
+				closest = qname[j:]
 				hint = hintWildcard
+				// We can break here, because if the actuall record exist we need to return that, otherwise
+				// the wildcard aplies.
 				break Search
 			}
 
@@ -148,10 +153,11 @@ Search:
 		labels++
 	}
 
-	return z.Msg(r, found, hint)
+	return z.Msg(r, found, hint, closest)
 }
 
-func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
+func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint, closest string) *dns.Msg {
+	println("closest", closest)
 	// Copy because there RRs _will_ be modified at some point, even here for dname and cname post processing.
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
@@ -162,6 +168,13 @@ func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 
 	// NXDOOMAIN response.
 	if len(found) == 0 {
+		// if hint is !wildcard (because otherwise hit)
+		for _, rr := range z.Apex() {
+			if _, ok := rr.(*dns.SOA); ok {
+				r.Ns = append(r.Ns, rr.Copy())
+			}
+		}
+		r.Rcode = dns.RcodeNameError
 		return r
 	}
 
