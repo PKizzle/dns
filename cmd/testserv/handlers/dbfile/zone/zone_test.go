@@ -70,11 +70,11 @@ func TestZone(t *testing.T) {
 			func() *dns.Msg {
 				m := dns.NewMsg("a.delegated.example.org.", dns.TypeA)
 				m.Ns = []dns.RR{
-					dnstest.New("delegated.example.org.  IN NS   a.delegated.example.org."),
-					dnstest.New("delegated.example.org.  IN NS   ns-ext.nlnetlabs.nl."),
-					dnstest.New("delegated.example.org. IN DS	10056 5 1 EE72CABD1927759CDDA92A10DBF431504B9E1F13"),
-					dnstest.New("delegated.example.org. IN DS	10056 5 2 E4B05F87725FA86D9A64F1E53C3D0E6250946599DFE639C45955B0ED416CDDFA"),
-					dnstest.New("delegated.example.org. IN RRSIG	DS 13 3 1800 20161129153240 20161030153240 49035 example.org. rlNNzcUmtbjLSl02ZzQGUbWX75yCUx0Mug1jHtKVqRq1hpPE2S3863tIWSlz+W9wz4o19OI4jbznKKqk+DGKog=="),
+					dnstest.New("delegated.example.org. IN NS     a.delegated.example.org."),
+					dnstest.New("delegated.example.org. IN NS     ns-ext.nlnetlabs.nl."),
+					dnstest.New("delegated.example.org. IN DS	  10056 5 1 EE72CABD1927759CDDA92A10DBF431504B9E1F13"),
+					dnstest.New("delegated.example.org. IN DS	  10056 5 2 E4B05F87725FA86D9A64F1E53C3D0E6250946599DFE639C45955B0ED416CDDFA"),
+					dnstest.New("delegated.example.org. IN RRSIG   DS 13 3 1800 20161129153240 20161030153240 49035 example.org. rlNNzcUmtbjLSl02ZzQGUbWX75yCUx0Mug1jHtKVqRq1hpPE2S3863tIWSlz+W9wz4o19OI4jbznKKqk+DGKog=="),
 				}
 				return m
 			},
@@ -129,7 +129,55 @@ func TestZone(t *testing.T) {
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)
 			}
-			//			sort.Sort(dns.RRset(gotrrs))
+			if len(exprrs) != len(gotrrs) {
+				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
+				t.Logf("%s\n", rmsg)
+			}
+			for i := range gotrrs {
+				if !dns.Equal(gotrrs[i], gotrrs[i]) {
+					t.Errorf("expected %s and %s to be equal", gotrrs[i], exprrs[i])
+				}
+			}
+		})
+	}
+}
+
+// Needs a signed test zone that is also loaded in nsd with multi-level wildcard, of the various types.
+func testZoneWildcard(t *testing.T) {
+	z := New("dnssex.nl.", "testdata/db.dnssex.nl")
+	if err := z.Load(); err != nil {
+		t.Fatal(err)
+	}
+	testcases := []struct {
+		name string
+		in   func() *dns.Msg
+		exp  func() *dns.Msg
+	}{
+		{
+			"dns:exact",
+			func() *dns.Msg { m := dns.NewMsg("dnssex.nl.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("dnssex.nl.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("dnssex.nl. IN A    139.162.196.78"),
+				}
+				return m
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			expmsg := tc.exp()
+			exprrs := []dns.RR{}
+			for rr := range expmsg.All() {
+				exprrs = append(exprrs, rr)
+			}
+
+			rmsg := z.Get(tc.in())
+			gotrrs := []dns.RR{}
+			for rr := range rmsg.All() {
+				gotrrs = append(gotrrs, rr)
+			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
 				t.Logf("%s\n", rmsg)
