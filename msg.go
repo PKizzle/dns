@@ -691,6 +691,9 @@ func (m *Msg) setMsgHeader(dh header) {
 	m.Rcode = dh.Bits & 0xF
 }
 
+// Hijack allows user hijacking the allocation in m.Data; this means that when the message is written through
+// the default ResponseWriter its buffer is not returned the message pool. This is only applicable when the
+// message was created by the default server.
 func (m *Msg) Hijack() { m.hijacked.Store(true) }
 
 // io.Reader and io.Writer interfaces implementation.
