@@ -1969,9 +1969,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
-func (rr *HTTPS) parse(c *zlexer, o string) *ParseError {
-	return rr.SVCB.parse(c, o)
-}
+func (rr *HTTPS) parse(c *zlexer, o string) *ParseError { return rr.SVCB.parse(c, o) }
 
 func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 	// TODO: unify with SVCB
@@ -2058,6 +2056,8 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 	rr.Value = xs
 	return nil
 }
+
+func (rr *DELEGI) parse(c *zlexer, o string) *ParseError { return rr.DELEG.parse(c, o) }
 
 // escapedStringOffset finds the offset within a string (which may contain escape
 // sequences) that corresponds to a certain byte offset. If the input offset is
