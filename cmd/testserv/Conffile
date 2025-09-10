@@ -1,6 +1,7 @@
 {
-   root .
-   metrics /10
+    debug
+    root .
+    metrics /10
 }
 
 (base) {

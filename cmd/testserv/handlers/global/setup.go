@@ -3,6 +3,7 @@ package global
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -44,16 +45,18 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				// TODO(miek): do better and catch error, while using 'go func'
-				http.Handle("/metrics", promhttp.Handler())
-				go func() {
-					if err := http.ListenAndServe(addr, nil); err != nil {
-						slog.Error("Failed to setup metrics handler failed: " + err.Error())
-					}
-				}()
+				ln, err := net.Listen("tcp", addr)
+				if err != nil {
+					return err
+				}
+				mux := http.NewServeMux()
+				mux.Handle("/metrics", promhttp.Handler())
+				server := &http.Server{Handler: mux}
+				go func() { server.Serve(ln) }()
+				g.MetricsListener = ln
 				return nil
 			})
-			g.OnShutdown(func() error { return nil })
+			g.OnShutdown(func() error { g.MetricsListener.Close(); return nil })
 		}
 	}
 	return nil

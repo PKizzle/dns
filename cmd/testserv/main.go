@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -35,6 +36,9 @@ func serve(server *dns.Server, net string, global *global.Global) {
 	i := uint64(0)
 	N := global.MetricsN
 	server.MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+		if N == 0 {
+			return
+		}
 		if i%N == 0 {
 			metrics.Dropped.Inc()
 		}
@@ -98,5 +102,6 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	s := <-sig
+	srv.Shutdown(context.TODO())
 	fmt.Printf("Signal (%s) received, stopping\n", s)
 }

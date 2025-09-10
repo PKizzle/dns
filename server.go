@@ -130,6 +130,7 @@ type Server struct {
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
 	exited   chan struct{}
+	once     sync.Once
 	shutdown chan bool
 }
 
@@ -254,7 +255,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 		case <-srv.shutdown:
 			ln.Close()
 			wg.Wait()
-			close(srv.exited)
+			srv.once.Do(func() { close(srv.exited) })
 			return
 		default:
 			conn, err := ln.Accept()
@@ -289,7 +290,7 @@ Read:
 		case <-srv.shutdown:
 			pc.Close()
 			wg.Wait()
-			close(srv.exited)
+			srv.once.Do(func() { close(srv.exited) })
 			return
 		default:
 			bufs := make([][]byte, BatchSize, BatchSize)
