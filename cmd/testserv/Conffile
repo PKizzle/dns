@@ -10,9 +10,9 @@
 
 # log whoami only, order matters
 miek.nl example.org {
+    import base
     metrics
     any
-    log
     cookie geheim
     nsid Use the force
 #    whoami
