@@ -50,7 +50,7 @@ func serve(server *dns.Server, net string, global *global.Global) {
 		os.Exit(1)
 	}
 	if err := global.Shutdown(); err != nil {
-		slog.Warn("Failed to run shutdown for " + net + "server: " + err.Error())
+		slog.Warn("Failed to run shutdown for " + net + " server: " + err.Error())
 	}
 }
 

@@ -2,18 +2,25 @@ package dbfile
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
 
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 func (d *Dbfile) Setup(co dnsserver.Controller) error {
+	d.Zones = map[string]*zone.Zone{}
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
 			return co.ArgErr()
 		}
 		d.Path = args[0]
+		if !filepath.IsAbs(d.Path) {
+			d.Path = filepath.Join(co.Global.Root, d.Path)
+		}
 		for co.NextBlock() {
 			switch co.Val() {
 			case "reload":
@@ -37,8 +44,17 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 			}
 		}
 	}
-	// for all co.Keys() we are now loading the zone in a go-routine, might do co.OnStartup
-	// where this is added, so we get a generic - can also copy that from old caddy as well.
+	for _, z := range co.Keys() {
+		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
+	}
+	co.OnStartup(func() error {
+		for _, z := range d.Zones {
+			if err := z.Load(); err != nil {
+				return co.Err(err.Error())
+			}
+		}
+		return nil
+	})
 
 	return nil
 }

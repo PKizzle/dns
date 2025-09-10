@@ -25,7 +25,8 @@ debug
 
 .IP \(bu 4
 with \fIroot\fP \fBDIRECTORY\fP is the directory to use as the root directory for the server. Any relative path names will
-get this directory prefixed.
+get this directory prefixed. If \fBDIRECTORY\fP itself is also relative the current working directory (cwd) of the testserv
+process will be prefixed.
 .IP \(bu 4
 with \fIdebug\fP the global log level is to debug.
 .IP \(bu 4

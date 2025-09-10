@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -19,6 +21,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				d.PropErr()
 			}
 			g.Root = d.Val()
+			if !filepath.IsAbs(g.Root) {
+				pwd, _ := os.Getwd()
+				g.Root = filepath.Join(pwd, g.Root)
+			}
 		case "debug":
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "metrics":

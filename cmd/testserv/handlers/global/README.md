@@ -18,7 +18,8 @@ debug
 ```
 
 - with _root_ **DIRECTORY** is the directory to use as the root directory for the server. Any relative path names will
-  get this directory prefixed.
+  get this directory prefixed. If **DIRECTORY** itself is also relative the current working directory (cwd) of the testserv
+  process will be prefixed.
 - with _debug_ the global log level is to debug.
 - The _metrics_ property allows setting the listening **ADDRESS** for the promtheus metrics. This defaults to `localhost:9153`.
   Without _metrics_ no metrics can be scraped as the prometheus server isn't running, i.e. to allow for

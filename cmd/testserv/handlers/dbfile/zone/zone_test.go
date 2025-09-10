@@ -8,8 +8,8 @@ import (
 )
 
 func TestZone(t *testing.T) {
-	z, err := Load("example.org.", "testdata/db.example.org")
-	if err != nil {
+	z := New("example.org.", "testdata/db.example.org")
+	if err := z.Load(); err != nil {
 		t.Fatal(err)
 	}
 	testcases := []struct {

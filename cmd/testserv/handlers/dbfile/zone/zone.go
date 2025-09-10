@@ -13,11 +13,12 @@ import (
 // There is no locking, because after creation this structure is basically read-only.
 // Tree will be used to write, but that has its own locking.
 type Zone struct {
-	Origin  string
-	Labels  int
-	Path    string
-	Minimal bool
-	Tree    *btree.BTreeG[[]dns.RR]
+	Origin string
+	Labels int
+	Path   string
+	Tree   *btree.BTreeG[[]dns.RR]
+
+	Minimal bool // TODO: needed here?
 
 	q []dns.RR // resusable q for retrieving the apex, set in New.
 }
@@ -38,15 +39,14 @@ func New(origin, path string) *Zone {
 	}
 }
 
-// Load loads a new zone with origin from path.
-func Load(origin, path string) (*Zone, error) {
-	f, err := os.Open(path)
+// Load loads a new zone with origin from path from z.
+func (z *Zone) Load() error {
+	f, err := os.Open(z.Path)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	zp := dns.NewZoneParser(f, dnsutil.Canonical(origin), path)
+	zp := dns.NewZoneParser(f, z.Origin, z.Path)
 	zp.SetIncludeAllowed(true)
-	z := New(origin, path)
 	soa := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if _, ok := rr.(*dns.SOA); ok {
@@ -63,12 +63,12 @@ func Load(origin, path string) (*Zone, error) {
 		z.Tree.Set([]dns.RR{rr})
 	}
 	if zp.Err() != nil {
-		return nil, fmt.Errorf("failed to parse zone %q with origin %q: %s ", path, origin, zp.Err())
+		return fmt.Errorf("failed to parse zone %q with origin %q: %s ", z.Path, z.Origin, zp.Err())
 	}
 	if soa != 1 {
-		return nil, fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", path, origin)
+		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", z.Path, z.Origin)
 	}
-	return z, nil
+	return nil
 }
 
 func (z *Zone) Apex() []dns.RR {
