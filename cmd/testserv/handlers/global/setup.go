@@ -37,13 +37,17 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			if d.NextArg() {
 				addr = d.Val()
 			}
-			http.Handle("/metrics", promhttp.Handler())
-			go func() {
-				// TODO(miek): tie into global shutdown?
-				if err := http.ListenAndServe(addr, nil); err != nil {
-					slog.Error("Failed to setup metrics handler failed: " + err.Error())
-				}
-			}()
+			g.OnStartup(func() error {
+				// TODO(miek): do better and catch error, while using 'go func'
+				http.Handle("/metrics", promhttp.Handler())
+				go func() {
+					if err := http.ListenAndServe(addr, nil); err != nil {
+						slog.Error("Failed to setup metrics handler failed: " + err.Error())
+					}
+				}()
+				return nil
+			})
+			g.OnShutdown(func() error { return nil })
 		}
 	}
 	return nil

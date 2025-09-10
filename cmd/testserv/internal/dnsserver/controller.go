@@ -13,6 +13,9 @@ type Controller struct {
 	Config *global.Global
 }
 
+func (c *Controller) OnStartup(fn func() error)  { c.Config.OnStartup(fn) }
+func (c *Controller) OnShutdown(fn func() error) { c.Config.OnShutdown(fn) }
+
 // NewTestController create a controller useful for tests.
 func NewTestController(input string) Controller {
 	d := conffile.NewTestDispenser(input)
