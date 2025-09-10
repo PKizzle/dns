@@ -80,6 +80,8 @@ func (rr *OPT) Header() *Header        { return &rr.Hdr }
 func (rr *RESINFO) Header() *Header    { return &rr.Hdr }
 func (rr *SVCB) Header() *Header       { return &rr.Hdr }
 func (rr *HTTPS) Header() *Header      { return &rr.Hdr }
+func (rr *DELEG) Header() *Header      { return &rr.Hdr }
+func (rr *DELEGI) Header() *Header     { return &rr.Hdr }
 func (rr *ANY) Header() *Header        { return &rr.Hdr }
 func (rr *AXFR) Header() *Header       { return &rr.Hdr }
 func (rr *IXFR) Header() *Header       { return &rr.Hdr }
@@ -164,6 +166,8 @@ var TypeToRR = map[uint16]func() RR{
 	TypeRESINFO:    func() RR { return new(RESINFO) },
 	TypeSVCB:       func() RR { return new(SVCB) },
 	TypeHTTPS:      func() RR { return new(HTTPS) },
+	TypeDELEG:      func() RR { return new(DELEG) },
+	TypeDELEGI:     func() RR { return new(DELEGI) },
 	TypeANY:        func() RR { return new(ANY) },
 	TypeAXFR:       func() RR { return new(AXFR) },
 	TypeIXFR:       func() RR { return new(IXFR) },
@@ -327,6 +331,10 @@ func RRToType(rr RR) uint16 {
 		return TypeSVCB
 	case *HTTPS:
 		return TypeHTTPS
+	case *DELEG:
+		return TypeDELEG
+	case *DELEGI:
+		return TypeDELEGI
 	case *ANY:
 		return TypeANY
 	case *AXFR:
@@ -421,6 +429,8 @@ var TypeToString = map[uint16]string{
 	TypeRESINFO:    "RESINFO",
 	TypeSVCB:       "SVCB",
 	TypeHTTPS:      "HTTPS",
+	TypeDELEG:      "DELEG",
+	TypeDELEGI:     "DELEGI",
 	TypeANY:        "ANY",
 	TypeAXFR:       "AXFR",
 	TypeIXFR:       "IXFR",

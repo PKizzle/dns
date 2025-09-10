@@ -162,6 +162,10 @@ func compare(a, b RR) int {
 		return x.compare(b)
 	case *HTTPS:
 		return x.compare(b)
+	case *DELEG:
+		return x.compare(b)
+	case *DELEGI:
+		return x.compare(b)
 	case *ANY:
 		return x.compare(b)
 	case *AXFR:
@@ -1377,6 +1381,14 @@ func (rr *SVCB) compare(b RR) (x int) {
 }
 
 func (rr *HTTPS) compare(b RR) (x int) {
+	return 0
+}
+
+func (rr *DELEG) compare(b RR) (x int) {
+	return 0
+}
+
+func (rr *DELEGI) compare(b RR) (x int) {
 	return 0
 }
 

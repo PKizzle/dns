@@ -90,6 +90,8 @@ func main() {
 					o("off, err = packNSEC(rr.%s, msg, off)\n")
 				case `dns:"pairs"`:
 					o("off, err = packSVCB(rr.%s, msg, off)\n")
+				case `dns:"infos"`:
+					o("off, err = packDELEG(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
 				default:
@@ -249,6 +251,8 @@ if rr.%s != "-" {
 					unpackField("unpackNSEC")
 				case `dns:"pairs"`:
 					unpackField("unpackSVCB")
+				case `dns:"infos"`:
+					unpackField("unpackDELEG")
 				case `dns:"domain-name"`:
 					unpackFieldBuf("unpack.Names")
 				default:

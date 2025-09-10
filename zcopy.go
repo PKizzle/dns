@@ -2,8 +2,11 @@
 
 package dns
 
-import "slices"
-import "codeberg.org/miekg/dns/svcb"
+import (
+	"codeberg.org/miekg/dns/deleg"
+	"codeberg.org/miekg/dns/svcb"
+	"slices"
+)
 
 func (rr *NULL) Copy() RR {
 	return &NULL{
@@ -639,6 +642,22 @@ func (rr *SVCB) Copy() RR {
 
 func (rr *HTTPS) Copy() RR {
 	return &HTTPS{*rr.SVCB.Copy().(*SVCB)}
+}
+func (rr *DELEG) Copy() RR {
+	return &DELEG{
+		rr.Hdr,
+		func() []deleg.Info {
+			infos := make([]deleg.Info, len(rr.Value))
+			for i, p := range rr.Value {
+				infos[i] = p.Copy()
+			}
+			return infos
+		}(),
+	}
+}
+
+func (rr *DELEGI) Copy() RR {
+	return &DELEGI{*rr.DELEG.Copy().(*DELEG)}
 }
 func (rr *ANY) Copy() RR {
 	return &ANY{

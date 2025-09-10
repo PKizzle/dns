@@ -24,8 +24,11 @@ var hdr = `
 
 package dns
 
-import "slices"
-import "codeberg.org/miekg/dns/svcb"
+import (
+	"slices"
+    "codeberg.org/miekg/dns/svcb"
+    "codeberg.org/miekg/dns/deleg"
+)
 
 `
 
@@ -118,6 +121,17 @@ func main() {
 							pairs[i] = p.Copy()
 						}
 						return pairs
+						}()` + ",\n"
+					o(fn)
+					continue
+				case `dns:"infos"`:
+					pkg := strings.ToLower(rrname)
+					fn := `func() []` + pkg + `.Info {
+						infos := make([]` + pkg + `.Info, len(rr.%[1]s))
+						for i, p := range rr.%[1]s {
+							infos[i] = p.Copy()
+						}
+						return infos
 						}()` + ",\n"
 					o(fn)
 					continue

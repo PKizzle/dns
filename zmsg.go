@@ -2296,6 +2296,38 @@ func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 	return nil
 }
 
+func (rr *DELEG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = packDELEG(rr.Value, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *DELEG) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	rr.Value, err = unpackDELEG(&s)
+	if err != nil {
+		return err
+	}
+	if !s.Empty() {
+		return unpack.Errorf("trailing record data: %s", "DELEG")
+	}
+	return nil
+}
+
+func (rr *DELEGI) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return off, nil
+}
+
+func (rr *DELEGI) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.Empty() {
+		return unpack.Errorf("trailing record data: %s", "DELEGI")
+	}
+	return nil
+}
+
 func (rr *ANY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	return off, nil
 }
