@@ -1559,18 +1559,18 @@ func (rr *HTTPS) String() string { return rr.SVCB.String() }
 // DELEG RR. See RFC ... (draft ...)
 type DELEG struct {
 	Hdr   Header
-	Value []deleg.Pair `dns:"pairs"`
+	Value []deleg.Info `dns:"infos"`
 }
 
 func (rr *DELEG) String() string {
 	sb := sprintHeader(rr)
-	for _, p := range rr.Value {
+	for _, i := range rr.Value {
 		sb.WriteByte(' ')
-		k := deleg.PairToKey(p)
+		k := deleg.InfoToKey(i)
 		sb.WriteString(svcb.KeyToString(k))
 		sb.WriteByte('=')
 		sb.WriteByte('"')
-		sb.WriteString(p.String())
+		sb.WriteString(i.String())
 		sb.WriteByte('"')
 	}
 	return sb.String()

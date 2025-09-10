@@ -1,9 +1,10 @@
-// Package deleg deals with all the intricacies of the DELEG RR. All the sub-types ([Pairs]) used in the RR are defined here.
-// As DELEG is derived from the [dns.SVCB] RR there are a lot of similarities.
+// Package deleg deals with all the intricacies of the DELEG RR. All the sub-types ([Infos]) used in the RR are defined here.
+// As DELEG is derived from the [dns.SVCB] RR so there are a lot of similarities.
 package deleg
 
 import (
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -20,12 +21,12 @@ const (
 	KeyIncludeName
 )
 
-// Pair defines a key=value pair for the SVCB RR type. An SVCB RR can have multiple pairs appended to it.
-// The numerical key code is derived from the type, see [PairToKey].
-type Pair interface {
+// Info defines a key=value pair for the DELEG/DELEGI RR type. A DELEG RR can have multiple infos appended to it.
+// The numerical key code is derived from the type, see [InfoToKey].
+type Info interface {
 	String() string // String returns the string representation of the value.
 	Len() int       // Len returns the length of value in the wire format.
-	Copy() Pair     // Copy returns a deep copy of the Pair.
+	Copy() Info     // Copy returns a deep copy of the Info.
 }
 
 // KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
@@ -61,21 +62,21 @@ func StringToKey(s string) uint16 {
 
 var stringToKey = reverse.Int16(keyToString)
 
-// KeyToPair convert the key value to a Pair.
-func KeyToPair(k uint16) func() Pair {
+// KeyToInfo convert the key value to a Info.
+func KeyToInfo(k uint16) func() Info {
 	switch k {
 	case KeyServerIP4:
-		return func() Pair { return new(SERVERIP4) }
+		return func() Info { return new(SERVERIP4) }
 	case KeyServerIP6:
-		return func() Pair { return new(SERVERIP6) }
+		return func() Info { return new(SERVERIP6) }
 	default:
 		return nil
 	}
 }
 
-// PairToKey is the reverse of KeyToPair.
-func PairToKey(p Pair) uint16 {
-	switch p.(type) {
+// InfoToKey is the reverse of KeyToInfo.
+func InfoToKey(i Info) uint16 {
+	switch i.(type) {
 	case *SERVERIP4:
 		return KeyServerIP4
 	case *SERVERIP6:
@@ -84,7 +85,7 @@ func PairToKey(p Pair) uint16 {
 	return KeyReserved
 }
 
-// SERVERIP4 pair adds IPv4 addresses to the DELEG RR.
+// SERVERIP4 info adds IPv4 addresses to the DELEG RR.
 type SERVERIP4 struct {
 	IPs []net.IP
 }
@@ -103,7 +104,7 @@ func (s *SERVERIP4) String() string {
 	return strings.Join(str, ",")
 }
 
-// SERVERIP6 pair adds IPv6 addresses to the DELEG RR.
+// SERVERIP6 info adds IPv6 addresses to the DELEG RR.
 type SERVERIP6 struct {
 	IPs []net.IP
 }
@@ -123,3 +124,6 @@ func (s *SERVERIP6) String() string {
 }
 
 const tlv = 4
+
+func (s *SERVERIP4) Copy() Info { return &SERVERIP4{slices.Clone(s.IPs)} }
+func (s *SERVERIP6) Copy() Info { return &SERVERIP4{slices.Clone(s.IPs)} }
