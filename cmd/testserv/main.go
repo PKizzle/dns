@@ -30,6 +30,7 @@ var (
 )
 
 func serve(server *dns.Server, net string, global *global.Global) {
+	// TODO: make this into proper dnsserver function.
 	server.Net = net
 	i := uint64(0)
 	N := global.MetricsN
@@ -39,9 +40,17 @@ func serve(server *dns.Server, net string, global *global.Global) {
 		}
 		i++
 	}
+	if err := global.Startup(); err != nil {
+		slog.Error("Failed to run startup for " + net + "server: " + err.Error())
+		os.Exit(1)
+	}
+
 	if err := server.ListenAndServe(); err != nil {
 		slog.Error("Failed to setup the " + net + " server: " + err.Error())
 		os.Exit(1)
+	}
+	if err := global.Shutdown(); err != nil {
+		slog.Warn("Failed to run shutdown for " + net + "server: " + err.Error())
 	}
 }
 

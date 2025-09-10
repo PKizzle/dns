@@ -24,16 +24,16 @@ func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
 		return nil, err
 	}
 
-	config := &global.Global{}
+	global := &global.Global{}
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
 		}
 		for _, dir := range b.Directives {
 			d := conffile.NewDispenser(conf, nil, b.Tokens[dir])
-			err := config.Setup(d)
+			err := global.Setup(d)
 			if err != nil {
-				return config, fmt.Errorf("could not parse global config: %s", err)
+				return global, fmt.Errorf("could not parse global config: %s", err)
 			}
 		}
 		break
@@ -50,17 +50,17 @@ func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
 			if !ok {
-				return config, fmt.Errorf("unknown handler: %s", name)
+				return global, fmt.Errorf("unknown handler: %s", name)
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
-				c := dnsserver.Controller{
+				co := dnsserver.Controller{
 					Dispenser: conffile.NewDispenser(conf, b.Keys, b.Tokens[name]),
-					Config:    config,
+					Global:    global,
 				}
-				err := s.Setup(c)
+				err := s.Setup(co)
 				if err != nil {
-					return config, handler.Err(err)
+					return global, handler.Err(err)
 				}
 			}
 			hs = append(hs, handler)
@@ -74,5 +74,5 @@ func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
 			mux.HandleFunc(k, handlers.Compile(hs))
 		}
 	}
-	return config, nil
+	return global, nil
 }

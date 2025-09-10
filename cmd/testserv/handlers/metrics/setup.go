@@ -5,7 +5,7 @@ import (
 )
 
 func (m *Metrics) Setup(co dnsserver.Controller) error {
-	m.N = co.Config.MetricsN
+	m.N = co.Global.MetricsN
 	if co.Next() {
 		if !co.NextArg() {
 			return nil
