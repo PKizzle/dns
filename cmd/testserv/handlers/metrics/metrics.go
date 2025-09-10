@@ -24,7 +24,7 @@ type Metrics struct {
 
 func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		if m.disable {
+		if m.disable || m.N == 0 {
 			next.ServeDNS(ctx, w, r)
 			return
 		}

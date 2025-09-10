@@ -1,6 +1,7 @@
 {
-   root .
-   metrics /10
+    debug
+    root .
+    metrics /10
 }
 
 (base) {
@@ -9,9 +10,9 @@
 
 # log whoami only, order matters
 miek.nl example.org {
+    import base
     metrics
     any
-    log
     cookie geheim
     nsid Use the force
 #    whoami
