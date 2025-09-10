@@ -14,7 +14,7 @@ miek.nl example.org {
     log
     cookie geheim
     nsid Use the force
-    whoami
+#    whoami
     dbfile db.generic
 }
 

@@ -7,6 +7,7 @@ import (
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 func (d *Dbfile) Setup(co dnsserver.Controller) error {
@@ -44,7 +45,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		}
 	}
 	for _, z := range co.Keys() {
-		d.Zones[z] = zone.New(z, d.Path)
+		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
 		for _, z := range d.Zones {
