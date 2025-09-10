@@ -577,6 +577,19 @@ func (rr *HTTPS) Len() int {
 	return l
 }
 
+func (rr *DELEG) Len() int {
+	l := rr.Hdr.Len()
+	for _, x := range rr.Value {
+		l += x.Len()
+	}
+	return l
+}
+
+func (rr *DELEGI) Len() int {
+	l := rr.Hdr.Len()
+	return l
+}
+
 func (rr *ANY) Len() int {
 	l := rr.Hdr.Len()
 	return l

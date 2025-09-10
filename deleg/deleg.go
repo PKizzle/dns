@@ -1,4 +1,5 @@
 // Package deleg deals with all the intricacies of the DELEG RR. All the sub-types ([Pairs]) used in the RR are defined here.
+// As DELEG is derived from the [dns.SVCB] RR there are a lot of similarities.
 package deleg
 
 import (
@@ -18,6 +19,14 @@ const (
 	KeyServerName
 	KeyIncludeName
 )
+
+// Pair defines a key=value pair for the SVCB RR type. An SVCB RR can have multiple pairs appended to it.
+// The numerical key code is derived from the type, see [PairToKey].
+type Pair interface {
+	String() string // String returns the string representation of the value.
+	Len() int       // Len returns the length of value in the wire format.
+	Copy() Pair     // Copy returns a deep copy of the Pair.
+}
 
 // KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
 // unknown keys "key"+value is returned, see section 2.1 of RFC 9460.
@@ -73,13 +82,6 @@ func PairToKey(p Pair) uint16 {
 		return KeyServerIP6
 	}
 	return KeyReserved
-}
-
-// Pair defines a key=value pair for the DELEG/DELEGI RR type. A DELEG RR can have multiple pairs appended to it.
-// The numerical key code is derived from the type, see [PairToKey].
-type Pair interface {
-	String() string // String returns the string representation of the value.
-	Len() int       // Len returns the length of value in the wire format.
 }
 
 // SERVERIP4 pair adds IPv4 addresses to the DELEG RR.

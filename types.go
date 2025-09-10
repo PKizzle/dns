@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/svcb"
 )
 
@@ -107,6 +108,8 @@ const (
 
 	TypeTA       uint16 = 32768
 	TypeDLV      uint16 = 32769
+	TypeDELEG    uint16 = 65432 // Provisional type
+	TypeDELEGI   uint16 = 65433 // Provisional type
 	TypeReserved uint16 = 65535
 
 	// valid question classes only.
@@ -193,7 +196,7 @@ const (
 	_AD = 1 << 5  // authenticated data
 	_CD = 1 << 4  // checking disabled
 
-	// EDNS0 OPT "Header.Bits"
+	// EDNS0 OPT "Header.Bits", these are placed directoy in a *Msg in this impl.
 	_DO = 1 << 15 // DNSSEC OK
 	_CO = 1 << 14 // Compact Answers OK
 	_DE = 1 << 13 // DELEG OK
@@ -769,9 +772,7 @@ func (rr *LOC) String() string {
 }
 
 // SIG RR. See RFC 2535. The SIG RR is identical to RRSIG and nowadays only used for SIG(0), See RFC 2931.
-type SIG struct {
-	RRSIG
-}
+type SIG struct{ RRSIG }
 
 // NewSIG0 return a new SIG with initial fields set. This can be used SIG0 transaction signing.
 func NewSIG0() *SIG {
@@ -829,9 +830,7 @@ func NewRRSIG(z string, algorithm uint8, keytag uint16, incepexp ...uint32) *RRS
 }
 
 // NXT RR. See RFC 2535.
-type NXT struct {
-	NSEC
-}
+type NXT struct{ NSEC }
 
 // NSEC RR. See RFC 4034 and RFC 3755.
 type NSEC struct {
@@ -942,14 +941,10 @@ func (rr *SSHFP) String() string {
 }
 
 // KEY RR. See RFC 2535.
-type KEY struct {
-	DNSKEY
-}
+type KEY struct{ DNSKEY }
 
 // CDNSKEY RR. See RFC 7344.
-type CDNSKEY struct {
-	DNSKEY
-}
+type CDNSKEY struct{ DNSKEY }
 
 // DNSKEY RR. See RFC 4034 and RFC 3755.
 type DNSKEY struct {
@@ -1557,11 +1552,33 @@ func (rr *SVCB) String() string {
 
 // HTTPS RR. See RFC 9460. Everything valid for SVCB applies to HTTPS as well.
 // Except that the HTTPS record is intended for use with the HTTP and HTTPS protocols.
-type HTTPS struct {
-	SVCB
-}
+type HTTPS struct{ SVCB }
 
 func (rr *HTTPS) String() string { return rr.SVCB.String() }
+
+// DELEG RR. See RFC ... (draft ...)
+type DELEG struct {
+	Hdr   Header
+	Value []deleg.Pair `dns:"pairs"`
+}
+
+func (rr *DELEG) String() string {
+	sb := sprintHeader(rr)
+	for _, p := range rr.Value {
+		sb.WriteByte(' ')
+		k := deleg.PairToKey(p)
+		sb.WriteString(svcb.KeyToString(k))
+		sb.WriteByte('=')
+		sb.WriteByte('"')
+		sb.WriteString(p.String())
+		sb.WriteByte('"')
+	}
+	return sb.String()
+}
+
+type DELEGI struct{ DELEG }
+
+func (rr *DELEGI) String() string { return rr.DELEG.String() }
 
 // Meta RRs
 

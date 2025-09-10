@@ -162,6 +162,10 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 		return x.pack(msg, off, compression)
 	case *HTTPS:
 		return x.pack(msg, off, compression)
+	case *DELEG:
+		return x.pack(msg, off, compression)
+	case *DELEGI:
+		return x.pack(msg, off, compression)
 	case *ANY:
 		return x.pack(msg, off, compression)
 	case *AXFR:
@@ -333,6 +337,10 @@ func zunpack(rr RR, data, msgBuf []byte) error {
 	case *SVCB:
 		return x.unpack(data, msgBuf)
 	case *HTTPS:
+		return x.unpack(data, msgBuf)
+	case *DELEG:
+		return x.unpack(data, msgBuf)
+	case *DELEGI:
 		return x.unpack(data, msgBuf)
 	case *ANY:
 		return x.unpack(data, msgBuf)

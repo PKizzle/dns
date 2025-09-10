@@ -28,6 +28,14 @@ const (
 	KeyReserved uint16 = 65535
 )
 
+// Pair defines a key=value pair for the SVCB RR type. An SVCB RR can have multiple pairs appended to it.
+// The numerical key code is derived from the type, see [PairToKey].
+type Pair interface {
+	String() string // String returns the string representation of the value.
+	Len() int       // Len returns the length of value in the wire format.
+	Copy() Pair     // Copy returns a deep copy of the Pair.
+}
+
 // KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
 // unknown keys "key"+value is returned, see section 2.1 of RFC 9460.
 func KeyToString(k uint16) string {
@@ -119,14 +127,6 @@ func PairToKey(p Pair) uint16 {
 		return p.(*LOCAL).KeyCode
 	}
 	return KeyReserved
-}
-
-// Pair defines a key=value pair for the SVCB RR type. An SVCB RR can have multiple pairs appended to it.
-// The numerical key code is derived from the type, see [PairToKey].
-type Pair interface {
-	String() string // String returns the string representation of the value.
-	Len() int       // Len returns the length of value in the wire format.
-	Copy() Pair     // Copy returns a deep copy of the Pair.
 }
 
 // MANDATORY pair adds to required keys that must be interpreted for the RR

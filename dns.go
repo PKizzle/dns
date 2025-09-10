@@ -174,8 +174,8 @@ type MsgHeader struct {
 	UDPSize        uint16 // UDPSize is the OPT's RR advertised UDP size.
 	Version        uint8  // Version is the EDNS version, always zero.
 	Security       bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
-	CompactAnswers bool   // Compact Answers OK, https://datatracker.ietf.org/doc/draft-ietf-dnsop-compact-denial-of-existence/
-	Delegation     bool   // DELEG RR, https://datatracker.ietf.org/doc/draft-ietf-deleg/
+	CompactAnswers bool   // Compact Answers OK, https://datatracker.ietf.org/doc/draft-ietf-dnsop-compact-denial-of-existence/.
+	Delegation     bool   // Delegation is the DELEG OK bit, see https://datatracker.ietf.org/doc/draft-ietf-deleg/.
 }
 
 // Msg is a DNS message. Each message has a Data field that contains the binary data buffer. This is filled when

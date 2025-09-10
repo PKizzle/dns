@@ -99,9 +99,10 @@ var HashToString = map[uint8]string{
 
 // DNSKEY flag values.
 const (
-	SEP    = 1
-	REVOKE = 1 << 7
-	ZONE   = 1 << 8
+	FlagSEP    = 1
+	FlagREVOKE = 1 << 7
+	FlagZONE   = 1 << 8
+	FlagDELEG  = 1 << 14
 )
 
 // KeyTag calculates the keytag (or key-id) of the DNSKEY.

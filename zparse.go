@@ -160,6 +160,10 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *HTTPS:
 		return x.parse(c, o)
+	case *DELEG:
+		return x.parse(c, o)
+	case *DELEGI:
+		return x.parse(c, o)
 	case *ANY:
 		return x.parse(c, o)
 	case *AXFR:
