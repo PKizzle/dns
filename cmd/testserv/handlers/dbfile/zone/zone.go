@@ -151,9 +151,6 @@ Search:
 	return z.Msg(r, found, hint)
 }
 
-// glue, soa apex
-// cname, dname
-
 func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 	// Copy because there RRs _will_ be modified at some point, even here for dname and cname post processing.
 	section := &r.Answer
@@ -162,8 +159,9 @@ func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 		section = &r.Ns
 		qtype = dns.TypeNS
 	}
+
+	// NXDOOMAIN response.
 	if len(found) == 0 {
-		// nxdomain response.
 		return r
 	}
 
@@ -193,8 +191,26 @@ func (z *Zone) Msg(r *dns.Msg, found []dns.RR, hint Hint) *dns.Msg {
 		}
 	}
 
+	// NODATA response.
 	if len(*section) == 0 {
-		// no data response.
+		for _, rr := range z.Apex() {
+			if _, ok := rr.(*dns.SOA); ok {
+				r.Ns = append(r.Ns, rr.Copy())
+			}
+			if r.Security {
+				if _, ok := rr.(*dns.NSEC); ok {
+					r.Ns = append(r.Ns, rr.Copy())
+				}
+			}
+			if r.Security {
+				if s, ok := rr.(*dns.RRSIG); ok {
+					if s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC {
+						r.Ns = append(r.Ns, rr.Copy())
+
+					}
+				}
+			}
+		}
 	}
 
 	return r
