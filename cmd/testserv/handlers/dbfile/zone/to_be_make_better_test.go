@@ -8,8 +8,8 @@ import (
 )
 
 func testZoneLoad(t *testing.T) {
-	z, err := Load("example.org.", "testdata/db.example.org")
-	if err != nil {
+	z := New("example.org.", "testdata/db.example.org")
+	if err := z.Load(); err != nil {
 		t.Fatal(err)
 	}
 	z.Walk(func(rrs []dns.RR) bool {

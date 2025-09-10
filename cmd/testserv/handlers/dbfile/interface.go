@@ -12,8 +12,8 @@ import (
 // zone.Zone also implements the following functions:
 //
 // - New(origin, path string) Interface
-// - Load(origin, path string) Interface
 type Interface interface {
+	Load() error
 	Get(*dns.Msg) *dns.Msg
 	//	Set([]dns.RR) ([]dns.RR, bool)  - TODO(miek): implement for zone.Zone
 	Apex() []dns.RR

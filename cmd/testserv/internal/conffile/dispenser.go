@@ -248,7 +248,7 @@ func (d *Dispenser) EOFErr() error {
 
 // Err generates a custom parse-time error with a message of msg.
 func (d *Dispenser) Err(msg string) error {
-	msg = fmt.Sprintf("%s:%d - error during parsing: %s", d.File(), d.Line(), msg)
+	msg = fmt.Sprintf("%s:%d - error parsing or initializing: %s", d.File(), d.Line(), msg)
 	return errors.New(msg)
 }
 
