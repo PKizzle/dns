@@ -144,7 +144,7 @@ func TestZone(t *testing.T) {
 
 // Needs a signed test zone that is also loaded in nsd with multi-level wildcard, of the various types.
 func testZoneWildcard(t *testing.T) {
-	z := New("dnssex.nl.", "testdata/db.dnssex.nl")
+	z := New("example.", "testdata/db.example")
 	if err := z.Load(); err != nil {
 		t.Fatal(err)
 	}
