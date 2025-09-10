@@ -44,7 +44,7 @@ func (g *Global) Shutdown() error {
 	errs := []error{}
 	g.onceShutdown.Do(func() {
 		for _, fn := range g.onShutdown {
-			slog.Debug(fmt.Sprintf("Running %d shutdown d functions", len(g.onStartup)))
+			slog.Debug(fmt.Sprintf("Running %d shutdown functions", len(g.onStartup)))
 			if err := fn(); err != nil {
 				errs = append(errs, err)
 			}
