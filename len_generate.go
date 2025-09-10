@@ -89,6 +89,8 @@ func main() {
 					o("for _, x := range rr.%s { l += x.len() }\n")
 				case `dns:"pairs"`:
 					o("for _, x := range rr.%s { l += x.Len() }\n")
+				case `dns:"infos"`:
+					o("for _, x := range rr.%s { l += x.Len() }\n")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}

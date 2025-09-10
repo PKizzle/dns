@@ -2297,7 +2297,7 @@ func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DELEG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = packSVCB(rr.Value, msg, off)
+	off, err = packDELEG(rr.Value, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -2306,7 +2306,7 @@ func (rr *DELEG) pack(msg []byte, off int, compression map[string]uint16) (off1 
 
 func (rr *DELEG) unpack(data, msgBuf []byte) (err error) {
 	s := cryptobyte.String(data)
-	rr.Value, err = unpackSVCB(&s)
+	rr.Value, err = unpackDELEG(&s)
 	if err != nil {
 		return err
 	}

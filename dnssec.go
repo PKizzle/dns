@@ -375,7 +375,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	// RFC 4034 2.1.1 If bit 7 has value 0, then the DNSKEY record holds some
 	// other type of DNS public key and MUST NOT be used to verify RRSIGs that
 	// cover RRsets.
-	if k.Flags&ZONE == 0 {
+	if k.Flags&FlagZONE == 0 {
 		return ErrKey
 	}
 
