@@ -94,7 +94,7 @@ func (z *Zone) Set(node Node) string {
 	}
 	// The name didn't exist before, we need to insert it.
 	z.Tree.Set(node)
-	// Now we need to create (potential) ENT up to the apex. So when just insert www.a.b.example.org. we need
+	// Now we need to create (potential) ENT up to the apex. So when just insert www.a.b.example.org. We need
 	// make a.b.example.org, b.example.org. So we need N+2 labels, if this zone has N labels. If we only have
 	// 1 label more, we just created the correct node.
 	labels := dnsutil.Labels(node.Name)
@@ -119,7 +119,6 @@ func (z *Zone) Set(node Node) string {
 
 // Get gets the node under name from z.
 func (z *Zone) Get(name string) (Node, bool) {
-	// TODO(miek): wrap around! + test
 	n, ok := z.Tree.Get(Node{Name: name})
 	if ok {
 		return n, true
@@ -129,6 +128,7 @@ func (z *Zone) Get(name string) (Node, bool) {
 
 // Previous returns the logical previous name from name.
 func (z *Zone) Previous(name string) (Node, bool) {
+	// TODO(miek): wrap around! + test
 	node := Node{}
 	z.Tree.Descend(Node{Name: name}, func(n Node) bool {
 		node = n

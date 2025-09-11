@@ -198,9 +198,25 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 		if dns.RRToType(rr) == qtype {
 			*section = append(*section, rr.Copy())
 		}
-		switch {
-		case hint == hintDelegation && r.Security:
-			if _, ok := rr.(*dns.DS); ok {
+		if hint == hintDelegation {
+			if n, ok := rr.(*dns.NS); ok {
+				// if the owner name is a child of the target we need to find the glue
+				if dnsutil.IsBelow(rr.Header().Name, n.Ns) {
+					if glue, ok := z.Get(n.Ns); ok {
+						for _, rr := range glue.RRs {
+							if _, ok := rr.(*dns.A); ok {
+								r.Extra = append(r.Extra, rr.Copy())
+								continue
+							}
+							if _, ok := rr.(*dns.AAAA); ok {
+								r.Extra = append(r.Extra, rr.Copy())
+							}
+						}
+					}
+				}
+			}
+			// cehck the target of NS a get the A/AAAA for it
+			if _, ok := rr.(*dns.DS); ok && r.Security {
 				*section = append(*section, rr.Copy())
 			}
 		}

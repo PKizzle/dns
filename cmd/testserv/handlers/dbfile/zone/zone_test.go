@@ -61,6 +61,10 @@ func TestZone(t *testing.T) {
 					dnstest.New("delegated.example.org.  IN NS   a.delegated.example.org."),
 					dnstest.New("delegated.example.org.  IN NS   ns-ext.nlnetlabs.nl."),
 				}
+				m.Extra = []dns.RR{
+					dnstest.New("a.delegated.example.org. IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
+					dnstest.New("a.delegated.example.org. IN A       139.162.196.78"),
+				}
 				return m
 			},
 		},
@@ -75,6 +79,10 @@ func TestZone(t *testing.T) {
 					dnstest.New("delegated.example.org. IN DS	  10056 5 1 EE72CABD1927759CDDA92A10DBF431504B9E1F13"),
 					dnstest.New("delegated.example.org. IN DS	  10056 5 2 E4B05F87725FA86D9A64F1E53C3D0E6250946599DFE639C45955B0ED416CDDFA"),
 					dnstest.New("delegated.example.org. IN RRSIG   DS 13 3 1800 20161129153240 20161030153240 49035 example.org. rlNNzcUmtbjLSl02ZzQGUbWX75yCUx0Mug1jHtKVqRq1hpPE2S3863tIWSlz+W9wz4o19OI4jbznKKqk+DGKog=="),
+				}
+				m.Extra = []dns.RR{
+					dnstest.New("a.delegated.example.org. IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
+					dnstest.New("a.delegated.example.org. IN A       139.162.196.78"),
 				}
 				return m
 			},
