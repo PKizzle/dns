@@ -123,6 +123,19 @@ func TestZone(t *testing.T) {
 				return m
 			},
 		},
+		// dnssec:nxdomain
+		{
+			"dns:cname",
+			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("archive.example.org.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("archive.example.org. IN CNAME   a.example.org."),
+					dnstest.New("a.example.org.       IN A       139.162.196.78"),
+				}
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
