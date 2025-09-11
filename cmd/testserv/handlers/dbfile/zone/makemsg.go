@@ -112,7 +112,7 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 	// If this is a CNAME we need to chase it within the zone for (up to 8?) CNAME chains
 	for _, rr := range encloser.RRs {
 		if dns.RRToType(rr) == dns.TypeCNAME {
-			return MsgCanonical(r, encloser)
+			return z.MsgCanonical(r, encloser)
 		}
 	}
 
