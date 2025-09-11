@@ -9,9 +9,6 @@ import (
 // this needs to live in the pkg/db or something, not tucked away here.
 //
 // This is the interface dbfile implements on top of the b-tree.
-// zone.Zone also implements the following functions:
-//
-// - New(origin, path string) Interface
 type Interface interface {
 	Load() error
 	Retrieve(*dns.Msg) *dns.Msg

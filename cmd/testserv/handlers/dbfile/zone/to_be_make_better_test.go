@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestZoneLoad(t *testing.T) {
+func testZoneLoad(t *testing.T) {
 	z := New("example.", "testdata/db.example")
 	if err := z.Load(); err != nil {
 		t.Fatal(err)

@@ -171,6 +171,26 @@ func TestZoneWildcard(t *testing.T) {
 				m.Ns = []dns.RR{
 					dnstest.New("example. IN SOA     miek.example. miek.example. 3 2 3 4 5"),
 					dnstest.New("example. IN RRSIG   SOA 16 1 3600 20251008152815 20250910152815 7095 example. 3QyGt6+UNRqST/tex+lDZ4fyrSs5nyyxRBXTho8UTW1S99+koArKyoNMxIOXN2XiBdlsnvvaNa+Af9V1yR9TXsVXqm45lNvFY4lZcVpUXuyO2vgZJSOiZDypOh/hdaNpfPHyt6SMzETSbhpw548caxsA"),
+					dnstest.New("example. IN NSEC    sub.*.example. NS SOA MX RRSIG NSEC DNSKEY"),
+					dnstest.New("example.        IN RRSIG   NSEC 16 1 5 20251008152815 20250910152815 7095 example. vab6kNsy2t9oJFdAABHGdn/xDqjxKtvyuq1N8QNFXVmRroAcD5J56vQHY8fn2WCuMUlWNdNpYR+ANQOK8z620lGle/PQgoIi5DOz1V2EQ+bzRRmzHft79ZoAO5/xis8gY8XzcWoKGJB1qf8d+PrwTSAA"),
+					dnstest.New("c.b.example.    IN NSEC    d.example. A TXT RRSIG NSEC"),
+					dnstest.New("c.b.example.    IN RRSIG   NSEC 16 3 5 20251008152815 20250910152815 7095 example. pm+sGFdV8P2NPP0kfLv7hI0iyfhpUdCSu+FeI29P2Bz6TWERJys6z3OTZKeyUP6u+fIjtv8lU5MAStMfRjeM1SxK5qZq/s+h5BVgWn++VyiTuJpvqHiZj12rEMQBf9Nkk4TZbSlYyvqIOv+hg9UtTw8A"),
+				}
+				return m
+			},
+		},
+		{
+			"dnssec:entnogus",
+			func() *dns.Msg { m := dns.NewMsg("nogus.example.", dns.TypeA); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("nogus.example.", dns.TypeA)
+				m.Ns = []dns.RR{
+					dnstest.New("example. IN SOA     miek.example. miek.example. 3 2 3 4 5"),
+					dnstest.New("example. IN RRSIG   SOA 16 1 3600 20251008152815 20250910152815 7095 example. 3QyGt6+UNRqST/tex+lDZ4fyrSs5nyyxRBXTho8UTW1S99+koArKyoNMxIOXN2XiBdlsnvvaNa+Af9V1yR9TXsVXqm45lNvFY4lZcVpUXuyO2vgZJSOiZDypOh/hdaNpfPHyt6SMzETSbhpw548caxsA"),
+					dnstest.New("example. IN NSEC    sub.*.example. NS SOA MX RRSIG NSEC DNSKEY"),
+					dnstest.New("example.        IN RRSIG   NSEC 16 1 5 20251008152815 20250910152815 7095 example. vab6kNsy2t9oJFdAABHGdn/xDqjxKtvyuq1N8QNFXVmRroAcD5J56vQHY8fn2WCuMUlWNdNpYR+ANQOK8z620lGle/PQgoIi5DOz1V2EQ+bzRRmzHft79ZoAO5/xis8gY8XzcWoKGJB1qf8d+PrwTSAA"),
+					dnstest.New("_ssh._tcp.host2.example. IN NSEC    subdel.example. SRV RRSIG NSEC"),
+					dnstest.New("_ssh._tcp.host2.example. IN RRSIG   NSEC 16 4 5 20251008152815 20250910152815 7095 example. XObHcwh4vV7td01x0/Rfnx732Bq8Wn3ot/NckowRN6dRBUSnI1EPNoOWJLPFOSOY/yJMhgUtGcqAJOCugIaIryphRoNbdbxFxOhS0ytlTZsbOdx0/cSfs1ajuLJ9jkxCiEqPMY3E2pcznhJk8oT0ficA"),
 				}
 				return m
 			},
@@ -191,7 +211,6 @@ func TestZoneWildcard(t *testing.T) {
 			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
-				t.Logf("%s\n", rmsg)
 			}
 			for i := range gotrrs {
 				if !dns.Equal(gotrrs[i], gotrrs[i]) {
