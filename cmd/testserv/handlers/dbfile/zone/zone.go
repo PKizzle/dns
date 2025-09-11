@@ -27,8 +27,6 @@ type Zone struct {
 	Path   string
 	Tree   *btree.BTreeG[Node]
 
-	Minimal bool // TODO: needed here?
-
 	apex Node // apex node, filled after a Load.
 }
 
@@ -45,11 +43,10 @@ func less(a, b Node) bool {
 
 func New(origin, path string) *Zone {
 	return &Zone{
-		Origin:  dnsutil.Canonical(origin),
-		Labels:  dnsutil.Labels(dnsutil.Canonical(origin)),
-		Path:    path,
-		Tree:    btree.NewBTreeG(less),
-		Minimal: true,
+		Origin: dnsutil.Canonical(origin),
+		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
+		Path:   path,
+		Tree:   btree.NewBTreeG(less),
 	}
 }
 

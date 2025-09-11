@@ -10,9 +10,8 @@ import (
 )
 
 type Dbfile struct {
-	Path           string
-	Reload         time.Duration
-	DisableMinimal bool
+	Path   string
+	Reload time.Duration
 
 	// Zones holds all the zone this instance of Dbfile is called for.
 	Zones map[string]*zone.Zone

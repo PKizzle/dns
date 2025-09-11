@@ -72,8 +72,8 @@ Search:
 			// Skip a label to the right again and replace with '*', this should work by definition. If we
 			// find a wildcard label here we keep track of what we found, but we need to search below to see
 			// if there is a more specific match.
-			j, _ := dnsutil.Next(qname, 0)
-			node, ok := z.Get("*." + qname[j:])
+			j, _ := dnsutil.Next(qname[i:], 0)
+			node, ok := z.Get("*." + qname[i+j:])
 			if ok {
 				sosynthesis = node
 				hint = hintWildcard
@@ -94,9 +94,52 @@ Search:
 // more specific. I.e. original qname did not exist. Now we need to assemble the answer plus adding the NSECs
 // that validte the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
 func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
-	// By definition sosynthesis.Name must start with a "*.". Substitute?
+	// Synthesis, can still lead to no data if the qtype doesn't match.
+	if len(sosynthesis.RRs) > 0 {
+		qtype := dns.RRToType(r.Question[0])
+		for _, rr := range sosynthesis.RRs {
+			if dns.RRToType(rr) == qtype {
+				rr1 := rr.Copy()
+				rr1.Header().Name = r.Question[0].Header().Name // replace owner names with the qname
+				r.Answer = append(r.Answer, rr1)
+			}
+			if r.Security {
+				if _, ok := rr.(*dns.NSEC); ok {
+					r.Ns = append(r.Ns, rr.Copy()) // SoS' NSEC
+				}
+				if s, ok := rr.(*dns.RRSIG); ok {
+					if s.TypeCovered == qtype {
+						rr1 := rr.Copy()
+						rr1.Header().Name = r.Question[0].Header().Name
+						r.Answer = append(r.Answer, rr1)
+					}
+					if s.TypeCovered == dns.TypeNSEC {
+						r.Ns = append(r.Ns, rr.Copy())
+					}
+				}
 
-	// NODATA response, when there are no RRs.
+			}
+		}
+		if len(r.Answer) > 0 {
+			return r
+		}
+		// nodata, as the type isn't there, only need SOA + RRSIG, lets prepend so it comes first
+		for _, rr := range z.Apex().RRs {
+			if _, ok := rr.(*dns.SOA); ok {
+				r.Ns = append(r.Ns, rr.Copy())
+			}
+			if r.Security {
+				if s, ok := rr.(*dns.RRSIG); ok {
+					if s.TypeCovered == dns.TypeSOA {
+						r.Ns = append(r.Ns, rr.Copy())
+					}
+				}
+			}
+		}
+		return r
+	}
+
+	// NODATA response, when there are no RRs or when we fall through from above.
 	if len(sosynthesis.RRs) == 0 {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
@@ -132,9 +175,6 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 		}
 		return r
 	}
-
-	// Synthesis, can still lead to no data if the qtype doesn't match.
-	// sos needed
 
 	return r
 }
