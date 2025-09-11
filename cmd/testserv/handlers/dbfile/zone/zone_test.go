@@ -185,7 +185,6 @@ func TestZoneWildcard(t *testing.T) {
 			}
 
 			rmsg := z.Retrieve(tc.in())
-			t.Logf("%s\n", rmsg)
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)

@@ -211,9 +211,7 @@ Search:
 func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 	// By definition sosynthesis.Name must start with a "*.". Substitute?
 
-	println("SOS", sosynthesis.Name)
-	println("ENC", encloser.Name)
-	// NODATA response.
+	// NODATA response, when there are no RRs.
 	if len(sosynthesis.RRs) == 0 {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
@@ -229,6 +227,8 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 		}
 		return r
 	}
+
+	// Synthesis, can still lead to no data if the qtype doesn't match.
 
 	return r
 }
