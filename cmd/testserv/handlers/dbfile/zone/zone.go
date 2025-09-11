@@ -29,7 +29,7 @@ type Zone struct {
 
 	Minimal bool // TODO: needed here?
 
-	q Node // resusable q for retrieving the apex, set in New.
+	apex Node // apex node, filled after a Load.
 }
 
 // A Node is a DNS node in the tree.
@@ -50,11 +50,10 @@ func New(origin, path string) *Zone {
 		Path:    path,
 		Tree:    btree.NewBTreeG(less),
 		Minimal: true,
-		q:       Node{Name: dnsutil.Canonical(origin)},
 	}
 }
 
-// Load loads a new zone with origin from path from z.
+// Load loads a new zone with origin from path from z. Load also sets the apex, so the z.Apex can return that.
 func (z *Zone) Load() error {
 	f, err := os.Open(z.Path)
 	if err != nil {
@@ -79,13 +78,11 @@ func (z *Zone) Load() error {
 	if soa != 1 {
 		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", z.Path, z.Origin)
 	}
+	z.apex, _ = z.Tree.Get(Node{Name: z.Origin})
 	return nil
 }
 
-func (z *Zone) Apex() Node {
-	node, _ := z.Tree.Get(z.q)
-	return node
-}
+func (z *Zone) Apex() Node { return z.apex }
 
 // Set sets the RRs in the zone. It needs to create any empty non-terminals it has. Meaning for each label
 // a lookup is done if there already is an empty non-terminal, if not an empty set is inserted.
@@ -154,7 +151,7 @@ func (z *Zone) Retrieve(m *dns.Msg) *dns.Msg {
 	dnsutil.SetReply(r, m)
 
 	labels := z.Labels
-	found, foundstar := Node{}, Node{}
+	sosynthesis, encloser := Node{}, Node{} // source of synthesis and closes encloser RRset + names.
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
 	// record set from the zone. The second loop (in z.Msg) then creates a message with the correct RRs in the sections.
@@ -163,19 +160,17 @@ func (z *Zone) Retrieve(m *dns.Msg) *dns.Msg {
 
 	// Doing apex queries separate simplifies the loop below as we can not have delegation, wildcards, etc.
 	if z.Labels == dnsutil.Labels(qname) {
-		return z.MsgFound(r, z.Apex(), hintAnswer, "" /* closest can remain empty */)
+		return z.MsgFound(r, z.Apex(), hintAnswer)
 	}
 
 	labels++
 	hint := hintAnswer
-	closest := z.Origin // closest contains the last matching name, this is closet encloser, we start with the zone's origin
-	closeststar := ""
+	encloser = z.Apex()
 Search:
 	for i, start := dnsutil.Prev(qname, labels); !start; i, start = dnsutil.Prev(qname, labels) {
 		node, ok := z.Get(qname[i:])
 		if ok {
-			found = node
-			closest = qname[i:]
+			encloser = node
 
 			// Check for delegation, thus NS and (later) DELEG records. If this set contain NS records we have a delegation.
 			for _, rr := range node.RRs {
@@ -195,8 +190,7 @@ Search:
 			j, _ := dnsutil.Next(qname, 0)
 			node, ok := z.Get("*." + qname[j:])
 			if ok {
-				foundstar = node
-				closeststar = qname[j:]
+				sosynthesis = node
 				hint = hintWildcard
 			}
 		}
@@ -205,20 +199,22 @@ Search:
 	}
 
 	if hint == hintWildcard {
-		return z.MsgWildcard(r, foundstar, closest, closeststar)
+		return z.MsgSynthesize(r, sosynthesis, encloser)
 	}
 
-	return z.MsgFound(r, found, hint, closest)
+	return z.MsgFound(r, encloser, hint)
 }
 
 // MsgWildcard handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
 // more specific. I.e. original qname did not exist. Now we need to assemble the answer plus adding the NSECs
-// that validte the answer. If closeststar != closest, those NSECs need to be added.
-func (z *Zone) MsgWildcard(r *dns.Msg, foundstar Node, closest, closeststar string) *dns.Msg {
-	// By definition foundstar.Name must start with a "*.". Substitute?
+// that validte the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
+func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
+	// By definition sosynthesis.Name must start with a "*.". Substitute?
 
+	println("SOS", sosynthesis.Name)
+	println("ENC", encloser.Name)
 	// NODATA response.
-	if len(foundstar.RRs) == 0 {
+	if len(sosynthesis.RRs) == 0 {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
@@ -237,7 +233,7 @@ func (z *Zone) MsgWildcard(r *dns.Msg, foundstar Node, closest, closeststar stri
 	return r
 }
 
-func (z *Zone) MsgFound(r *dns.Msg, found Node, hint Hint, closest string) *dns.Msg {
+func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 	// Copy because there RRs _will_ be modified at some point, even here for dname and cname post processing.
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
@@ -247,7 +243,7 @@ func (z *Zone) MsgFound(r *dns.Msg, found Node, hint Hint, closest string) *dns.
 	}
 
 	// NXDOOMAIN response. (multiple nsecs??), If even then ni Node is empty
-	if found.Name == "" { // found.RRs must be empty as well
+	if encloser.Name == "" { // found.RRs must be empty as well
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
@@ -257,7 +253,7 @@ func (z *Zone) MsgFound(r *dns.Msg, found Node, hint Hint, closest string) *dns.
 		return r
 	}
 
-	for _, rr := range found.RRs {
+	for _, rr := range encloser.RRs {
 		if dns.RRToType(rr) == qtype {
 			*section = append(*section, rr.Copy())
 		}
@@ -269,7 +265,7 @@ func (z *Zone) MsgFound(r *dns.Msg, found Node, hint Hint, closest string) *dns.
 		}
 	}
 	if r.Security {
-		for _, rr := range found.RRs {
+		for _, rr := range encloser.RRs {
 			if s, ok := rr.(*dns.RRSIG); ok {
 				if s.TypeCovered == qtype {
 					*section = append(*section, rr.Copy())
