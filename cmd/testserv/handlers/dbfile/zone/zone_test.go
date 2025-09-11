@@ -84,7 +84,7 @@ func TestZone(t *testing.T) {
 			func() *dns.Msg { m := dns.NewMsg("a.example.org.", dns.TypeTXT); return m },
 			func() *dns.Msg {
 				m := dns.NewMsg("a.example.org.", dns.TypeTXT)
-				m.Answer = []dns.RR{
+				m.Ns = []dns.RR{
 					dnstest.New("example.org. IN SOA  a.iana-servers.net. devnull.example.org. 1282630057 14400 3600 604800 14400"),
 				}
 				return m
@@ -95,7 +95,7 @@ func TestZone(t *testing.T) {
 			func() *dns.Msg { m := dns.NewMsg("a.example.org.", dns.TypeTXT); m.Security = true; return m },
 			func() *dns.Msg {
 				m := dns.NewMsg("a.example.org.", dns.TypeTXT)
-				m.Answer = []dns.RR{
+				m.Ns = []dns.RR{
 					dnstest.New("example.org. IN SOA     a.iana-servers.net. devnull.example.org. 1282630057 14400 3600 604800 14400"),
 					dnstest.New("example.org. IN RRSIG   SOA 13 2 1800 20161129153240 20161030153240 49035 example.org. GVnMpFmN+6PDdgCtlYDEYBsnBNDgYmEJNvosBk9+PNTPNWNst+BXCpDadTeqRwrr1RHEAQ7jYWzNwqn81pN+IA=="),
 					dnstest.New("example.org. IN NSEC    a.example.org. NS SOA RRSIG NSEC DNSKEY"),
@@ -109,7 +109,7 @@ func TestZone(t *testing.T) {
 			func() *dns.Msg { m := dns.NewMsg("www1.example.org.", dns.TypeA); return m },
 			func() *dns.Msg {
 				m := dns.NewMsg("www1.example.org.", dns.TypeA)
-				m.Answer = []dns.RR{
+				m.Ns = []dns.RR{
 					dnstest.New("example.org. IN SOA  a.iana-servers.net. devnull.example.org. 1282630057 14400 3600 604800 14400"),
 				}
 				return m
@@ -142,8 +142,7 @@ func TestZone(t *testing.T) {
 	}
 }
 
-// Needs a signed test zone that is also loaded in nsd with multi-level wildcard, of the various types.
-func testZoneWildcard(t *testing.T) {
+func TestZoneWildcard(t *testing.T) {
 	z := New("example.", "testdata/db.example")
 	if err := z.Load(); err != nil {
 		t.Fatal(err)
@@ -154,12 +153,24 @@ func testZoneWildcard(t *testing.T) {
 		exp  func() *dns.Msg
 	}{
 		{
-			"dns:exact",
-			func() *dns.Msg { m := dns.NewMsg("dnssex.nl.", dns.TypeA); return m },
+			"dns:entbogus",
+			func() *dns.Msg { m := dns.NewMsg("bogus.example.", dns.TypeA); return m },
 			func() *dns.Msg {
-				m := dns.NewMsg("dnssex.nl.", dns.TypeA)
-				m.Answer = []dns.RR{
-					dnstest.New("dnssex.nl. IN A    139.162.196.78"),
+				m := dns.NewMsg("bogus.example.", dns.TypeA)
+				m.Ns = []dns.RR{
+					dnstest.New("example. IN SOA     miek.example. miek.example. 3 2 3 4 5"),
+				}
+				return m
+			},
+		},
+		{
+			"dnssec:entbogus",
+			func() *dns.Msg { m := dns.NewMsg("bogus.example.", dns.TypeA); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("bogus.example.", dns.TypeA)
+				m.Ns = []dns.RR{
+					dnstest.New("example. IN SOA     miek.example. miek.example. 3 2 3 4 5"),
+					dnstest.New("example. IN RRSIG   SOA 16 1 3600 20251008152815 20250910152815 7095 example. 3QyGt6+UNRqST/tex+lDZ4fyrSs5nyyxRBXTho8UTW1S99+koArKyoNMxIOXN2XiBdlsnvvaNa+Af9V1yR9TXsVXqm45lNvFY4lZcVpUXuyO2vgZJSOiZDypOh/hdaNpfPHyt6SMzETSbhpw548caxsA"),
 				}
 				return m
 			},
@@ -174,6 +185,7 @@ func testZoneWildcard(t *testing.T) {
 			}
 
 			rmsg := z.Retrieve(tc.in())
+			t.Logf("%s\n", rmsg)
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)

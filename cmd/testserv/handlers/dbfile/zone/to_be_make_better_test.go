@@ -15,6 +15,8 @@ func TestZoneLoad(t *testing.T) {
 		if len(n.RRs) == 0 {
 			fmt.Printf("ENT\n")
 			return true
+		} else {
+			fmt.Printf("RRSET\n")
 		}
 		for i := range n.RRs {
 			fmt.Printf("%s\n", n.RRs[i])

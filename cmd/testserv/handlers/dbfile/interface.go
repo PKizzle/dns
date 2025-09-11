@@ -15,9 +15,9 @@ import (
 type Interface interface {
 	Load() error
 	Retrieve(*dns.Msg) *dns.Msg
-	Get(string) ([]dns.RR, bool)
-	Set([]dns.RR) string
-	Apex() []dns.RR
+	Get(string) (zone.Node, bool)
+	Set(zone.Node) string
+	Apex() zone.Node
 	Walk(func(zone.Node) bool)
 	AuthoritativeWalk(func(zone.Node, bool) bool)
 }
