@@ -109,21 +109,18 @@ func (z *Zone) Set(rrs []dns.RR) string {
 	if labels == z.Labels+1 {
 		return rrs[0].Header().Name
 	}
-	// Else we create (or check if they exist) the intermediate nodes.
 
+	// Else we create (or check if they exist) the intermediate nodes.
 	off := 0
 	name := rrs[0].Header().Name
-	for i := 1; i < z.Labels-labels; i++ {
+	for i := 1; i < labels-z.Labels; i++ {
 		off, _ = dnsutil.Next(name, off)
 
 		node := Node{Name: name[off:]}
-
 		if _, ok := z.Tree.Get(node); ok {
-			// already exist, nothing to add
-			continue
+			continue // already exist, nothing to add
 		}
-		// set an empty node
-		z.Tree.Set(node)
+		z.Tree.Set(node) // set an empty node
 	}
 	return rrs[0].Header().Name
 }

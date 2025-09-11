@@ -10,26 +10,15 @@ func TestZoneLoad(t *testing.T) {
 	if err := z.Load(); err != nil {
 		t.Fatal(err)
 	}
-	return
 	z.Walk(func(n Node) bool {
 		fmt.Printf("%s :", n.Name)
+		if len(n.RRs) == 0 {
+			fmt.Printf("ENT\n")
+			return true
+		}
 		for i := range n.RRs {
 			fmt.Printf("%s\n", n.RRs[i])
 		}
-		return true
-	})
-	println("=======")
-	z.AuthoritativeWalk(func(n Node, auth bool) bool {
-		fmt.Printf("%s :", n.Name)
-		for i := range n.RRs {
-			if auth {
-				fmt.Print("AUTH: ")
-			} else {
-				fmt.Print("NONE: ")
-			}
-			fmt.Printf("%s\n", n.RRs[i])
-		}
-		fmt.Println("*****")
 		return true
 	})
 }
