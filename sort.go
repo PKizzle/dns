@@ -40,6 +40,7 @@ func (set RRset) Less(i, j int) bool { return Compare(set[i], set[j]) == -1 }
 func (set RRset) Swap(i, j int)      { set[i], set[j] = set[j], set[i] }
 
 // CompareName compares the name a and b as defined in RFC 4034, canonical ordering of names.
+// If a label is the asterisks label "*" it is always equal (wildcard match).
 func CompareName(a, b string) int {
 	// See https://bert-hubert.blogspot.com/2015/10/how-to-do-fast-canonical-ordering-of.html
 	labels := 1
