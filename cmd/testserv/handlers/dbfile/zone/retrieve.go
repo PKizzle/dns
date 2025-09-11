@@ -129,10 +129,8 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 				r.Ns = append(r.Ns, rr.Copy())
 			}
 			if r.Security {
-				if s, ok := rr.(*dns.RRSIG); ok {
-					if s.TypeCovered == dns.TypeSOA {
-						r.Ns = append(r.Ns, rr.Copy())
-					}
+				if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
+					r.Ns = append(r.Ns, rr.Copy())
 				}
 			}
 		}
@@ -149,10 +147,8 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 				if _, ok := rr.(*dns.NSEC); ok {
 					r.Ns = append(r.Ns, rr.Copy())
 				}
-				if s, ok := rr.(*dns.RRSIG); ok {
-					if s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.Copy())
-					}
+				if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
+					r.Ns = append(r.Ns, rr.Copy())
 				}
 			}
 		}
@@ -164,10 +160,8 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 						if _, ok := rr.(*dns.NSEC); ok {
 							r.Ns = append(r.Ns, rr.Copy())
 						}
-						if s, ok := rr.(*dns.RRSIG); ok {
-							if s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC {
-								r.Ns = append(r.Ns, rr.Copy())
-							}
+						if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
+							r.Ns = append(r.Ns, rr.Copy())
 						}
 					}
 				}
@@ -226,21 +220,21 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 		}
 	}
 
+	if len(*section) > 0 {
+		return r
+	}
+
 	// NODATA response.
-	if len(*section) == 0 {
-		for _, rr := range z.Apex().RRs {
-			if _, ok := rr.(*dns.SOA); ok {
+	for _, rr := range z.Apex().RRs {
+		if _, ok := rr.(*dns.SOA); ok {
+			r.Ns = append(r.Ns, rr.Copy())
+		}
+		if r.Security {
+			if _, ok := rr.(*dns.NSEC); ok {
 				r.Ns = append(r.Ns, rr.Copy())
 			}
-			if r.Security {
-				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.Copy())
-				}
-				if s, ok := rr.(*dns.RRSIG); ok {
-					if s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.Copy())
-					}
-				}
+			if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
+				r.Ns = append(r.Ns, rr.Copy())
 			}
 		}
 	}
