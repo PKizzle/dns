@@ -124,7 +124,7 @@ func TestZone(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 
-			rmsg := z.Get(tc.in())
+			rmsg := z.Retrieve(tc.in())
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)
@@ -173,7 +173,7 @@ func testZoneWildcard(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 
-			rmsg := z.Get(tc.in())
+			rmsg := z.Retrieve(tc.in())
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)

@@ -22,7 +22,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		z := d.Zones[dns.Zone(ctx)]
 
-		m := z.Lookup(r)
+		m := z.Retrieve(r)
 		m.Data = r.Data
 		m.Pack()
 

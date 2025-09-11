@@ -5,11 +5,12 @@ import (
 	"testing"
 )
 
-func testZoneLoad(t *testing.T) {
-	z := New("example.org.", "testdata/db.example.org")
+func TestZoneLoad(t *testing.T) {
+	z := New("example.", "testdata/db.example")
 	if err := z.Load(); err != nil {
 		t.Fatal(err)
 	}
+	return
 	z.Walk(func(n Node) bool {
 		fmt.Printf("%s :", n.Name)
 		for i := range n.RRs {

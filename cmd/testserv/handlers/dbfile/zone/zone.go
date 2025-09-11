@@ -150,10 +150,10 @@ const (
 	hintWildcard
 )
 
-// Lookup looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
+// Retrieve looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA response the message will also contain the correct
 // information.
-func (z *Zone) Lookup(m *dns.Msg) *dns.Msg {
+func (z *Zone) Retrieve(m *dns.Msg) *dns.Msg {
 	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
 	// so we should be able to Prev to the first label that should fall in this zone.
 	r := new(dns.Msg)

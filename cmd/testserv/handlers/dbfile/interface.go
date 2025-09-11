@@ -14,7 +14,7 @@ import (
 // - New(origin, path string) Interface
 type Interface interface {
 	Load() error
-	Lookup(*dns.Msg) *dns.Msg
+	Retrieve(*dns.Msg) *dns.Msg
 	Get(string) ([]dns.RR, bool)
 	Set([]dns.RR) string
 	Apex() []dns.RR
