@@ -14,11 +14,12 @@ import (
 // - New(origin, path string) Interface
 type Interface interface {
 	Load() error
-	Get(*dns.Msg) *dns.Msg
-	//	Set([]dns.RR) ([]dns.RR, bool)  - TODO(miek): implement for zone.Zone
+	Lookup(*dns.Msg) *dns.Msg
+	Get(string) ([]dns.RR, bool)
+	Set([]dns.RR) string
 	Apex() []dns.RR
-	Walk(func([]dns.RR) bool)
-	AuthoritativeWalk(func([]dns.RR, bool) bool)
+	Walk(func(zone.Node) bool)
+	AuthoritativeWalk(func(zone.Node, bool) bool)
 }
 
 var _ Interface = &zone.Zone{}
