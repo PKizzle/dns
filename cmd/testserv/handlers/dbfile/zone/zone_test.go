@@ -227,8 +227,8 @@ func TestZoneWildcard(t *testing.T) {
 					dnstest.New("blah.blah.d.example. IN RRSIG   TXT 16 2 3600 20251008152815 20250910152815 7095 example. 1gsP+drOy45P9UDN9Kx/4Mz0iSmYRSm34ZRaj8ecCrnIEUgKyzhCUapvV3MFwRJu2H+zSrRcx4cAd5O19+REbbmgna40PsixsLGqePs/1gXtNI9nWZokT102Nj1XbRkthNFvz9AWlboJwwLFrPI+vjsA"),
 				}
 				m.Ns = []dns.RR{
-					dnstest.New("*.d.example.    5       IN      NSEC    host1.example. TXT RRSIG NSEC"),
-					dnstest.New("*.d.example.    5       IN      RRSIG   NSEC 16 2 5 20251008152815 20250910152815 7095 example. /TjeDDQ1T0knqzvuh7cXSWpVbmwkdVDNgVaU4+RwPIKytn1xyWzObvt6IK3AbXeYgp77n3NP9p0AaxxBQgtKP2n2HZtfIr4wX2ITHWwnuZYjbuxwCWP/8S8fA/7fVzClQc+M0t6nhKeSRaTYj1uRny8A"),
+					dnstest.New("*.d.example. IN NSEC    host1.example. TXT RRSIG NSEC"),
+					dnstest.New("*.d.example. IN RRSIG   NSEC 16 2 5 20251008152815 20250910152815 7095 example. /TjeDDQ1T0knqzvuh7cXSWpVbmwkdVDNgVaU4+RwPIKytn1xyWzObvt6IK3AbXeYgp77n3NP9p0AaxxBQgtKP2n2HZtfIr4wX2ITHWwnuZYjbuxwCWP/8S8fA/7fVzClQc+M0t6nhKeSRaTYj1uRny8A"),
 				}
 				return m
 			},
@@ -239,7 +239,10 @@ func TestZoneWildcard(t *testing.T) {
 			func() *dns.Msg {
 				m := dns.NewMsg("blah.blah.d.example.", dns.TypeA)
 				m.Ns = []dns.RR{
-					dnstest.New("example. IN SOA     miek.example. miek.example. 3 2 3 4 5"),
+					dnstest.New("*.d.example. IN NSEC    host1.example. TXT RRSIG NSEC"),
+					dnstest.New("*.d.example. IN RRSIG   NSEC 16 2 5 20251008152815 20250910152815 7095 example. /TjeDDQ1T0knqzvuh7cXSWpVbmwkdVDNgVaU4+RwPIKytn1xyWzObvt6IK3AbXeYgp77n3NP9p0AaxxBQgtKP2n2HZtfIr4wX2ITHWwnuZYjbuxwCWP/8S8fA/7fVzClQc+M0t6nhKeSRaTYj1uRny8A"),
+					dnstest.New("example.     IN SOA     miek.example. miek.example. 1 2 3 4 5"),
+					dnstest.New("example.     IN RRSIG   SOA 16 1 3600 20251008152815 20250910152815 7095 example. 3QyGt6+UNRqST/tex+lDZ4fyrSs5nyyxRBXTho8UTW1S99+koArKyoNMxIOXN2XiBdlsnvvaNa+Af9V1yR9TXsVXqm45lNvFY4lZcVpUXuyO2vgZJSOiZDypOh/hdaNpfPHyt6SMzETSbhpw548caxsA"),
 				}
 				return m
 			},
