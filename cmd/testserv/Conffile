@@ -9,14 +9,14 @@
 }
 
 # log whoami only, order matters
-miek.nl example.org {
+example.org {
     import base
     metrics
     any
     cookie geheim
     nsid Use the force
 #    whoami
-    dbfile db.generic
+    dbfile db.example.org
 }
 
 chaos2.miek.nl {

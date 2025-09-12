@@ -10,9 +10,8 @@ import (
 )
 
 type Dbfile struct {
-	Path           string
-	Reload         time.Duration
-	DisableMinimal bool
+	Path   string
+	Reload time.Duration
 
 	// Zones holds all the zone this instance of Dbfile is called for.
 	Zones map[string]*zone.Zone
@@ -22,7 +21,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		z := d.Zones[dns.Zone(ctx)]
 
-		m := z.Retrieve(r)
+		m := z.Retrieve(r, nil)
 		m.Data = r.Data
 		m.Pack()
 
