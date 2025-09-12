@@ -148,6 +148,34 @@ func TestZone(t *testing.T) {
 				return m
 			},
 		},
+		{
+			"dnssec:cname",
+			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeA); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("archive.example.org.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("archive.example.org. IN CNAME   a.example.org."),
+					dnstest.New("archive.example.org. IN RRSIG   CNAME 13 3 1800 20161129153240 20161030153240 49035 example.org. SDFW1z/PN9knzH8BwBvmWK0qdIwMVtGrMgRw7lgy4utRrdrRdCSLZy3xpkmkh1wehuGc4R0S05Z3DPhB0Fg5BA=="),
+					dnstest.New("a.example.org. IN A       139.162.196.78"),
+					dnstest.New("a.example.org. IN RRSIG   A 13 3 1800 20161129153240 20161030153240 49035 example.org. 41jFz0Dr8tZBN4Kv25S5dD4vTmviFiLx7xSAqMIuLFm0qibKL07perKpxqgLqM0H1wreT4xzI9Y4Dgp1nsOuMA=="),
+				}
+				return m
+			},
+		},
+		{
+			"dnssec:cname6",
+			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeAAAA); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("archive.example.org.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("archive.example.org. IN CNAME   a.example.org."),
+					dnstest.New("archive.example.org. IN RRSIG   CNAME 13 3 1800 20161129153240 20161030153240 49035 example.org. SDFW1z/PN9knzH8BwBvmWK0qdIwMVtGrMgRw7lgy4utRrdrRdCSLZy3xpkmkh1wehuGc4R0S05Z3DPhB0Fg5BA=="),
+					dnstest.New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
+					dnstest.New("a.example.org.  IN RRSIG   AAAA 13 3 1800 20161129153240 20161030153240 49035 example.org. brHizDxYCxCHrSKIu+J+XQbodRcb7KNRdN4qVOWw8wHqeBsFNRzvFF6jwPQYphGP7kZh1KAbVuY5ZVVhM2kHjw=="),
+				}
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -164,6 +192,7 @@ func TestZone(t *testing.T) {
 			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
+				t.Logf("%s", rmsg)
 			}
 			for i := range gotrrs {
 				if !dns.Equal(gotrrs[i], gotrrs[i]) {
@@ -295,6 +324,7 @@ func TestZoneWildcard(t *testing.T) {
 			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
+				t.Logf("%s", rmsg)
 			}
 			for i := range gotrrs {
 				if !dns.Equal(gotrrs[i], gotrrs[i]) {
