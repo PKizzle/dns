@@ -62,8 +62,8 @@ func TestZone(t *testing.T) {
 					dnstest.New("delegated.example.org.  IN NS   ns-ext.nlnetlabs.nl."),
 				}
 				m.Extra = []dns.RR{
-					dnstest.New("a.delegated.example.org. IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
 					dnstest.New("a.delegated.example.org. IN A       139.162.196.78"),
+					dnstest.New("a.delegated.example.org. IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
 				}
 				return m
 			},
@@ -81,8 +81,8 @@ func TestZone(t *testing.T) {
 					dnstest.New("delegated.example.org. IN RRSIG   DS 13 3 1800 20161129153240 20161030153240 49035 example.org. rlNNzcUmtbjLSl02ZzQGUbWX75yCUx0Mug1jHtKVqRq1hpPE2S3863tIWSlz+W9wz4o19OI4jbznKKqk+DGKog=="),
 				}
 				m.Extra = []dns.RR{
-					dnstest.New("a.delegated.example.org. IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
 					dnstest.New("a.delegated.example.org. IN A       139.162.196.78"),
+					dnstest.New("a.delegated.example.org. IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
 				}
 				return m
 			},
@@ -140,7 +140,7 @@ func TestZone(t *testing.T) {
 			"dns:cname6",
 			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeAAAA); return m },
 			func() *dns.Msg {
-				m := dns.NewMsg("archive.example.org.", dns.TypeA)
+				m := dns.NewMsg("archive.example.org.", dns.TypeAAAA)
 				m.Answer = []dns.RR{
 					dnstest.New("archive.example.org. IN CNAME   a.example.org."),
 					dnstest.New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
@@ -166,7 +166,7 @@ func TestZone(t *testing.T) {
 			"dnssec:cname6",
 			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeAAAA); m.Security = true; return m },
 			func() *dns.Msg {
-				m := dns.NewMsg("archive.example.org.", dns.TypeA)
+				m := dns.NewMsg("archive.example.org.", dns.TypeAAAA)
 				m.Answer = []dns.RR{
 					dnstest.New("archive.example.org. IN CNAME   a.example.org."),
 					dnstest.New("archive.example.org. IN RRSIG   CNAME 13 3 1800 20161129153240 20161030153240 49035 example.org. SDFW1z/PN9knzH8BwBvmWK0qdIwMVtGrMgRw7lgy4utRrdrRdCSLZy3xpkmkh1wehuGc4R0S05Z3DPhB0Fg5BA=="),
@@ -195,8 +195,9 @@ func TestZone(t *testing.T) {
 				t.Logf("%s", rmsg)
 			}
 			for i := range gotrrs {
-				if !dns.Equal(gotrrs[i], gotrrs[i]) {
-					t.Errorf("expected %s and %s to be equal", gotrrs[i], exprrs[i])
+				if !dns.Equal(gotrrs[i], exprrs[i]) {
+					t.Logf("%s", rmsg)
+					t.Fatalf("expected %s and\n\t%s to be equal", gotrrs[i], exprrs[i])
 				}
 			}
 		})
@@ -302,8 +303,31 @@ func TestZoneWildcard(t *testing.T) {
 				m.Ns = []dns.RR{
 					dnstest.New("*.d.example. IN NSEC    host1.example. TXT RRSIG NSEC"),
 					dnstest.New("*.d.example. IN RRSIG   NSEC 16 2 5 20251008152815 20250910152815 7095 example. /TjeDDQ1T0knqzvuh7cXSWpVbmwkdVDNgVaU4+RwPIKytn1xyWzObvt6IK3AbXeYgp77n3NP9p0AaxxBQgtKP2n2HZtfIr4wX2ITHWwnuZYjbuxwCWP/8S8fA/7fVzClQc+M0t6nhKeSRaTYj1uRny8A"),
-					dnstest.New("example.     IN SOA     miek.example. miek.example. 1 2 3 4 5"),
+					dnstest.New("example.     IN SOA     miek.example. miek.example. 3 2 3 4 5"),
 					dnstest.New("example.     IN RRSIG   SOA 16 1 3600 20251008152815 20250910152815 7095 example. 3QyGt6+UNRqST/tex+lDZ4fyrSs5nyyxRBXTho8UTW1S99+koArKyoNMxIOXN2XiBdlsnvvaNa+Af9V1yR9TXsVXqm45lNvFY4lZcVpUXuyO2vgZJSOiZDypOh/hdaNpfPHyt6SMzETSbhpw548caxsA"),
+				}
+				return m
+			},
+		},
+		{
+			"dns:hitunderwildcard",
+			func() *dns.Msg { m := dns.NewMsg("c.b.example.", dns.TypeTXT); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("c.b.example.", dns.TypeTXT)
+				m.Answer = []dns.RR{
+					dnstest.New(`c.b.example. IN TXT     "do I see this"`),
+				}
+				return m
+			},
+		},
+		{
+			"dnssec:hitunderwildcard",
+			func() *dns.Msg { m := dns.NewMsg("c.b.example.", dns.TypeTXT); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("c.b.example.", dns.TypeTXT)
+				m.Answer = []dns.RR{
+					dnstest.New(`c.b.example. IN TXT     "do I see this"`),
+					dnstest.New("c.b.example. IN RRSIG   TXT 16 3 3600 20251008152815 20250910152815 7095 example. t0bE9+GNX9DK9No0AZ6dYOjCb2ZZ4VGJHAfFVa6Lf8R2Wo0z0O5hHmGQ 7v4JDoNQqy1nvYXXhjsAU4VqYMW0ZNA6aiMxe6B1zTtunfdc01SBw7z0 MwvXk6C8fmn7WaC4mTXz9FQT5W/MUZcYYtLXTDwA"),
 				}
 				return m
 			},
@@ -327,8 +351,9 @@ func TestZoneWildcard(t *testing.T) {
 				t.Logf("%s", rmsg)
 			}
 			for i := range gotrrs {
-				if !dns.Equal(gotrrs[i], gotrrs[i]) {
-					t.Errorf("expected %s and %s to be equal", gotrrs[i], exprrs[i])
+				if !dns.Equal(gotrrs[i], exprrs[i]) {
+					t.Logf("%s", rmsg)
+					t.Fatalf("expected %s and\n\t%s to be equal", gotrrs[i], exprrs[i])
 				}
 			}
 		})
