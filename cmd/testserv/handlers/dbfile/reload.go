@@ -2,6 +2,7 @@ package dbfile
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
@@ -38,14 +39,14 @@ func (d *Dbfile) Reload() error {
 						if z.Path == event.Name {
 							z1 := zone.New(z.Origin, event.Name)
 							if err := z1.Load(); err != nil {
-								log.Error(fmt.Sprintf("Failed reload of zone %q in %q: %s", z.Origin, event.Name, err))
+								log.Error(fmt.Sprintf("Failed reload of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
 								continue
 							}
 							d.Lock()
 							d.Zones[z.Origin] = z1
 							d.Unlock()
 
-							log.Info(fmt.Sprintf("Reload of zone %q in %q", z.Origin, event.Name))
+							log.Info(fmt.Sprintf("Reload of zone %q in %q", z.Origin, filepath.Base(event.Name)))
 							break
 						}
 					}
