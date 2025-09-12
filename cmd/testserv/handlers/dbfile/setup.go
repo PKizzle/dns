@@ -1,6 +1,7 @@
 package dbfile
 
 import (
+	"context"
 	"path/filepath"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
@@ -10,6 +11,7 @@ import (
 
 func (d *Dbfile) Setup(co dnsserver.Controller) error {
 	d.Zones = map[string]*zone.Zone{}
+	d.ctx, d.cancel = context.WithCancel(context.Background())
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -34,18 +36,17 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
+		log.Info("Start: loading")
 		for _, z := range d.Zones {
 			if err := z.Load(); err != nil {
 				return co.Err(err.Error())
 			}
-			z.Reload()
 		}
-		return nil
+		return d.Reload()
 	})
 	co.OnShutdown(func() error {
-		for _, z := range d.Zones {
-			z.Shutdown()
-		}
+		log.Info("Shutdown: reload")
+		d.cancel()
 		return nil
 	})
 

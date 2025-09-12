@@ -13,9 +13,9 @@
 package zone
 
 import (
-	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -32,9 +32,6 @@ type Zone struct {
 	Tree   *btree.BTreeG[Node]
 
 	apex Node // apex node, filled after a Load.
-
-	ctx    context.Context // zone wide context to signal shutdown to reload
-	cancel context.CancelFunc
 }
 
 // A Node is a DNS node in the tree.
@@ -59,16 +56,11 @@ func New(origin, path string) *Zone {
 	z := &Zone{
 		Origin: dnsutil.Canonical(origin),
 		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
-		Path:   path,
+		Path:   func() string { a, _ := filepath.Abs(path); return a }(),
 		Tree:   btree.NewBTreeG(less),
 	}
-	ctx := context.Background()
-	z.ctx, z.cancel = context.WithCancel(ctx)
 	return z
 }
-
-// Shutdown is called when the server is shutting down.
-func (z *Zone) Shutdown() { z.cancel() }
 
 // Load loads a new zone with origin from path from z. Load also sets the apex, so the z.Apex can return that.
 func (z *Zone) Load() error {

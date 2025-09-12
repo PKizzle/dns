@@ -91,6 +91,7 @@ func main() {
 	srv := &dns.Server{
 		Handler:       mux,
 		Addr:          "[::]:" + *flagPort,
+		ReuseAddr:     true,
 		ReusePort:     true,
 		MaxTCPQueries: -1,
 	}
