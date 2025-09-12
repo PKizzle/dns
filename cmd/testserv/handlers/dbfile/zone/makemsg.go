@@ -38,7 +38,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 		if len(r.Answer) > 0 {
 			return r
 		}
-		// nodata, as the type isn't there, only need SOA + RRSIG, lets prepend so it comes first
+		// NODATA, as the type isn't there, only need SOA + RRSIG.
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
