@@ -13,7 +13,7 @@ type Interface interface {
 	// Load loads a zone.
 	Load() error
 	// Retrieve takes an incoming message and prepares a reply that is ready to be send back to the client.
-	Retrieve(*dns.Msg) *dns.Msg
+	Retrieve(*dns.Msg, *zone.Restart) *dns.Msg
 	// Get returns the node under key. The boolean is true when something is found.
 	Get(string) (zone.Node, bool)
 	// Previous returns the previous node for string. If the node under key exists that one is returned.
