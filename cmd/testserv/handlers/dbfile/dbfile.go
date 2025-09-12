@@ -3,23 +3,28 @@ package dbfile
 import (
 	"context"
 	"io"
-	"time"
+	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 )
 
 type Dbfile struct {
-	Path   string
-	Reload time.Duration
+	Path string
 
 	// Zones holds all the zone this instance of Dbfile is called for.
-	Zones map[string]*zone.Zone
+	Zones        map[string]*zone.Zone
+	sync.RWMutex // protects Zones
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		d.RLock()
 		z := d.Zones[dns.Zone(ctx)]
+		d.RUnlock()
 
 		m := z.Retrieve(r, nil)
 		m.Data = r.Data

@@ -1,9 +1,8 @@
 package dbfile
 
 import (
-	"fmt"
+	"context"
 	"path/filepath"
-	"time"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
@@ -12,6 +11,7 @@ import (
 
 func (d *Dbfile) Setup(co dnsserver.Controller) error {
 	d.Zones = map[string]*zone.Zone{}
+	d.ctx, d.cancel = context.WithCancel(context.Background())
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -23,16 +23,6 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		}
 		for co.NextBlock() {
 			switch co.Val() {
-			case "reload":
-				co.NextArg()
-				dur, err := time.ParseDuration(co.Val())
-				if err != nil {
-					return co.PropErr(err)
-				}
-				if dur < time.Second*10 {
-					return co.PropErr(fmt.Errorf("reload duration must be > 10s"))
-				}
-				d.Reload = dur
 			case "transfer":
 				if err := d.SetupTransfer(co); err != nil {
 					return err
@@ -46,11 +36,17 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
+		log.Info("Start: loading")
 		for _, z := range d.Zones {
 			if err := z.Load(); err != nil {
 				return co.Err(err.Error())
 			}
 		}
+		return d.Reload()
+	})
+	co.OnShutdown(func() error {
+		log.Info("Shutdown: reload")
+		d.cancel()
 		return nil
 	})
 

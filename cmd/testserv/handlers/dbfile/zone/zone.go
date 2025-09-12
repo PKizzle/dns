@@ -15,6 +15,7 @@ package zone
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -52,12 +53,13 @@ func less(a, b Node) bool {
 }
 
 func New(origin, path string) *Zone {
-	return &Zone{
+	z := &Zone{
 		Origin: dnsutil.Canonical(origin),
 		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
-		Path:   path,
+		Path:   func() string { a, _ := filepath.Abs(path); return a }(),
 		Tree:   btree.NewBTreeG(less),
 	}
+	return z
 }
 
 // Load loads a new zone with origin from path from z. Load also sets the apex, so the z.Apex can return that.

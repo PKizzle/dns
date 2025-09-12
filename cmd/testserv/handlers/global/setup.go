@@ -45,6 +45,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
+				log.Info("Start: /metrics")
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -56,7 +57,11 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.MetricsListener = ln
 				return nil
 			})
-			g.OnShutdown(func() error { g.MetricsListener.Close(); return nil })
+			g.OnShutdown(func() error {
+				log.Info("Shutdown: /metrics")
+				g.MetricsListener.Close()
+				return nil
+			})
 		}
 	}
 	return nil
