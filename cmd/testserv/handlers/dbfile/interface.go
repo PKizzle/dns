@@ -17,7 +17,7 @@ type Interface interface {
 	// Get returns the node under key. The boolean is true when something is found.
 	Get(string) (zone.Node, bool)
 	// Previous returns the previous node for string. If the node under key exists that one is returned.
-	Previous(string) (zone.Node, bool)
+	Previous(string) zone.Node
 	// Set sets a node in the zone. It must take care to also fill out any empty non-terminals that are
 	// needed.
 	Set(zone.Node) string

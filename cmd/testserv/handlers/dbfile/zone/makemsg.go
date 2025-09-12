@@ -42,6 +42,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
+				continue
 			}
 			if r.Security {
 				if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
@@ -57,6 +58,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
+				continue
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
@@ -68,16 +70,15 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 			}
 		}
 		if r.Security { // proving there is no wildcard
-			if prev, ok := z.Previous(r.Question[0].Header().Name); ok {
-				// we already have the SOA records, don't repeat.
-				if !dns.EqualName(prev.Name, z.Origin) {
-					for _, rr := range prev.RRs {
-						if _, ok := rr.(*dns.NSEC); ok {
-							r.Ns = append(r.Ns, rr.Copy())
-						}
-						if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-							r.Ns = append(r.Ns, rr.Copy())
-						}
+			prev := z.Previous(r.Question[0].Header().Name)
+			if !dns.EqualName(prev.Name, z.Origin) { // we already have the SOA records, don't repeat.
+				for _, rr := range prev.RRs {
+					if _, ok := rr.(*dns.NSEC); ok {
+						r.Ns = append(r.Ns, rr.Copy())
+						continue
+					}
+					if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
+						r.Ns = append(r.Ns, rr.Copy())
 					}
 				}
 			}
@@ -96,11 +97,35 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 		qtype = dns.TypeNS
 	}
 
-	// NXDOOMAIN response. TODO(miek): security+NSECs and sigs
-	if encloser.Name == "" { // found.RRs must be empty as well, but we dont check
+	// NXDOOMAIN response.
+	if hint != hintDelegation && encloser.Name != r.Question[0].Header().Name {
+		// TODO(miek): identical to nodata...
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
+				continue
+			}
+			if r.Security {
+				if _, ok := rr.(*dns.NSEC); ok {
+					r.Ns = append(r.Ns, rr.Copy())
+				}
+				if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
+					r.Ns = append(r.Ns, rr.Copy())
+				}
+			}
+		}
+		if r.Security {
+			prev := z.Previous(r.Question[0].Header().Name)
+			if !dns.EqualName(prev.Name, z.Origin) {
+				for _, rr := range prev.RRs {
+					if _, ok := rr.(*dns.NSEC); ok {
+						r.Ns = append(r.Ns, rr.Copy())
+						continue
+					}
+					if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
+						r.Ns = append(r.Ns, rr.Copy())
+					}
+				}
 			}
 		}
 		r.Rcode = dns.RcodeNameError
@@ -171,6 +196,7 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 	for _, rr := range z.Apex().RRs {
 		if _, ok := rr.(*dns.SOA); ok {
 			r.Ns = append(r.Ns, rr.Copy())
+			continue
 		}
 		if r.Security {
 			if _, ok := rr.(*dns.NSEC); ok {
@@ -195,6 +221,7 @@ func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 		if c, ok := rr.(*dns.CNAME); ok {
 			r.Question[0].Header().Name = c.Target
 			re.Answer = append(re.Answer, rr)
+			continue
 		}
 		if s, ok := rr.(*dns.RRSIG); ok && r.Security && s.TypeCovered == dns.TypeCNAME {
 			re.Answer = append(re.Answer, rr)
