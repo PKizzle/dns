@@ -3,15 +3,13 @@ package dbfile
 import (
 	"context"
 	"io"
-	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 )
 
 type Dbfile struct {
-	Path   string
-	Reload time.Duration
+	Path string
 
 	// Zones holds all the zone this instance of Dbfile is called for.
 	Zones map[string]*zone.Zone

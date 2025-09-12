@@ -2,7 +2,6 @@ package dbfile
 
 import (
 	"testing"
-	"time"
 
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 )
@@ -12,9 +11,7 @@ func TestSetup(t *testing.T) {
 		input string
 		exp   *Dbfile
 	}{
-		{`file db.example {
-			reload 10s
-		}`, &Dbfile{Path: "db.example", Reload: time.Second * 10}},
+		{`file db.example`, &Dbfile{Path: "db.example"}},
 	}
 	for i, tc := range testcases {
 		dbfile := new(Dbfile)
@@ -26,9 +23,6 @@ func TestSetup(t *testing.T) {
 
 		if tc.exp.Path != dbfile.Path {
 			t.Errorf("test %d: expected %s, got %s", i, tc.exp.Path, dbfile.Path)
-		}
-		if tc.exp.Reload != dbfile.Reload {
-			t.Errorf("test %d: expected %s, got %s", i, tc.exp.Reload, dbfile.Reload)
 		}
 	}
 }

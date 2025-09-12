@@ -8,11 +8,15 @@
 
 .SH "DESCRIPTION"
 .PP
-The \fIfile\fP plugin is used for an "old\-style" DNS server. It serves from a preloaded file that exists
-on disk contained RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using
-DNSSEC), correct DNSSEC answers are returned, but only NSEC is supported. If you use this setup \fIyou\fP
-are responsible for re\-signing the zonefile. See the \fIsign\fP plugin if you want to sign and resign your zone
-though.
+The \fIfile\fP plugin is used for an "old\-style" DNS server. It serves from a preloaded file that exists on disk
+contained RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
+DNSSEC answers are returned. Only NSEC is supported. See the \fIsign\fP plugin if you want to sign and resign your
+zone automatically.
+
+.PP
+The server will reply with minimal responses by default. The \fIdbfile\fP plugin will watch the zone file and when
+it receives a (kernel) notify will reload the zone. Regardless of any change it will send out notifies if
+configured to do so, the actual SOA serial isn't relevant.
 
 .SH "SYNTAX"
 .PP
@@ -30,29 +34,40 @@ will be prepended to it.
 
 
 .PP
-For extra control you can open the block are define multipe properties.
+If the zone specification contains multiple zones they all will use the \fIsame\fP \fBFILE\fP.
+
+.PP
+For extra control you can open the block and define multipe properties.
 
 .PP
 .RS
 
 .nf
 dbfile FILE {
-    reload DURATION
-    minimal disable
+    transfer {
+        from IP [IP...] {
+            key NAME ALGORITHM SECRET
+        }
+        to IP [IP...] {
+            source IP
+            key NAME ALGORITHM SECRET
+        }
+    }
 }
 
 .fi
 .RE
 
 .IP \(bu 4
-\fB\fCreload\fR will reload the zone every \fBDURATION\fP to check for SOA version changes. Default is one minute
-(\fB\fC1m\fR). A value of \fB\fC0\fR means to not scan for changes. For example, \fB\fC30s\fR checks the zonefile every 30 seconds
-and reloads the zone when serial changes.
-.IP \(bu 4
-\fB\fCminimal disable\fR makes \fIdbfile\fP return larger and more complete answers, the default is to omit the authoritative
-section in positive answers. Almost all clients should be able to handle these kind of replies.
-.IP \(bu 4
-\fB\fCtransfer\fR ...
+\fB\fCtransfer\fR details how zone transfers are handled, \fB\fCfrom\fR deals with incoming AXFR from \fBIP\fP, and \fB\fCto\fR
+deals with outgoing ones.
+\fB\fCfrom\fR allows for multiple upstream \fBIP\fPs to be specified, they will be tried in that order. The \fB\fCkey\fR
+specification is for TSIG signed transfers. The \fBSECRET\fP must be base64 encoded.
+\fB\fCto\fR allows for multipe downstream \fBIP\fPs to be specified, those are all allowed to initiate a transfer.
+\fB\fCfrom\fR use the \fBIP\fP from \fB\fCsource\fR as the source address for sending the \fInotifies\fP. The TSIG key
+specification is identical to that of \fB\fCfrom\fR.
+For \fBIP\fP you can use IPv6 or IPv4 addresses. The wildcard address for them are \fB\fC::/128\fR or \fB\fC0.0.0.0/0\fR.
+\fB\fC*\fR is an aliases for \fIboth\fP of them.
 
 
 .SH "EXAMPLES"
@@ -67,7 +82,7 @@ notifies to 10.240.1.1
 example.org {
     file db.example.org
     transfer {
-        to * 10.240.1.1
+        to *
     }
 }
 
@@ -101,8 +116,8 @@ Or use a single zone file for multiple zones:
 .nf
 example.org example.net {
     file example.org.signed {
-        transfer example.org example.net {
-            to * 10.240.1.1
+        transfer {
+            to 10.240.1.1
         }
     }
 }

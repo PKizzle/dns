@@ -13,7 +13,7 @@ zone automatically.
 
 The server will reply with minimal responses by default. The _dbfile_ plugin will watch the zone file and when
 it receives a (kernel) notify will reload the zone. Regardless of any change it will send out notifies if
-configured to do so.
+configured to do so, the actual SOA serial isn't relevant.
 
 ## Syntax
 

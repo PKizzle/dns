@@ -1,9 +1,7 @@
 package dbfile
 
 import (
-	"fmt"
 	"path/filepath"
-	"time"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
@@ -23,16 +21,6 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		}
 		for co.NextBlock() {
 			switch co.Val() {
-			case "reload":
-				co.NextArg()
-				dur, err := time.ParseDuration(co.Val())
-				if err != nil {
-					return co.PropErr(err)
-				}
-				if dur < time.Second*10 {
-					return co.PropErr(fmt.Errorf("reload duration must be > 10s"))
-				}
-				d.Reload = dur
 			case "transfer":
 				if err := d.SetupTransfer(co); err != nil {
 					return err
@@ -50,6 +38,13 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 			if err := z.Load(); err != nil {
 				return co.Err(err.Error())
 			}
+			z.Reload()
+		}
+		return nil
+	})
+	co.OnShutdown(func() error {
+		for _, z := range d.Zones {
+			z.Shutdown()
 		}
 		return nil
 	})
