@@ -12,8 +12,8 @@ DNSSEC answers are returned. Only NSEC is supported. See the _sign_ plugin if yo
 zone automatically.
 
 The server will reply with minimal responses by default. The _dbfile_ plugin will watch the zone file and when
-it receives a (kernel) notify will reload the zone. Regardless of any change it will send out notifies if
-configured to do so, the actual SOA serial isn't relevant.
+it receives a (kernel) notify will reload the zone after 5 seconds. Regardless of any change it will send out
+notifies if configured to do so, the actual SOA serial isn't relevant.
 
 ## Syntax
 
