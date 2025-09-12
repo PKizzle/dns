@@ -123,7 +123,22 @@ func TestZone(t *testing.T) {
 				return m
 			},
 		},
-		// dnssec:nxdomain
+		{
+			"dnssec:nxdomain",
+			func() *dns.Msg { m := dns.NewMsg("www1.example.org.", dns.TypeA); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("www1.example.org.", dns.TypeA)
+				m.Ns = []dns.RR{
+					dnstest.New("example.org. IN SOA  a.iana-servers.net. devnull.example.org. 1282630057 14400 3600 604800 14400"),
+					dnstest.New("example.org. IN RRSIG   SOA 13 2 1800 20161129153240 20161030153240 49035 example.org. GVnMpFmN+6PDdgCtlYDEYBsnBNDgYmEJNvosBk9+PNTPNWNst+BXCpDadTeqRwrr1RHEAQ7jYWzNwqn81pN+IA=="),
+					dnstest.New("example.org. IN NSEC    a.example.org. NS SOA RRSIG NSEC DNSKEY"),
+					dnstest.New("example.org. IN RRSIG   NSEC 13 2 14400 20161129153240 20161030153240 49035 example.org. BQROf1swrmYi3GqpP5M/h5vTB8jmJ/RFnlaX7fjxvV7aMvXCsr3ekWeB2S7L6wWFihDYcKJg9BxVPqxzBKeaqg=="),
+					dnstest.New("www.example.org. IN NSEC    example.org. CNAME RRSIG NSEC"),
+					dnstest.New("www.example.org. IN RRSIG   NSEC 13 3 14400 20161129153240 20161030153240 49035 example.org. jy3f96GZGBaRuQQjuqsoP1YN8ObZF37o+WkVPL7TruzI7iNl0AjrUDy9FplP8Mqk/HWyvlPeN3cU+W8NYlfDDQ=="),
+				}
+				return m
+			},
+		},
 		{
 			"dns:cname",
 			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeA); return m },

@@ -137,12 +137,11 @@ func (z *Zone) Get(name string) (Node, bool) {
 }
 
 // Previous returns the logical previous name from name.
-func (z *Zone) Previous(name string) (Node, bool) {
-	// TODO(miek): wrap around! + test
+func (z *Zone) Previous(name string) Node {
 	node := Node{}
 	z.Tree.Descend(Node{Name: name}, func(n Node) bool {
 		node = n
 		return false
 	})
-	return node, true
+	return node
 }
