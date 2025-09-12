@@ -33,6 +33,10 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 					return co.PropErr(fmt.Errorf("reload duration must be > 10s"))
 				}
 				d.Reload = dur
+			case "transfer":
+				if err := d.SetupTransfer(co); err != nil {
+					return err
+				}
 			default:
 				return co.PropErr()
 			}

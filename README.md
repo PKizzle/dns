@@ -152,6 +152,7 @@ _all of them_
 - 7871 - EDNS0 Client Subnet
 - 7873 - Domain Name System (DNS) Cookies
 - 8080 - EdDSA for DNSSEC
+- 8482 - Minimal Answers for ANY
 - 8499 - DNS Terminology
 - 8659 - DNS Certification Authority Authorization (CAA) Resource Record
 - 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
