@@ -136,6 +136,18 @@ func TestZone(t *testing.T) {
 				return m
 			},
 		},
+		{
+			"dns:cname6",
+			func() *dns.Msg { m := dns.NewMsg("archive.example.org.", dns.TypeAAAA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("archive.example.org.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New("archive.example.org. IN CNAME   a.example.org."),
+					dnstest.New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
+				}
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -145,14 +157,13 @@ func TestZone(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 
-			rmsg := z.Retrieve(tc.in())
+			rmsg := z.Retrieve(tc.in(), nil)
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)
 			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
-				t.Logf("%s\n", rmsg)
 			}
 			for i := range gotrrs {
 				if !dns.Equal(gotrrs[i], gotrrs[i]) {
@@ -277,14 +288,13 @@ func TestZoneWildcard(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 
-			rmsg := z.Retrieve(tc.in())
+			rmsg := z.Retrieve(tc.in(), nil)
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)
 			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
-				println(rmsg.String())
 			}
 			for i := range gotrrs {
 				if !dns.Equal(gotrrs[i], gotrrs[i]) {

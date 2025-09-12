@@ -7,6 +7,9 @@
 //
 // Doing this on insert sucks a bit, but makes the lookup code much more simple (and correct), which is more
 // important for a DNS server.
+//
+// CNAME, DNSSEC, wildcards, etc. are all supported. Not supported is: DNAME (RFC 6672), the server will just
+// return the DNAME without any of the (in the RFC required) post-processing.
 package zone
 
 import (
@@ -34,6 +37,13 @@ type Zone struct {
 type Node struct {
 	Name string
 	RRs  []dns.RR // all the rrs with owner name 'name'.
+}
+
+// Restart is used in the (recursive) calling of Retrieve to complete a CNAME chain. The i index is used to avoid loops
+// in the recursion and we break at 8.
+type Restart struct {
+	Answer []dns.RR // current set of RRs that need to go in the final response
+	i      int      // break recursion at i > 7
 }
 
 func less(a, b Node) bool {

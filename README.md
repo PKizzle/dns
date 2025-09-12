@@ -133,6 +133,7 @@ _all of them_
 - 5936 - AXFR
 - 5966 - TCP implementation recommendations
 - 6605 - ECDSA
+- 6672 - DNAME
 - 6725 - IANA Registry Update
 - 6742 - ILNP DNS
 - 6840 - Clarifications and Implementation Notes for DNS Security

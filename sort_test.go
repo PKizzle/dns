@@ -49,3 +49,33 @@ func TestCompareName(t *testing.T) {
 		})
 	}
 }
+
+func TestCompare(t *testing.T) {
+	testcases := []struct {
+		name string
+		a    RR
+		b    RR
+		ok   bool
+	}{
+		{
+			"ok:aaaa",
+			func() RR { rr, _ := New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
+			func() RR { rr, _ := New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
+			true,
+		},
+		{
+			"diff:aaaa",
+			func() RR { rr, _ := New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
+			func() RR { rr, _ := New("a.example.org.  IN AAAA    3a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
+			false,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := Equal(tc.a, tc.b)
+			if got != tc.ok {
+				t.Fatalf("expected %t, got %t for %q == %q", tc.ok, got, tc.a, tc.b)
+			}
+		})
+	}
+}

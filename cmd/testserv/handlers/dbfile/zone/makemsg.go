@@ -8,7 +8,7 @@ import (
 // MsgSynthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
 // more specific. I.e. original qname did not exist. Now we need to assemble the answer plus adding the NSECs
 // that validte the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
-func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
+func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart) *dns.Msg {
 	// Synthesis, can still lead to no data if the qtype doesn't match.
 	if len(sosynthesis.RRs) > 0 {
 		qtype := dns.RRToType(r.Question[0])
@@ -88,7 +88,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node) *dns.Msg {
 	return r
 }
 
-func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
+func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.Msg {
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
 	if hint == hintDelegation {
@@ -96,9 +96,8 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 		qtype = dns.TypeNS
 	}
 
-	// NXDOOMAIN response.
-	// prev needed?
-	if encloser.Name == "" { // found.RRs must be empty as well
+	// NXDOOMAIN response. TODO(miek): security+NSECs and sigs
+	if encloser.Name == "" { // found.RRs must be empty as well, but we dont check
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
@@ -108,11 +107,17 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 		return r
 	}
 
-	// CNAME
-	// If this is a CNAME we need to chase it within the zone for (up to 8?) CNAME chains
+	// If this is a CNAME we need to chase it within the zone for (up to 8?) CNAME chains.
 	for _, rr := range encloser.RRs {
-		if dns.RRToType(rr) == dns.TypeCNAME {
-			return z.MsgCanonical(r, encloser)
+		if dns.RRToType(rr) == dns.TypeCNAME && qtype != dns.TypeCNAME {
+			return z.MsgCanonical(r, encloser, re)
+		}
+	}
+	if re != nil {
+		// first answer in the change must have the original qname
+		r.Question[0].Header().Name = re.Answer[0].Header().Name
+		for _, rr := range re.Answer {
+			r.Answer = append(r.Answer, rr.Copy())
 		}
 	}
 
@@ -180,6 +185,24 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint) *dns.Msg {
 	return r
 }
 
-func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node) *dns.Msg {
-	return nil
+// MsgCanonical follow the cname chain.
+func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
+	if re == nil {
+		re = new(Restart)
+	}
+
+	for _, rr := range encloser.RRs {
+		if c, ok := rr.(*dns.CNAME); ok {
+			r.Question[0].Header().Name = c.Target
+			re.Answer = append(re.Answer, rr)
+		}
+		if s, ok := rr.(*dns.RRSIG); ok && r.Security && s.TypeCovered == dns.TypeCNAME {
+			re.Answer = append(re.Answer, rr)
+		}
+	}
+	re.i++
+	if re.i > 7 {
+		return r
+	}
+	return z.Retrieve(r, re)
 }
