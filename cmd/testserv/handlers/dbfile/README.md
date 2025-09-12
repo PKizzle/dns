@@ -6,11 +6,14 @@ _dbfile_ - serve zone data from an RFC 1035-style zone file
 
 ## Description
 
-The _file_ plugin is used for an "old-style" DNS server. It serves from a preloaded file that exists
-on disk contained RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using
-DNSSEC), correct DNSSEC answers are returned, but only NSEC is supported. If you use this setup _you_
-are responsible for re-signing the zonefile. See the _sign_ plugin if you want to sign and resign your zone
-though.
+The _file_ plugin is used for an "old-style" DNS server. It serves from a preloaded file that exists on disk
+contained RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
+DNSSEC answers are returned. Only NSEC is supported. See the _sign_ plugin if you want to sign and resign your
+zone automatically.
+
+The server will reply with minimal responses by default. The _dbfile_ plugin will watch the zone file and when
+it receives a (kernel) notify will reload the zone. Regardless of any change it will send out notifies if
+configured to do so.
 
 ## Syntax
 
@@ -21,21 +24,33 @@ dbfile FILE
 - **FILE** the database file to read and parse. If the path is relative, the path from the global root config
   will be prepended to it.
 
-For extra control you can open the block are define multipe properties.
+If the zone specification contains multiple zones they all will use the _same_ **FILE**.
+
+For extra control you can open the block and define multipe properties.
 
 ```
 dbfile FILE {
-    reload DURATION
-    minimal disable
+    transfer {
+        from IP [IP...] {
+            key NAME ALGORITHM SECRET
+        }
+        to IP [IP...] {
+            source IP
+            key NAME ALGORITHM SECRET
+        }
+    }
 }
 ```
 
-- `reload` will reload the zone every **DURATION** to check for SOA version changes. Default is one minute
-  (`1m`). A value of `0` means to not scan for changes. For example, `30s` checks the zonefile every 30 seconds
-  and reloads the zone when serial changes.
-- `minimal disable` makes _dbfile_ return larger and more complete answers, the default is to omit the authoritative
-  section in positive answers. Almost all clients should be able to handle these kind of replies.
-- `transfer` ...
+- `transfer` details how zone transfers are handled, `from` deals with incoming AXFR from **IP**, and `to`
+  deals with outgoing ones.
+  `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. The `key`
+  specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
+  `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
+  `from` use the **IP** from `source` as the source address for sending the _notifies_. The TSIG key
+  specification is identical to that of `from`.
+  For **IP** you can use IPv6 or IPv4 addresses. The wildcard address for them are `::/128` or `0.0.0.0/0`.
+  `*` is an aliases for _both_ of them.
 
 ## Examples
 
@@ -46,7 +61,7 @@ notifies to 10.240.1.1
 example.org {
     file db.example.org
     transfer {
-        to * 10.240.1.1
+        to *
     }
 }
 ```
@@ -68,8 +83,8 @@ Or use a single zone file for multiple zones:
 ```conffile
 example.org example.net {
     file example.org.signed {
-        transfer example.org example.net {
-            to * 10.240.1.1
+        transfer {
+            to 10.240.1.1
         }
     }
 }
