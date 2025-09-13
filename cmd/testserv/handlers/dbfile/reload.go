@@ -20,6 +20,7 @@ func (d *Dbfile) Reload() error {
 		for {
 			select {
 			case event, ok := <-watcher.Events:
+				log.Debug("Zone watch event", "file", filepath.Base(event.Name))
 				if !ok {
 					continue
 				}
@@ -54,10 +55,11 @@ func (d *Dbfile) Reload() error {
 					}
 				default:
 				}
-			case _, ok := <-watcher.Errors:
+			case err, ok := <-watcher.Errors:
 				if !ok {
 					continue
 				}
+				log.Debug("Zone watch event error", "err", err)
 			case <-d.ctx.Done():
 				watcher.Close()
 				return
