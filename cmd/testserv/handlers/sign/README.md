@@ -16,6 +16,7 @@ _dbfile_ **serves** the zone's _data_.
 
 For this handler to work at least one key is needed. This "Common Signing Key" will be used to sign the entire
 zone, _sign_ does _not_ support the ZSK/KSK split, nor will it do key or algorithm rollovers - it just signs.
+This is the most authentic way of doing DNSSEC as it mimics the fire-and-forget style of the DNS.
 
 By default every record will get a TTL of 3600 seconds.
 
@@ -30,10 +31,9 @@ _sign_ will:
 When signing it will:
 
 - Create RRSIGs that have an inception of -3 hours (minus a jitter between 0 and 18 hours)
-  and a expiration of +32 (plus a jitter between 0 and 5 days) days for every given DNSKEY.
+  and a expiration of +32 (plus a jitter beteen 0 and 100 hours) days for every given DNSKEY.
 
-- Add NSEC records for all names in the zone. The TTL for these is the negative cache TTL from the
-  SOA record.
+- Add NSEC records for all names in the zone.
 
 - Add or replace _all_ apex CDS/CDNSKEY records with the ones derived from the given keys. For
   each key two CDS are created one with SHA1 and another with SHA256.
@@ -41,13 +41,9 @@ When signing it will:
 - Update the SOA's serial number to the _Unix epoch_ of when the signing happens. This will
   overwrite _any_ previous serial number.
 
-- Adjust TTLs to make RRSets expire before the signature expires. TTLs longer or within 20% of the
-  expiration date are cut in half.
+- Pick up change if the source (unsigned) zone file changes immediately.
 
-- If the source (unsigned) zone file changes, these are picked up immediately.
-
-The state of each zone will be checked at 5 hour intervals. The modification time is checked every 5
-minutes.
+The state of each (signed) zone will be checked at 5 hour intervals.
 
 Keys are named (following BIND9): `K<name>+<alg>+<id>.key` and `K<name>+<alg>+<id>.private`.
 The keys **must not** be included in your zone; they will be added by _sign_. These keys can be

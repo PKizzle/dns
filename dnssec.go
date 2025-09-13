@@ -14,7 +14,6 @@ import (
 	"encoding/hex"
 	"hash"
 	"math/big"
-	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/pack"
@@ -225,7 +224,8 @@ func (d *DS) ToCDS() *CDS {
 // from the RRset. Sign returns a non-nill error when the signing went OK.
 // There is no check if RRSet is a proper (RFC 2181) RRSet.  If OrigTTL is non
 // zero, it is used as-is, otherwise the TTL of the RRset is used as the
-// OrigTTL.
+// OrigTTL. Sign expect RRSIG to be initialized with [NewRRSIG].
+// Sign will skip RRSIG records, and return nil in that case.
 func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
@@ -234,20 +234,11 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	if options.Pooler == nil {
 		options.Pooler = newNoopPool(DefaultMsgSize)
 	}
+	if rr.TypeCovered == TypeRRSIG {
+		return nil
+	}
 
-	h0 := rrset[0].Header()
 	rr.Hdr.t = TypeRRSIG
-	rr.Hdr.Name = h0.Name
-	rr.Hdr.Class = h0.Class
-	if rr.OrigTTL == 0 { // If set don't override
-		rr.OrigTTL = h0.TTL
-	}
-	rr.TypeCovered = h0.t
-	rr.Labels = uint8(dnsutilLabels(h0.Name))
-
-	if strings.HasPrefix(h0.Name, "*") {
-		rr.Labels-- // wildcard, remove from label count
-	}
 
 	sigwire := new(rrsigWireFmt)
 	sigwire.TypeCovered = rr.TypeCovered

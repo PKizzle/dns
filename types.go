@@ -811,12 +811,16 @@ func (rr *RRSIG) String() string {
 // NewRRSIG returns a new RRSIG with many fields set. That can be used as a "stub" RRSIG before generating the
 // signature. If incepexp, the inception and expiration are not the given, now-300s and now+2w is used.
 // z is both set as the ownername and the signers name.
-func NewRRSIG(z string, algorithm uint8, keytag uint16, incepexp ...uint32) *RRSIG {
+func NewRRSIG(z string, algorithm uint8, keytag uint16, ttl uint32, incepexp ...uint32) *RRSIG {
 	s := new(RRSIG)
 	s.Hdr.Name = z
 	s.Hdr.Class = ClassINET
 	s.Algorithm = algorithm
 	s.KeyTag = keytag
+	s.Labels = uint8(dnsutilLabels(z))
+	if strings.HasPrefix(z, "*.") {
+		s.Labels--
+	}
 	s.SignerName = z
 	if len(incepexp) == 0 {
 		now := time.Now().Unix()

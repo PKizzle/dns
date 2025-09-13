@@ -40,7 +40,7 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 						return co.PropErr(err)
 					}
 					pair.DNSKEY.Header().TTL = s.ttl
-					s.Pairs = append(s.Pairs, pair)
+					s.KeyPairs = append(s.KeyPairs, pair)
 				}
 			case "directory":
 				if !co.Next() {
@@ -61,46 +61,46 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 	return nil
 }
 
-// Pair holds DNSSEC key information, both the public and private components are stored here.
-type Pair struct {
+// KeyPair holds DNSSEC key information, both the public and private components are stored here.
+type KeyPair struct {
 	*dns.DNSKEY
 	Tag uint16
 	crypto.Signer
 }
 
-func keypair(base string) (Pair, error) {
+func keypair(base string) (KeyPair, error) {
 	p, err := os.ReadFile(base + ".key")
 	if err != nil {
-		return Pair{}, err
+		return KeyPair{}, err
 	}
 	rr, err := dns.New(string(p))
 	if err != nil {
-		return Pair{}, err
+		return KeyPair{}, err
 	}
 	if _, ok := rr.(*dns.DNSKEY); !ok {
-		return Pair{}, fmt.Errorf("RR in %q is not a DNSKEY: %s", base+".key", dnsutil.TypeToString(dns.RRToType(rr)))
+		return KeyPair{}, fmt.Errorf("RR in %q is not a DNSKEY: %s", base+".key", dnsutil.TypeToString(dns.RRToType(rr)))
 	}
 	dnskey := rr.(*dns.DNSKEY)
 	ksk := dnskey.Flags&(1<<8) == (1<<8) && dnskey.Flags&1 == 1
 	if !ksk {
-		return Pair{}, fmt.Errorf("DNSKEY is not a CSK/KSK")
+		return KeyPair{}, fmt.Errorf("DNSKEY is not a CSK/KSK")
 	}
 
 	if p, err = os.ReadFile(base + ".private"); err != nil {
-		return Pair{}, err
+		return KeyPair{}, err
 	}
 	privkey, err := dnskey.NewPrivate(string(p))
 	if err != nil {
-		return Pair{}, err
+		return KeyPair{}, err
 	}
 	switch signer := privkey.(type) {
 	case *ecdsa.PrivateKey:
-		return Pair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
+		return KeyPair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
 	case ed25519.PrivateKey:
-		return Pair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
+		return KeyPair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
 	case *rsa.PrivateKey:
-		return Pair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
+		return KeyPair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
 	default:
-		return Pair{}, fmt.Errorf("unsupported algorithm %s", signer)
+		return KeyPair{}, fmt.Errorf("unsupported algorithm %s", signer)
 	}
 }
