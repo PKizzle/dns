@@ -69,8 +69,8 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 
 		for _, pair := range nf.keypairs {
 			incep, expir := lifetime(nf.now)
-			rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, nf.ttl, incep, expir)
-			rrsig.Sign(pair.Signer, []dns.RR{rrsig}, &dns.SignOption{})
+			rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+			rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
 
 			nsecnode.RRs = append(nsecnode.RRs, rrsig)
 		}
@@ -93,8 +93,8 @@ func (nf *nsecfn) Last(origin string) zone.Node {
 
 	for _, pair := range nf.keypairs {
 		incep, expir := lifetime(nf.now)
-		rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, nf.ttl, incep, expir)
-		rrsig.Sign(pair.Signer, []dns.RR{rrsig}, &dns.SignOption{})
+		rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+		rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
 
 		nsecnode.RRs = append(nsecnode.RRs, rrsig)
 	}
