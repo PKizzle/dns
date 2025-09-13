@@ -12,9 +12,9 @@ func TestWalkNSEC(*testing.T) {
 	z.Load()
 
 	pair, _ := keypair("./testdata/Kmiek.nl.+013+59725")
+
 	nf := &nsecfn{zone: z, keypairs: []KeyPair{pair}, ttl: 3600}
 	z.AuthoritativeWalk(nf.Walk)
-	// we need to insert the last nsec
 	for i := range nf.nsecs {
 		z.Set(nf.nsecs[i])
 	}
