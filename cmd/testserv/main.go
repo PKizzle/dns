@@ -21,26 +21,13 @@ import (
 
 const Version = "001"
 
-func serve(server *dns.Server, net string, global *global.Global) {
-	// TODO: make this into proper dnsserver function.
-	server.Net = net
-	i := uint64(0)
-	N := global.MetricsN
-	server.MsgInvalidFunc = func(_ *dns.Msg, _ error) {
-		if N == 0 {
-			return
-		}
-		if i%N == 0 {
-			metrics.Dropped.Inc()
-		}
-		i++
-	}
+func serve(srv *dns.Server, global *global.Global) {
 	if err := global.Startup(); err != nil {
 		slog.Error("Failed to run startup: " + err.Error())
 		os.Exit(1)
 	}
 
-	if err := server.ListenAndServe(); err != nil {
+	if err := srv.ListenAndServe(); err != nil {
 		slog.Error("Failed to start: " + err.Error())
 		os.Exit(1)
 	}
@@ -93,24 +80,40 @@ func main() {
 		os.Exit(1)
 	}
 
-	srv := &dns.Server{
-		Handler:       mux,
-		Addr:          "[::]:" + flagPort,
-		ReuseAddr:     true,
-		ReusePort:     true,
-		MaxTCPQueries: -1,
+	srvs := make([]*dns.Server, runtime.NumCPU()*3*2) // *2 udp/tcp
+	for j := range srvs {
+		net := "tcp"
+		if j < len(srvs)/2 {
+			net = "udp"
+		}
+		srvs[j] = &dns.Server{
+			Handler: mux, Net: net, Addr: "[::]:" + flagPort,
+			ReuseAddr: true, ReusePort: true, MaxTCPQueries: -1,
+		}
+		i := uint64(0)
+		N := global.MetricsN
+		srvs[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+			if N == 0 {
+				return
+			}
+			if i%N == 0 {
+				metrics.Dropped.Inc()
+			}
+			i++
+		}
+	}
+	for _, srv := range srvs {
+		go serve(srv, global)
 	}
 
-	for range runtime.NumCPU() * 3 {
-		go serve(srv, "tcp", global)
-		go serve(srv, "udp", global)
-	}
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	s := <-sig
 	if err := global.Shutdown(); err != nil {
 		slog.Warn("Failed to run shutdown: " + err.Error())
 	}
-	srv.Shutdown(context.TODO())
+	for _, srv := range srvs {
+		srv.Shutdown(context.TODO())
+	}
 	fmt.Printf("Signal (%s) received, stopping\n", s)
 }

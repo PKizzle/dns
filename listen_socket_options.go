@@ -47,26 +47,6 @@ func reuseaddrandportControl(network, address string, c syscall.RawConn) error {
 	return reuseportControl(network, address, c)
 }
 
-// this is just for test compatibility
-func checkReuseport(fd uintptr) (bool, error) {
-	v, err := unix.GetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEPORT)
-	if err != nil {
-		return false, err
-	}
-
-	return v == 1, nil
-}
-
-// this is just for test compatibility
-func checkReuseaddr(fd uintptr) (bool, error) {
-	v, err := unix.GetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEADDR)
-	if err != nil {
-		return false, err
-	}
-
-	return v == 1, nil
-}
-
 func listenTCP(network, addr string, reuseport, reuseaddr bool) (net.Listener, error) {
 	var lc net.ListenConfig
 	switch {

@@ -15,7 +15,6 @@ example.org {
     any
     cookie geheim
     nsid Use the force
-#    whoami
     dbfile db.example.org
 }
 
