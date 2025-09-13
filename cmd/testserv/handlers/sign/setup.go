@@ -9,12 +9,15 @@ import (
 	"path/filepath"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
 	"golang.org/x/crypto/ed25519"
 )
 
 func (s *Sign) Setup(co dnsserver.Controller) error {
+	s.ttl = 3600
+
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -36,6 +39,7 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 					if err != nil {
 						return co.PropErr(err)
 					}
+					pair.DNSKEY.Header().TTL = s.ttl
 					s.Pairs = append(s.Pairs, pair)
 				}
 			case "directory":
@@ -51,14 +55,17 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 			}
 		}
 	}
+	for _, z := range co.Keys() {
+		s.Zones[dnsutil.Canonical(z)] = zone.New(z, s.Path)
+	}
 	return nil
 }
 
 // Pair holds DNSSEC key information, both the public and private components are stored here.
 type Pair struct {
-	Public  *dns.DNSKEY
-	KeyTag  uint16
-	Private crypto.Signer
+	*dns.DNSKEY
+	Tag uint16
+	crypto.Signer
 }
 
 func keypair(base string) (Pair, error) {
@@ -88,11 +95,11 @@ func keypair(base string) (Pair, error) {
 	}
 	switch signer := privkey.(type) {
 	case *ecdsa.PrivateKey:
-		return Pair{Public: dnskey, KeyTag: dnskey.KeyTag(), Private: signer}, nil
+		return Pair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
 	case ed25519.PrivateKey:
-		return Pair{Public: dnskey, KeyTag: dnskey.KeyTag(), Private: signer}, nil
+		return Pair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
 	case *rsa.PrivateKey:
-		return Pair{Public: dnskey, KeyTag: dnskey.KeyTag(), Private: signer}, nil
+		return Pair{DNSKEY: dnskey, Tag: dnskey.KeyTag(), Signer: signer}, nil
 	default:
 		return Pair{}, fmt.Errorf("unsupported algorithm %s", signer)
 	}

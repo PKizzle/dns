@@ -17,6 +17,8 @@ _dbfile_ **serves** the zone's _data_.
 For this handler to work at least one key is needed. This "Common Signing Key" will be used to sign the entire
 zone, _sign_ does _not_ support the ZSK/KSK split, nor will it do key or algorithm rollovers - it just signs.
 
+By default every record will get a TTL of 3600 seconds.
+
 _sign_ will:
 
 - (Re)-sign the zone with the CSK(s) when:
