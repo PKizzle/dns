@@ -6,6 +6,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
+	"fmt"
 	"io"
 	"math/big"
 	"strconv"
@@ -14,35 +15,34 @@ import (
 	"codeberg.org/miekg/dns/internal/pack"
 )
 
-// NewPrivateKey returns a PrivateKey by parsing the string s.
+// NewPrivate returns a crypto.PrivateKey by parsing the string s.
 // s should be in the same form of the BIND private key files.
-func (k *DNSKEY) NewPrivateKey(s string) (crypto.PrivateKey, error) {
+func (k *DNSKEY) NewPrivate(s string) (crypto.PrivateKey, error) {
 	if s == "" || s[len(s)-1] != '\n' { // We need a closing newline
-		return k.ReadPrivateKey(strings.NewReader(s+"\n"), "")
+		return k.readPrivate(strings.NewReader(s+"\n"), "")
 	}
-	return k.ReadPrivateKey(strings.NewReader(s), "")
+	return k.readPrivate(strings.NewReader(s), "")
 }
 
-// ReadPrivateKey reads a private key from the io.Reader q. The string file is
-// only used in error reporting.
+// readPrivate reads a private key from the io.Reader q. The string file is only used in error reporting.
 // The public key must be known, because some cryptographic algorithms embed
 // the public inside the privatekey.
-func (k *DNSKEY) ReadPrivateKey(q io.Reader, file string) (crypto.PrivateKey, error) {
+func (k *DNSKEY) readPrivate(q io.Reader, file string) (crypto.PrivateKey, error) {
 	m, err := parseKey(q, file)
 	if m == nil {
 		return nil, err
 	}
 	if _, ok := m["private-key-format"]; !ok {
-		return nil, ErrPrivKey
+		return nil, fmt.Errorf("private-key-format not found")
 	}
 	if m["private-key-format"] != "v1.2" && m["private-key-format"] != "v1.3" {
-		return nil, ErrPrivKey
+		return nil, fmt.Errorf("private-key-format v1.2 or v.1.3 not found")
 	}
 	// TODO(mg): check if the pubkey matches the private key
-	algoStr, _, _ := strings.Cut(m["algorithm"], " ")
-	algo, err := strconv.ParseUint(algoStr, 10, 8)
+	algostr, _, _ := strings.Cut(m["algorithm"], " ")
+	algo, err := strconv.ParseUint(algostr, 10, 8)
 	if err != nil {
-		return nil, ErrPrivKey
+		return nil, err
 	}
 	switch uint8(algo) {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512:
@@ -110,7 +110,6 @@ func readPrivateKeyRSA(m map[string]string) (*rsa.PrivateKey, error) {
 func readPrivateKeyECDSA(m map[string]string) (*ecdsa.PrivateKey, error) {
 	p := new(ecdsa.PrivateKey)
 	p.D = new(big.Int)
-	// TODO: validate that the required flags are present
 	for k, v := range m {
 		switch k {
 		case "privatekey":
@@ -128,7 +127,6 @@ func readPrivateKeyECDSA(m map[string]string) (*ecdsa.PrivateKey, error) {
 
 func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 	var p ed25519.PrivateKey
-	// TODO: validate that the required flags are present
 	for k, v := range m {
 		switch k {
 		case "privatekey":
@@ -137,7 +135,7 @@ func readPrivateKeyED25519(m map[string]string) (ed25519.PrivateKey, error) {
 				return nil, err
 			}
 			if len(p1) != ed25519.SeedSize {
-				return nil, ErrPrivKey
+				return nil, fmt.Errorf("ed25519 seed size error")
 			}
 			p = ed25519.NewKeyFromSeed(p1)
 		case "created", "publish", "activate":
@@ -156,7 +154,6 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 	c := newKLexer(r)
 
 	for l, ok := c.Next(); ok; l, ok = c.Next() {
-		// It should alternate
 		switch l.value {
 		case zKey:
 			k = l.token
@@ -164,17 +161,14 @@ func parseKey(r io.Reader, file string) (map[string]string, error) {
 			if k == "" {
 				return nil, &ParseError{file: file, err: "no private key seen", lex: l}
 			}
-
 			m[strings.ToLower(k)] = l.token
 			k = ""
 		}
 	}
 
-	// Surface any read errors from r.
 	if err := c.Err(); err != nil {
 		return nil, &ParseError{file: file, err: err.Error()}
 	}
-
 	return m, nil
 }
 
@@ -187,7 +181,6 @@ type klexer struct {
 	column int
 
 	key bool
-
 	eol bool // end-of-line
 }
 
@@ -198,11 +191,9 @@ func newKLexer(r io.Reader) *klexer {
 	}
 
 	return &klexer{
-		br: br,
-
+		br:   br,
 		line: 1,
-
-		key: true,
+		key:  true,
 	}
 }
 
@@ -210,7 +201,6 @@ func (kl *klexer) Err() error {
 	if kl.readErr == io.EOF {
 		return nil
 	}
-
 	return kl.readErr
 }
 
@@ -239,16 +229,13 @@ func (kl *klexer) readByte() (byte, bool) {
 	} else {
 		kl.column++
 	}
-
 	return c, true
 }
 
 func (kl *klexer) Next() (lex, bool) {
 	var (
-		l lex
-
-		str strings.Builder
-
+		l     lex
+		str   strings.Builder
 		commt bool
 	)
 
@@ -307,6 +294,5 @@ func (kl *klexer) Next() (lex, bool) {
 		l.token = str.String()
 		return l, true
 	}
-
 	return lex{value: zEOF}, false
 }

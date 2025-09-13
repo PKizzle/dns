@@ -964,7 +964,7 @@ func (rr *DNSKEY) String() string {
 	return sb.String()
 }
 
-// NewDNSKEY returns a DNSKEY with good defaults for some fields. The keys flags are set to 256.
+// NewDNSKEY returns a DNSKEY with good defaults for some fields. The key's flag field is set to 256.
 func NewDNSKEY(z string, algorithm uint8) *DNSKEY {
 	k := new(DNSKEY)
 	k.Hdr.Name = z

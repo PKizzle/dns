@@ -1,100 +1,99 @@
 package sign
 
 import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"fmt"
-	"math/rand"
+	"os"
 	"path/filepath"
-	"time"
 
-	"github.com/miekg/sndns/caddy"
-	"github.com/miekg/sndns/core/dnsserver"
-	"github.com/miekg/sndns/plugin"
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnsutil"
+	"golang.org/x/crypto/ed25519"
 )
 
-func init() { plugin.Register("sign", setup) }
-
-func setup(c *caddy.Controller) error {
-	sign, err := parse(c)
-	if err != nil {
-		return plugin.Error("sign", err)
+func (s *Sign) Setup(co dnsserver.Controller) error {
+	if co.Next() {
+		args := co.RemainingArgs()
+		if len(args) != 1 {
+			return co.ArgErr()
+		}
+		s.Path = args[0]
+		if !filepath.IsAbs(s.Path) {
+			s.Path = filepath.Join(co.Global.Root, s.Path)
+		}
+		for co.NextBlock() {
+			switch co.Val() {
+			case "key":
+				args := co.RemainingArgs()
+				if len(args) == 0 {
+					return co.ArgErr()
+				}
+				for i := range args {
+					pair, err := keypair(args[i])
+					if err != nil {
+						return co.PropErr(err)
+					}
+					s.Pairs = append(s.Pairs, pair)
+				}
+			case "directory":
+				if !co.Next() {
+					return co.ArgErr()
+				}
+				s.Directory = co.Val()
+				if !filepath.IsAbs(s.Directory) {
+					s.Directory = filepath.Join(co.Global.Root, s.Directory)
+				}
+			default:
+				return co.ArgErr()
+			}
+		}
 	}
-
-	c.OnStartup(sign.OnStartup)
-	c.OnStartup(func() error {
-		for _, signer := range sign.signers {
-			go signer.refresh()
-		}
-		return nil
-	})
-	c.OnShutdown(func() error {
-		for _, signer := range sign.signers {
-			close(signer.stop)
-		}
-		return nil
-	})
-
-	// Don't call AddPlugin, *sign* is not a plugin.
 	return nil
 }
 
-func parse(c *caddy.Controller) (*Sign, error) {
-	sign := &Sign{}
-	config := dnsserver.GetConfig(c)
+// Pair holds DNSSEC key information, both the public and private components are stored here.
+type Pair struct {
+	Public  *dns.DNSKEY
+	KeyTag  uint16
+	Private crypto.Signer
+}
 
-	for c.Next() {
-		if !c.NextArg() {
-			return nil, c.ArgErr()
-		}
-		dbfile := c.Val()
-		if !filepath.IsAbs(dbfile) && config.Root != "" {
-			dbfile = filepath.Join(config.Root, dbfile)
-		}
-
-		origins := plugin.OriginsFromArgsOrServerBlock(c.RemainingArgs(), c.ServerBlockKeys)
-		signers := make([]*Signer, len(origins))
-		for i := range origins {
-			signers[i] = &Signer{
-				dbfile:      dbfile,
-				origin:      origins[i],
-				jitterIncep: time.Duration(float32(durationInceptionJitter) * rand.Float32()),
-				jitterExpir: time.Duration(float32(durationExpirationDayJitter) * rand.Float32()),
-				directory:   "/var/lib/coredns",
-				stop:        make(chan struct{}),
-				signedfile:  fmt.Sprintf("db.%ssigned", origins[i]), // origins[i] is a fqdn, so it ends with a dot, hence %ssigned.
-			}
-		}
-
-		for c.NextBlock() {
-			switch c.Val() {
-			case "key":
-				pairs, err := keyParse(c)
-				if err != nil {
-					return sign, err
-				}
-				for i := range signers {
-					for _, p := range pairs {
-						p.Public.Header().Name = signers[i].origin
-					}
-					signers[i].keys = append(signers[i].keys, pairs...)
-				}
-			case "directory":
-				dir := c.RemainingArgs()
-				if len(dir) == 0 || len(dir) > 1 {
-					return sign, fmt.Errorf("can only be one argument after %q", "directory")
-				}
-				if !filepath.IsAbs(dir[0]) && config.Root != "" {
-					dir[0] = filepath.Join(config.Root, dir[0])
-				}
-				for i := range signers {
-					signers[i].directory = dir[0]
-					signers[i].signedfile = fmt.Sprintf("db.%ssigned", signers[i].origin)
-				}
-			default:
-				return nil, c.Errf("unknown property '%s'", c.Val())
-			}
-		}
-		sign.signers = append(sign.signers, signers...)
+func keypair(base string) (Pair, error) {
+	p, err := os.ReadFile(base + ".key")
+	if err != nil {
+		return Pair{}, err
+	}
+	rr, err := dns.New(string(p))
+	if err != nil {
+		return Pair{}, err
+	}
+	if _, ok := rr.(*dns.DNSKEY); !ok {
+		return Pair{}, fmt.Errorf("RR in %q is not a DNSKEY: %s", base+".key", dnsutil.TypeToString(dns.RRToType(rr)))
+	}
+	dnskey := rr.(*dns.DNSKEY)
+	ksk := dnskey.Flags&(1<<8) == (1<<8) && dnskey.Flags&1 == 1
+	if !ksk {
+		return Pair{}, fmt.Errorf("DNSKEY is not a CSK/KSK")
 	}
 
-	return sign, nil
+	if p, err = os.ReadFile(base + ".private"); err != nil {
+		return Pair{}, err
+	}
+	privkey, err := dnskey.NewPrivate(string(p))
+	if err != nil {
+		return Pair{}, err
+	}
+	switch signer := privkey.(type) {
+	case *ecdsa.PrivateKey:
+		return Pair{Public: dnskey, KeyTag: dnskey.KeyTag(), Private: signer}, nil
+	case ed25519.PrivateKey:
+		return Pair{Public: dnskey, KeyTag: dnskey.KeyTag(), Private: signer}, nil
+	case *rsa.PrivateKey:
+		return Pair{Public: dnskey, KeyTag: dnskey.KeyTag(), Private: signer}, nil
+	default:
+		return Pair{}, fmt.Errorf("unsupported algorithm %s", signer)
+	}
 }

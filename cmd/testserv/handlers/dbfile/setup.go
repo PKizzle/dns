@@ -31,7 +31,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 					return err
 				}
 			default:
-				return co.PropErr()
+				return co.ArgErr()
 			}
 		}
 	}

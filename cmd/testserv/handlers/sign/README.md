@@ -42,6 +42,8 @@ When signing it will:
 - Adjust TTLs to make RRSets expire before the signature expires. TTLs longer or within 20% of the
   expiration date are cut in half.
 
+- If the source (unsigned) zone file changes, these are picked up immediately.
+
 The state of each zone will be checked at 5 hour intervals. The modification time is checked every 5
 minutes.
 
@@ -57,14 +59,16 @@ A generated zone is written out in a file named `db.<name>.signed` in the direct
 
 ```
 sign FILE {
-    key KEYFILE [kEYFILE]...
+    key KEYFILE [KEYFILE]...
     directory DIRECTORY
 }
 ```
 
 - **FILE** is the input zone file to sign. If the path is relative, the path from the _root_ global handler will be prepended to it.
 - `key` specifies the key(s) (there can be multiple) to sign the zone. Any metadata in these files (Activate, Publish, etc.) is
-  _ignored_. These keys must also be Key Signing Keys (KSK).
+  _ignored_. These keys must also be Key Signing Keys (KSK). The **KEYFILE** must be the root name of the keys
+  files, i.e if you have "Kmiek.nl.+013+26205.key", **KEYFILE** must be "Kmiek.nl.+013+26205". For finding the
+  keys files the same rules apply as for **FILE**.
 - **DIRECTORY** specifies where to write the signed zone files. If not specified the directory where **FILE**
   is found is used. If the path is relative, _root_ will be prepended.
 
@@ -72,14 +76,14 @@ sign FILE {
 
 Sign the `example.org` zone contained in the file `db.example.org` and write the result to
 `./db.example.org.signed` to let the _dbfile_ handler pick it up and serve it. The keys used
-are read from `Kexample.org.key` and `Kexample.org.private`.
+are read from `Kexample.org.+013+32412.key` and `Kexample.org.+013+32412.private`.
 
 ```txt
 example.org {
     dbfile db.example.org.signed
 
     sign db.example.org {
-        key Kexample.org
+        key Kexample.org.+013+32412
     }
 }
 ```
@@ -91,24 +95,11 @@ shorter intervals).
 
 ```
 
-Be careful to fully list the origins you want to sign, if you don't:
-
-```txt
-example.org example.net {
-    sign handler/sign/testdata/db.example.org miek.org {
-        key file /etc/coredns/keys/Kexample.org
-    }
-}
-```
-
-This will lead to `db.example.org` be signed _twice_, as this entire section is parsed twice because
-you have specified the origins `example.org` and `example.net` in the server block.
-
 Forcibly resigning a zone can be accomplished by removing the signed zone file (testserv will keep
-on serving it from memory), and restarting testserv or waiting for the 5 hour timer to hit.
+on serving it from memory), and `touch`-ing **FILE**.
 
 ## See Also
 
-The DNSSEC RFCs: RFC 4033, RFC 4034 and RFC 4035. And the BCP on DNSSEC, RFC 6781. And the _dbfile_ handler's
-documentation. Useful DNS(SEC) tools can be found in [ldns](https://nlnetlabs.nl/projects/ldns/about/), e.g.
-`ldns-key2ds` to create DS records from DNSKEYs.
+The DNSSEC RFCs: RFC 4033, RFC 4034 and RFC 4035. And the best current practice (BCP) on DNSSEC, RFC 6781. And
+the _dbfile_ handler's documentation. Useful DNS(SEC) tools can be found in
+[ldns](https://nlnetlabs.nl/projects/ldns/about/), e.g. `ldns-key2ds` to create DS records from DNSKEYs.

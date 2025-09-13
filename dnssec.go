@@ -227,9 +227,6 @@ func (d *DS) ToCDS() *CDS {
 // zero, it is used as-is, otherwise the TTL of the RRset is used as the
 // OrigTTL.
 func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
-	if k == nil {
-		return ErrPrivKey
-	}
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
