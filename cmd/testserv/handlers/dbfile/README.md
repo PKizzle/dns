@@ -6,8 +6,8 @@ _dbfile_ - serve zone data from an RFC 1035-style zone file
 
 ## Description
 
-The _file_ plugin is used for an "old-style" DNS server. It serves from a preloaded file that exists on disk
-contained RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
+The _file_ plugin is used for DNS servers that serve from a preloaded file that exists on disk
+containing RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
 DNSSEC answers are returned. Only NSEC is supported. See the _sign_ plugin if you want to sign and resign your
 zone automatically.
 
@@ -31,11 +31,13 @@ For extra control you can open the block and define multipe properties.
 ```
 dbfile FILE {
     transfer {
-        from IP [IP...] {
+        from IP [IP]... {
             key NAME ALGORITHM SECRET
         }
-        to IP [IP...] {
-            source IP
+        to IP [IP]... {
+            notify [IP]... {
+                source IP
+            }
             key NAME ALGORITHM SECRET
         }
     }
@@ -47,8 +49,9 @@ dbfile FILE {
   `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. The `key`
   specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
-  `from` use the **IP** from `source` as the source address for sending the _notifies_. The TSIG key
-  specification is identical to that of `from`.
+  If there is no `notify` section the **IP**s as specified are in `to` are used for sending notifies. If you
+  want to override this open a `notify` block and add an (optional) new set of **IP**s. With `source` you can
+  set the source address when sending the notifies. The TSIG key specification is identical to that of `from`.
   For **IP** you can use IPv6 or IPv4 addresses. The wildcard address for them are `::/128` or `0.0.0.0/0`.
   `*` is an aliases for _both_ of them.
 
@@ -62,6 +65,7 @@ example.org {
     file db.example.org
     transfer {
         to *
+        notify 10.240.1.1
     }
 }
 ```
