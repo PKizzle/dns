@@ -2,6 +2,9 @@ package dbfile
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
@@ -38,6 +41,11 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log.Info("Start: loading")
 		for _, z := range d.Zones {
+			_, err := os.Stat(z.Path)
+			if errors.Is(err, os.ErrNotExist) {
+				log.Warn(fmt.Sprintf("Zone %q in %q does not exist, picking up later", z.Origin, filepath.Base(z.Path)))
+				continue
+			}
 			if err := z.Load(); err != nil {
 				return co.Err(err.Error())
 			}

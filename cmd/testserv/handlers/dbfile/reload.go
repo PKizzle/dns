@@ -26,13 +26,15 @@ func (d *Dbfile) Reload() error {
 				switch {
 				case event.Has(fsnotify.Write):
 					fallthrough
+				case event.Has(fsnotify.Create):
+					fallthrough
 				case event.Has(fsnotify.Rename):
 					fallthrough
 				case event.Has(fsnotify.Remove):
 					// Not happy with this, but there is a race between the event and actually reading the
 					// file, i.e. it might be empty, we don't really care how long the reload takes, as long
 					// as it happens. Let do the dumbest thing you can do in a race, and wait a bit.
-					time.Sleep(5 * time.Second)
+					time.Sleep(2 * time.Second)
 
 					// check which zone needs reloading
 					for _, z := range d.Zones {
@@ -50,8 +52,6 @@ func (d *Dbfile) Reload() error {
 							break
 						}
 					}
-
-					watcher.Add(event.Name)
 				default:
 				}
 			case _, ok := <-watcher.Errors:
@@ -66,7 +66,7 @@ func (d *Dbfile) Reload() error {
 	}()
 
 	for _, z := range d.Zones {
-		watcher.Add(z.Path)
+		watcher.Add(filepath.Dir(z.Path))
 	}
 	return nil
 }
