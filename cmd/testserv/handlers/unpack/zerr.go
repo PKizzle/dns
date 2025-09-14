@@ -2,8 +2,10 @@
 
 package unpack
 
-import "fmt"
-import "log/slog"
+import (
+	"fmt"
+	"log/slog"
+)
 
 func (h *Unpack) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 

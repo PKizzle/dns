@@ -8,15 +8,15 @@
 
 .SH "DESCRIPTION"
 .PP
-The \fIfile\fP plugin is used for an "old\-style" DNS server. It serves from a preloaded file that exists on disk
-contained RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
+The \fIfile\fP plugin is used for DNS servers that serve from a preloaded file that exists on disk
+containing RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
 DNSSEC answers are returned. Only NSEC is supported. See the \fIsign\fP plugin if you want to sign and resign your
 zone automatically.
 
 .PP
 The server will reply with minimal responses by default. The \fIdbfile\fP plugin will watch the zone file and when
-it receives a (kernel) notify will reload the zone. Regardless of any change it will send out notifies if
-configured to do so, the actual SOA serial isn't relevant.
+it receives a (kernel) notify will reload the zone after 5 seconds. Regardless of any change it will send out
+notifies if configured to do so, the actual SOA serial isn't relevant.
 
 .SH "SYNTAX"
 .PP
@@ -45,11 +45,13 @@ For extra control you can open the block and define multipe properties.
 .nf
 dbfile FILE {
     transfer {
-        from IP [IP...] {
+        from IP [IP]... {
             key NAME ALGORITHM SECRET
         }
-        to IP [IP...] {
-            source IP
+        to IP [IP]... {
+            notify [IP]... {
+                source IP
+            }
             key NAME ALGORITHM SECRET
         }
     }
@@ -64,8 +66,9 @@ deals with outgoing ones.
 \fB\fCfrom\fR allows for multiple upstream \fBIP\fPs to be specified, they will be tried in that order. The \fB\fCkey\fR
 specification is for TSIG signed transfers. The \fBSECRET\fP must be base64 encoded.
 \fB\fCto\fR allows for multipe downstream \fBIP\fPs to be specified, those are all allowed to initiate a transfer.
-\fB\fCfrom\fR use the \fBIP\fP from \fB\fCsource\fR as the source address for sending the \fInotifies\fP. The TSIG key
-specification is identical to that of \fB\fCfrom\fR.
+If there is no \fB\fCnotify\fR section the \fBIP\fPs as specified are in \fB\fCto\fR are used for sending notifies. If you
+want to override this open a \fB\fCnotify\fR block and add an (optional) new set of \fBIP\fPs. With \fB\fCsource\fR you can
+set the source address when sending the notifies. The TSIG key specification is identical to that of \fB\fCfrom\fR.
 For \fBIP\fP you can use IPv6 or IPv4 addresses. The wildcard address for them are \fB\fC::/128\fR or \fB\fC0.0.0.0/0\fR.
 \fB\fC*\fR is an aliases for \fIboth\fP of them.
 
@@ -83,6 +86,7 @@ example.org {
     file db.example.org
     transfer {
         to *
+        notify 10.240.1.1
     }
 }
 
