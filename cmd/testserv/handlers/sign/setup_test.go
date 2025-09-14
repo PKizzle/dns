@@ -13,7 +13,7 @@ func TestSetup(t *testing.T) {
 	}{
 		{`sign db.example.org {
         		key testdata/Kmiek.nl.+013+59725
-			}`, &Sign{Path: "db.example.org", Directory: "testdata"}},
+			}`, &Sign{Path: "db.example.org", Directory: "."}},
 		{`sign db.example.org {
         		key testdata/Kmiek.nl.+013+59725
 			directory /tmp
