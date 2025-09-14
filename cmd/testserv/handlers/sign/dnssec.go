@@ -8,11 +8,11 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 )
 
-func (s *Sign) Sign(origin, path string) error {
-	z := zone.New(origin, path)
+func (s *Sign) Sign(origin string) (*zone.Zone, error) {
+	z := zone.New(origin, s.Path)
 	err := z.Load()
 	if err != nil {
-		return err
+		return z, err
 	}
 
 	n := zone.Node{Name: origin}
@@ -24,7 +24,7 @@ func (s *Sign) Sign(origin, path string) error {
 	}
 	z.Set(n)
 
-	// Add nsecs + rrsig
+	// Add nsecs + rrsig in the first pass.
 	nf := &nsecfn{zone: z, keypairs: s.KeyPairs, ttl: s.ttl}
 	z.AuthoritativeWalk(nf.Walk)
 	for i := range nf.nsecs {
@@ -32,7 +32,7 @@ func (s *Sign) Sign(origin, path string) error {
 	}
 	z.Set(nf.Last(z.Origin))
 
-	// Now walk again to sign the rest
+	// Now walk again to sign the rest.
 	rrset := []dns.RR{}
 	rrsigs := []zone.Node{}
 	incep, expir := lifetime(time.Now().UTC())
@@ -67,7 +67,7 @@ func (s *Sign) Sign(origin, path string) error {
 	for i := range rrsigs {
 		z.Set(rrsigs[i])
 	}
-	return nil
+	return z, nil
 }
 
 type nsecfn struct {
