@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
@@ -40,7 +39,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
-		log.Info("Start: reload: " + strings.Join(co.Keys(), ", "))
+		log.Info("Start: reload: " + filepath.Base(d.Path))
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {

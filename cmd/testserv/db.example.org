@@ -105,4 +105,4 @@ sub.example.org.	1800	IN NS	sub1.example.net.
 					VYjahdV+TTkA3RBdnUI0hwXDm6U5k/weeZZr
 					ix1znORpOELbeLBMJW56cnaG+LGwOQfw9qqj
 					bOuULDst84s4+g== )
-bla.example.org. IN TXT "hallo"
+;bla.example.org. IN TXT "hallo"
