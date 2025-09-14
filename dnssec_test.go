@@ -19,7 +19,6 @@ func TestDNSSECSignVerify(t *testing.T) {
 			"rsasha256", RSASHA256, 1024,
 			[]RR{
 				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
-				//				&HINFO{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Cpu: "Pentium", Os: "Linux"},
 			},
 		},
 		{

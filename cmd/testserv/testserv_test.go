@@ -39,7 +39,7 @@ func TestTestserv(t *testing.T) {
 			go func() {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {
-						panic(err)
+						t.Skip("no working testserv binary found in .")
 					}
 				}
 			}()

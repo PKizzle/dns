@@ -351,7 +351,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	if !dnsutilIsRRset(rrset) {
 		return ErrRRset
 	}
-	if rrset[0].Header().t != rr.TypeCovered {
+	if RRToType(rrset[0]) != rr.TypeCovered {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {
