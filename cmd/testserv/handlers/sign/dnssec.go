@@ -51,6 +51,9 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 			rrset = []dns.RR{}
 			for _, rr := range n.RRs {
 				if dns.RRToType(rr) == t {
+					if t == dns.TypeSOA {
+						rr.(*dns.SOA).Serial = uint32(time.Now().Unix())
+					}
 					rrset = append(rrset, rr)
 				}
 			}

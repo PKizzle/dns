@@ -21,8 +21,7 @@ func TestSign(t *testing.T) {
 		t.Fatal(err)
 	}
 	// because of NewTestController's way of working we miss sign.Zones map, because we don't have keys to add.
-	s.Zones = make(map[string]*zone.Zone)
-	s.Zones[dnszone] = zone.New(dnszone, s.Path)
+	s.Zones = map[string]*zone.Zone{dnszone: zone.New(dnszone, s.Path)}
 
 	z, err := s.Sign(dnszone)
 	if err != nil {
