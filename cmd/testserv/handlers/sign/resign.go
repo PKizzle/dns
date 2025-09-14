@@ -21,22 +21,11 @@ func (s *Sign) Resign() error {
 		for {
 			select {
 			case event, ok := <-watcher.Events:
-				log.Debug("Zone watch event", "file", filepath.Base(event.Name))
 				if !ok {
 					continue
 				}
 				switch {
 				case event.Has(fsnotify.Write):
-					fallthrough
-				case event.Has(fsnotify.Create):
-					fallthrough
-				case event.Has(fsnotify.Rename):
-					fallthrough
-				case event.Has(fsnotify.Remove):
-					// See comment in dbfile/reload.go
-					time.Sleep(2 * time.Second)
-
-					// check which zone needs resigning
 					for _, z := range s.Zones {
 						if z.Path == event.Name {
 							zs, err := s.Sign(z.Origin)
