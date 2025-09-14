@@ -30,6 +30,9 @@ func TestSign(t *testing.T) {
 	}
 
 	z.Walk(func(n zone.Node) bool {
+		if len(n.RRs) == 0 {
+			return true
+		}
 		fmt.Println(n)
 		return true
 	})

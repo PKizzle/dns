@@ -1,7 +1,6 @@
 package sign
 
 import (
-	"fmt"
 	"slices"
 	"time"
 
@@ -34,18 +33,13 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	}
 	z.Set(nf.Last(z.Origin))
 
-	z.Walk(func(n zone.Node) bool {
-		fmt.Println(n)
-		return true
-	})
-
 	// Now walk again to sign the rest.
 	rrset := []dns.RR{}
 	rrsigs := []zone.Node{}
 	incep, expir := lifetime(time.Now().UTC())
 
 	z.AuthoritativeWalk(func(n zone.Node, auth bool) bool {
-		if !auth {
+		if !auth || len(n.RRs) == 0 {
 			return true
 		}
 		types := types(n)
@@ -105,7 +99,7 @@ func types(n zone.Node) []uint16 {
 // Walk is used when signing a zone. It generates all the NSECs that a zone needs.
 // We can't insert while walking, so we need save the nsec+rssig and insert them post walk.
 func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
-	if !auth {
+	if !auth || len(n.RRs) == 0 { // empty non-terminal
 		return true
 	}
 	if nf.last != "" {
