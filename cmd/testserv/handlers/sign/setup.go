@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
@@ -16,8 +17,6 @@ import (
 )
 
 func (s *Sign) Setup(co dnsserver.Controller) error {
-	s.ttl = 3600
-
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -29,6 +28,17 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		}
 		for co.NextBlock() {
 			switch co.Val() {
+			case "ttl":
+				args := co.RemainingArgs()
+				if len(args) == 0 {
+					return co.ArgErr()
+				}
+				ttl, err := strconv.ParseUint(args[0], 10, 32)
+				if err != nil {
+					return co.PropErr(err)
+				}
+				s.ttl = uint32(ttl)
+
 			case "key":
 				args := co.RemainingArgs()
 				if len(args) == 0 {
@@ -58,6 +68,11 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 	for _, z := range co.Keys() {
 		s.Zones[dnsutil.Canonical(z)] = zone.New(z, s.Path)
 	}
+	for _, k := range s.KeyPairs {
+		// if ttl was specified after the key property they would get the wrong ttl
+		k.DNSKEY.Header().TTL = s.ttl
+	}
+	s.pool = dns.NewPool(dns.MinMsgSize)
 	return nil
 }
 
