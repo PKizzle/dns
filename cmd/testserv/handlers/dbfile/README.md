@@ -46,14 +46,15 @@ dbfile FILE {
 
 - `transfer` details how zone transfers are handled, `from` deals with incoming AXFR from **IP**, and `to`
   deals with outgoing ones.
-  `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. The `key`
-  specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
-  `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
-  If there is no `notify` section the **IP**s as specified are in `to` are used for sending notifies. If you
-  want to override this open a `notify` block and add an (optional) new set of **IP**s. With `source` you can
-  set the source address when sending the notifies. The TSIG key specification is identical to that of `from`.
-  For **IP** you can use IPv6 or IPv4 addresses. The wildcard address for them are `::/128` or `0.0.0.0/0`.
-  `*` is an aliases for _both_ of them.
+
+  - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order.
+  - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
+  - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
+  - If there is no `notify` section the **IP**s as specified in `to` are used for sending notifies. If you
+    want to override this open a `notify` block and add an (optional) new set of **IP**s. With `source` you can
+    set the source address when sending the notifies. The TSIG key specification is identical to that of `from`.
+    For **IP** you can use IPv6 or IPv4 addresses. The wildcard address for them are `::/128` or `0.0.0.0/0`.
+    `*` is an aliases for _both_ of them.
 
 ## Examples
 

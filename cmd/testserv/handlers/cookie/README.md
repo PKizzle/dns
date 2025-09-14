@@ -18,11 +18,11 @@ Where **SECRET** is the secret to use in the server cookie generation record.
 
 ## Examples
 
-Enable nsid:
+Enable cookies:
 
 ```corefile
 example.org {
-    whoami
     cookie Use the force
+    whoami
 }
 ```

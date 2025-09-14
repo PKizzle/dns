@@ -19,8 +19,8 @@ any
 
 ```conffile
 example.org {
-    whoami
     any
+    whoami
 }
 ```
 
