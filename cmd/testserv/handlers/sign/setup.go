@@ -1,9 +1,11 @@
 package sign
 
 import (
+	"context"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,7 +19,9 @@ import (
 )
 
 func (s *Sign) Setup(co dnsserver.Controller) error {
-	s.ttl = 3600 // default.
+	s.ttl = 3600
+	s.pool = dns.NewPool(dns.MinMsgSize)
+	s.ctx, s.cancel = context.WithCancel(context.Background())
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -70,10 +74,31 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		s.Zones[dnsutil.Canonical(z)] = zone.New(z, s.Path)
 	}
 	for _, k := range s.KeyPairs {
-		// if ttl was specified after the key property they would get the wrong ttl
 		k.DNSKEY.Header().TTL = s.ttl
 	}
-	s.pool = dns.NewPool(dns.MinMsgSize)
+	co.OnStartup(func() error {
+		log.Info("Start: signing")
+		for _, z := range s.Zones {
+			_, err := os.Stat(z.Path)
+			if errors.Is(err, os.ErrNotExist) {
+				log.Warn(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
+				return co.Err(err.Error())
+			}
+			zsigned, err := s.Sign(z.Origin)
+			if err != nil {
+				return co.Err(err.Error())
+			}
+			// Write to dire
+			zsigned = zsigned
+		}
+		//		return d.Reload() watcher routine, sets what on origin and ticker for wacht
+		return nil
+	})
+	co.OnShutdown(func() error {
+		log.Info("Shutdown: signing")
+		s.cancel()
+		return nil
+	})
 	return nil
 }
 
