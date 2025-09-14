@@ -354,28 +354,6 @@ func (rr *DNSKEY) Copy() RR {
 	}
 }
 
-func (rr *IPSECKEY) Copy() RR {
-	return &IPSECKEY{
-		rr.Hdr,
-		rr.Precedence,
-		rr.GatewayType,
-		rr.Algorithm,
-		rr.GatewayAddr,
-		rr.GatewayHost,
-		rr.PublicKey,
-	}
-}
-
-func (rr *AMTRELAY) Copy() RR {
-	return &AMTRELAY{
-		rr.Hdr,
-		rr.Precedence,
-		rr.GatewayType,
-		rr.GatewayAddr,
-		rr.GatewayHost,
-	}
-}
-
 func (rr *RKEY) Copy() RR {
 	return &RKEY{
 		rr.Hdr,

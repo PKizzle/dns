@@ -94,10 +94,6 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *DNSKEY:
 		return x.parse(c, o)
-	case *IPSECKEY:
-		return x.parse(c, o)
-	case *AMTRELAY:
-		return x.parse(c, o)
 	case *RKEY:
 		return x.parse(c, o)
 	case *NSAPPTR:

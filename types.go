@@ -58,7 +58,7 @@ const (
 	TypeAPL        uint16 = 42 // Not implemented.
 	TypeDS         uint16 = 43
 	TypeSSHFP      uint16 = 44
-	TypeIPSECKEY   uint16 = 45
+	TypeIPSECKEY   uint16 = 45 // Not implemented.
 	TypeRRSIG      uint16 = 46
 	TypeNSEC       uint16 = 47
 	TypeDNSKEY     uint16 = 48
@@ -93,7 +93,7 @@ const (
 	TypeURI        uint16 = 256
 	TypeCAA        uint16 = 257
 	TypeAVC        uint16 = 258
-	TypeAMTRELAY   uint16 = 260
+	TypeAMTRELAY   uint16 = 260 // Not implemented.
 	TypeRESINFO    uint16 = 261
 
 	TypeTKEY uint16 = 249
@@ -973,73 +973,6 @@ func NewDNSKEY(z string, algorithm uint8) *DNSKEY {
 	k.Flags = 256
 	k.Protocol = 3
 	return k
-}
-
-// IPSECKEY RR. See RFC 4025.
-type IPSECKEY struct {
-	Hdr         Header
-	Precedence  uint8
-	GatewayType uint8
-	Algorithm   uint8
-	GatewayAddr net.IP `dns:"-"` // packing/unpacking/parsing/etc handled together with GatewayHost
-	GatewayHost string `dns:"ipsechost"`
-	PublicKey   string `dns:"base64"`
-}
-
-func (rr *IPSECKEY) String() string {
-	sb := sprintHeader(rr)
-	var gateway string
-	switch rr.GatewayType {
-	case IPSECGatewayIPv4, IPSECGatewayIPv6:
-		gateway = rr.GatewayAddr.String()
-	case IPSECGatewayHost:
-		gateway = rr.GatewayHost
-	case IPSECGatewayNone:
-		fallthrough
-	default:
-		gateway = "."
-	}
-
-	sprintData(sb, strconv.Itoa(int(rr.Precedence)),
-		strconv.Itoa(int(rr.GatewayType)),
-		strconv.Itoa(int(rr.Algorithm)),
-		gateway,
-		rr.PublicKey)
-	return sb.String()
-}
-
-// AMTRELAY RR. See RFC 8777.
-type AMTRELAY struct {
-	Hdr         Header
-	Precedence  uint8
-	GatewayType uint8  // discovery is packed in here at bit 0x80
-	GatewayAddr net.IP `dns:"-"` // packing/unpacking/parsing/etc handled together with GatewayHost
-	GatewayHost string `dns:"amtrelayhost"`
-}
-
-func (rr *AMTRELAY) String() string {
-	sb := sprintHeader(rr)
-	var gateway string
-	switch rr.GatewayType & 0x7f {
-	case AMTRELAYIPv4, AMTRELAYIPv6:
-		gateway = rr.GatewayAddr.String()
-	case AMTRELAYHost:
-		gateway = rr.GatewayHost
-	case AMTRELAYNone:
-		fallthrough
-	default:
-		gateway = "."
-	}
-	boolS := "0"
-	if rr.GatewayType&0x80 == 0x80 {
-		boolS = "1"
-	}
-
-	sprintData(sb, strconv.Itoa(int(rr.Precedence)),
-		boolS,
-		strconv.Itoa(int(rr.GatewayType&0x7f)),
-		gateway)
-	return sb.String()
 }
 
 // RKEY RR. See https://www.iana.org/assignments/dns-parameters/RKEY/rkey-completed-template.
