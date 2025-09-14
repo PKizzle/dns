@@ -814,7 +814,6 @@ func (rr *RRSIG) String() string {
 func NewRRSIG(z string, algorithm uint8, keytag uint16, incepexp ...uint32) *RRSIG {
 	s := new(RRSIG)
 	s.Hdr.Name = z
-	s.Hdr.Class = ClassINET
 	s.Algorithm = algorithm
 	s.KeyTag = keytag
 	s.SignerName = z
@@ -964,7 +963,7 @@ func (rr *DNSKEY) String() string {
 	return sb.String()
 }
 
-// NewDNSKEY returns a DNSKEY with good defaults for some fields. The keys flags are set to 256.
+// NewDNSKEY returns a DNSKEY with good defaults for some fields. The key's flag field is set to 256.
 func NewDNSKEY(z string, algorithm uint8) *DNSKEY {
 	k := new(DNSKEY)
 	k.Hdr.Name = z

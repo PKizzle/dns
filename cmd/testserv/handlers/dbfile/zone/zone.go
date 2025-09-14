@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -45,6 +46,15 @@ type Node struct {
 type Restart struct {
 	Answer []dns.RR // current set of RRs that need to go in the final response
 	i      int      // break recursion at i > 7
+}
+
+func (n Node) String() string {
+	sb := strings.Builder{}
+	for i := range n.RRs {
+		sb.WriteString(n.RRs[i].String())
+		sb.WriteByte('\n')
+	}
+	return sb.String()
 }
 
 func less(a, b Node) bool {

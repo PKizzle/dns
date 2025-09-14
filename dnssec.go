@@ -223,13 +223,9 @@ func (d *DS) ToCDS() *CDS {
 // Sign signs an RRset. The signature needs to be filled in with the values:
 // Inception, Expiration, KeyTag, SignerName and Algorithm. See [NewRRSIG], the rest is copied
 // from the RRset. Sign returns a non-nill error when the signing went OK.
-// There is no check if RRSet is a proper (RFC 2181) RRSet.  If OrigTTL is non
-// zero, it is used as-is, otherwise the TTL of the RRset is used as the
-// OrigTTL.
+// There is no check if RRSet is a proper (RFC 2181) RRSet.
+// Sign expect RRSIG to be initialized with [NewRRSIG]. Sign will skip RRSIG records, and return nil in that case.
 func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
-	if k == nil {
-		return ErrPrivKey
-	}
 	// s.Inception and s.Expiration may be 0 (rollover etc.), the rest must be set
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
@@ -239,16 +235,17 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	}
 
 	h0 := rrset[0].Header()
+	if RRToType(rrset[0]) == TypeRRSIG {
+		return nil
+	}
 	rr.Hdr.t = TypeRRSIG
 	rr.Hdr.Name = h0.Name
+	rr.Hdr.TTL = h0.TTL
 	rr.Hdr.Class = h0.Class
-	if rr.OrigTTL == 0 { // If set don't override
-		rr.OrigTTL = h0.TTL
-	}
-	rr.TypeCovered = h0.t
+	rr.OrigTTL = h0.TTL
+	rr.TypeCovered = RRToType(rrset[0])
 	rr.Labels = uint8(dnsutilLabels(h0.Name))
-
-	if strings.HasPrefix(h0.Name, "*") {
+	if strings.HasPrefix(h0.Name, "*.") {
 		rr.Labels-- // wildcard, remove from label count
 	}
 
@@ -354,7 +351,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	if !dnsutilIsRRset(rrset) {
 		return ErrRRset
 	}
-	if rrset[0].Header().t != rr.TypeCovered {
+	if RRToType(rrset[0]) != rr.TypeCovered {
 		return ErrRRset
 	}
 	if rr.KeyTag != k.KeyTag() {

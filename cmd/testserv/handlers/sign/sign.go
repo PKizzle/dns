@@ -1,0 +1,33 @@
+// Package sign implements a zone signer as a plugin.
+package sign
+
+import (
+	"context"
+	"time"
+
+	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
+)
+
+type Sign struct {
+	Path      string
+	Directory string
+	KeyPairs  []KeyPair
+
+	Zones map[string]*zone.Zone
+	ttl   uint32 // default ttl on all records
+
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+// Various duration constants for signing of the zones.
+const (
+	expireDays = 9 * 24 * time.Hour // max time allowed before expiration
+
+	signatureExpire    = 32 * 24 * time.Hour // sign for 32 days
+	signatureInception = -3 * time.Hour      // -(2+1) hours, be sure to catch daylight saving time and such, jitter is subtracted
+
+	inceptionJitter  = -18 * time.Hour // default max jitter for the inception
+	expirationJitter = 100 * time.Hour // default max jitter for the expiration
+
+)

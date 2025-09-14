@@ -31,7 +31,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 					return err
 				}
 			default:
-				return co.PropErr()
+				return co.ArgErr()
 			}
 		}
 	}
@@ -47,6 +47,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 				continue
 			}
 			if err := z.Load(); err != nil {
+				// check if exists and if not wait for it to appear..?
 				return co.Err(err.Error())
 			}
 		}

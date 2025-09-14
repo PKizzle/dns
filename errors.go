@@ -20,7 +20,6 @@ var (
 	ErrSig     = &Error{err: "bad signature"}     // ErrSig indicates that a signature can not be cryptographically validated.
 	ErrKeyAlg  = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
 	ErrKey     = &Error{err: "bad key"}
-	ErrPrivKey = &Error{err: "bad private key"}
 	ErrKeySize = &Error{err: "bad key size"}
 	ErrNoTSIG  = &Error{err: "no TSIG signature"}
 	ErrNoSIG0  = &Error{err: "no SIG(0) signature"}

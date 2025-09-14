@@ -19,7 +19,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		switch d.Val() {
 		case "root":
 			if !d.NextArg() {
-				d.PropErr()
+				d.ArgErr()
 			}
 			g.Root = d.Val()
 			if !filepath.IsAbs(g.Root) {
