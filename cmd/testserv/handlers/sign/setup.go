@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
@@ -80,7 +81,7 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		k.DNSKEY.Header().TTL = s.ttl
 	}
 	co.OnStartup(func() error {
-		log.Info("Start: signing")
+		log.Info("Start: signing: " + strings.Join(co.Keys(), ", "))
 		for _, z := range s.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
