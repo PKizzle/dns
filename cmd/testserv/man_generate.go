@@ -27,7 +27,7 @@ workgroup = "Testserv Authors"
 `
 
 func main() {
-	handlers, err := generate.AllHandlers("handlers")
+	handlers, err := generate.Handlers("handlers")
 	if err != nil {
 		log.Fatal(err)
 	}
