@@ -17,6 +17,7 @@ import (
 )
 
 func (s *Sign) Setup(co dnsserver.Controller) error {
+	s.ttl = 3600 // default.
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {

@@ -64,7 +64,8 @@ sign FILE {
 ```
 
 - **FILE** is the input zone file to sign. If the path is relative, the path from the _root_ global handler will be prepended to it.
-- `ttl` specifies the TTL of all records that will be signed, and for the new records (NSEC, RRSIG) that get added to the zone.
+- `ttl` specifies the TTL of all records that will be signed, and for the new records (NSEC, RRSIG) that get added to the zone. Without
+  this option all records that are signed will get a TTL of 3600.
 - `key` specifies the key(s) (there can be multiple) to sign the zone. Any metadata in these files (Activate, Publish, etc.) is
   _ignored_. These keys must also be Key Signing Keys (KSK). The **KEYFILE** must be the root name of the keys
   files, i.e if you have "Kmiek.nl.+013+26205.key", **KEYFILE** must be "Kmiek.nl.+013+26205". For finding the
