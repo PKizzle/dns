@@ -1,6 +1,7 @@
 package sign
 
 import (
+	"fmt"
 	"slices"
 	"time"
 
@@ -32,6 +33,11 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		z.Set(nf.nsecs[i])
 	}
 	z.Set(nf.Last(z.Origin))
+
+	z.Walk(func(n zone.Node) bool {
+		fmt.Println(n)
+		return true
+	})
 
 	// Now walk again to sign the rest.
 	rrset := []dns.RR{}
@@ -84,14 +90,14 @@ type nsecfn struct {
 }
 
 func types(n zone.Node) []uint16 {
-	types := make([]uint16, 0, len(n.RRs))
+	types := []uint16{} // pool for this too?
 	for _, rr := range n.RRs {
 		types = append(types, dns.RRToType(rr))
 	}
+	types = append(types, []uint16{dns.TypeRRSIG, dns.TypeNSEC}...)
 
 	slices.Sort(types)
-	slices.Compact(types)
-	return types
+	return slices.Compact(types)
 }
 
 // Pooler for memory allocations! TODO(miek)
@@ -103,21 +109,7 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 		return true
 	}
 	if nf.last != "" {
-		nsec := &dns.NSEC{
-			Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
-			NextDomain: n.Name,
-			TypeBitMap: nf.bitmap,
-		}
-		nsecnode := zone.Node{Name: nf.last, RRs: make([]dns.RR, 0, 2)}
-		nsecnode.RRs = append(nsecnode.RRs, nsec)
-
-		for _, pair := range nf.keypairs {
-			incep, expir := lifetime(nf.now)
-			rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
-			rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
-
-			nsecnode.RRs = append(nsecnode.RRs, rrsig)
-		}
+		nsecnode := nf.nsec(nf.last)
 		nf.nsecs = append(nf.nsecs, nsecnode)
 	}
 	nf.last = n.Name
@@ -126,18 +118,21 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 }
 
 // Last creates the last NSEC, that loops back to the origin. Walk misses this.
-func (nf *nsecfn) Last(origin string) zone.Node {
+func (nf *nsecfn) Last(origin string) zone.Node { return nf.nsec(origin) }
+
+// nsec creates an NSEC + RRSIG(s) node from nf.
+func (nf *nsecfn) nsec(origin string) zone.Node {
 	nsec := &dns.NSEC{
 		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
 		NextDomain: origin,
 		TypeBitMap: nf.bitmap,
 	}
-	nsecnode := zone.Node{Name: nf.last, RRs: make([]dns.RR, 0, 2)}
+	nsecnode := zone.Node{Name: nf.last}
 	nsecnode.RRs = append(nsecnode.RRs, nsec)
 
 	for _, pair := range nf.keypairs {
 		incep, expir := lifetime(nf.now)
-		rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+		rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
 		rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
 
 		nsecnode.RRs = append(nsecnode.RRs, rrsig)

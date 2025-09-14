@@ -172,7 +172,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	}
 	wire = wire[:n]
 
-	owner := make([]byte, len(k.Hdr.Name))
+	owner := make([]byte, len(k.Hdr.Name)+1)
 	off, err1 := pack.Name(dnsutilCanonical(k.Hdr.Name), owner, 0, nil, false)
 	if err1 != nil {
 		return nil
@@ -257,8 +257,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	sigwire.Expiration = rr.Expiration
 	sigwire.Inception = rr.Inception
 	sigwire.KeyTag = rr.KeyTag
-	// For signing, lowercase this name
-	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
+	sigwire.SignerName = rr.SignerName
 
 	// Create the desired binary blob
 	signdata := options.Pooler.Get()
