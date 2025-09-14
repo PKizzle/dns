@@ -8,6 +8,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 )
 
+// Sign signs the zone with origin from s. It returns the signed zone.
 func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	z := zone.New(origin, s.Path)
 	err := z.Load()

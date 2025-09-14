@@ -6,7 +6,6 @@ import (
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/testserv/internal/dnsserver"
-	"codeberg.org/miekg/dns/dnsutil"
 )
 
 func TestSign(t *testing.T) {
@@ -23,7 +22,15 @@ func TestSign(t *testing.T) {
 	}
 	// because of NewTestController's way of working we miss sign.Zones map, because we don't have keys to add.
 	s.Zones = make(map[string]*zone.Zone)
-	s.Zones[dnsutil.Canonical(dnszone)] = zone.New(dnszone, s.Path)
+	s.Zones[dnszone] = zone.New(dnszone, s.Path)
 
-	fmt.Printf("%+v\n", s)
+	z, err := s.Sign(dnszone)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	z.Walk(func(n zone.Node) bool {
+		fmt.Println(n)
+		return true
+	})
 }
