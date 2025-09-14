@@ -1,11 +1,16 @@
 package sign
 
 import (
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"slices"
 	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // Sign signs the zone with origin from s. It returns the signed zone.
@@ -51,6 +56,9 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 			rrset = []dns.RR{}
 			for _, rr := range n.RRs {
 				if dns.RRToType(rr) == t {
+					if t == dns.TypeSOA {
+						rr.(*dns.SOA).Serial = uint32(time.Now().Unix())
+					}
 					rrset = append(rrset, rr)
 				}
 			}
@@ -140,4 +148,53 @@ func lifetime(now time.Time) (uint32, uint32) {
 	incep := uint32(now.Add(signatureInception).Add(inceptionJitter).Unix())
 	expir := uint32(now.Add(signatureExpire).Add(expirationJitter).Unix())
 	return incep, expir
+}
+
+// Expired returns true when 'a' signature on the SOA record has only 9 days left.
+func (s *Sign) Expired(origin string) (bool, error) {
+	f, err := os.Open(s.Zones[origin].Path)
+	if err != nil {
+		return false, err
+	}
+	now := time.Now().UTC()
+	zp := dns.NewZoneParser(f, origin, f.Name())
+	zp.SetIncludeAllowed(true)
+	i := 0
+	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
+			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
+			if expire.Sub(now) < expireDays {
+				log.Info(fmt.Sprintf("More than 9 (%s) days left of zone %q in %q", (expire.Sub(now) / 24 * time.Hour).String(), origin, filepath.Base(f.Name())))
+				return true, nil
+			}
+		}
+
+		i++
+		if i > 50 {
+			break
+		}
+	}
+	return false, fmt.Errorf("no SOA RRSIG found in first 50 records")
+}
+
+func (s Sign) Write(z *zone.Zone) error {
+	f, err := os.CreateTemp(s.Directory, "testserv")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+
+	log.Debug(fmt.Sprintf("Zone %q in %q is signed and is written to temp. file %s", z.Origin, filepath.Base(z.Path), filepath.Base(f.Name())))
+
+	z.Walk(func(n zone.Node) bool {
+		if len(n.RRs) == 0 { // skip empty non-terminals
+			return true
+		}
+		io.WriteString(f, n.String())
+		return true
+	})
+	f.Close()
+	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
+	log.Info(fmt.Sprintf("Zone %q in %q is signed and is written to %s", z.Origin, filepath.Base(z.Path), filepath.Base(target)))
+	return os.Rename(f.Name(), target)
 }

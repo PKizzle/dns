@@ -22,6 +22,10 @@ type Sign struct {
 	cancel context.CancelFunc
 }
 
+func (s *Sign) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
+	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { next.ServeDNS(ctx, w, r) })
+}
+
 // Various duration constants for signing of the zones.
 const (
 	expireDays = 9 * 24 * time.Hour // max time allowed before expiration

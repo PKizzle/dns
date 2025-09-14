@@ -24,8 +24,8 @@ Enable nsid:
 
 ```corefile
 example.org {
-    whoami
     nsid Use the force
+    whoami
 }
 ```
 

@@ -1,7 +1,6 @@
 package sign
 
 import (
-	"fmt"
 	"testing"
 
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
@@ -9,6 +8,7 @@ import (
 )
 
 func TestSign(t *testing.T) {
+	// TODO(miek): turn into better test
 	dnszone := "miek.nl."
 	config := `sign testdata/db.miek.nl {
         		key testdata/Kmiek.nl.+013+59725
@@ -21,19 +21,9 @@ func TestSign(t *testing.T) {
 		t.Fatal(err)
 	}
 	// because of NewTestController's way of working we miss sign.Zones map, because we don't have keys to add.
-	s.Zones = make(map[string]*zone.Zone)
-	s.Zones[dnszone] = zone.New(dnszone, s.Path)
+	s.Zones = map[string]*zone.Zone{dnszone: zone.New(dnszone, s.Path)}
 
-	z, err := s.Sign(dnszone)
-	if err != nil {
+	if _, err := s.Sign(dnszone); err != nil {
 		t.Fatal(err)
 	}
-
-	z.Walk(func(n zone.Node) bool {
-		if len(n.RRs) == 0 {
-			return true
-		}
-		fmt.Println(n)
-		return true
-	})
 }

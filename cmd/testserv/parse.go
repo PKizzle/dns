@@ -43,7 +43,7 @@ func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
 		if b.Keys == nil {
 			continue
 		}
-		// prepend unpack to start
+		// prepend unpack to start the chain
 		hs := []handlers.Handler{new(unpack.Unpack)}
 		names := []string{}
 		for _, name := range b.Directives {

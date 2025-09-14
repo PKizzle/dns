@@ -1,12 +1,14 @@
 package global
 
 import (
+	"os"
 	"testing"
 
 	"codeberg.org/miekg/dns/cmd/testserv/internal/conffile"
 )
 
 func TestSetup(t *testing.T) {
+	cwd, _ := os.Getwd()
 	testcases := []struct {
 		input string
 		exp   *Global
@@ -14,7 +16,7 @@ func TestSetup(t *testing.T) {
 		{`root /tmp`, &Global{Root: "/tmp"}},
 		{`root /tmp
 		  debug`, &Global{Root: "/tmp"}},
-		{`metrics /10 localhost`, &Global{MetricsN: 10}},
+		{`metrics /10 localhost`, &Global{MetricsN: 10, Root: cwd}},
 	}
 	for i, tc := range testcases {
 		global := new(Global)

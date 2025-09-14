@@ -24,9 +24,8 @@ _sign_ will:
 
 - (Re)-sign the zone with the CSK(s) when:
 
-  - The last time the SOA record was signed is more than a 6 days ago. Each zone will have some jitter
-    applied to the inception date.
   - The signature on the SOA only has 9 days left before expiring.
+  - The source zone file has changed.
 
 When signing it will:
 
@@ -40,8 +39,6 @@ When signing it will:
 
 - Update the SOA's serial number to the _Unix epoch_ of when the signing happens. This will
   overwrite _any_ previous serial number.
-
-- Pick up change if the source (unsigned) zone file changes immediately.
 
 The state of each (signed) zone will be checked at 5 hour intervals.
 

@@ -33,10 +33,9 @@ By default every record will get a TTL of 3600 seconds.
 
 .RS
 .IP \(en 4
-The last time the SOA record was signed is more than a 6 days ago. Each zone will have some jitter
-applied to the inception date.
-.IP \(en 4
 The signature on the SOA only has 9 days left before expiring.
+.IP \(en 4
+The source zone file has changed.
 
 .RE
 
@@ -55,8 +54,6 @@ each key two CDS are created one with SHA1 and another with SHA256.
 .IP \(bu 4
 Update the SOA's serial number to the \fIUnix epoch\fP of when the signing happens. This will
 overwrite \fIany\fP previous serial number.
-.IP \(bu 4
-Pick up change if the source (unsigned) zone file changes immediately.
 
 
 .PP
@@ -78,6 +75,7 @@ A generated zone is written out in a file named \fB\fCdb.<name>.signed\fR in the
 
 .nf
 sign FILE {
+    ttl TTL
     key KEYFILE [KEYFILE]...
     directory DIRECTORY
 }
@@ -87,6 +85,9 @@ sign FILE {
 
 .IP \(bu 4
 \fBFILE\fP is the input zone file to sign. If the path is relative, the path from the \fIroot\fP global handler will be prepended to it.
+.IP \(bu 4
+\fB\fCttl\fR specifies the TTL of all records that will be signed, and for the new records (NSEC, RRSIG) that get added to the zone. Without
+this option all records that are signed will get a TTL of 3600.
 .IP \(bu 4
 \fB\fCkey\fR specifies the key(s) (there can be multiple) to sign the zone. Any metadata in these files (Activate, Publish, etc.) is
 \fIignored\fP. These keys must also be Key Signing Keys (KSK). The \fBKEYFILE\fP must be the root name of the keys
