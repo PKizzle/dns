@@ -39,7 +39,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
-		log.Info("Start: loading")
+		log.Info("Start: reload")
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
@@ -47,7 +47,6 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 				continue
 			}
 			if err := z.Load(); err != nil {
-				// check if exists and if not wait for it to appear..?
 				return co.Err(err.Error())
 			}
 		}

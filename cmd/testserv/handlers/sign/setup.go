@@ -87,16 +87,15 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 				log.Warn(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
 				return co.Err(err.Error())
 			}
-			zsigned, err := s.Sign(z.Origin)
+			zs, err := s.Sign(z.Origin)
 			if err != nil {
 				return co.Err(err.Error())
 			}
-			if err := s.Write(zsigned); err != nil {
+			if err := s.Write(zs); err != nil {
 				return co.Err(err.Error())
 			}
 		}
-		//		return s.Resign() watcher routine, sets what on origin and ticker for wacht
-		return nil
+		return s.Resign()
 	})
 	co.OnShutdown(func() error {
 		log.Info("Shutdown: signing")

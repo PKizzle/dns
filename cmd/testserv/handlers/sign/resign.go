@@ -1,6 +1,7 @@
 package sign
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -38,6 +39,15 @@ func (s *Sign) Resign() error {
 					// check which zone needs resigning
 					for _, z := range s.Zones {
 						if z.Path == event.Name {
+							zs, err := s.Sign(z.Origin)
+							if err != nil {
+								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
+								break
+							}
+							if err := s.Write(zs); err != nil {
+								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
+								break
+							}
 						}
 					}
 				default:
@@ -48,7 +58,17 @@ func (s *Sign) Resign() error {
 				}
 				log.Debug("Zone watch event error", "err", err)
 			case <-ticker.C:
-			// check zone and resign if needed
+				for _, z := range s.Zones {
+					zs, err := s.Sign(z.Origin)
+					if err != nil {
+						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(z.Path), err))
+						continue
+					}
+					if err := s.Write(zs); err != nil {
+						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(z.Path), err))
+						continue
+					}
+				}
 
 			case <-s.ctx.Done():
 				watcher.Close()
