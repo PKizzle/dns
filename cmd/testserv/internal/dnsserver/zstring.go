@@ -13,4 +13,5 @@ var Handlers = []string{
 	"metrics",
 	"nsid",
 	"refuse",
+	"unpack",
 }

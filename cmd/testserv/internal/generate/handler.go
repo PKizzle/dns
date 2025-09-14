@@ -5,18 +5,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"slices"
 )
 
 // Handlers returns the handlers, except global and unpack.
-func Handlers(path ...string) ([]string, error) { return handlers(false, path...) }
-
-// AllHandlers returns all handlers.
-func AllHandlers(path ...string) ([]string, error) { return handlers(true, path...) }
-
-var special = []string{"global", "unpack", "sign"}
-
-func handlers(all bool, path ...string) ([]string, error) {
+func Handlers(path ...string) ([]string, error) {
 	dir := "."
 	if len(path) > 0 {
 		dir = path[0]
@@ -30,11 +22,6 @@ func handlers(all bool, path ...string) ([]string, error) {
 	for _, d := range subdirs {
 		if !d.IsDir() {
 			continue
-		}
-		if !all {
-			if slices.Contains(special, d.Name()) {
-				continue
-			}
 		}
 		handler := dir + "/" + filepath.Join(d.Name(), d.Name()+".go")
 		types, err := Types(handler)

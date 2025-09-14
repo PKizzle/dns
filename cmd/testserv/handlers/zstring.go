@@ -11,6 +11,7 @@ import "codeberg.org/miekg/dns/cmd/testserv/handlers/log"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/metrics"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/nsid"
 import "codeberg.org/miekg/dns/cmd/testserv/handlers/refuse"
+import "codeberg.org/miekg/dns/cmd/testserv/handlers/unpack"
 
 // StringToHandler is a map of strings to a handler creation function.
 var StringToHandler = map[string]func() Handler{
@@ -23,4 +24,5 @@ var StringToHandler = map[string]func() Handler{
 	"metrics": func() Handler { return new(metrics.Metrics) },
 	"nsid":    func() Handler { return new(nsid.Nsid) },
 	"refuse":  func() Handler { return new(refuse.Refuse) },
+	"unpack":  func() Handler { return new(unpack.Unpack) },
 }
