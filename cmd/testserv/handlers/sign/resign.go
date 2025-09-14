@@ -7,12 +7,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// Resign launches a REsign routine that listens for _write_ events to the origin zone files and resigns them.
+// Resign launches a resign routine that listens for _write_ events to the origin zone files and resigns them.
 func (s *Sign) Resign() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
+	ticker := time.NewTicker(5 * time.Hour)
+	defer ticker.Stop()
 
 	go func() {
 		for {
@@ -36,7 +38,6 @@ func (s *Sign) Resign() error {
 					// check which zone needs resigning
 					for _, z := range s.Zones {
 						if z.Path == event.Name {
-							break
 						}
 					}
 				default:
@@ -46,6 +47,9 @@ func (s *Sign) Resign() error {
 					continue
 				}
 				log.Debug("Zone watch event error", "err", err)
+			case <-ticker.C:
+			// check zone and resign if needed
+
 			case <-s.ctx.Done():
 				watcher.Close()
 				return
