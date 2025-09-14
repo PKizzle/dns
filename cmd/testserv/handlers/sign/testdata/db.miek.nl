@@ -1,7 +1,7 @@
 $TTL 30M
 $ORIGIN miek.nl.
 @                        IN   SOA        linode.atoom.net. miek (
-                                            1282630061   ; serial  Fri, 28 Feb 1287 14:14:00 UTC
+                                            1282630069   ; serial  Fri, 28 Feb 1287 16:06:00 UTC
                                             4H           ; refresh
                                             1H           ; retry
                                             1W           ; expire

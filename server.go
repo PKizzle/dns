@@ -161,7 +161,7 @@ func (srv *Server) init() {
 		srv.IdleTimeout = 8 * time.Second
 	}
 	if srv.MsgPool == nil {
-		srv.MsgPool = newPool(srv.UDPSize)
+		srv.MsgPool = NewPool(srv.UDPSize)
 	}
 
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())

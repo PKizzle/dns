@@ -26,7 +26,8 @@ func (p *Pool) Put(b []byte) {
 	p.pool.Put(b)
 }
 
-func newPool(size int) *Pool {
+// NewPool returns a new Pooler of size.
+func NewPool(size int) *Pool {
 	return &Pool{
 		size: size,
 		pool: sync.Pool{

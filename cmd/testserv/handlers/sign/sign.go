@@ -5,6 +5,7 @@ import (
 	"context"
 	"time"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
 )
 
@@ -12,6 +13,7 @@ type Sign struct {
 	Path      string
 	Directory string
 	KeyPairs  []KeyPair
+	pool      *dns.Pool
 
 	Zones map[string]*zone.Zone
 	ttl   uint32 // default ttl on all records
@@ -29,5 +31,4 @@ const (
 
 	inceptionJitter  = -18 * time.Hour // default max jitter for the inception
 	expirationJitter = 100 * time.Hour // default max jitter for the expiration
-
 )
