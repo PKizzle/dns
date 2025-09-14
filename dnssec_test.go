@@ -18,19 +18,19 @@ func TestDNSSECSignVerify(t *testing.T) {
 		{
 			"rsasha256", RSASHA256, 1024,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
 			},
 		},
 		{
 			"ecdsap256sha256", ECDSAP256SHA256, 256,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
 			},
 		},
 		{
 			"ed25519", ED25519, 256,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
 			},
 		},
 	}
@@ -43,7 +43,7 @@ func TestDNSSECSignVerify(t *testing.T) {
 			key := NewDNSKEY("miek.nl.", tc.algorithm)
 			priv, _ := key.Generate(tc.bitsize)
 
-			sig := NewRRSIG("miek.nl", tc.algorithm, key.KeyTag())
+			sig := NewRRSIG("miek.nl.", tc.algorithm, key.KeyTag())
 			switch tc.algorithm {
 			case RSASHA256:
 				err = sig.Sign(priv.(*rsa.PrivateKey), tc.rrs, options)
