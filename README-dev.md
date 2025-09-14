@@ -35,3 +35,9 @@ If you have a bunch of values that certain types can take the are named: `ValueT
 
 For tests name them after the sub-system and the something more specific. This makes it easy to just run the
 tests for that sub-system. `TestZoneParserXXX`, `TestMsgXXX`, etc.
+
+### Go generate
+
+A lot of things are generated, so when adding an RR run a `go generate ./...`, this might fail on zcopy.go in
+that case remove the file zcopy.go and in dns.go remove `Copier` from then `RR` interface. Run go generate,
+and re-add `Copier`.
