@@ -809,14 +809,11 @@ func (rr *RRSIG) String() string {
 }
 
 // NewRRSIG returns a new RRSIG with many fields set. That can be used as a "stub" RRSIG before generating the
-// signature. If incepexp, the inception and expiration are not the given, now-300s and now+2w is used.
-// z is both set as the ownername and the signers name.
-func NewRRSIG(z string, algorithm uint8, keytag uint16, incepexp ...uint32) *RRSIG {
-	s := new(RRSIG)
-	s.Hdr.Name = z
-	s.Algorithm = algorithm
-	s.KeyTag = keytag
-	s.SignerName = z
+// signature. If incepexp, the inception and expiration dates, are not the given, now-300s and now+2w is used.
+// origin (which must be in canonical form) is set as the signers name. The name of the RRSIG is set while
+// signing.
+func NewRRSIG(origin string, algorithm uint8, keytag uint16, incepexp ...uint32) *RRSIG {
+	s := &RRSIG{Algorithm: algorithm, KeyTag: keytag, SignerName: origin}
 	if len(incepexp) == 0 {
 		now := time.Now().Unix()
 		s.Expiration = uint32(now - 300)

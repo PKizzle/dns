@@ -29,5 +29,4 @@ const (
 
 	inceptionJitter  = -18 * time.Hour // default max jitter for the inception
 	expirationJitter = 100 * time.Hour // default max jitter for the expiration
-
 )

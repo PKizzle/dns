@@ -345,7 +345,7 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 // cryptographic test, the signature validity period must be checked separately.
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 // It also checks that the Zone Key bit (RFC 4034 2.1.1) is set on the DNSKEY
-// and that the Protocol field is set to 3 (RFC 4034 2.1.2).
+// and that the Protocol field is set to 3 (RFC 4034 2.1.2). Options can not be nil.
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	if !dnsutilIsRRset(rrset) {
 		return ErrRRset
@@ -353,19 +353,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	if RRToType(rrset[0]) != rr.TypeCovered {
 		return ErrRRset
 	}
-	if rr.KeyTag != k.KeyTag() {
-		return ErrKey
-	}
-	if rr.Hdr.Class != k.Hdr.Class {
-		return ErrKey
-	}
-	if rr.Algorithm != k.Algorithm {
-		return ErrKey
-	}
-	if !EqualName(rr.SignerName, k.Hdr.Name) {
-		return ErrKey
-	}
-	if k.Protocol != 3 {
+	if rr.KeyTag != k.KeyTag() || rr.Hdr.Class != k.Hdr.Class || rr.Algorithm != k.Algorithm {
 		return ErrKey
 	}
 	// RFC 4034 2.1.1 If bit 7 has value 0, then the DNSKEY record holds some
@@ -375,9 +363,16 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 		return ErrKey
 	}
 
+	if k.Protocol != 3 || !EqualName(rr.SignerName, k.Hdr.Name) {
+		return ErrKey
+	}
+
 	if options.Pooler == nil {
 		options.Pooler = newNoopPool(DefaultMsgSize)
 	}
+
+	rr.Hdr.Name = rrset[0].Header().Name
+
 	// RFC 4035 5.3.2.  Reconstructing the Signed Data
 	// Copy the sig, except the rrsig data
 	sigwire := new(rrsigWireFmt)
@@ -388,7 +383,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	sigwire.Expiration = rr.Expiration
 	sigwire.Inception = rr.Inception
 	sigwire.KeyTag = rr.KeyTag
-	sigwire.SignerName = dnsutilCanonical(rr.SignerName)
+	sigwire.SignerName = rr.SignerName
 	// Create the desired binary blob
 	signeddata := options.Pooler.Get()
 	defer options.Pooler.Put(signeddata)

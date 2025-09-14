@@ -26,7 +26,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	z.Set(n)
 
 	// Add nsecs + rrsig in the first pass.
-	nf := &nsecfn{zone: z, keypairs: s.KeyPairs, ttl: s.ttl}
+	nf := &nsecfn{zone: z, keypairs: s.KeyPairs, ttl: s.ttl, origin: origin}
 	z.AuthoritativeWalk(nf.Walk)
 	for i := range nf.nsecs {
 		z.Set(nf.nsecs[i])
@@ -42,7 +42,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		if !auth || len(n.RRs) == 0 {
 			return true
 		}
-		types := types(n)
+		types := types(n, s.ttl)
 		for _, t := range types {
 			if t == dns.TypeRRSIG || t == dns.TypeNSEC {
 				continue
@@ -56,7 +56,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 
 			rrsignode := zone.Node{Name: n.Name, RRs: make([]dns.RR, 0, len(s.KeyPairs))}
 			for _, pair := range s.KeyPairs {
-				rrsig := dns.NewRRSIG(nf.last, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+				rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
 				rrsig.Sign(pair.Signer, rrset, &dns.SignOption{})
 
 				rrsignode.RRs = append(rrsignode.RRs, rrsig)
@@ -73,6 +73,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 
 type nsecfn struct {
 	zone     *zone.Zone
+	origin   string
 	keypairs []KeyPair
 	now      time.Time
 
@@ -83,10 +84,12 @@ type nsecfn struct {
 	nsecs []zone.Node
 }
 
-func types(n zone.Node) []uint16 {
+func types(n zone.Node, ttl uint32) []uint16 {
+	// while looking at them anyway we set the ttl.
 	types := []uint16{} // pool for this too?
 	for _, rr := range n.RRs {
 		types = append(types, dns.RRToType(rr))
+		rr.Header().TTL = ttl
 	}
 	types = append(types, []uint16{dns.TypeRRSIG, dns.TypeNSEC}...)
 
@@ -103,11 +106,11 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 		return true
 	}
 	if nf.last != "" {
-		nsecnode := nf.nsec(nf.last)
+		nsecnode := nf.nsec(nf.origin)
 		nf.nsecs = append(nf.nsecs, nsecnode)
 	}
 	nf.last = n.Name
-	nf.bitmap = types(n)
+	nf.bitmap = types(n, nf.ttl)
 	return true
 }
 
