@@ -2,6 +2,7 @@ package dnsutil
 
 import (
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -262,4 +263,29 @@ func compareLabel(a, b string) int {
 		}
 	}
 	return 0
+}
+
+// TimeToString translates the RRSIG's incep. and expir. times to the
+// string representation used when printing the record. It takes serial arithmetic (RFC 1982) into account.
+func TimeToString(t uint32) string {
+	mod := (int64(t)-time.Now().Unix())/year68 - 1
+	if mod < 0 {
+		mod = 0
+	}
+	ti := time.Unix(int64(t)-mod*year68, 0).UTC()
+	return ti.Format("20060102150405")
+}
+
+// StringToTime translates the RRSIG's incep. and expir. times from string values like "20110403154150" to an 32 bit integer.
+// It takes serial arithmetic (RFC 1982) into account.
+func StringToTime(s string) (uint32, error) {
+	t, err := time.Parse("20060102150405", s)
+	if err != nil {
+		return 0, err
+	}
+	mod := t.Unix()/year68 - 1
+	if mod < 0 {
+		mod = 0
+	}
+	return uint32(t.Unix() - mod*year68), nil
 }

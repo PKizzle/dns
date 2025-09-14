@@ -1,11 +1,15 @@
 package sign
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/testserv/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // Sign signs the zone with origin from s. It returns the signed zone.
@@ -143,4 +147,31 @@ func lifetime(now time.Time) (uint32, uint32) {
 	incep := uint32(now.Add(signatureInception).Add(inceptionJitter).Unix())
 	expir := uint32(now.Add(signatureExpire).Add(expirationJitter).Unix())
 	return incep, expir
+}
+
+// Expired returns true when 'a' signature on the SOA record has only 9 days left.
+func (s *Sign) Expired(origin string) (bool, error) {
+	f, err := os.Open(s.Zones[origin].Path)
+	if err != nil {
+		return false, err
+	}
+	now := time.Now().UTC()
+	zp := dns.NewZoneParser(f, origin, f.Name())
+	zp.SetIncludeAllowed(true)
+	i := 0
+	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
+			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
+			if expire.Sub(now) < expireDays {
+				log.Info("More than 9 (%s) days left of zone %q in %q", (expire.Sub(now) / 24 * time.Hour).String(), origin, filepath.Base(f.Name()))
+				return true, nil
+			}
+		}
+
+		i++
+		if i > 50 {
+			break
+		}
+	}
+	return false, fmt.Errorf("no SOA RRSIG found in first 50 records")
 }
