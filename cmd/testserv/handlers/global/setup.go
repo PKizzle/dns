@@ -15,6 +15,7 @@ import (
 )
 
 func (g *Global) Setup(d conffile.Dispenser) error {
+	g.Root, _ = os.Getwd()
 	if d.Next() {
 		switch d.Val() {
 		case "root":

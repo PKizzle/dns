@@ -2,6 +2,7 @@ package sign
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -163,7 +164,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			if expire.Sub(now) < expireDays {
-				log.Info("More than 9 (%s) days left of zone %q in %q", (expire.Sub(now) / 24 * time.Hour).String(), origin, filepath.Base(f.Name()))
+				log.Info(fmt.Sprintf("More than 9 (%s) days left of zone %q in %q", (expire.Sub(now) / 24 * time.Hour).String(), origin, filepath.Base(f.Name())))
 				return true, nil
 			}
 		}
@@ -174,4 +175,26 @@ func (s *Sign) Expired(origin string) (bool, error) {
 		}
 	}
 	return false, fmt.Errorf("no SOA RRSIG found in first 50 records")
+}
+
+func (s Sign) Write(z *zone.Zone) error {
+	f, err := os.CreateTemp(s.Directory, "testserv")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(f.Name())
+
+	log.Debug(fmt.Sprintf("Zone %q in %q is signed and is written to temp. file %s", z.Origin, filepath.Base(z.Path), filepath.Base(f.Name())))
+
+	z.Walk(func(n zone.Node) bool {
+		if len(n.RRs) == 0 { // skip empty non-terminals
+			return true
+		}
+		io.WriteString(f, n.String())
+		return true
+	})
+	f.Close()
+	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
+	log.Info(fmt.Sprintf("Zone %q in %q is signed and is written to %s", z.Origin, filepath.Base(z.Path), filepath.Base(target)))
+	return os.Rename(f.Name(), target)
 }

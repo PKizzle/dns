@@ -22,6 +22,8 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 	s.ttl = 3600
 	s.pool = dns.NewPool(dns.MinMsgSize)
 	s.ctx, s.cancel = context.WithCancel(context.Background())
+	s.Zones = map[string]*zone.Zone{}
+	s.Directory = co.Global.Root
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -31,6 +33,7 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		if !filepath.IsAbs(s.Path) {
 			s.Path = filepath.Join(co.Global.Root, s.Path)
 		}
+		s.Directory = filepath.Dir(s.Path)
 		for co.NextBlock() {
 			switch co.Val() {
 			case "ttl":
@@ -88,10 +91,11 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 			if err != nil {
 				return co.Err(err.Error())
 			}
-			// Write to dire
-			zsigned = zsigned
+			if err := s.Write(zsigned); err != nil {
+				return co.Err(err.Error())
+			}
 		}
-		//		return d.Reload() watcher routine, sets what on origin and ticker for wacht
+		//		return s.Resign() watcher routine, sets what on origin and ticker for wacht
 		return nil
 	})
 	co.OnShutdown(func() error {
