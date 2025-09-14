@@ -156,8 +156,6 @@ return 1
 
 			case tag == `dns:"octet"`:
 
-			case tag == `dns:"ipsechost"` || tag == `dns:"amtrelayhost"`:
-
 			case tag == "":
 				switch fieldtype {
 				case "uint8":

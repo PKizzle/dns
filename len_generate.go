@@ -124,28 +124,6 @@ func main() {
 				o("for _, t := range rr.%s { l += len(t) + 1 }\n")
 			case tag == `dns:"uint48"`:
 				o("l += 6 // %s\n")
-			case tag == `dns:"ipsechost"`:
-				o(`switch rr.GatewayType {
-				case IPSECGatewayIPv4:
-					l += net.IPv4len
-				case IPSECGatewayIPv6:
-					l += net.IPv6len
-				case IPSECGatewayHost:
-					l += len(rr.%s) + 1
-				}
-				`)
-			case tag == `dns:"amtrelayhost"`:
-				o(`switch rr.GatewayType {
-				case AMTRELAYIPv4:
-					l += net.IPv4len
-				case AMTRELAYIPv6:
-					l += net.IPv6len
-				case AMTRELAYHost:
-					l += len(rr.%s) + 1
-				}
-				`)
-			case tag == `dns:"amtrelaytype"`:
-				o("l++ // %s\n")
 			case tag == "":
 				switch fieldtype {
 				case "uint8":

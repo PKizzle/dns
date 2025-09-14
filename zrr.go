@@ -47,8 +47,6 @@ func (rr *SSHFP) Header() *Header      { return &rr.Hdr }
 func (rr *KEY) Header() *Header        { return &rr.Hdr }
 func (rr *CDNSKEY) Header() *Header    { return &rr.Hdr }
 func (rr *DNSKEY) Header() *Header     { return &rr.Hdr }
-func (rr *IPSECKEY) Header() *Header   { return &rr.Hdr }
-func (rr *AMTRELAY) Header() *Header   { return &rr.Hdr }
 func (rr *RKEY) Header() *Header       { return &rr.Hdr }
 func (rr *NSAPPTR) Header() *Header    { return &rr.Hdr }
 func (rr *NSEC3) Header() *Header      { return &rr.Hdr }
@@ -134,8 +132,6 @@ var TypeToRR = map[uint16]func() RR{
 	TypeKEY:        func() RR { return new(KEY) },
 	TypeCDNSKEY:    func() RR { return new(CDNSKEY) },
 	TypeDNSKEY:     func() RR { return new(DNSKEY) },
-	TypeIPSECKEY:   func() RR { return new(IPSECKEY) },
-	TypeAMTRELAY:   func() RR { return new(AMTRELAY) },
 	TypeRKEY:       func() RR { return new(RKEY) },
 	TypeNSAPPTR:    func() RR { return new(NSAPPTR) },
 	TypeNSEC3:      func() RR { return new(NSEC3) },
@@ -267,10 +263,6 @@ func RRToType(rr RR) uint16 {
 		return TypeCDNSKEY
 	case *DNSKEY:
 		return TypeDNSKEY
-	case *IPSECKEY:
-		return TypeIPSECKEY
-	case *AMTRELAY:
-		return TypeAMTRELAY
 	case *RKEY:
 		return TypeRKEY
 	case *NSAPPTR:
@@ -398,8 +390,6 @@ var TypeToString = map[uint16]string{
 	TypeKEY:        "KEY",
 	TypeCDNSKEY:    "CDNSKEY",
 	TypeDNSKEY:     "DNSKEY",
-	TypeIPSECKEY:   "IPSECKEY",
-	TypeAMTRELAY:   "AMTRELAY",
 	TypeRKEY:       "RKEY",
 	TypeNSEC3:      "NSEC3",
 	TypeNSEC3PARAM: "NSEC3PARAM",

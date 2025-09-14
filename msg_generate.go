@@ -146,8 +146,6 @@ if rr.%s != "-" {
 				o("off, err = pack.StringAny(rr.%s, msg, off)\n")
 			case tag == `dns:"octet"`:
 				o("off, err = pack.StringOctet(rr.%s, msg, off)\n")
-			case tag == `dns:"ipsechost"` || tag == `dns:"amtrelayhost"`:
-				o("off, err = packIPSECGateway(rr.GatewayAddr, rr.%s, msg, off, rr.GatewayType, compression, false)\n")
 			case tag == "":
 				switch fieldtype {
 				case "uint8":
@@ -283,10 +281,6 @@ if rr.%s != "-" {
 				unpackFieldRest("unpack.StringAny")
 			case `dns:"octet"`:
 				unpackField("unpack.StringOctet")
-			case `dns:"ipsechost"`, `dns:"amtrelayhost"`:
-				// TODO(tmthrgd): This is a particular unpleasant way of dealing with this. Can we do better? Probably not with the structs as they are.
-				fmt.Fprintln(b, "rr.GatewayAddr, rr.GatewayHost, err = unpackIPSECGateway(&s, msgBuf, rr.GatewayType)")
-				errCheck()
 			case "":
 				switch fieldtype {
 				case "uint8":

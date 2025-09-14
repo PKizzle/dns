@@ -98,10 +98,6 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 		return x.pack(msg, off, compression)
 	case *DNSKEY:
 		return x.pack(msg, off, compression)
-	case *IPSECKEY:
-		return x.pack(msg, off, compression)
-	case *AMTRELAY:
-		return x.pack(msg, off, compression)
 	case *RKEY:
 		return x.pack(msg, off, compression)
 	case *NSAPPTR:
@@ -273,10 +269,6 @@ func zunpack(rr RR, data, msgBuf []byte) error {
 	case *CDNSKEY:
 		return x.unpack(data, msgBuf)
 	case *DNSKEY:
-		return x.unpack(data, msgBuf)
-	case *IPSECKEY:
-		return x.unpack(data, msgBuf)
-	case *AMTRELAY:
 		return x.unpack(data, msgBuf)
 	case *RKEY:
 		return x.unpack(data, msgBuf)

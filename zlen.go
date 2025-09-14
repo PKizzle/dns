@@ -329,38 +329,6 @@ func (rr *DNSKEY) Len() int {
 	return l
 }
 
-func (rr *IPSECKEY) Len() int {
-	l := rr.Hdr.Len()
-	l++ // Precedence
-	l++ // GatewayType
-	l++ // Algorithm
-	switch rr.GatewayType {
-	case IPSECGatewayIPv4:
-		l += net.IPv4len
-	case IPSECGatewayIPv6:
-		l += net.IPv6len
-	case IPSECGatewayHost:
-		l += len(rr.GatewayHost) + 1
-	}
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
-	return l
-}
-
-func (rr *AMTRELAY) Len() int {
-	l := rr.Hdr.Len()
-	l++ // Precedence
-	l++ // GatewayType
-	switch rr.GatewayType {
-	case AMTRELAYIPv4:
-		l += net.IPv4len
-	case AMTRELAYIPv6:
-		l += net.IPv6len
-	case AMTRELAYHost:
-		l += len(rr.GatewayHost) + 1
-	}
-	return l
-}
-
 func (rr *RKEY) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Flags

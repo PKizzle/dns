@@ -98,10 +98,6 @@ func compare(a, b RR) int {
 		return x.compare(b)
 	case *DNSKEY:
 		return x.compare(b)
-	case *IPSECKEY:
-		return x.compare(b)
-	case *AMTRELAY:
-		return x.compare(b)
 	case *RKEY:
 		return x.compare(b)
 	case *NSAPPTR:
@@ -858,49 +854,6 @@ func (rr *DNSKEY) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.Algorithm) - int(b.(*DNSKEY).Algorithm)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	return 0
-}
-
-func (rr *IPSECKEY) compare(b RR) (x int) {
-	x = int(rr.Precedence) - int(b.(*IPSECKEY).Precedence)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = int(rr.GatewayType) - int(b.(*IPSECKEY).GatewayType)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = int(rr.Algorithm) - int(b.(*IPSECKEY).Algorithm)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	return 0
-}
-
-func (rr *AMTRELAY) compare(b RR) (x int) {
-	x = int(rr.Precedence) - int(b.(*AMTRELAY).Precedence)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = int(rr.GatewayType) - int(b.(*AMTRELAY).GatewayType)
 	if x != 0 {
 		if x < 0 {
 			return -1
