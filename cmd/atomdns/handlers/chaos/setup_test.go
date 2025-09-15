@@ -16,8 +16,9 @@ func TestSetup(t *testing.T) {
 		{`chaos {
 			authors {
 				aaa
+				bbb
 			}
-		}`, &Chaos{Version: "", Authors: []string{"aaa"}}},
+		}`, &Chaos{Version: "", Authors: []string{"aaa", "bbb"}}},
 		{`chaos {
 			authors {
 			}

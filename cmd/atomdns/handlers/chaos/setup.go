@@ -16,10 +16,11 @@ func (c *Chaos) Setup(co dnsserver.Controller) error {
 			c.Version = args[0]
 		}
 		authors := []string{}
-		for co.NextBlock() {
+		for co.NextBlock(0) {
 			switch co.Val() {
 			case "authors":
-				for co.NextBlock() {
+				for co.NextBlock(1) {
+					authors = append(authors, strings.TrimSpace(co.Val()))
 					for co.NextLine() {
 						if co.Val() == "}" {
 							break

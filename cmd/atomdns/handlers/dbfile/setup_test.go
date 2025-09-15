@@ -11,7 +11,7 @@ func TestSetup(t *testing.T) {
 		input string
 		exp   *Dbfile
 	}{
-		{`file db.example`, &Dbfile{Path: "db.example"}},
+		{`dbfile db.example`, &Dbfile{Path: "db.example"}},
 	}
 	for i, tc := range testcases {
 		dbfile := new(Dbfile)

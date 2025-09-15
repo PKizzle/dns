@@ -34,7 +34,7 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 			s.Path = filepath.Join(co.Global.Root, s.Path)
 		}
 		s.Directory = filepath.Dir(s.Path)
-		for co.NextBlock() {
+		for co.NextBlock(0) {
 			switch co.Val() {
 			case "ttl":
 				args := co.RemainingArgs()
