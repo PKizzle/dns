@@ -1,7 +1,10 @@
 package dbfile
 
 import (
+	"context"
+	"fmt"
 	"net"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -27,7 +30,7 @@ func (t *Transfer) Notify(origin string) error {
 	dnsutil.SetQuestion(m, origin, dns.TypeSOA)
 	c := new(dns.Client)
 	c.Transport = dns.NewDefaultTransport()
-	// add tsig if needed
+	// TODO(miek): TSIG
 
 	var lasterr error
 	for _, ip := range t.IPs {
@@ -35,12 +38,27 @@ func (t *Transfer) Notify(origin string) error {
 			lasterr = err
 		}
 	}
-	log.Debug("Sent notifies for zone %q to %v", origin, t.IPs)
+	log.Debug(fmt.Sprintf("Sent notifies for zone %q to %v", origin, t.IPs))
 	return lasterr
 }
 
-func notify(c *dns.Client, m *dns.Msg, to string, sources []string) error {
-	return nil
+func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
+	if src := source(ip, sources); src != nil {
+		c.Dialer.LocalAddr = &net.UDPAddr{IP: src}
+	}
+	for i := 0; i < 3; i++ {
+		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
+		if err != nil {
+			log.Warn(fmt.Sprintf("Failed to sent notify: %s", err))
+			time.Sleep(time.Second)
+			continue
+		}
+		if r.Rcode == dns.RcodeSuccess {
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+	return fmt.Errorf("notify for zone %q was not accepted by %q", m.Question[0].Header().Name, ip)
 }
 
 // returns the correct family address or nil, also nil when nothing is needed.
@@ -63,54 +81,3 @@ func source(ip string, sources []string) net.IP {
 	}
 	return nil
 }
-
-/*
-func sendNotify(c *dns.Client, m *dns.Msg, s string, sources []net.IP) error {
-	var err error
-
-	code := dns.RcodeServerFailure
-	for i := 0; i < 3; i++ {
-		ret := &dns.Msg{}
-		switch len(sources) {
-		case 0:
-			ret, _, err = c.Exchange(m, s)
-		default:
-			source := sourceForFamily(s, sources)
-			if source == nil {
-				ret, _, err = c.Exchange(m, s)
-			} else {
-				conn, err := connWithSrcAddr(s, source)
-				if err != nil {
-					log.Warningf("Can not use %s as notifiy source: %s", source, err)
-					break
-				}
-				ret, _, err = c.ExchangeWithConn(m, conn) // nolint:all
-			}
-		}
-		if err != nil {
-			log.Warningf("Failed to sent notify: %s", err)
-			continue
-		}
-		// due to all the skipping when encountering errors, ret may be nil
-		if ret != nil {
-			code = ret.Rcode
-		} else {
-			err = fmt.Errorf("notify for zone %q got no reply", m.Question[0].Name)
-		}
-		if code == dns.RcodeSuccess {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("notify for zone %q was not accepted by %q: %q", m.Question[0].Name, s, err)
-	}
-	return fmt.Errorf("notify for zone %q was not accepted by %q: rcode was %q", m.Question[0].Name, s, dnsutil.RcodeToString(code))
-}
-
-
-	dialer := &net.Dialer{
-		LocalAddr: &net.UDPAddr{
-			IP:   source,
-		},
-	}
-*/
