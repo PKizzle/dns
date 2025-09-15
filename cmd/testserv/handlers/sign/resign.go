@@ -26,7 +26,10 @@ func (s *Sign) Resign() error {
 				}
 				switch {
 				case event.Has(fsnotify.Write):
+					// see dbfile/reload.go for why we wait
+					time.Sleep(2 * time.Second)
 					for _, z := range s.Zones {
+						log.Info(fmt.Sprintf("Zone write event seen for %q in %q", z.Origin, filepath.Base(event.Name)))
 						if z.Path == event.Name {
 							zs, err := s.Sign(z.Origin)
 							if err != nil {

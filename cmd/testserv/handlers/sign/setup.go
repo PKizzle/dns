@@ -87,6 +87,7 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 				log.Warn(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
 				return co.Err(err.Error())
 			}
+			// TODO(miek): check if we need to resign at alll
 			zs, err := s.Sign(z.Origin)
 			if err != nil {
 				return co.Err(err.Error())
