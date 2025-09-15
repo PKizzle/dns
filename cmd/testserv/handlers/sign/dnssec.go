@@ -1,6 +1,7 @@
 package sign
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -112,7 +113,7 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 		return true
 	}
 	if nf.last != "" {
-		nsecnode := nf.nsec(nf.origin)
+		nsecnode := nf.nsec(n.Name)
 		nf.nsecs = append(nf.nsecs, nsecnode)
 	}
 	nf.last = n.Name
@@ -124,10 +125,10 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 func (nf *nsecfn) Last(origin string) zone.Node { return nf.nsec(origin) }
 
 // nsec creates an NSEC + RRSIG(s) node from nf.
-func (nf *nsecfn) nsec(origin string) zone.Node {
+func (nf *nsecfn) nsec(name string) zone.Node {
 	nsec := &dns.NSEC{
 		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
-		NextDomain: origin,
+		NextDomain: name,
 		TypeBitMap: nf.bitmap,
 	}
 	nsecnode := zone.Node{Name: nf.last}
@@ -135,7 +136,7 @@ func (nf *nsecfn) nsec(origin string) zone.Node {
 
 	for _, pair := range nf.keypairs {
 		incep, expir := lifetime(nf.now)
-		rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+		rrsig := dns.NewRRSIG(nf.origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
 		rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
 
 		nsecnode.RRs = append(nsecnode.RRs, rrsig)
@@ -152,8 +153,11 @@ func lifetime(now time.Time) (uint32, uint32) {
 
 // Expired returns true when 'a' signature on the SOA record has only 9 days left.
 func (s *Sign) Expired(origin string) (bool, error) {
-	f, err := os.Open(s.Zones[origin].Path)
+	f, err := os.Open(s.Zones[origin].Path + ".signed")
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return true, nil
+		}
 		return false, err
 	}
 	now := time.Now().UTC()
@@ -163,9 +167,15 @@ func (s *Sign) Expired(origin string) (bool, error) {
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
+			left := expire.Sub(now) - expireDays
+			left /= 24 * time.Hour
+			expired := expireDays / (24 * time.Hour)
 			if expire.Sub(now) < expireDays {
-				log.Info(fmt.Sprintf("More than 9 (%s) days left of zone %q in %q", (expire.Sub(now) / 24 * time.Hour).String(), origin, filepath.Base(f.Name())))
+				log.Info(fmt.Sprintf("Less than %d days (%d) left before expiration of zone %q in %q", expired, left, origin, filepath.Base(f.Name())))
 				return true, nil
+			} else {
+				log.Info(fmt.Sprintf("More than %d days (%d) left before expiration of zone %q in %q", expired, left, origin, filepath.Base(f.Name())))
+				return false, nil
 			}
 		}
 
@@ -174,7 +184,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 			break
 		}
 	}
-	return false, fmt.Errorf("no SOA RRSIG found in first 50 records")
+	return true, fmt.Errorf("no SOA RRSIG found in first 50 records")
 }
 
 func (s Sign) Write(z *zone.Zone) error {

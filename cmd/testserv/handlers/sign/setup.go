@@ -80,23 +80,28 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		k.DNSKEY.Header().TTL = s.ttl
 	}
 	co.OnStartup(func() error {
-		log.Info("Start: signing")
+		log.Info("Startup: signing: " + filepath.Base(s.Path))
 		for _, z := range s.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
-				log.Warn(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
+				log.Error(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
 				return co.Err(err.Error())
 			}
-			zsigned, err := s.Sign(z.Origin)
+
+			expired, err := s.Expired(z.Origin)
+			if !expired {
+				log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin, filepath.Base(z.Path)))
+				continue
+			}
+			zs, err := s.Sign(z.Origin)
 			if err != nil {
 				return co.Err(err.Error())
 			}
-			if err := s.Write(zsigned); err != nil {
+			if err := s.Write(zs); err != nil {
 				return co.Err(err.Error())
 			}
 		}
-		//		return s.Resign() watcher routine, sets what on origin and ticker for wacht
-		return nil
+		return s.Resign()
 	})
 	co.OnShutdown(func() error {
 		log.Info("Shutdown: signing")

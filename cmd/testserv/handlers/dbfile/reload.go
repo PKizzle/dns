@@ -20,7 +20,6 @@ func (d *Dbfile) Reload() error {
 		for {
 			select {
 			case event, ok := <-watcher.Events:
-				log.Debug("Zone watch event", "file", filepath.Base(event.Name))
 				if !ok {
 					continue
 				}

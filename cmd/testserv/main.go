@@ -19,7 +19,7 @@ import (
 
 //go:generate go run man_generate.go
 
-const Version = "001"
+const Version = "002"
 
 func serve(srv *dns.Server, global *global.Global) {
 	if err := global.Startup(); err != nil {
@@ -80,7 +80,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	srvs := make([]*dns.Server, runtime.NumCPU()*3*2) // *2 udp/tcp
+	srvs := make([]*dns.Server, runtime.NumCPU()*3*2) // *2=udp/tcp
 	for j := range srvs {
 		net := "tcp"
 		if j < len(srvs)/2 {

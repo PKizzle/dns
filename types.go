@@ -816,11 +816,11 @@ func NewRRSIG(origin string, algorithm uint8, keytag uint16, incepexp ...uint32)
 	s := &RRSIG{Algorithm: algorithm, KeyTag: keytag, SignerName: origin}
 	if len(incepexp) == 0 {
 		now := time.Now().Unix()
-		s.Expiration = uint32(now - 300)
-		s.Inception = uint32(now + (14 * 86400))
+		s.Expiration = uint32(now + (14 * 86400))
+		s.Inception = uint32(now - 300)
 	} else {
-		s.Expiration = incepexp[0]
-		s.Inception = incepexp[1]
+		s.Expiration = incepexp[1]
+		s.Inception = incepexp[0]
 	}
 	return s
 }
