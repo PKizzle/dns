@@ -166,6 +166,10 @@ func (s *Sign) Expired(origin string) (bool, error) {
 	i := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
+			if !s.ValidPeriod(now) {
+				log.Info(fmt.Sprintf("Signature's validity period has passed completey of zone %q in %q", origin, filepath.Base(f.Name())))
+				return true, nil
+			}
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			left := expire.Sub(now) - expireDays
 			left /= 24 * time.Hour

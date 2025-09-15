@@ -54,7 +54,7 @@ func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
-				co := dnsserver.Controller{
+				co := &dnsserver.Controller{
 					Dispenser: conffile.NewDispenser(conf, b.Keys, b.Tokens[name]),
 					Global:    global,
 				}

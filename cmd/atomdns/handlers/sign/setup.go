@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
-func (s *Sign) Setup(co dnsserver.Controller) error {
+func (s *Sign) Setup(co *dnsserver.Controller) error {
 	s.ttl = 3600
 	s.pool = dns.NewPool(dns.MinMsgSize)
 	s.ctx, s.cancel = context.WithCancel(context.Background())

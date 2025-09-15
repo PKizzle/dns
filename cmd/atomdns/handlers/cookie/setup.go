@@ -7,7 +7,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
-func (c *Cookie) Setup(co dnsserver.Controller) error {
+func (c *Cookie) Setup(co *dnsserver.Controller) error {
 	for co.Next() {
 		args := co.RemainingArgs()
 		if len(args) == 0 {

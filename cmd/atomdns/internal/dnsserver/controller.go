@@ -19,7 +19,7 @@ func (c *Controller) OnStartup(fn func() error)  { c.Global.OnStartup(fn) }
 func (c *Controller) OnShutdown(fn func() error) { c.Global.OnShutdown(fn) }
 
 // NewTestController create a controller useful for tests.
-func NewTestController(input string) Controller {
+func NewTestController(input string) *Controller {
 	d := conffile.NewTestDispenser(input)
-	return Controller{Dispenser: d, Global: &global.Global{}}
+	return &Controller{Dispenser: d, Global: &global.Global{}}
 }

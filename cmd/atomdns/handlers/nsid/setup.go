@@ -8,7 +8,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
-func (n *Nsid) Setup(co dnsserver.Controller) error {
+func (n *Nsid) Setup(co *dnsserver.Controller) error {
 	data, err := os.Hostname()
 	if err != nil {
 		data = "localhost"

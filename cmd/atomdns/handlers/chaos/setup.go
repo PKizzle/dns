@@ -6,7 +6,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
-func (c *Chaos) Setup(co dnsserver.Controller) error {
+func (c *Chaos) Setup(co *dnsserver.Controller) error {
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) > 1 {

@@ -18,6 +18,21 @@ type Dbfile struct {
 
 	ctx    context.Context
 	cancel context.CancelFunc
+
+	To   *Transfer
+	From *Transfer
+}
+
+// Transfer holds all the information to perform in incoming or outgoing zone transfer.
+// The families from IP, Notifies and Sources will be matched upon sending the actual notifies.
+type Transfer struct {
+	IPs []string
+
+	TSIG       *dns.TSIG
+	TSIGSecret string // base64
+
+	Notifies []string
+	Sources  []string
 }
 
 func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
