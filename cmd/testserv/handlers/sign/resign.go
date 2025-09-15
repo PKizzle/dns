@@ -39,7 +39,7 @@ func (s *Sign) Resign() error {
 								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
 								break
 							}
-							log.Error(fmt.Sprintf("Resign of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
+							log.Info(fmt.Sprintf("Resign of zone %q in %q successful", z.Origin, filepath.Base(event.Name)))
 						}
 					}
 				default:
