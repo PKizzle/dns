@@ -11,10 +11,7 @@
 # log whoami only, order matters
 example.org {
     import base
-    metrics
-    any
-    cookie geheim
-    nsid Use the force
+    sign
     dbfile db.example.org
 }
 

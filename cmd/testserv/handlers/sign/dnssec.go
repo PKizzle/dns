@@ -1,6 +1,7 @@
 package sign
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -154,6 +155,9 @@ func lifetime(now time.Time) (uint32, uint32) {
 func (s *Sign) Expired(origin string) (bool, error) {
 	f, err := os.Open(s.Zones[origin].Path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return true, nil
+		}
 		return false, err
 	}
 	now := time.Now().UTC()

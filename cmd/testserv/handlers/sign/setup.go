@@ -80,14 +80,18 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		k.DNSKEY.Header().TTL = s.ttl
 	}
 	co.OnStartup(func() error {
-		log.Info("Start: signing: " + filepath.Base(s.Path))
+		log.Info("Startup: signing: " + filepath.Base(s.Path))
 		for _, z := range s.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				log.Warn(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
 				return co.Err(err.Error())
 			}
-			// TODO(miek): check if we need to resign at alll
+
+			expired, err := s.Expired(z.Origin)
+			if !expired {
+				continue
+			}
 			zs, err := s.Sign(z.Origin)
 			if err != nil {
 				return co.Err(err.Error())

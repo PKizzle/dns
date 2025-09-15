@@ -51,6 +51,10 @@ func (s *Sign) Resign() error {
 				log.Debug("Zone watch event error", "err", err)
 			case <-ticker.C:
 				for _, z := range s.Zones {
+					expired, err := s.Expired(z.Origin)
+					if !expired {
+						continue
+					}
 					zs, err := s.Sign(z.Origin)
 					if err != nil {
 						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(z.Path), err))

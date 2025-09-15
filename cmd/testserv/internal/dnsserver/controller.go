@@ -13,6 +13,8 @@ type Controller struct {
 	Global *global.Global
 }
 
+// OnStartup and OnShutdown can be used by handlers to register startup and shutdown functions. Each function
+// is execute once during starting and shutting of the server.
 func (c *Controller) OnStartup(fn func() error)  { c.Global.OnStartup(fn) }
 func (c *Controller) OnShutdown(fn func() error) { c.Global.OnShutdown(fn) }
 

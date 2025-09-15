@@ -39,7 +39,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
-		log.Info("Start: reload: " + filepath.Base(d.Path))
+		log.Info("Startup: reload: " + filepath.Base(d.Path))
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
