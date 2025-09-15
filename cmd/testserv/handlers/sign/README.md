@@ -95,8 +95,7 @@ Running this leads to the following log output
 2025/09/15 12:00:35 INFO Startup: reload: db.example.org.signed handler=dbfile
 2025/09/15 12:00:47 INFO Zone "example.org." in "db.example.org" is signed and is written to db.example.org.signed handler=sign
 2025/09/15 12:00:47 INFO Resign of zone "example.org." in "db.example.org" successful handler=sign
-2025/09/15 12:01:07 INFO Reload of zone "example.org." in "db.example.org.signed" successful handler=dbfile
-
+2025/09/15 12:00:49 INFO Reload of zone "example.org." in "db.example.org.signed" successful handler=dbfile
 ```
 
 Forcibly resigning a zone can be accomplished by removing the signed zone file (testserv will keep
