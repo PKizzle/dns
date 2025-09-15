@@ -1,6 +1,8 @@
 package dbfile
 
 import (
+	"net"
+
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -24,6 +26,7 @@ func (t *Transfer) Notify(origin string) error {
 	m.Opcode = dns.OpcodeNotify
 	dnsutil.SetQuestion(m, origin, dns.TypeSOA)
 	c := new(dns.Client)
+	c.Transport = dns.NewDefaultTransport()
 	// add tsig if needed
 
 	var lasterr error
@@ -37,6 +40,27 @@ func (t *Transfer) Notify(origin string) error {
 }
 
 func notify(c *dns.Client, m *dns.Msg, to string, sources []string) error {
+	return nil
+}
+
+// returns the correct family address or nil, also nil when nothing is needed.
+func source(ip string, sources []string) net.IP {
+	fam := net.ParseIP(ip).To4() != nil
+	if fam { // v4
+		for _, s := range sources {
+			sip := net.ParseIP(s)
+			if sip.To4() != nil {
+				return sip
+			}
+		}
+	} else { // v6
+		for _, s := range sources {
+			sip := net.ParseIP(s)
+			if sip.To4() == nil {
+				return sip
+			}
+		}
+	}
 	return nil
 }
 
@@ -83,29 +107,10 @@ func sendNotify(c *dns.Client, m *dns.Msg, s string, sources []net.IP) error {
 	return fmt.Errorf("notify for zone %q was not accepted by %q: rcode was %q", m.Question[0].Name, s, dnsutil.RcodeToString(code))
 }
 
-func sourceForFamily(s string, sources []net.IP) net.IP {
-	s1, _, _ := net.SplitHostPort(s) // this must work
-	sfam := net.ParseIP(s1).To4() != nil
-	if sfam { // v4
-		for _, s2 := range sources {
-			if s2.To4() != nil {
-				return s2
-			}
-		}
-	} else { // v6
-		for _, s2 := range sources {
-			if s2.To4() == nil {
-				return s2
-			}
-		}
-	}
-	return nil
-}
 
 	dialer := &net.Dialer{
 		LocalAddr: &net.UDPAddr{
 			IP:   source,
-			Port: 0,
 		},
 	}
 */
