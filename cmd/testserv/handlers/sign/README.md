@@ -78,18 +78,24 @@ are read from `Kexample.org.+013+32412.key` and `Kexample.org.+013+32412.private
 
 ```txt
 example.org {
-    dbfile db.example.org.signed
-
     sign db.example.org {
         key Kexample.org.+013+32412
     }
+    dbfile db.example.org.signed
 }
 ```
 
-Running this leads to the following log output (note the timers in this example have been set to
-shorter intervals).
+Running this leads to the following log output
 
 ```txt
+2025/09/15 12:00:35 INFO example.org. handlers=log,sign,dbfile
+2025/09/15 12:00:35 INFO Start: /metrics handler=global
+2025/09/15 12:00:35 INFO Startup: signing: db.example.org handler=sign
+2025/09/15 12:00:35 INFO Zone "example.org." in "db.example.org" is signed and is written to db.example.org.signed handler=sign
+2025/09/15 12:00:35 INFO Startup: reload: db.example.org.signed handler=dbfile
+2025/09/15 12:00:47 INFO Zone "example.org." in "db.example.org" is signed and is written to db.example.org.signed handler=sign
+2025/09/15 12:00:47 INFO Resign of zone "example.org." in "db.example.org" successful handler=sign
+2025/09/15 12:01:07 INFO Reload of zone "example.org." in "db.example.org.signed" successful handler=dbfile
 
 ```
 

@@ -24,20 +24,20 @@ func TestReflect(t *testing.T) {
 			}
 
 			cmd := exec.CommandContext(ctx, "./reflect")
-			go func() {
+			go func(t *testing.T) {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {
 						t.Skip("no working reflect binary found in .")
 					}
 				}
-			}()
+			}(t)
 
 			queries := strings.NewReader("whoami.miek.nl. A")
 			if err := dnsperf.Run(t, queries, "127.0.0.1:8053", network, 2*time.Second, count); err != nil {
 				t.Fatal(err)
 			}
 			cancel()
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 		})
 	}
 }

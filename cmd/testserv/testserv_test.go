@@ -36,20 +36,20 @@ func TestTestserv(t *testing.T) {
 			}
 
 			cmd := exec.CommandContext(ctx, "./testserv", "--conf", conffile, "--port", "8054")
-			go func() {
+			go func(t *testing.T) {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {
 						t.Skip("no working testserv binary found in .")
 					}
 				}
-			}()
+			}(t)
 
 			queries := strings.NewReader("whoami.example.org. A")
 			if err := dnsperf.Run(t, queries, "127.0.0.1:8054", network, 2*time.Second, count); err != nil {
 				t.Fatal(err)
 			}
 			cancel()
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 		})
 	}
 }
