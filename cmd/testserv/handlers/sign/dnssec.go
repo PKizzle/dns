@@ -112,7 +112,7 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 		return true
 	}
 	if nf.last != "" {
-		nsecnode := nf.nsec(nf.origin)
+		nsecnode := nf.nsec(n.Name)
 		nf.nsecs = append(nf.nsecs, nsecnode)
 	}
 	nf.last = n.Name
@@ -124,10 +124,10 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 func (nf *nsecfn) Last(origin string) zone.Node { return nf.nsec(origin) }
 
 // nsec creates an NSEC + RRSIG(s) node from nf.
-func (nf *nsecfn) nsec(origin string) zone.Node {
+func (nf *nsecfn) nsec(name string) zone.Node {
 	nsec := &dns.NSEC{
 		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
-		NextDomain: origin,
+		NextDomain: name,
 		TypeBitMap: nf.bitmap,
 	}
 	nsecnode := zone.Node{Name: nf.last}
@@ -135,7 +135,7 @@ func (nf *nsecfn) nsec(origin string) zone.Node {
 
 	for _, pair := range nf.keypairs {
 		incep, expir := lifetime(nf.now)
-		rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+		rrsig := dns.NewRRSIG(nf.origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
 		rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
 
 		nsecnode.RRs = append(nsecnode.RRs, rrsig)
