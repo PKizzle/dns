@@ -47,8 +47,8 @@ The keys **must not** be included in your zone; they will be added by _sign_. Th
 generated with `ldns-keygen` or BIND9's `dnssec-keygen`. You don't have to adhere to this naming
 scheme, but then you need to name your keys explicitly, see the `keys` directive.
 
-A generated zone is written out in a file named `db.<name>.signed` in the directory named by the
-`directory` directive.
+A generated zone is written out in a file named `<name>.signed` in the directory named by the
+`directory` directive or otherwise the directory where to origin zone file is found.
 
 ## Syntax
 

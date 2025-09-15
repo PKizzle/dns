@@ -153,7 +153,7 @@ func lifetime(now time.Time) (uint32, uint32) {
 
 // Expired returns true when 'a' signature on the SOA record has only 9 days left.
 func (s *Sign) Expired(origin string) (bool, error) {
-	f, err := os.Open(s.Zones[origin].Path)
+	f, err := os.Open(s.Zones[origin].Path + ".signed")
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return true, nil
@@ -178,7 +178,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 			break
 		}
 	}
-	return false, fmt.Errorf("no SOA RRSIG found in first 50 records")
+	return true, fmt.Errorf("no SOA RRSIG found in first 50 records")
 }
 
 func (s Sign) Write(z *zone.Zone) error {

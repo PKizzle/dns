@@ -84,12 +84,13 @@ func (s *Sign) Setup(co dnsserver.Controller) error {
 		for _, z := range s.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
-				log.Warn(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
+				log.Error(fmt.Sprintf("Zone %q in %q does not exist", z.Origin, filepath.Base(z.Path)))
 				return co.Err(err.Error())
 			}
 
 			expired, err := s.Expired(z.Origin)
 			if !expired {
+				log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin, filepath.Base(z.Path)))
 				continue
 			}
 			zs, err := s.Sign(z.Origin)

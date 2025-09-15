@@ -9,18 +9,10 @@
 }
 
 # log whoami only, order matters
-example.org {
+atoom.net {
     import base
-    sign
-    dbfile db.example.org
-}
-
-chaos2.miek.nl {
-    chaos {
-        authors {
-            "Bloep"
-            "bla"
-            "blargh"
-        }
+    sign zones/db.atoom.net {
+        key zones/Katoom.net.+008+19114 zones/Katoom.net.+013+21233
     }
+#    dbfile zones/db.example.net.signed
 }

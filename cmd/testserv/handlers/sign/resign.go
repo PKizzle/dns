@@ -53,6 +53,7 @@ func (s *Sign) Resign() error {
 				for _, z := range s.Zones {
 					expired, err := s.Expired(z.Origin)
 					if !expired {
+						log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin, filepath.Base(z.Path)))
 						continue
 					}
 					zs, err := s.Sign(z.Origin)
