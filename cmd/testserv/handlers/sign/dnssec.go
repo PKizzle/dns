@@ -167,9 +167,15 @@ func (s *Sign) Expired(origin string) (bool, error) {
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
+			left := expire.Sub(now) - expireDays
+			left /= 24 * time.Hour
+			expired := expireDays / (24 * time.Hour)
 			if expire.Sub(now) < expireDays {
-				log.Info(fmt.Sprintf("More than 9 (%s) days left of zone %q in %q", (expire.Sub(now) / 24 * time.Hour).String(), origin, filepath.Base(f.Name())))
+				log.Info(fmt.Sprintf("Less than %d days (%d) left before expiration of zone %q in %q", expired, left, origin, filepath.Base(f.Name())))
 				return true, nil
+			} else {
+				log.Info(fmt.Sprintf("More than %d days (%d) left before expiration of zone %q in %q", expired, left, origin, filepath.Base(f.Name())))
+				return false, nil
 			}
 		}
 
