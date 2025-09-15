@@ -1,6 +1,4 @@
-//go:build windows || darwin
-
-// NOTICE(stek29): darwin supports PKTINFO in sendmsg, but it unbinds sockets, see https://github.com/miekg/dns/issues/724
+//go:build windows
 
 package dns
 
