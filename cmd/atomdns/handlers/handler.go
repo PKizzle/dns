@@ -27,7 +27,7 @@ type Handler interface {
 // Setupper holds a single method that is called when this Handler has configuration that needs to be parsed
 // from the config file. The options global.Global holds the server's global config.
 type Setupper interface {
-	Setup(dnsserver.Controller) error
+	Setup(*dnsserver.Controller) error
 }
 
 // Compile takes the Handlers hs and creates a wrapped handle func.

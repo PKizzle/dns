@@ -12,9 +12,11 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func (d *Dbfile) Setup(co dnsserver.Controller) error {
+func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 	d.Zones = map[string]*zone.Zone{}
 	d.ctx, d.cancel = context.WithCancel(context.Background())
+	d.To, d.From = &Transfer{}, &Transfer{}
+
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) != 1 {
@@ -24,7 +26,7 @@ func (d *Dbfile) Setup(co dnsserver.Controller) error {
 		if !filepath.IsAbs(d.Path) {
 			d.Path = filepath.Join(co.Global.Root, d.Path)
 		}
-		for co.NextBlock() {
+		for co.NextBlock(0) {
 			switch co.Val() {
 			case "transfer":
 				if err := d.SetupTransfer(co); err != nil {

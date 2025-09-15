@@ -4,7 +4,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
-func (m *Metrics) Setup(co dnsserver.Controller) error {
+func (m *Metrics) Setup(co *dnsserver.Controller) error {
 	m.N = co.Global.MetricsN
 	if co.Next() {
 		if !co.NextArg() {

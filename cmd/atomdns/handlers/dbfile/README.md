@@ -34,10 +34,9 @@ dbfile FILE {
         from IP [IP]... {
             key NAME ALGORITHM SECRET
         }
-        to IP [IP]... {
-            notify [IP]... {
-                source IP
-            }
+        to [IP]... {
+            notify IP [IP]...
+            source IP [IP]...
             key NAME ALGORITHM SECRET
         }
     }
@@ -52,9 +51,9 @@ dbfile FILE {
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
   - If there is no `notify` section the **IP**s as specified in `to` are used for sending notifies. If you
     want to override this open a `notify` block and add an (optional) new set of **IP**s. With `source` you can
-    set the source address when sending the notifies. The TSIG key specification is identical to that of `from`.
-    For **IP** you can use IPv6 or IPv4 addresses. The wildcard address for them are `::/128` or `0.0.0.0/0`.
-    `*` is an aliases for _both_ of them.
+    set the source(s) address when sending the notifies. The TSIG key specification is identical to that of `from`.
+    For **IP** you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
+    IPv4 address will use a IPv4 source and vice versa.
 
 ## Examples
 
@@ -65,8 +64,9 @@ notifies to 10.240.1.1
 example.org {
     file db.example.org
     transfer {
-        to *
-        notify 10.240.1.1
+        to {
+            notify 10.240.1.1
+        }
     }
 }
 ```
@@ -97,5 +97,4 @@ example.org example.net {
 
 ## See Also
 
-See the _sign_ plugin for signing your zones and see [RFC 1035](https://www.rfc-editor.org/rfc/rfc1035.txt)
-for more info on how to structure zone files.
+See the _sign_ plugin for signing your zones and see RFC 1035 for more info on how to structure zone files.

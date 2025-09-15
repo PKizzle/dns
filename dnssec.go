@@ -451,11 +451,11 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	}
 }
 
-// ValidityPeriod uses RFC1982 serial arithmetic to calculate
+// ValidPeriod uses RFC1982 serial arithmetic to calculate
 // if a signature period is valid. If t is the zero time, the
 // current time is taken other t is. Returns true if the signature
 // is valid at the given time, otherwise returns false.
-func (rr *RRSIG) ValidityPeriod(t time.Time) bool {
+func (rr *RRSIG) ValidPeriod(t time.Time) bool {
 	var utc int64
 	if t.IsZero() {
 		utc = time.Now().UTC().Unix()
