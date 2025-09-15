@@ -19,7 +19,7 @@ import (
 
 //go:generate go run man_generate.go
 
-const Version = "002"
+const Version = "003"
 
 func serve(srv *dns.Server, global *global.Global) {
 	if err := global.Startup(); err != nil {

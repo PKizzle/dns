@@ -5,6 +5,18 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
+// Transfer holds all the information to perform in incoming or outgoing zone transfer.
+// The families from IP, Notifies and Sources will be matched upon sending the actual notifies.
+type Transfer struct {
+	IPs []string
+
+	TSIG       *dns.TSIG
+	TSIGSecret string // base64
+
+	Notifies []string
+	Sources  []string
+}
+
 // Notify will send notifies to all configured TO IP addresses.
 func (t *Transfer) Notify(origin string) error {
 	m := new(dns.Msg)

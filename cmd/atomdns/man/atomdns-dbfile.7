@@ -48,10 +48,9 @@ dbfile FILE {
         from IP [IP]... {
             key NAME ALGORITHM SECRET
         }
-        to IP [IP]... {
-            notify [IP]... {
-                source IP
-            }
+        to [IP]... {
+            notify IP [IP]...
+            source IP [IP]...
             key NAME ALGORITHM SECRET
         }
     }
@@ -74,9 +73,9 @@ The \fB\fCkey\fR specification is for TSIG signed transfers. The \fBSECRET\fP mu
 .IP \(en 4
 If there is no \fB\fCnotify\fR section the \fBIP\fPs as specified in \fB\fCto\fR are used for sending notifies. If you
 want to override this open a \fB\fCnotify\fR block and add an (optional) new set of \fBIP\fPs. With \fB\fCsource\fR you can
-set the source address when sending the notifies. The TSIG key specification is identical to that of \fB\fCfrom\fR.
-For \fBIP\fP you can use IPv6 or IPv4 addresses. The wildcard address for them are \fB\fC::/128\fR or \fB\fC0.0.0.0/0\fR.
-\fB\fC*\fR is an aliases for \fIboth\fP of them.
+set the source(s) address when sending the notifies. The TSIG key specification is identical to that of \fB\fCfrom\fR.
+For \fBIP\fP you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
+IPv4 address will use a IPv4 source and vice versa.
 
 .RE
 
@@ -93,8 +92,9 @@ notifies to 10.240.1.1
 example.org {
     file db.example.org
     transfer {
-        to *
-        notify 10.240.1.1
+        to {
+            notify 10.240.1.1
+        }
     }
 }
 
@@ -139,6 +139,4 @@ example.org example.net {
 
 .SH "SEE ALSO"
 .PP
-See the \fIsign\fP plugin for signing your zones and see RFC 1035
-\[la]https://www.rfc-editor.org/rfc/rfc1035.txt\[ra]
-for more info on how to structure zone files.
+See the \fIsign\fP plugin for signing your zones and see RFC 1035 for more info on how to structure zone files.
