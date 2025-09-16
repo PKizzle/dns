@@ -45,7 +45,6 @@ func main() {
 	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
 	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
 	flag.BoolVar(&flagHandler, "handler", false, "list installed handlers")
-	flag.BoolVar(&flagHandler, "h", false, "list installed handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
 	flag.StringVar(&flagPort, "port", "53", "default port")

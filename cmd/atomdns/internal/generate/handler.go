@@ -2,6 +2,7 @@ package generate
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,6 +25,10 @@ func Handlers(path ...string) ([]string, error) {
 			continue
 		}
 		handler := dir + "/" + filepath.Join(d.Name(), d.Name()+".go")
+		_, err := os.Stat(handler)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
 		types, err := Types(handler)
 		if err != nil {
 			return nil, err
