@@ -26,3 +26,7 @@ example.org {
     whoami
 }
 ```
+
+## Bugs
+
+_cookie_ does not implement a cache to validate client, is just does enough to make `dig` happy.

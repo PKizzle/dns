@@ -68,7 +68,7 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) error {
 				}
 			}
 			if len(d.To.IPs) == 0 && len(d.To.Notifies) == 0 {
-				return co.Err("both To and Notify are empty")
+				return co.Err("both 'to' and 'notify' are empty")
 			}
 
 		default:
