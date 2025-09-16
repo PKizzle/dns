@@ -31,6 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	handlers = append(handlers, "import") // import only has a readme
 	for _, h := range handlers {
 		h = strings.ToLower(h)
 		readme := "handlers/" + h + "/README.md"
