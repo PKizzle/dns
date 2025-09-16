@@ -18,7 +18,7 @@ type Envelope struct {
 // present in the [Ns] section of the [Msg], see RFC 1995.
 //
 // If the pseudo section contains a (stub) TSIG or in the future.
-// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs. For
+// SIG0 record, TSIG or SIG0 signing is performed, see [NewTSIG] and [NewSIG0] on how create such RRs. For
 // this the client also need a [TSIGSigner] or [SIG0Signer].
 //
 // On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs

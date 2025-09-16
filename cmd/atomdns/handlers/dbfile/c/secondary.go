@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
+	"go.science.ru.nl/log"
 )
 
 // TransferIn retrieves the zone from the masters, parses it and sets it live.

@@ -17,6 +17,8 @@ important to put as much of the details in this sub-package. The top-level RR sh
 
 The sub-types in that RR should all capitial letters as their name, as-if they are (also) RRs.
 
+For the in-progress DELEG RR, a `deleg` package exists which houses most of the complexity.
+
 ## Custom Types for uint8/16, etc
 
 The `type Key uint16` looks nice and _is_ more type-safe, but then you need to convert to and from uint16 all
