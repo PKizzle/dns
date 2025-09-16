@@ -34,10 +34,10 @@ func Handlers(path ...string) ([]string, error) {
 			return nil, err
 		}
 		// insanely crude check, but if there is a line that matches
-		// 'HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {' in the file it _is_ an actual handler and
+		// 'HandlerFunc(next/_ dns.HandlerFunc) dns.HandlerFunc {' in the file it _is_ an actual handler and
 		// not only a Setupper - global is skipped then for example.
 		p, _ := os.ReadFile(handler)
-		if bytes.Contains(p, []byte("HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {")) {
+		if bytes.Contains(p, []byte(" HandlerFunc(")) {
 			handlers = append(handlers, types...)
 		}
 	}
