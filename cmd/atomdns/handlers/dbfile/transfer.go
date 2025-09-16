@@ -4,12 +4,6 @@ import "codeberg.org/miekg/dns"
 
 // Transfer implements the transfer.Transfer interface.
 func (d *Dbfile) TransferOut() error {
-	// get soa and apex
-	apex, err := z.ApexIfDefined()
-	if err != nil {
-		return nil, err
-	}
-
 	ch := make(chan []dns.RR)
 	go func() {
 		if serial != 0 && apex[0].(*dns.SOA).Serial == serial { // ixfr fallback, only send SOA
@@ -26,5 +20,9 @@ func (d *Dbfile) TransferOut() error {
 		close(ch)
 	}()
 
-	return ch, nil
+	return nil
+}
+
+func (d *Dbfile) TransferIn() error {
+	return nil
 }

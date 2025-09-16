@@ -2,7 +2,6 @@ package dbfile
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"sync"
 
@@ -35,21 +34,21 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Data = r.Data
 				m.Pack()
 				io.Copy(w, m)
+
+				err := d.TransferIn()
+				if err != nil {
+					// ...
+				}
 			}
-			log.Info(fmt.Sprintf("Notify from %s for %s: checking transfer", dnsutil.RemoteIP(w), dns.Zone(ctx)))
-			// transfer in if needed
-			ok, err := z.shouldTransfer()
-			if ok {
-				z.TransferIn()
-			} else {
-				log.Infof("Notify from %s for %s: no SOA serial increase seen", state.IP(), zone)
-			}
-			if err != nil {
-				log.Warningf("Notify from %s for %s: failed primary check: %s", state.IP(), zone, err)
-			}
-			return dns.RcodeSuccess, nil
+			return // ignore request to avoid amplification
 		}
-		// log.Warningf("Dropping notify from %s for %s", state.IP(), zone)
+		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
+			err := d.TransferOut()
+			if err != nil {
+				// ...
+			}
+			return
+		}
 
 		d.RLock()
 		z := d.Zones[dns.Zone(ctx)]
