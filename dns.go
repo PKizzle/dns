@@ -29,9 +29,10 @@ const (
 	MaxMsgSize = 65535
 	// MsgHeaderSize is the length of the header in the DNS message.
 	MsgHeaderSize = 12
+	// MaxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
+	MaxSerialIncrement = 2147483647
 
-	year68     = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
-	defaultTTL = 3600    // Default internal TTL.
+	defaultTTL = 3600 // Default internal TTL.
 )
 
 // An RR represents a DNS resource record.

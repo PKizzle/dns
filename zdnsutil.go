@@ -269,11 +269,11 @@ func compareLabel(a, b string) int {
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record. It takes serial arithmetic (RFC 1982) into account.
 func dnsutilTimeToString(t uint32) string {
-	mod := (int64(t)-time.Now().Unix())/year68 - 1
+	mod := (int64(t)-time.Now().Unix())/MaxSerialIncrement - 1
 	if mod < 0 {
 		mod = 0
 	}
-	ti := time.Unix(int64(t)-mod*year68, 0).UTC()
+	ti := time.Unix(int64(t)-mod*MaxSerialIncrement, 0).UTC()
 	return ti.Format("20060102150405")
 }
 
@@ -284,9 +284,9 @@ func dnsutilStringToTime(s string) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	mod := t.Unix()/year68 - 1
+	mod := t.Unix()/MaxSerialIncrement - 1
 	if mod < 0 {
 		mod = 0
 	}
-	return uint32(t.Unix() - mod*year68), nil
+	return uint32(t.Unix() - mod*MaxSerialIncrement), nil
 }
