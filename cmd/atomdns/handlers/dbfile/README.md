@@ -49,8 +49,9 @@ dbfile FILE {
   - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order.
   - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
-  - If there is no `notify` section the **IP**s as specified in `to` are used for sending notifies. If you
-    want to override this open a `notify` block and add an (optional) new set of **IP**s. With `source` you can
+    If there are no **IP**s specfied the AXFR is open to al.
+  - If there is no `notify` the **IP**s as specified in `to` are used for sending notifies. If you
+    want to override this add a `notify` and put an (optional) new set of **IP**s there. With `source` you can
     set the source(s) address when sending the notifies. The TSIG key specification is identical to that of `from`.
     For **IP** you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
     IPv4 address will use a IPv4 source and vice versa.

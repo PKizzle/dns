@@ -43,13 +43,11 @@ func (t *Transfer) Notify(origin string) error {
 }
 
 func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
-	if src := source(ip, sources); src != nil {
-		c.Dialer.LocalAddr = &net.UDPAddr{IP: src}
-	}
+	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
 	for i := 0; i < 3; i++ {
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
 		if err != nil {
-			log.Warn(fmt.Sprintf("Failed to sent notify: %s", err))
+			log.Error(fmt.Sprintf("Failed to sent notify: %s", err))
 			time.Sleep(time.Second)
 			continue
 		}
