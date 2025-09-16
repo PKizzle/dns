@@ -350,24 +350,22 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
-		if !w.hijacked.Load() {
-			wg.Add(1)
-		}
 		go func() {
+			wg.Add(1)
 			srv.serveDNS(w, r)
 			wg.Done()
 		}()
 
 		if w.hijacked.Load() {
 			limit = -1 // also disregard any limits
-			wg.Done()  // call done because hijack has been called in the handler
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
 		readtimeout = srv.IdleTimeout
 	}
 
+	wg.Wait() // wait for anyone still processing
+
 	if !w.hijacked.Load() {
-		wg.Wait() // wait for anyone still processing
 		w.Close()
 	}
 }
