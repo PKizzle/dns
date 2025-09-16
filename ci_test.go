@@ -10,8 +10,7 @@ import (
 	"testing"
 )
 
-func TestReflect(t *testing.T) {
-	// don't let it linger if we do a top-level test, takes 16+s
+func init() {
 	os.Remove("cmd/reflect/reflect")
 	os.Remove("cmd/testserv/testserv")
 }
