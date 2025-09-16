@@ -2,6 +2,7 @@ package dbfile
 
 import (
 	"context"
+	"net"
 	"sync"
 
 	"codeberg.org/miekg/dns"
@@ -39,5 +40,22 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 }
 
 func (d *Dbfile) TransferIn(ctx context.Context) error {
+	c := dns.NewClient()
+	m := dns.NewMsg(dns.Zone(ctx), dns.TypeAXFR)
+	for _, ip := range d.From.IPs {
+		env, err := c.TransferIn(context.TODO(), m, "tcp", net.JoinHostPort(ip, "53"))
+		if err != nil {
+			continue
+		}
+		for e := range env {
+			if e.Error != nil {
+				// ...
+			}
+			// e.Answer kan be inserted into the a new zone
+		}
+
+		break
+	}
+	// do we want to save this on disk somewhere
 	return nil
 }

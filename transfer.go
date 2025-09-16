@@ -34,7 +34,7 @@ type Envelope struct {
 //	m := dns.NewMsg("example.org.", dns.TypeAXFR)
 //	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 //	if err != nil {
-//	   t.Fatal("failed to setup zone transfer in", err)
+//	   return fmt.Errorf("failed to setup zone transfer in", err)
 //	}
 //
 //	for e := range env {
