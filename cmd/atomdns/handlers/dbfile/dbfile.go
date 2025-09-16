@@ -35,7 +35,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Pack()
 				io.Copy(w, m)
 
-				err := d.TransferIn(ctx, w)
+				err := d.TransferIn(ctx)
 				if err != nil {
 					// ...
 				}
@@ -43,7 +43,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return // ignore request to avoid amplification
 		}
 		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
-			err := d.TransferOut(ctx)
+			err := d.TransferOut(ctx, w, r)
 			if err != nil {
 				// ...
 			}

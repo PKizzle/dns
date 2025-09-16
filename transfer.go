@@ -288,7 +288,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 }
 
 // TransferOut performs an outgoing transfer with the client connecting in w, r is the request
-// that initiates the transfer.
+// that initiates the transfer and is used for TSIG/SIG0.
 //
 // Example setup from within a dns.HandleFunc:
 //
@@ -298,7 +298,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //	c := dns.NewClient()
 //	var wg sync.WaitGroup
 //	wg.Go(func() {
-//	    c.TransferOut(w, env)
+//	    c.TransferOut(w, r, env)
 //	    w.Close()
 //	})
 //	env <- &dns.Envelope{Answer: []dns.RR{...}}

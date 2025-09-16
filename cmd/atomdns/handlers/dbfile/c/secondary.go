@@ -8,60 +8,6 @@ import (
 	"go.science.ru.nl/log"
 )
 
-// TransferIn retrieves the zone from the masters, parses it and sets it live.
-func (z *Zone) TransferIn() error {
-	if len(z.TransferFrom) == 0 {
-		return nil
-	}
-	m := new(dns.Msg)
-	m.SetAxfr(z.origin)
-
-	z1 := z.CopyWithoutApex()
-	var (
-		Err error
-		tr  string
-	)
-
-Transfer:
-	for _, tr = range z.TransferFrom {
-		t := new(dns.Transfer)
-		c, err := t.In(m, tr)
-		if err != nil {
-			log.Errorf("Failed to setup transfer `%s' with `%q': %v", z.origin, tr, err)
-			Err = err
-			continue Transfer
-		}
-		for env := range c {
-			if env.Error != nil {
-				log.Errorf("Failed to transfer `%s' from %q: %v", z.origin, tr, env.Error)
-				Err = env.Error
-				continue Transfer
-			}
-			for _, rr := range env.RR {
-				if err := z1.Insert(rr); err != nil {
-					log.Errorf("Failed to parse transfer `%s' from: %q: %v", z.origin, tr, err)
-					Err = err
-					continue Transfer
-				}
-			}
-		}
-		Err = nil
-		break
-	}
-	if Err != nil {
-		return Err
-	}
-
-	z.Lock()
-	z.Tree = z1.Tree
-	z.Apex = z1.Apex
-	z.Expired = false
-	z.Unlock()
-	log.Infof("Transferred: %s from %s", z.origin, tr)
-	return nil
-}
-
-// shouldTransfer checks the primaries of zone, retrieves the SOA record, checks the current serial
 // and the remote serial and will return true if the remote one is higher than the locally configured one.
 func (z *Zone) shouldTransfer() (bool, error) {
 	c := new(dns.Client)

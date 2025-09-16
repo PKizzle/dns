@@ -1,44 +1,40 @@
 package dbfile
 
 import (
+	"context"
 	"sync"
 
 	"codeberg.org/miekg/dns"
-	"github.com/coredns/coredns/plugin/file/tree"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 )
 
 // Transfer implements the transfer.Transfer interface.
-func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter) error {
+func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) error {
 	w.Hijack()
 	env := make(chan *dns.Envelope)
 	c := dns.NewClient()
 	var wg sync.WaitGroup
 
 	wg.Go(func() {
-		w.TransferOut(w, env)
+		c.TransferOut(w, r, env)
 		w.Close()
-	}
+	})
 
-		d.RLock()
-		z := d.Zones[dns.Zone(ctx)]
-		d.RUnlock()
+	d.RLock()
+	z := d.Zones[dns.Zone(ctx)]
+	d.RUnlock()
 
-	z.Walk(func(n zone.Node
-
-
-		if serial != 0 && apex[0].(*dns.SOA).Serial == serial { // ixfr fallback, only send SOA
-			ch <- []dns.RR{apex[0]}
-
-			close(ch)
-			return
+	apex := z.Apex()
+	z.Walk(func(n zone.Node) bool {
+		env <- &dns.Envelope{Answer: n.RRs}
+		return true
+	})
+	for _, rr := range apex.RRs {
+		if s, ok := rr.(*dns.SOA); ok {
+			env <- &dns.Envelope{Answer: []dns.RR{s}}
 		}
-
-		ch <- apex
-		z.Walk(func(e *tree.Elem, _ map[uint16][]dns.RR) error { ch <- e.All(); return nil })
-		ch <- []dns.RR{apex[0]}
-
-		close(ch)
-	}()
+	}
+	close(env)
 
 	return nil
 }
