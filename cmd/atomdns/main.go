@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"sync"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
@@ -101,12 +102,17 @@ func main() {
 			i++
 		}
 	}
+	wg := sync.WaitGroup{}
 	for _, srv := range srvs {
+		wg.Add(1)
 		go serve(srv, global)
+		wg.Done()
 	}
+	wg.Wait()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	fmt.Println(banner())
 	s := <-sig
 	if err := global.Shutdown(); err != nil {
 		slog.Warn("Failed to run shutdown: " + err.Error())
@@ -115,4 +121,15 @@ func main() {
 		srv.Shutdown(context.TODO())
 	}
 	fmt.Printf("Signal (%s) received, stopping\n", s)
+}
+
+func banner() string {
+	const banner = `
+┏━┓  ╺┳╸  ┏━┓  ┏┳┓
+┣━┫   ┃   ┃ ┃  ┃┃┃
+╹ ╹   ╹   ┗━┛  ╹ ╹ DNS   v%s
+High performance, flexible DNS server
+https://atomdns.miek.nl
+__________________________________\o/_______`
+	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping for formatting in the const
 }

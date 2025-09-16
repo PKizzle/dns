@@ -17,7 +17,10 @@ import (
 )
 
 func parse(mux *dns.ServeMux, conf string) (*global.Global, error) {
-	f, _ := os.Open(conf)
+	f, err := os.Open(conf)
+	if err != nil {
+		return nil, err
+	}
 	defer f.Close()
 	blocks, err := conffile.Parse(conf, f, nil)
 	if err != nil {
