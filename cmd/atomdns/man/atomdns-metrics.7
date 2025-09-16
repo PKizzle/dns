@@ -75,7 +75,7 @@ metrics [|enable|disable]
 Where:
 
 .IP \(bu 4
-\fIempty\fP or \fB\fCenable\fR, \fB\fCdisable\fR will enable or disable the metrics gathering completely.
+\fIempty\fP or \fB\fCenable\fR will enable metrics gathering, only \fB\fCdisable\fR will disable it.
 
 
 .SH "EXAMPLES"
@@ -86,6 +86,11 @@ Start a server on the default port and load the \fIwhoami\fP handler and disable
 .RS
 
 .nf
+{
+    metrics
+    debug
+}
+
 example.org {
     metrics disable
     whoami

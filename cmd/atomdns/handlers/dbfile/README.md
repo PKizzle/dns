@@ -6,12 +6,12 @@ _dbfile_ - serve zone data from an RFC 1035-style zone file
 
 ## Description
 
-The _dbfile_ plugin is used for DNS servers that serve from a file that loaded from disk,
+The _dbfile_ handler is used for DNS servers that serve from a file that loaded from disk,
 containing RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
-DNSSEC answers are returned. Only NSEC is supported. See the _sign_ plugin if you want to sign and resign your
+DNSSEC answers are returned. Only NSEC is supported. See the _sign_ handler if you want to sign and resign your
 zone automatically.
 
-The server will reply with minimal responses by default. The _dbfile_ plugin will watch the zone file and when
+The server will reply with minimal responses by default. The _dbfile_ handler will watch the zone file and when
 it receives a (kernel) notify it will reload the zone after 2 seconds. Regardless of any change it will send out
 notifies if configured to do so, the actual SOA serial isn't relevant.
 
@@ -101,4 +101,4 @@ example.org example.net {
 
 ## See Also
 
-See the _sign_ plugin for signing your zones and see RFC 1035 for more info on how to structure zone files.
+See the _sign_ handler for signing your zones and see RFC 1035 for more info on how to structure zone files.

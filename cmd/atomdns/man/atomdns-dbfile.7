@@ -8,17 +8,20 @@
 
 .SH "DESCRIPTION"
 .PP
-The \fIdbfile\fP plugin is used for DNS servers that serve from a preloaded file that exists on disk
+The \fIdbfile\fP handler is used for DNS servers that serve from a file that loaded from disk,
 containing RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
-DNSSEC answers are returned. Only NSEC is supported. See the \fIsign\fP plugin if you want to sign and resign your
+DNSSEC answers are returned. Only NSEC is supported. See the \fIsign\fP handler if you want to sign and resign your
 zone automatically.
 
 .PP
-The server will reply with minimal responses by default. The \fIdbfile\fP plugin will watch the zone file and when
-it receives a (kernel) notify will reload the zone after 5 seconds. Regardless of any change it will send out
+The server will reply with minimal responses by default. The \fIdbfile\fP handler will watch the zone file and when
+it receives a (kernel) notify it will reload the zone after 2 seconds. Regardless of any change it will send out
 notifies if configured to do so, the actual SOA serial isn't relevant.
 
 .SH "SYNTAX"
+.PP
+In it simplests form \fIdbfile\fP you can use:
+
 .PP
 .RS
 
@@ -29,15 +32,16 @@ dbfile FILE
 .RE
 
 .IP \(bu 4
-\fBFILE\fP the database file to read and parse. If the path is relative, the path from the global root config
-will be prepended to it.
+\fBFILE\fP the zone file to load. If the path is relative, the path from the global root config will be
+prepended to it.
 
 
 .PP
-If the zone specification contains multiple zones they all will use the \fIsame\fP \fBFILE\fP.
+If the zone specification contains multiple zones they all will use the \fIsame\fP \fBFILE\fP. And you must make
+sure that zone \fBFILE\fP is generic enough, i.e. use \fB\fC@\fR for origins instead of domain names.
 
 .PP
-For extra control you can open the block and define multipe properties.
+For extra control you can open the block and define multipe extra properties that deal with zone transfers.
 
 .PP
 .RS
@@ -70,9 +74,10 @@ deals with outgoing ones.
 The \fB\fCkey\fR specification is for TSIG signed transfers. The \fBSECRET\fP must be base64 encoded.
 .IP \(en 4
 \fB\fCto\fR allows for multipe downstream \fBIP\fPs to be specified, those are all allowed to initiate a transfer.
+If there are no \fBIP\fPs specfied the AXFR is open to the entire internet.
 .IP \(en 4
-If there is no \fB\fCnotify\fR section the \fBIP\fPs as specified in \fB\fCto\fR are used for sending notifies. If you
-want to override this open a \fB\fCnotify\fR block and add an (optional) new set of \fBIP\fPs. With \fB\fCsource\fR you can
+If there is no \fB\fCnotify\fR the \fBIP\fPs as specified in \fB\fCto\fR are used for sending notifies. If you
+want to override this add a \fB\fCnotify\fR and put an (new) set of \fBIP\fPs there. With \fB\fCsource\fR you can
 set the source(s) address when sending the notifies. The TSIG key specification is identical to that of \fB\fCfrom\fR.
 For \fBIP\fP you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
 IPv4 address will use a IPv4 source and vice versa.
@@ -139,4 +144,4 @@ example.org example.net {
 
 .SH "SEE ALSO"
 .PP
-See the \fIsign\fP plugin for signing your zones and see RFC 1035 for more info on how to structure zone files.
+See the \fIsign\fP handler for signing your zones and see RFC 1035 for more info on how to structure zone files.
