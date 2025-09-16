@@ -76,3 +76,29 @@ func Equal(a, b RR) bool { return Compare(a, b) == 0 }
 
 // EqualName returns true if the domain names a and b are equal. See [CompareName].
 func EqualName(a, b string) bool { return CompareName(a, b) == 0 }
+
+// CompareSerial compares a, b which are serial numbers are timestamps from signatures, while taking into
+// account RFC 1984 serial arithemetic.
+func CompareSerial(a, b uint32) int {
+	if a == b {
+		return 0
+	}
+
+	// 3.2 of the RFC
+	i1 := int(a)
+	i2 := int(b)
+
+	if i1 < i2 && (i2-i1) < MaxSerialIncrement {
+		return -1
+	}
+	if i1 > i2 && (i1-i2) > MaxSerialIncrement {
+		return -1
+	}
+
+	return 1
+}
+
+// EqualSerial return true if a and b are equal. This function is here for consistency only.
+func EqualSerial(a, b uint32) bool {
+	return a == b
+}
