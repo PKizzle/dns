@@ -462,10 +462,10 @@ func (rr *RRSIG) ValidPeriod(t time.Time) bool {
 	} else {
 		utc = t.UTC().Unix()
 	}
-	modi := (int64(rr.Inception) - utc) / year68
-	mode := (int64(rr.Expiration) - utc) / year68
-	ti := int64(rr.Inception) + modi*year68
-	te := int64(rr.Expiration) + mode*year68
+	modi := (int64(rr.Inception) - utc) / MaxSerialIncrement
+	mode := (int64(rr.Expiration) - utc) / MaxSerialIncrement
+	ti := int64(rr.Inception) + modi*MaxSerialIncrement
+	te := int64(rr.Expiration) + mode*MaxSerialIncrement
 	return ti <= utc && utc <= te
 }
 

@@ -38,4 +38,5 @@ func OpcodeToString(o uint8) string {
 	return "OPCODE" + strconv.Itoa(int(o))
 }
 
-const year68 = 1 << 31 // For RFC1982 (Serial Arithmetic) calculations in 32 bits.
+// MaxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
+const MaxSerialIncrement = 2147483647
