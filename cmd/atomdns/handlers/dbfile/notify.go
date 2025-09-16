@@ -22,7 +22,18 @@ type Transfer struct {
 	Sources  []string
 }
 
-// Notify will send notifies to all configured TO IP addresses.
+// IsNotify checks if the received notify is from any of the configured from IP addreses.
+func (t *Transfer) IsNotify(w dns.ResponseWriter) bool {
+	// valid from ip
+	for _, ip := range t.IPs {
+		if ip == dnsutil.RemoteIP(w) {
+			return true
+		}
+	}
+	return false
+}
+
+// Notify will send notifies to all configured to IP addresses.
 func (t *Transfer) Notify(origin string) error {
 	m := new(dns.Msg)
 	m.Authoritative = true
