@@ -6,7 +6,7 @@ _cookie_ - adds an DNS cookie of this server to each reply
 
 ## Description
 
-This plugin implements the DNS cookie RFC.
+This handler implements the DNS cookie RFC.
 
 ## Syntax
 
