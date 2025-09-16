@@ -323,7 +323,8 @@ Read:
 
 func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
 	wg.Add(1)
-	srv.serveDNS(wg, w, r)
+	srv.serveDNS(w, r)
+	wg.Done()
 }
 
 // Serve a new TCP connection.
@@ -353,7 +354,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			wg.Add(1)
 		}
 		go func() {
-			srv.serveDNS(wg, w, r)
+			srv.serveDNS(w, r)
+			wg.Done()
 		}()
 
 		if w.hijacked.Load() {
@@ -371,13 +373,12 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 }
 
 // serveDNS serves the message it skip the message handling if the received message has the response bit set.
-func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
+func (srv *Server) serveDNS(w *response, r *Msg) {
 	r.msgPool = srv.MsgPool
 	r.Options = MsgOptionUnpackQuestion | MsgOptionUnpackHeader
 
 	if err := r.Unpack(); err != nil {
 		srv.MsgInvalidFunc(r, err)
-		wg.Done()
 		return
 	}
 
@@ -398,11 +399,9 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		r.Pack()
 
 		io.Copy(w, r)
-		wg.Done()
 		return
 	}
 
 	r.Options = MsgOptionUnpack
 	srv.Handler.ServeDNS(srv.ctx, w, r)
-	wg.Done()
 }
