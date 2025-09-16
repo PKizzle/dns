@@ -8,7 +8,6 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 )
 
-// Transfer implements the transfer.Transfer interface.
 func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) error {
 	w.Hijack()
 	env := make(chan *dns.Envelope)

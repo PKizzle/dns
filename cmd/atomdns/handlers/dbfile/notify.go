@@ -22,17 +22,6 @@ type Transfer struct {
 	Sources  []string
 }
 
-// IsNotify checks if the received notify is from any of the configured from IP addreses.
-func (t *Transfer) IsNotify(w dns.ResponseWriter) bool {
-	// valid from ip
-	for _, ip := range t.IPs {
-		if ip == dnsutil.RemoteIP(w) {
-			return true
-		}
-	}
-	return false
-}
-
 // Notify will send notifies to all configured to IP addresses.
 func (t *Transfer) Notify(origin string) error {
 	m := new(dns.Msg)
@@ -55,7 +44,7 @@ func (t *Transfer) Notify(origin string) error {
 
 func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
 		if err != nil {
 			log.Error(fmt.Sprintf("Failed to sent notify: %s", err))
@@ -83,4 +72,26 @@ func source(ip string, sources []string) net.IP {
 		}
 	}
 	return nil
+}
+
+// Available return true if the "other side" has a new SOA then we have. The first IP that answers
+// with a higher serial is enough to return true.
+func (t *Transfer) Available(origin string, serial uint32) bool {
+	c := dns.NewClient()
+	m := dns.NewMsg(origin, dns.TypeSOA)
+
+	for _, ip := range t.IPs {
+		m, _, err := c.Exchange(context.TODO(), m, "tcp", net.JoinHostPort(ip, "53"))
+		if err == nil {
+			for _, rr := range m.Answer {
+				if s, ok := rr.(*dns.SOA); ok {
+					if dns.CompareSerial(serial, s.Serial) == -1 {
+						// ours is smaller then the remote, transfer
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
 }

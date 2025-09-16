@@ -3,6 +3,7 @@ package dbfile
 import (
 	"context"
 	"io"
+	"slices"
 	"sync"
 
 	"codeberg.org/miekg/dns"
@@ -27,20 +28,21 @@ type Dbfile struct {
 func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		if r.Opcode == dns.OpcodeNotify {
-			if d.From.IsNotify(w) {
-				m := new(dns.Msg)
-				dnsutil.SetReply(m, r)
-				m.Authoritative = true
-				m.Data = r.Data
-				m.Pack()
-				io.Copy(w, m)
-
-				err := d.TransferIn(ctx)
-				if err != nil {
-					// ...
-				}
+			if !slices.Contains(d.From.IPs, dnsutil.RemoteIP(w)) {
+				return // ignore request
 			}
-			return // ignore request to avoid amplification
+			m := new(dns.Msg)
+			dnsutil.SetReply(m, r)
+			m.Authoritative = true
+			m.Data = r.Data
+			m.Pack()
+			io.Copy(w, m)
+
+			err := d.TransferIn(ctx)
+			if err != nil {
+				// ...
+			}
+			return // ignore request
 		}
 		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
 			err := d.TransferOut(ctx, w, r)
