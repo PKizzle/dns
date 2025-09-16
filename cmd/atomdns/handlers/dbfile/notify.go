@@ -11,7 +11,7 @@ import (
 )
 
 // Transfer holds all the information to perform in incoming or outgoing zone transfer.
-// The families from IP, Notifies and Sources will be matched upon sending the actual notifies.
+// The families from IPs, notifies and sources will be matched upon sending the actual notifies.
 type Transfer struct {
 	IPs []string
 
@@ -61,7 +61,7 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 	return fmt.Errorf("notify for zone %q was not accepted by %q", m.Question[0].Header().Name, ip)
 }
 
-// returns the correct family address or nil, also nil when nothing is needed.
+// returns the correct family address or nil, or nil when nothing is needed.
 func source(ip string, sources []string) net.IP {
 	fam := net.ParseIP(ip).To4() != nil
 	if fam { // v4
