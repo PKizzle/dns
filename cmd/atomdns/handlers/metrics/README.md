@@ -46,13 +46,18 @@ metrics [|enable|disable]
 
 Where:
 
-- _empty_ or `enable`, `disable` will enable or disable the metrics gathering completely.
+- _empty_ or `enable` will enable metrics gathering, only `disable` will disable it.
 
 ## Examples
 
 Start a server on the default port and load the _whoami_ handler and disable metrics.
 
 ```conffile
+{
+    metrics
+    debug
+}
+
 example.org {
     metrics disable
     whoami
