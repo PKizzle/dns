@@ -62,19 +62,13 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 // returns the correct family address or nil, or nil when nothing is needed.
 func source(ip string, sources []string) net.IP {
 	fam := net.ParseIP(ip).To4() != nil
-	if fam { // v4
-		for _, s := range sources {
-			sip := net.ParseIP(s)
-			if sip.To4() != nil {
-				return sip
-			}
+	for _, s := range sources {
+		sip := net.ParseIP(s)
+		if sip.To4() != nil && fam {
+			return sip
 		}
-	} else { // v6
-		for _, s := range sources {
-			sip := net.ParseIP(s)
-			if sip.To4() == nil {
-				return sip
-			}
+		if sip.To4() == nil && !fam {
+			return sip
 		}
 	}
 	return nil
