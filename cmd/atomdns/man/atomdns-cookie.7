@@ -8,7 +8,7 @@
 
 .SH "DESCRIPTION"
 .PP
-This plugin implements the DNS cookie RFC.
+This handler implements the DNS cookie RFC.
 
 .SH "SYNTAX"
 .PP
@@ -38,3 +38,7 @@ example.org {
 
 .fi
 .RE
+
+.SH "BUGS"
+.PP
+\fIcookie\fP does not implement a cache to validate client, is just does enough to make \fB\fCdig\fR happy.

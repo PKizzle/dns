@@ -6,27 +6,30 @@ _dbfile_ - serve zone data from an RFC 1035-style zone file
 
 ## Description
 
-The _dbfile_ plugin is used for DNS servers that serve from a preloaded file that exists on disk
+The _dbfile_ handler is used for DNS servers that serve from a file that loaded from disk,
 containing RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
-DNSSEC answers are returned. Only NSEC is supported. See the _sign_ plugin if you want to sign and resign your
+DNSSEC answers are returned. Only NSEC is supported. See the _sign_ handler if you want to sign and resign your
 zone automatically.
 
-The server will reply with minimal responses by default. The _dbfile_ plugin will watch the zone file and when
-it receives a (kernel) notify will reload the zone after 5 seconds. Regardless of any change it will send out
+The server will reply with minimal responses by default. The _dbfile_ handler will watch the zone file and when
+it receives a (kernel) notify it will reload the zone after 2 seconds. Regardless of any change it will send out
 notifies if configured to do so, the actual SOA serial isn't relevant.
 
 ## Syntax
+
+In it simplests form _dbfile_ you can use:
 
 ```
 dbfile FILE
 ```
 
-- **FILE** the database file to read and parse. If the path is relative, the path from the global root config
-  will be prepended to it.
+- **FILE** the zone file to load. If the path is relative, the path from the global root config will be
+  prepended to it.
 
-If the zone specification contains multiple zones they all will use the _same_ **FILE**.
+If the zone specification contains multiple zones they all will use the _same_ **FILE**. And you must make
+sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names.
 
-For extra control you can open the block and define multipe properties.
+For extra control you can open the block and define multipe extra properties that deal with zone transfers.
 
 ```
 dbfile FILE {
@@ -49,8 +52,9 @@ dbfile FILE {
   - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order.
   - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
-  - If there is no `notify` section the **IP**s as specified in `to` are used for sending notifies. If you
-    want to override this open a `notify` block and add an (optional) new set of **IP**s. With `source` you can
+    If there are no **IP**s specfied the AXFR is open to the entire internet.
+  - If there is no `notify` the **IP**s as specified in `to` are used for sending notifies. If you
+    want to override this add a `notify` and put an (new) set of **IP**s there. With `source` you can
     set the source(s) address when sending the notifies. The TSIG key specification is identical to that of `from`.
     For **IP** you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
     IPv4 address will use a IPv4 source and vice versa.
@@ -97,4 +101,4 @@ example.org example.net {
 
 ## See Also
 
-See the _sign_ plugin for signing your zones and see RFC 1035 for more info on how to structure zone files.
+See the _sign_ handler for signing your zones and see RFC 1035 for more info on how to structure zone files.

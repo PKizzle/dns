@@ -78,7 +78,7 @@ func Equal(a, b RR) bool { return Compare(a, b) == 0 }
 func EqualName(a, b string) bool { return CompareName(a, b) == 0 }
 
 // CompareSerial compares a, b which are serial numbers are timestamps from signatures, while taking into
-// account RFC 1984 serial arithemetic.
+// account RFC 1984 serial arithemetic, -1 is returned when a is smaller, +1 when a is larger, otherwise 0.
 func CompareSerial(a, b uint32) int {
 	if a == b {
 		return 0

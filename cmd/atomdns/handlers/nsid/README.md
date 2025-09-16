@@ -6,7 +6,7 @@ _nsid_ - adds an identifier of this server to each reply
 
 ## Description
 
-This plugin implements [RFC 5001](https://tools.ietf.org/html/rfc5001) and adds an option code to replies that
+This handler implements RFC 5001 and adds an option code to replies that
 uniquely identify the server. This is useful in anycast setups to see which server was responsible for
 generating the reply and for debugging.
 
@@ -49,4 +49,4 @@ And now a client with NSID support will see an OPT record with the NSID option:
 
 ## See Also
 
-[RFC 5001](https://tools.ietf.org/html/rfc5001).
+RFC 5001.

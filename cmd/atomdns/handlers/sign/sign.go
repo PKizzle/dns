@@ -1,4 +1,4 @@
-// Package sign implements a zone signer as a plugin.
+// Package sign implements a zone signer as a hander.
 package sign
 
 import (

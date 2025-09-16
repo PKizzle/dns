@@ -24,13 +24,14 @@ chaos [VERSION] {
 - **VERSION** is the version to return. Defaults to `atomdns-<version>`, if not set.
 - The `authors` section holds the authors that are returned.
 
-Note that you have to make sure that this handler will get actual queries for the
-following zones prefixes: `version.`, `authors.`, `hostname.` and `id.`, i.e.
-having `version.example.org` will suffice.
+Note that you have to make sure that this handler will get actual queries for
+the following zones _prefixes_: `version.`, `authors.`, `hostname.` and `id.`,
+i.e. having `version.example.org` will suffice to get queries for the
+`version.` prefix.
 
 ## Examples
 
-Specify all the zones in full.
+Specify all the zones:
 
 ```corefile
 version.bind version.server authors.bind hostname.bind id.server {

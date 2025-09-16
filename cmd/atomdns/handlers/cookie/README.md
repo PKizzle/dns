@@ -6,7 +6,7 @@ _cookie_ - adds an DNS cookie of this server to each reply
 
 ## Description
 
-This plugin implements the DNS cookie RFC.
+This handler implements the DNS cookie RFC.
 
 ## Syntax
 
@@ -26,3 +26,7 @@ example.org {
     whoami
 }
 ```
+
+## Bugs
+
+_cookie_ does not implement a cache to validate client, is just does enough to make `dig` happy.

@@ -18,7 +18,7 @@ type Envelope struct {
 // present in the [Ns] section of the [Msg], see RFC 1995.
 //
 // If the pseudo section contains a (stub) TSIG or in the future.
-// SIG0 record, TSIG or SIG0 signing is performed, see [TSIG.New] and [SIG.New] on how create such RRs. For
+// SIG0 record, TSIG or SIG0 signing is performed, see [NewTSIG] and [NewSIG0] on how create such RRs. For
 // this the client also need a [TSIGSigner] or [SIG0Signer].
 //
 // On the returned channel the received RRs are returned (and a non-nil erorr in case of an error). These RRs
@@ -34,7 +34,7 @@ type Envelope struct {
 //	m := dns.NewMsg("example.org.", dns.TypeAXFR)
 //	env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 //	if err != nil {
-//	   t.Fatal("failed to setup zone transfer in", err)
+//	   return fmt.Errorf("failed to setup zone transfer in", err)
 //	}
 //
 //	for e := range env {
@@ -81,7 +81,7 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 			return nil, err
 		}
 	}
-	// if.SIG0Signer != nil {}
+	// if.SIG0Signer != nil {} // TODO(miek): implement the whole SIG0 dance
 
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
 	if _, err := io.Copy(remote, m); err != nil {
@@ -288,7 +288,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 }
 
 // TransferOut performs an outgoing transfer with the client connecting in w, r is the request
-// that initiates the transfer.
+// that initiates the transfer and is used for TSIG/SIG0.
 //
 // Example setup from within a dns.HandleFunc:
 //
@@ -298,7 +298,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 //	c := dns.NewClient()
 //	var wg sync.WaitGroup
 //	wg.Go(func() {
-//	    c.TransferOut(w, env)
+//	    c.TransferOut(w, r, env)
 //	    w.Close()
 //	})
 //	env <- &dns.Envelope{Answer: []dns.RR{...}}
