@@ -1,39 +1,35 @@
 package acl
 
 import (
-	"github.com/miekg/sndns/plugin"
-
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	// RequestBlockCount is the number of DNS requests being blocked.
-	RequestBlockCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: plugin.Namespace,
-		Subsystem: pluginName,
-		Name:      "blocked_requests_total",
-		Help:      "Counter of DNS requests being blocked.",
-	}, []string{"server", "zone"})
-	// RequestFilterCount is the number of DNS requests being filtered.
-	RequestFilterCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: plugin.Namespace,
-		Subsystem: pluginName,
-		Name:      "filtered_requests_total",
-		Help:      "Counter of DNS requests being filtered.",
-	}, []string{"server", "zone"})
-	// RequestAllowCount is the number of DNS requests being Allowed.
-	RequestAllowCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: plugin.Namespace,
-		Subsystem: pluginName,
-		Name:      "allowed_requests_total",
-		Help:      "Counter of DNS requests being allowed.",
-	}, []string{"server"})
-	// RequestDropCount is the number of DNS requests being dropped.
-	RequestDropCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: plugin.Namespace,
-		Subsystem: pluginName,
-		Name:      "dropped_requests_total",
-		Help:      "Counter of DNS requests being dropped.",
-	}, []string{"server", "zone"})
+	RequestsBlock = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace, Subsystem: subsystem,
+		Name: "blocked_requests_total",
+		Help: "Counter of DNS requests being blocked.",
+	}, []string{"zone", "network", "family"})
+
+	RequestsFilter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace, Subsystem: subsystem,
+		Name: "filtered_requests_total",
+		Help: "Counter of DNS requests being filtered.",
+	}, []string{"zone", "network", "family"})
+
+	RequestsAllow = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace, Subsystem: subsystem,
+		Name: "allowed_requests_total",
+		Help: "Counter of DNS requests being allowed.",
+	}, []string{"zone", "network", "family"})
+
+	RequestsDrop = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: metrics.Namespace, Subsystem: subsystem,
+		Name: "dropped_requests_total",
+		Help: "Counter of DNS requests being dropped.",
+	}, []string{"zone", "network", "family"})
 )
+
+const subsystem = "acl"

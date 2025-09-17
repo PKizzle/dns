@@ -4,141 +4,68 @@ import (
 	"net"
 	"strings"
 
-	"github.com/miekg/sndns/caddy"
-	"github.com/miekg/sndns/core/dnsserver"
-	"github.com/miekg/sndns/plugin"
-
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"github.com/infobloxopen/go-trees/iptree"
-	"github.com/miekg/dns"
 )
 
-const pluginName = "acl"
-
-func init() { plugin.Register(pluginName, setup) }
-
-func newDefaultFilter() *iptree.Tree {
-	defaultFilter := iptree.NewTree()
-	_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
-	_, IPv6All, _ := net.ParseCIDR("::/0")
-	defaultFilter.InplaceInsertNet(IPv4All, struct{}{})
-	defaultFilter.InplaceInsertNet(IPv6All, struct{}{})
-	return defaultFilter
-}
-
-func setup(c *caddy.Controller) error {
-	a, err := parse(c)
-	if err != nil {
-		return plugin.Error(pluginName, err)
-	}
-
-	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		a.Next = next
-		return a
-	})
-
-	return nil
-}
-
-func parse(c *caddy.Controller) (ACL, error) {
-	a := ACL{}
-	for c.Next() {
+func (a *Acl) Setup(co *dnsserver.Controller) error {
+	for co.Next() {
 		r := rule{}
-		args := c.RemainingArgs()
-		r.zones = plugin.OriginsFromArgsOrServerBlock(args, c.ServerBlockKeys)
-
-		for c.NextBlock() {
+		for co.NextBlock(0) {
 			p := policy{}
 
-			action := strings.ToLower(c.Val())
-			if action == "allow" {
+			switch co.Val() {
+			case "allow":
 				p.action = actionAllow
-			} else if action == "block" {
+			case "block":
 				p.action = actionBlock
-			} else if action == "filter" {
+			case "filter":
 				p.action = actionFilter
-			} else if action == "drop" {
+			case "drop":
 				p.action = actionDrop
-			} else {
-				return a, c.Errf("unexpected token %q; expect 'allow', 'block', 'filter' or 'drop'", c.Val())
+			default:
+				return co.Errf("unexpected token %q, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
 			}
 
-			p.qtypes = make(map[uint16]struct{})
+			p.qtypes = []uint16{}
 			p.filter = iptree.NewTree()
 
-			hasTypeSection := false
-			hasNetSection := false
+			hasNet := false
 
-			remainingTokens := c.RemainingArgs()
-			for len(remainingTokens) > 0 {
-				if !isPreservedIdentifier(remainingTokens[0]) {
-					return a, c.Errf("unexpected token %q; expect 'type | net'", remainingTokens[0])
-				}
-				section := strings.ToLower(remainingTokens[0])
+			args := co.RemainingArgs()
+			if len(args) == 0 {
+				return co.ArgErr()
+			}
 
-				i := 1
-				var tokens []string
-				for ; i < len(remainingTokens) && !isPreservedIdentifier(remainingTokens[i]); i++ {
-					tokens = append(tokens, remainingTokens[i])
-				}
-				remainingTokens = remainingTokens[i:]
-
-				if len(tokens) == 0 {
-					return a, c.Errf("no token specified in %q section", section)
-				}
-
-				switch section {
-				case "type":
-					hasTypeSection = true
-					for _, token := range tokens {
-						if token == "*" {
-							p.qtypes[dns.TypeNone] = struct{}{}
-							break
-						}
-						qtype, ok := dns.StringToType[token]
-						if !ok {
-							return a, c.Errf("unexpected token %q; expect legal QTYPE", token)
-						}
-						p.qtypes[qtype] = struct{}{}
+			for _, a := range args {
+				// either DNS types or IP addresses, there is no overlap between the two
+				qtype := dns.StringToType[a]
+				switch qtype {
+				case 0:
+					hasNet = true
+					_, source, err := net.ParseCIDR(normalize(a))
+					if err != nil {
+						return co.Errf("illegal CIDR notation %q", normalize(a))
 					}
-				case "net":
-					hasNetSection = true
-					for _, token := range tokens {
-						if token == "*" {
-							p.filter = newDefaultFilter()
-							break
-						}
-						token = normalize(token)
-						_, source, err := net.ParseCIDR(token)
-						if err != nil {
-							return a, c.Errf("illegal CIDR notation %q", token)
-						}
-						p.filter.InplaceInsertNet(source, struct{}{})
-					}
+					p.filter.InplaceInsertNet(source, struct{}{})
 				default:
-					return a, c.Errf("unexpected token %q; expect 'type | net'", section)
+					p.qtypes = append(p.qtypes, qtype)
 				}
 			}
 
-			// optional `type` section means all record types.
-			if !hasTypeSection {
-				p.qtypes[dns.TypeNone] = struct{}{}
-			}
-
-			// optional `net` means all ip addresses.
-			if !hasNetSection {
-				p.filter = newDefaultFilter()
+			if !hasNet {
+				_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
+				_, IPv6All, _ := net.ParseCIDR("::/0")
+				p.filter.InplaceInsertNet(IPv4All, struct{}{})
+				p.filter.InplaceInsertNet(IPv6All, struct{}{})
 			}
 
 			r.policies = append(r.policies, p)
 		}
 		a.Rules = append(a.Rules, r)
 	}
-	return a, nil
-}
-
-func isPreservedIdentifier(token string) bool {
-	identifier := strings.ToLower(token)
-	return identifier == "type" || identifier == "net"
+	return nil
 }
 
 // normalize appends '/32' for any single IPv4 address and '/128' for IPv6.

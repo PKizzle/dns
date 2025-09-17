@@ -2,80 +2,67 @@ package acl
 
 import (
 	"net"
+	"slices"
 	"strings"
 
-	"github.com/miekg/sndns/request"
-	"go.science.ru.nl/log"
-
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/infobloxopen/go-trees/iptree"
-	"github.com/miekg/dns"
 )
 
-// rule defines a list of Zones and some ACL policies which will be
-// enforced on them.
+// rule defines ACL policies which will be enforced.
 type rule struct {
-	zones    []string
 	policies []policy
 }
 
-// action defines the action against queries.
+// action defines the action against messages.
 type action int
 
-// policy defines the ACL policy for DNS queries.
-// A policy performs the specified action (block/allow) on all DNS queries
+// policy defines the ACL policy for DNS messages.
+// A policy performs the specified action (block/allow) on all DNS messages
 // matched by source IP or QTYPE.
 type policy struct {
 	action action
-	qtypes map[uint16]struct{}
+	qtypes []uint16
 	filter *iptree.Tree
 }
 
 const (
-	// actionNone does nothing on the queries.
+	// actionNone does nothing on the messages.
 	actionNone = iota
-	// actionAllow allows authorized queries to recurse.
+	// actionAllow allows authorized messages.
 	actionAllow
-	// actionBlock blocks unauthorized queries towards protected DNS zones.
+	// actionBlock blocks unauthorized messages towards protected DNS zones.
 	actionBlock
-	// actionFilter returns empty sets for queries towards protected DNS zones.
+	// actionFilter returns empty sets for messages towards protected DNS zones.
 	actionFilter
-	// actionDrop does not respond for queries towards the protected DNS zones.
+	// actionDrop does not respond for messages towards the protected DNS zones.
 	actionDrop
 )
 
-// matchWithPolicies matches the DNS query with a list of ACL polices and returns suitable
-// action against the query.
-func matchWithPolicies(policies []policy, w dns.ResponseWriter, r *dns.Msg) action {
-	state := request.Request{W: w, Req: r}
-
-	var ip net.IP
-	if idx := strings.IndexByte(state.IP(), '%'); idx >= 0 {
-		ip = net.ParseIP(state.IP()[:idx])
-	} else {
-		ip = net.ParseIP(state.IP())
+// match matches the DNS message with a list of ACL polices and returns suitable action against the message.
+func match(policies []policy, w dns.ResponseWriter, r *dns.Msg) action {
+	remote := dnsutil.RemoteIP(w)
+	ip := net.ParseIP(remote)
+	if idx := strings.IndexByte(remote, '%'); idx >= 0 {
+		ip = net.ParseIP(remote[:idx])
 	}
 
-	// if the parsing did not return a proper response then we simply return 'actionBlock' to
-	// block the query
 	if ip == nil {
-		log.Errorf("Blocking request. Unable to parse source address: %v", state.IP())
 		return actionBlock
 	}
-	qtype := state.QType()
+	_, qtype := dnsutil.Question(r)
 	for _, policy := range policies {
-		// dns.TypeNone matches all query types.
-		_, matchAll := policy.qtypes[dns.TypeNone]
-		_, match := policy.qtypes[qtype]
+		matchAll := len(policy.qtypes) == 0
+		match := slices.Contains(policy.qtypes, qtype)
 		if !matchAll && !match {
 			continue
 		}
 
-		_, contained := policy.filter.GetByIP(ip)
-		if !contained {
+		if _, contained := policy.filter.GetByIP(ip); !contained {
 			continue
 		}
 
-		// matched.
 		return policy.action
 	}
 	return actionNone

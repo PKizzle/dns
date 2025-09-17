@@ -2,11 +2,11 @@ package acl
 
 import (
 	"context"
+	"io"
+	"strconv"
 
-	"github.com/miekg/sndns/plugin"
-	"github.com/miekg/sndns/plugin/metrics"
-
-	"github.com/miekg/dns"
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // Acl enforces access control policies on DNS queries.
@@ -17,48 +17,53 @@ type Acl struct {
 func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 
+		net := dnsutil.Network(w)
+		fam := strconv.Itoa(dnsutil.Family(w))
+
 	Rules:
 		for _, rule := range a.Rules {
-			// check zone.
-			zone := plugin.Zones(rule.zones).Matches(state.Name())
-			if zone == "" {
-				continue
-			}
-
-			action := matchWithPolicies(rule.policies, w, r)
+			action := match(rule.policies, w, r)
 			switch action {
+			case actionAllow:
+
+				break Rules
+
 			case actionDrop:
-				RequestDropCount.WithLabelValues(metrics.WithServer(ctx), zone).Inc()
-				return dns.RcodeSuccess, nil
+
+				RequestsDrop.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				return
 
 			case actionBlock:
 
-				m := new(dns.Msg).
-					SetRcode(r, dns.RcodeRefused).
-					SetEdns0(4096, true)
-				ede := dns.EDNS0_EDE{InfoCode: dns.ExtendedErrorCodeBlocked}
-				m.IsEdns0().Option = append(m.IsEdns0().Option, &ede)
-				w.WriteMsg(m)
-				RequestBlockCount.WithLabelValues(metrics.WithServer(ctx), zone).Inc()
-				return dns.RcodeSuccess, nil
+				m := new(dns.Msg)
+				dnsutil.SetReply(m, r)
+				m.Data = r.Data
+				m.Rcode = dns.RcodeRefused
+				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorBlocked}}
 
-			case actionAllow:
-				break Rules
+				m.Pack()
+				io.Copy(w, m)
+
+				RequestsBlock.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				return
+
 			case actionFilter:
-				{
-					m := new(dns.Msg).
-						SetRcode(r, dns.RcodeSuccess).
-						SetEdns0(4096, true)
-					ede := dns.EDNS0_EDE{InfoCode: dns.ExtendedErrorCodeFiltered}
-					m.IsEdns0().Option = append(m.IsEdns0().Option, &ede)
-					w.WriteMsg(m)
-					RequestFilterCount.WithLabelValues(metrics.WithServer(ctx), zone).Inc()
-					return dns.RcodeSuccess, nil
-				}
+
+				m := new(dns.Msg)
+				dnsutil.SetReply(m, r)
+				m.Data = r.Data
+				m.Rcode = dns.RcodeRefused
+				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorFiltered}}
+
+				m.Pack()
+				io.Copy(w, m)
+
+				RequestsFilter.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				return
 			}
 		}
 
-		RequestAllowCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+		RequestsAllow.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
 		next.ServeDNS(ctx, w, r)
 	})
 }

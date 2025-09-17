@@ -82,39 +82,39 @@ var bufPool = &sync.Pool{
 
 var (
 	Dropped = promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: namespace, Subsystem: subsystem,
+		Namespace: Namespace, Subsystem: subsystem,
 		Name: "dropped_total",
 		Help: "Counter of dropped requests. These are reported via the server's MsgInvalidFunc.",
 	})
 
 	Requests = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace, Subsystem: subsystem,
+		Namespace: Namespace, Subsystem: subsystem,
 		Name: "requests_total",
 		Help: "Counter of requests made per zone, network and family.",
 	}, []string{"zone", "network", "family", "flags"})
 
 	Responses = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace, Subsystem: subsystem,
+		Namespace: Namespace, Subsystem: subsystem,
 		Name: "responses_total",
 		Help: "Counter of responses and response codes.",
 	}, []string{"zone", "network", "family", "rcode"})
 
 	RequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace, Subsystem: subsystem,
+		Namespace: Namespace, Subsystem: subsystem,
 		Name:    "request_duration_seconds",
 		Buckets: prometheus.ExponentialBuckets(0.00025, 2, 16), // from 0.25ms to 8 seconds
 		Help:    "Histogram of the time (in seconds) each request took per zone.",
 	}, []string{"zone", "network", "family"})
 
 	RequestSize = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace, Subsystem: subsystem,
+		Namespace: Namespace, Subsystem: subsystem,
 		Name:    "request_size_bytes",
 		Help:    "Size of the requests.",
 		Buckets: []float64{0, 100, 200, 300, 400, 511, 1023, 2047, 4095, 8291, 16e3, 32e3, 48e3, 64e3},
 	}, []string{"zone", "network", "family"})
 
 	ResponseSize = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: namespace, Subsystem: subsystem,
+		Namespace: Namespace, Subsystem: subsystem,
 		Name:    "response_size_bytes",
 		Help:    "Size of the returned response in bytes.",
 		Buckets: []float64{0, 100, 200, 300, 400, 511, 1023, 2047, 4095, 8291, 16e3, 32e3, 48e3, 64e3},
@@ -123,5 +123,5 @@ var (
 
 const (
 	subsystem = "dns"
-	namespace = "atomdns"
+	Namespace = "atomdns"
 )

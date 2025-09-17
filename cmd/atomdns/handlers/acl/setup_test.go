@@ -3,39 +3,38 @@ package acl
 import (
 	"testing"
 
-	"github.com/miekg/sndns/caddy"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func TestSetup(t *testing.T) {
-	tests := []struct {
-		name    string
-		config  string
-		wantErr bool
+	testcases := []struct {
+		name   string
+		config string
+		exp    bool
 	}{
-		// IPv4 tests.
 		{
-			"Blacklist 1",
+			"blocklist",
 			`acl {
 				block type A net 192.168.0.0/16
 			}`,
 			false,
 		},
 		{
-			"Blacklist 2",
+			"blocklist",
 			`acl {
 				block type * net 192.168.0.0/16
 			}`,
 			false,
 		},
 		{
-			"Blacklist 3",
+			"blocklist",
 			`acl {
 				block type A net *
 			}`,
 			false,
 		},
 		{
-			"Blacklist 4",
+			"blocklist",
 			`acl {
 				allow type * net 192.168.1.0/24
 				block type * net 192.168.0.0/16
@@ -43,14 +42,14 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"Filter 1",
+			"filter",
 			`acl {
 				filter type A net 192.168.0.0/16
 			}`,
 			false,
 		},
 		{
-			"Whitelist 1",
+			"allowlist",
 			`acl {
 				allow type * net 192.168.0.0/16
 				block type * net *
@@ -58,7 +57,7 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"Drop 1",
+			"drop 1",
 			`acl {
 				drop type * net 192.168.0.0/16
 			}`,
@@ -82,85 +81,84 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"Multiple Networks 1",
+			"multiple networks 1",
 			`acl example.org {
 				block type * net 192.168.1.0/24 192.168.3.0/24
 			}`,
 			false,
 		},
 		{
-			"Multiple Qtypes 1",
+			"multiple qtypes 1",
 			`acl example.org {
 				block type TXT ANY CNAME net 192.168.3.0/24
 			}`,
 			false,
 		},
 		{
-			"Missing argument 1",
+			"missing argument 1",
 			`acl {
 				block A net 192.168.0.0/16
 			}`,
 			true,
 		},
 		{
-			"Missing argument 2",
+			"missing argument 2",
 			`acl {
 				block type net 192.168.0.0/16
 			}`,
 			true,
 		},
 		{
-			"Illegal argument 1",
+			"illegal argument 1",
 			`acl {
 				block type ABC net 192.168.0.0/16
 			}`,
 			true,
 		},
 		{
-			"Illegal argument 2",
+			"illegal argument 2",
 			`acl {
 				blck type A net 192.168.0.0/16
 			}`,
 			true,
 		},
 		{
-			"Illegal argument 3",
+			"illegal argument 3",
 			`acl {
 				block type A net 192.168.0/16
 			}`,
 			true,
 		},
 		{
-			"Illegal argument 4",
+			"illegal argument 4",
 			`acl {
 				block type A net 192.168.0.0/33
 			}`,
 			true,
 		},
-		// IPv6 tests.
 		{
-			"Blacklist 1 IPv6",
+			"blocklist IPv6",
 			`acl {
 				block type A net 2001:0db8:85a3:0000:0000:8a2e:0370:7334
 			}`,
 			false,
 		},
 		{
-			"Blacklist 2 IPv6",
+			"blocklist IPv6",
 			`acl {
 				block type * net 2001:db8:85a3::8a2e:370:7334
 			}`,
 			false,
 		},
 		{
-			"Blacklist 3 IPv6",
+			"blocklist IPv6",
 			`acl {
 				block type A
 			}`,
 			false,
 		},
 		{
-			"Blacklist 4 IPv6",
+			"blocklist IPv6",
 			`acl {
 				allow net 2001:db8:abcd:0012::0/64
 				block net 2001:db8:abcd:0012::0/48
@@ -168,14 +166,14 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"Filter 1 IPv6",
+			"filter 1 IPv6",
 			`acl {
 				filter type A net 2001:0db8:85a3:0000:0000:8a2e:0370:7334
 			}`,
 			false,
 		},
 		{
-			"Whitelist 1 IPv6",
+			"whitelist 1 IPv6",
 			`acl {
 				allow net 2001:db8:abcd:0012::0/64
 				block
@@ -183,7 +181,7 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"Drop 1 IPv6",
+			"drop 1 IPv6",
 			`acl {
 				drop net 2001:db8:abcd:0012::0/64
 			}`,
@@ -207,66 +205,65 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"Multiple Networks 1 IPv6",
+			"multiple networks 1 IPv6",
 			`acl example.org {
 				block net 2001:db8:abcd:0012::0/64 2001:db8:85a3::8a2e:370:7334/64
 			}`,
 			false,
 		},
 		{
-			"Illegal argument 1 IPv6",
+			"illegal argument 1 IPv6",
 			`acl {
 				block type A net 2001::85a3::8a2e:370:7334
 			}`,
 			true,
 		},
 		{
-			"Illegal argument 2 IPv6",
+			"illegal argument 2 IPv6",
 			`acl {
 				block type A net 2001:db8:85a3:::8a2e:370:7334
 			}`,
 			true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctr := caddy.NewTestController("dns", tt.config)
-			if err := setup(ctr); (err != nil) != tt.wantErr {
-				t.Errorf("Error: setup() error = %v, wantErr %v", err, tt.wantErr)
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			acl := new(Acl)
+			co := dnsserver.NewTestController(tc.config)
+			err := acl.Setup(co)
+			if (err != nil) != tc.exp {
+				t.Errorf("expected %t, got %t", tc.exp, err)
 			}
 		})
 	}
 }
 
 func TestNormalize(t *testing.T) {
-	type args struct {
-		rawNet string
-	}
 	tests := []struct {
 		name string
-		args args
+		args string
 		want string
 	}{
 		{
-			"Network range 1",
-			args{"10.218.10.8/24"},
+			"range",
+			"10.218.10.8/24",
 			"10.218.10.8/24",
 		},
 		{
-			"IP address 1",
-			args{"10.218.10.8"},
+			"IPv4",
+			"10.218.10.8",
 			"10.218.10.8/32",
 		},
 		{
-			"IPv6 address 1",
-			args{"2001:0db8:85a3:0000:0000:8a2e:0370:7334"},
+			"IPv6",
+			"2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 			"2001:0db8:85a3:0000:0000:8a2e:0370:7334/128",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := normalize(tt.args.rawNet); got != tt.want {
-				t.Errorf("Error: normalize() = %v, want %v", got, tt.want)
+			if got := normalize(tt.args); got != tt.want {
+				t.Errorf("expected %s, got %s", tt.want, got)
 			}
 		})
 	}
