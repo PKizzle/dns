@@ -66,7 +66,6 @@ workgroup = "atomdns authors"
 
 `
 	b = append([]byte(header), b...)
-	println(string(b))
 	p := parser.NewWithExtensions(parser.FencedCode | parser.DefinitionLists | parser.Tables)
 	p.Opts = parser.Options{
 		ParserHook: func(data []byte) (ast.Node, []byte, int) { return mparser.Hook(data) },
