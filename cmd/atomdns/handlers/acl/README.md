@@ -29,7 +29,8 @@ acl {
 
 - **QTYPE** is the query type to match for the requests to be allowed or blocked. If **QTYPE** is omitted it
   matches _all_ types.
-- **NET** is the source IP address to match for the requests to be allowed or blocked. Typical CIDR notation and single IP addresses are supported.
+- **NET** is the source IP address to match for the requests to be allowed or blocked. Typical CIDR notation
+  and single IP addresses are supported.
 
 ## Examples
 

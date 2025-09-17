@@ -49,7 +49,7 @@ func match(policies []policy, w dns.ResponseWriter, r *dns.Msg) action {
 	}
 
 	if ip == nil {
-		return actionBlock
+		return actionDrop
 	}
 	_, qtype := dnsutil.Question(r)
 	for _, policy := range policies {

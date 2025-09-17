@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"hash/fnv"
 	"io"
-	"log/slog"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -14,8 +13,6 @@ import (
 )
 
 func TestCookie(t *testing.T) {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-
 	h := &Cookie{Secret: "geheim"}
 
 	f := fnv.New64()
