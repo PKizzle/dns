@@ -30,23 +30,16 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 
 			p.qtypes = []uint16{}
 			p.filter = iptree.NewTree()
-
 			hasNet := false
-
-			args := co.RemainingArgs()
-			if len(args) == 0 {
-				return co.ArgErr()
-			}
-
-			for _, a := range args {
+			for _, arg := range co.RemainingArgs() {
 				// either DNS types or IP addresses, there is no overlap between the two
-				qtype := dns.StringToType[a]
+				qtype := dns.StringToType[arg]
 				switch qtype {
 				case 0:
 					hasNet = true
-					_, source, err := net.ParseCIDR(normalize(a))
+					_, source, err := net.ParseCIDR(normalize(arg))
 					if err != nil {
-						return co.Errf("illegal CIDR notation %q", normalize(a))
+						return co.Errf("illegal CIDR notation %q", normalize(arg))
 					}
 					p.filter.InplaceInsertNet(source, struct{}{})
 				default:
