@@ -2,6 +2,7 @@
 
 package handlers
 
+import "codeberg.org/miekg/dns/cmd/atomdns/handlers/acl"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/any"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/as112"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/chaos"
@@ -17,6 +18,7 @@ import "codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
 
 // StringToHandler is a map of strings to a handler creation function.
 var StringToHandler = map[string]func() Handler{
+	"acl":     func() Handler { return new(acl.Acl) },
 	"any":     func() Handler { return new(any.Any) },
 	"as112":   func() Handler { return new(as112.As112) },
 	"chaos":   func() Handler { return new(chaos.Chaos) },
