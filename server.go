@@ -336,6 +336,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	}
 
 	readtimeout := srv.ReadTimeout
+	hijacked := false
 
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
@@ -355,7 +356,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			wg.Done()
 		}()
 
-		if w.hijacked.Load() {
+		hijacked = hijacked || w.hijacked.Load()
+		if hijacked {
 			limit = -1 // when hijacked disregard any limits
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
@@ -364,7 +366,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 	wg.Wait() // wait for anyone still processing
 
-	if !w.hijacked.Load() {
+	if !hijacked {
 		w.Close()
 	}
 }
