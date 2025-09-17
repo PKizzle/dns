@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"sort"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -45,7 +47,7 @@ func main() {
 	flag.BoolVar(&flagProfile, "cpuprofile", false, "write cpu profile to cpu.out")
 	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
 	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
-	flag.BoolVar(&flagHandler, "handler", false, "list installed handlers")
+	flag.BoolVar(&flagHandler, "handler", false, "who sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
 	flag.StringVar(&flagPort, "port", "53", "default port")
@@ -66,9 +68,12 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	if flagHandler {
+		hs := []string{}
 		for h := range handlers.StringToHandler {
-			fmt.Println(h)
+			hs = append(hs, h)
 		}
+		sort.Strings(hs)
+		fmt.Println(strings.Join(hs, "\n"))
 		return
 	}
 
