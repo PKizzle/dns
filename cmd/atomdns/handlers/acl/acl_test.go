@@ -1,0 +1,118 @@
+package acl
+
+import (
+	"context"
+	"testing"
+
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnstest"
+	"codeberg.org/miekg/dns/dnsutil"
+)
+
+var testcases = []struct {
+	name   string
+	config string
+	qtype  uint16
+
+	rcode         int
+	extendedError uint16
+	noResponse    bool
+}{
+	{
+		name: "blocklist block",
+		config: `acl {
+				block A 198.51.100.0/16
+			}`,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "blocklist allowed",
+		config: `acl {
+				block A 192.168.0.0/16
+			}`,
+	},
+	{
+		name: "blocklist all blocked",
+		config: `acl {
+				block 198.51.100.0/16
+			}`,
+		qtype:         dns.TypeAAAA,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "block A and allow AAAA",
+		config: `acl {
+				block A 198.51.100.0/16
+				allow AAAA 198.51.100.0/16
+				allow TXT
+			}`,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "block A and allow AAAA",
+		config: `acl {
+				block A 198.51.100.0/16
+				allow AAAA 198.51.100.0/16
+				allow TXT
+			}`,
+		qtype: dns.TypeAAAA,
+	},
+	{
+		name: "block A, not TXT",
+		config: `acl {
+				block A
+				allow TXT
+			}`,
+		rcode:         dns.RcodeRefused,
+		extendedError: dns.ExtendedErrorBlocked,
+	},
+	{
+		name: "block A, not TXT",
+		config: `acl {
+				block A
+				allow TXT
+			}`,
+		qtype: dns.TypeTXT,
+	},
+}
+
+func TestAcl(t *testing.T) {
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := new(Acl)
+			co := dnsserver.NewTestController(tc.config)
+			a.Setup(co)
+
+			w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+			r := new(dns.Msg)
+			if tc.qtype == 0 {
+				tc.qtype = dns.TypeA
+			}
+			dnsutil.SetQuestion(r, "www.example.org.", tc.qtype)
+
+			next := new(whoami.Whoami).HandlerFunc(nil)
+			a.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
+
+			if w.Msg.Rcode != uint16(tc.rcode) {
+				t.Errorf("rcode mismatch want %d, got %d", tc.rcode, w.Msg.Rcode)
+			}
+			if tc.noResponse && w.Msg != nil {
+				t.Errorf("responded to client when not expected")
+			}
+			if tc.extendedError != 0 {
+				for _, p := range w.Msg.Pseudo {
+					if ede, ok := p.(*dns.EDE); ok {
+						if ede.InfoCode != tc.extendedError {
+							t.Errorf("expected extended error %d, got %d", ede.InfoCode, tc.extendedError)
+						}
+					}
+				}
+			}
+		})
+	}
+}

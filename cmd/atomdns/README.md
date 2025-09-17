@@ -10,14 +10,14 @@ provided out of the box you can add it by writing a handler.
 Currently atomdns is able to:
 
 - Serve zone data from a file; with DNSSEC support (_dbfile_), plus:
-  - Zone tranfers.
+  - Zone tranfers and notifies.
   - DNSSEC signing.
+- Provide query logging (_log_).
+- Access control for queryes (_acl_).
+- Provide metrics (by using Prometheus) (_metrics_).
+- ... and more.
 - Load balancing of responses (_loadbalance_). [TODO]
 - Serve as a router to router queries to some other (recursive) nameserver (_route_). [TODO]
-- Provide query logging (_log_).
-- Provide DNS64 IPv6 Translation (_dns64_). [TODO]
-- Provide metrics (by using Prometheus) (_prometheus_).
-- ... and more.
 
 ## Compilation from Source
 

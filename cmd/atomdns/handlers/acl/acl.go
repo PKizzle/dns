@@ -1,0 +1,69 @@
+package acl
+
+import (
+	"context"
+	"io"
+	"strconv"
+
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
+)
+
+// Acl enforces access control policies on DNS queries.
+type Acl struct {
+	Rules []rule
+}
+
+func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
+	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+
+		net := dnsutil.Network(w)
+		fam := strconv.Itoa(dnsutil.Family(w))
+
+	Rules:
+		for _, rule := range a.Rules {
+			action := match(rule.policies, w, r)
+			switch action {
+			case actionAllow:
+
+				break Rules
+
+			case actionDrop:
+
+				RequestsDrop.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				return
+
+			case actionBlock:
+
+				m := new(dns.Msg)
+				dnsutil.SetReply(m, r)
+				m.Data = r.Data
+				m.Rcode = dns.RcodeRefused
+				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorBlocked}}
+
+				m.Pack()
+				io.Copy(w, m)
+
+				RequestsBlock.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				return
+
+			case actionFilter:
+
+				m := new(dns.Msg)
+				dnsutil.SetReply(m, r)
+				m.Data = r.Data
+				m.Rcode = dns.RcodeRefused
+				m.Pseudo = []dns.RR{&dns.EDE{InfoCode: dns.ExtendedErrorFiltered}}
+
+				m.Pack()
+				io.Copy(w, m)
+
+				RequestsFilter.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				return
+			}
+		}
+
+		RequestsAllow.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+		next.ServeDNS(ctx, w, r)
+	})
+}
