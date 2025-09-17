@@ -28,14 +28,12 @@ type ResponseWriter interface {
 	Session() *Session
 	// Hijack lets the caller take over the TCP connection. For UDP this has no effect. The handler is then
 	// responsible for the connection. Packets will still be read and given to the handler, MaxTCPQueries will
-	// be ignored, and the client needs to call Close.
+	// be ignored, and the client needs to call Close. Use Conn to check the connection's state.
 	Hijack()
 }
 
 // A ResponseController is used by an DNS handler to control the DNS response.
 type ResponseController interface {
-	//	// SetReadDeadline sets the deadline for reading the entire response.
-	//	SetReadDeadline(deadline time.Time) error
 	//  SetWriteDeadline sets the deadline for writing the response.
 	SetWriteDeadline() error
 }
@@ -44,7 +42,7 @@ type ResponseController interface {
 type response struct {
 	session  *Session // used for UDP reply routing.
 	conn     net.Conn
-	hijacked *atomic.Bool // connection has been hijacked by handler
+	hijacked atomic.Bool
 }
 
 // SetWriteDeadline implements the ResponseController interface.

@@ -12,7 +12,7 @@ import (
 
 func init() {
 	os.Remove("cmd/reflect/reflect")
-	os.Remove("cmd/testserv/testserv")
+	os.Remove("cmd/atomdns/atomdns")
 }
 
 func TestPrintln(t *testing.T) {

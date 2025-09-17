@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/ipv4"
@@ -310,7 +309,7 @@ Read:
 			}
 			for _, msg := range msgs[:n] {
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
-				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}, hijacked: new(atomic.Bool)}
+				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}}
 				go srv.serveUDP(&wg, w, r)
 			}
 			// return if we over-allocated
@@ -323,12 +322,13 @@ Read:
 
 func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
 	wg.Add(1)
-	srv.serveDNS(wg, w, r)
+	srv.serveDNS(w, r)
+	wg.Done()
 }
 
 // Serve a new TCP connection.
 func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
-	w := &response{conn: conn, hijacked: new(atomic.Bool)}
+	w := &response{conn: conn}
 
 	limit := srv.MaxTCPQueries
 	if limit == 0 {
@@ -340,7 +340,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
-		r := &Msg{Data: srv.MsgPool.Get()} // not all TCP conns are because of TC, so this may help too
+		r := &Msg{Data: srv.MsgPool.Get()}
 		if _, err := r.ReadFrom(conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
 				break
@@ -349,35 +349,33 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
-		if !w.hijacked.Load() {
-			wg.Add(1)
-		}
 		go func() {
-			srv.serveDNS(wg, w, r)
+			wg.Add(1)
+			srv.serveDNS(w, r)
+			wg.Done()
 		}()
 
 		if w.hijacked.Load() {
-			limit = -1 // also disregard any limits
-			wg.Done()  // call done because hijack has been called in the handler
+			limit = -1 // when hijacked disregard any limits
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
 		readtimeout = srv.IdleTimeout
 	}
 
+	wg.Wait() // wait for anyone still processing
+
 	if !w.hijacked.Load() {
-		wg.Wait() // wait for anyone still processing
 		w.Close()
 	}
 }
 
 // serveDNS serves the message it skip the message handling if the received message has the response bit set.
-func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
+func (srv *Server) serveDNS(w *response, r *Msg) {
 	r.msgPool = srv.MsgPool
 	r.Options = MsgOptionUnpackQuestion | MsgOptionUnpackHeader
 
 	if err := r.Unpack(); err != nil {
 		srv.MsgInvalidFunc(r, err)
-		wg.Done()
 		return
 	}
 
@@ -398,11 +396,9 @@ func (srv *Server) serveDNS(wg *sync.WaitGroup, w *response, r *Msg) {
 		r.Pack()
 
 		io.Copy(w, r)
-		wg.Done()
 		return
 	}
 
 	r.Options = MsgOptionUnpack
 	srv.Handler.ServeDNS(srv.ctx, w, r)
-	wg.Done()
 }
