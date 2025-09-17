@@ -131,7 +131,7 @@ func main() {
 func banner() string {
 	const banner = `
 ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
-┣━┫   ┃   ┃ ┃  ┃┃┃ DNS             v%s
+┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v%s
 ╹ ╹   ╹   ┗━┛  ╹ ╹
 High performance and flexible DNS server
 https://atomdns.miek.nl

@@ -45,7 +45,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
-				log.Warn(fmt.Sprintf("Zone %q in %q does not exist (yet?)", z.Origin, filepath.Base(z.Path)))
+				log.Warn(fmt.Sprintf("Zone %q in file %q does not exist (yet?)", z.Origin, filepath.Base(z.Path)))
 				continue
 			}
 			if err := z.Load(); err != nil {
