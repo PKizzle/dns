@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/ipv4"
@@ -310,7 +309,7 @@ Read:
 			}
 			for _, msg := range msgs[:n] {
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
-				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}, hijacked: new(atomic.Bool)}
+				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}}
 				go srv.serveUDP(&wg, w, r)
 			}
 			// return if we over-allocated
@@ -329,7 +328,7 @@ func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
 
 // Serve a new TCP connection.
 func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
-	w := &response{conn: conn, hijacked: new(atomic.Bool)}
+	w := &response{conn: conn}
 
 	limit := srv.MaxTCPQueries
 	if limit == 0 {
@@ -341,7 +340,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	for q := 0; q < limit || limit == -1; q++ {
 		conn.SetReadDeadline(time.Now().Add(readtimeout))
 
-		r := &Msg{Data: srv.MsgPool.Get()} // not all TCP conns are because of TC, so this may help too
+		r := &Msg{Data: srv.MsgPool.Get()}
 		if _, err := r.ReadFrom(conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
 				break
@@ -357,7 +356,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		}()
 
 		if w.hijacked.Load() {
-			limit = -1 // also disregard any limits
+			limit = -1 // when hijacked disregard any limits
 		}
 		// The first read uses the read timeout, the rest use the idle timeout.
 		readtimeout = srv.IdleTimeout
