@@ -167,3 +167,15 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 	}
 	return global, nil
 }
+
+// When a server is started on the wildcard port, this method can be used to get the actual address and
+// listening port.
+func (s *Server) Addr() string {
+	if x := s.servers[0].Listener; x != nil {
+		return x.Addr().String()
+	}
+	if x := s.servers[0].PacketConn; x != nil {
+		return x.LocalAddr().String()
+	}
+	return ""
+}
