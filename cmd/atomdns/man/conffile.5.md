@@ -4,7 +4,7 @@ _conffile_ - configuration file for atomdns
 
 ## Description
 
-A _conffile_ specifies the internal servers sndns should run and what handlers each of these
+A _conffile_ specifies the internal servers atomdns should run and what handlers each of these
 should chain. The syntax is as follows:
 
 ```txt
@@ -32,11 +32,12 @@ Comments may be started anywhere on a line.
 Environment variables are supported and either the Unix or Windows form may be used: `{$ENV_VAR_1}`
 or `{%ENV_VAR_2%}`.
 
-You can use the `import` "handler" (See sndns-import(7)) to include parts of other files.
+You can use the `import` "handler" (See atomdns-import(7)) to include parts of other files.
 
 ## Import
 
-You can use the `import` "handler" to include parts of other files, see sndns-import(7).
+You can use the `import` "handler" to include parts of other files, see atomdns-import(7). To prevent infinite
+recursion a maximum of a 1000 imports are allowed.
 
 ## Snippets
 
@@ -56,11 +57,11 @@ example.org {
 ## Examples
 
 The **ZONE** is root zone `.`, the **handler** is _chaos_. The _chaos_ plugin takes an (optional) argument:
-`sndns-001`. This text is returned on a CH class query: `dig CH TXT version.bind @localhost`.
+`atomdns-001`. This text is returned on a CH class query: `dig CH TXT version.bind @localhost`.
 
 ```conffile
 . {
-   chaos sndns-001
+   chaos atomdns-001
 }
 ```
 

@@ -4,6 +4,7 @@ package dnsserver
 
 // Handlers is a slices of hanlder names.
 var Handlers = []string{
+	"acl",
 	"any",
 	"as112",
 	"chaos",
@@ -15,4 +16,5 @@ var Handlers = []string{
 	"refuse",
 	"sign",
 	"unpack",
+	"whoami",
 }

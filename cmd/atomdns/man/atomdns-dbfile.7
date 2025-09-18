@@ -65,11 +65,12 @@ dbfile FILE {
 
 .IP \(bu 4
 \fB\fCtransfer\fR details how zone transfers are handled, \fB\fCfrom\fR deals with incoming AXFR from \fBIP\fP, and \fB\fCto\fR
-deals with outgoing ones.
+deals with outgoing ones. Without \fB\fCtransfer\fR all transfers are prohibited.
 
 .RS
 .IP \(en 4
-\fB\fCfrom\fR allows for multiple upstream \fBIP\fPs to be specified, they will be tried in that order.
+\fB\fCfrom\fR allows for multiple upstream \fBIP\fPs to be specified, they will be tried in that order. Notifies
+from those servers will be matched against \fBIP\fPs.
 .IP \(en 4
 The \fB\fCkey\fR specification is for TSIG signed transfers. The \fBSECRET\fP must be base64 encoded.
 .IP \(en 4
@@ -84,6 +85,9 @@ IPv4 address will use a IPv4 source and vice versa.
 
 .RE
 
+
+.PP
+Note that a bare \fB\fCtransfer\fR is enough to allow for outgoing transfers.
 
 .SH "EXAMPLES"
 .PP

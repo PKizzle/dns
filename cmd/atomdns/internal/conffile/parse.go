@@ -50,6 +50,7 @@ type parser struct {
 	block           ServerBlock // current server block being parsed
 	eof             bool        // if we encounter a valid EOF in a hard place
 	definedSnippets map[string][]Token
+	expansions      int // max number of expansions, either snippits or files
 }
 
 func (p *parser) parseAll() ([]ServerBlock, error) {
@@ -249,8 +250,10 @@ func (p *parser) doImport() error {
 
 	// first check snippets. That is a simple, non-recursive replacement
 	if p.definedSnippets != nil && p.definedSnippets[importPattern] != nil {
+		p.expansions++
 		importedTokens = p.definedSnippets[importPattern]
 	} else {
+		p.expansions++
 		// make path relative to the file of the _token_ being processed rather
 		// than current working directory (issue #867) and then use glob to get
 		// list of matching filenames
@@ -288,6 +291,9 @@ func (p *parser) doImport() error {
 			}
 			importedTokens = append(importedTokens, newTokens...)
 		}
+	}
+	if p.expansions > 1000 {
+		return p.Errf("maximum snippet import depth (%d) exceeded", 1000)
 	}
 
 	// splice the imported tokens in the place of the import statement
