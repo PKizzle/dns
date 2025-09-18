@@ -72,6 +72,7 @@ func serve(srv *dns.Server, global *global.Global) {
 	}
 }
 
+// New returns a new server that has parsed the config in and r and applied the options.
 func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 	s := &Server{quiet: options.Quiet, addr: options.Addr, mux: dns.NewServeMux()}
 
