@@ -15,27 +15,13 @@ import (
 	"strings"
 	"syscall"
 
-	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 )
 
 //go:generate go run man_generate.go
 
-const Version = "003"
-
-func serve(srv *dns.Server, global *global.Global) {
-	if err := global.Startup(); err != nil {
-		slog.Error("Failed to run startup: " + err.Error())
-		os.Exit(1)
-	}
-
-	if err := srv.ListenAndServe(); err != nil {
-		slog.Error("Failed to start: " + err.Error())
-		os.Exit(1)
-	}
-}
+const Version = "004"
 
 func main() {
 	var (
@@ -122,5 +108,5 @@ func banner() string {
   High performance and flexible DNS server
   https://atomdns.miek.nl
 __________________________________\o/_______`
-	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping for formatting in the const
+	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping the formatting in the const
 }
