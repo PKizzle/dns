@@ -1,23 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
 	"sort"
 	"strings"
-	"sync"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/atom"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 )
 
 //go:generate go run man_generate.go
@@ -41,17 +42,21 @@ func main() {
 		flagProfile bool
 		flagHandler bool
 		flagVersion bool
+		flagQuiet   bool
 		flagConf    string
 		flagPort    string
 	)
 	flag.BoolVar(&flagProfile, "cpuprofile", false, "write cpu profile to cpu.out")
-	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
-	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
 	flag.BoolVar(&flagHandler, "handler", false, "who sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
+
 	flag.StringVar(&flagPort, "port", "53", "default port")
 	flag.StringVar(&flagPort, "p", "53", "default port")
+	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
+	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
+	flag.BoolVar(&flagQuiet, "quiet", false, "mute startup notifications")
+	flag.BoolVar(&flagQuiet, "q", false, "mute startup notifications")
 
 	flag.Parse()
 	if flagVersion {
@@ -77,64 +82,45 @@ func main() {
 		return
 	}
 
-	mux := dns.NewServeMux()
+	options := atom.ServerOption{
+		Quiet:   flagQuiet,
+		Addr:    net.JoinHostPort("::", flagPort),
+		Servers: runtime.NumCPU() * 3,
+	}
 
-	global, err := parse(mux, flagConf)
+	confdata, err := os.ReadFile(flagConf)
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+	s, err := atom.New(flagConf, bytes.NewReader(confdata), options)
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
 
-	srvs := make([]*dns.Server, runtime.NumCPU()*3*2) // *2=udp/tcp
-	for j := range srvs {
-		net := "tcp"
-		if j < len(srvs)/2 {
-			net = "udp"
-		}
-		srvs[j] = &dns.Server{
-			Handler: mux, Net: net, Addr: "[::]:" + flagPort,
-			ReuseAddr: true, ReusePort: true, MaxTCPQueries: -1,
-		}
-		i := uint64(0)
-		N := global.MetricsN
-		srvs[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
-			if N == 0 {
-				return
-			}
-			if i%N == 0 {
-				metrics.Dropped.Inc()
-			}
-			i++
-		}
+	if err := s.Start(); err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
-	wg := sync.WaitGroup{}
-	for _, srv := range srvs {
-		wg.Add(1)
-		go serve(srv, global)
-		wg.Done()
-	}
-	wg.Wait()
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-	fmt.Println(banner())
-	s := <-sig
-	if err := global.Shutdown(); err != nil {
-		slog.Warn("Failed to run shutdown: " + err.Error())
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+	if !flagQuiet {
+		fmt.Println(banner())
 	}
-	for _, srv := range srvs {
-		srv.Shutdown(context.TODO())
-	}
-	fmt.Printf("Signal (%s) received, stopping\n", s)
+	sig := <-sigchan
+	s.Shutdown(context.TODO())
+	slog.Info(fmt.Sprintf("Signal (%s) received, stopping", sig))
 }
 
 func banner() string {
 	const banner = `
-┏━┓  ╺┳╸  ┏━┓  ┏┳┓
-┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v%s
-╹ ╹   ╹   ┗━┛  ╹ ╹
-High performance and flexible DNS server
-https://atomdns.miek.nl
+  ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
+  ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v%s
+  ╹ ╹   ╹   ┗━┛  ╹ ╹
+  High performance and flexible DNS server
+  https://atomdns.miek.nl
 __________________________________\o/_______`
 	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping for formatting in the const
 }

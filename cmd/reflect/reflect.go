@@ -96,7 +96,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 func serve(net string) {
 	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true, MaxTCPQueries: -1}
 	if err := server.ListenAndServe(); err != nil {
-		log.Printf("Failed to setup the "+net+" server: %s\n", err.Error())
+		log.Printf("Failed to setup the "+net+" server: %s", err.Error())
 	}
 }
 
@@ -131,5 +131,5 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	s := <-sig
-	fmt.Printf("Signal (%s) received, stopping\n", s)
+	fmt.Printf("Signal (%s) received, stopping", s)
 }
