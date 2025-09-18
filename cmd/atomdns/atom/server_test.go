@@ -19,7 +19,7 @@ func TestServer(t *testing.T) {
 
 	c := new(dns.Client)
 	m := dns.NewMsg("whoami.example.org.", dns.TypeA)
-	r, _, err := c.Exchange(context.TODO(), m, "udp", s.Addr())
+	r, _, err := c.Exchange(context.TODO(), m, "udp", s.Addr()[0])
 	if err != nil {
 		t.Fatal(err)
 	}
