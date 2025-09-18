@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
+	"net"
 	"strings"
-	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
@@ -31,23 +30,36 @@ type Server struct {
 	global  *global.Global
 	servers []*dns.Server
 	mux     *dns.ServeMux
+	started chan error
 
 	quiet bool
 	addr  string
 }
 
 func (s *Server) Start() error {
-	// figure out a nice way to propagate errors, error.WaitGroup could be used, but in the happy path
-	// ListenAndServe does not return anything, so it will wait until the end of time?? Wait for single
-	// error channel, and if nothing continue?
-	wg := sync.WaitGroup{}
-	for _, srv := range s.servers {
-		wg.Add(1)
-		go serve(srv, s.global)
-		wg.Done()
+	for i := range s.servers {
+		go serve(s.started, s.servers[i], s.global)
 	}
-	wg.Wait()
+	// drain the channel, we either get a nil for success or otherwise an error _for each server_ started
+	for range s.servers {
+		err := <-s.started
+		if err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func serve(ch chan error, srv *dns.Server, global *global.Global) {
+	if err := global.Startup(); err != nil {
+		ch <- err
+		return
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		ch <- err
+		return
+	}
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
@@ -58,18 +70,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		srv.Shutdown(context.TODO())
 	}
 	return nil
-}
-
-func serve(srv *dns.Server, global *global.Global) {
-	if err := global.Startup(); err != nil {
-		slog.Error("Failed to run startup: " + err.Error())
-		os.Exit(1)
-	}
-
-	if err := srv.ListenAndServe(); err != nil {
-		slog.Error("Failed to start: " + err.Error())
-		os.Exit(1)
-	}
 }
 
 // New returns a new server that has parsed the config in and r and applied the options.
@@ -83,6 +83,7 @@ func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 	s.global = global
 
 	s.servers = make([]*dns.Server, options.Servers*2) // *2=udp/tcp
+	s.started = make(chan error, len(s.servers))
 	for j := range s.servers {
 		net := "tcp"
 		if j < len(s.servers)/2 {
@@ -104,6 +105,7 @@ func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 			}
 			i++
 		}
+		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
 	return s, nil
 }
@@ -179,4 +181,18 @@ func (s *Server) Addr() string {
 		return x.LocalAddr().String()
 	}
 	return ""
+}
+
+// NewTest returns a server suitable for testing. Use cancel to shutdown the server
+// Use [server.Addr] to get the listening address and port.
+func NewTest(config string) (*Server, func(), error) {
+	options := ServerOption{Quiet: true, Addr: net.JoinHostPort("::", "0"), Servers: 1}
+	s, err := New("test", strings.NewReader(config), options)
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := s.Start(); err != nil {
+		return nil, nil, err
+	}
+	return s, func() { s.Shutdown(context.TODO()) }, nil
 }

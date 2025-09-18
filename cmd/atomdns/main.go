@@ -116,11 +116,11 @@ func main() {
 
 func banner() string {
 	const banner = `
-┏━┓  ╺┳╸  ┏━┓  ┏┳┓
-┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v%s
-╹ ╹   ╹   ┗━┛  ╹ ╹
-High performance and flexible DNS server
-https://atomdns.miek.nl
+  ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
+  ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v%s
+  ╹ ╹   ╹   ┗━┛  ╹ ╹
+  High performance and flexible DNS server
+  https://atomdns.miek.nl
 __________________________________\o/_______`
 	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping for formatting in the const
 }

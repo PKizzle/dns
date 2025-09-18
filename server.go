@@ -195,9 +195,9 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		u := l.(*net.UDPConn)
-		if e := setUDPSocketOptions(u); e != nil {
+		if err := setUDPSocketOptions(u); err != nil {
 			u.Close()
-			return e
+			return err
 		}
 		srv.PacketConn = l
 		srv.listenUDP(u)
