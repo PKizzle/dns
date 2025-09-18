@@ -13,7 +13,6 @@ import (
 
 const Conffile = `
 whoami.example.org {
-	metrics
 	any
     whoami
 }

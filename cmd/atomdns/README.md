@@ -11,22 +11,17 @@ Currently atomdns is able to:
 
 - Serve zone data from a file; with DNSSEC support (_dbfile_), plus:
   - Zone tranfers and notifies.
-  - DNSSEC signing.
+  - DNSSEC signing (_sign_).
 - Provide query logging (_log_).
 - Access control for queryes (_acl_).
 - Provide metrics (by using Prometheus) (_metrics_).
 - ... and more.
-- Load balancing of responses (_loadbalance_). [TODO]
 - Serve as a router to router queries to some other (recursive) nameserver (_route_). [TODO]
 
 ## Compilation from Source
 
 To compile atomdns, we assume you have a working Go setup. See various tutorials if you don’t have
-that already configured.
-
-First, make sure your golang version is 1.21 or higher as `go mod` support and other api is needed.
-See [here](https://github.com/golang/go/wiki/Modules) for `go mod` details.
-Then, check out the project and run `make` to compile the binary:
+that already configured. We follow upstream Go closely and use new language features when they come available.
 
 ```
 $ git clone https://codeberg.org/miekg/dns
@@ -47,3 +42,5 @@ on port `53` and enables `whoami` handler is:
     whoami
 }
 ```
+
+Then start `atomdns -p 53 -c Conffile`.
