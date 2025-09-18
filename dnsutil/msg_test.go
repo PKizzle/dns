@@ -11,6 +11,7 @@ func TestStringToMsg(t *testing.T) {
 	}{
 		{
 			in: `
+;; QUERY, rcode: NOERROR, id: 49123, flags: qr rd ra
 ;; QUESTION: 1, PSEUDO: 0, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0, DATA SIZE: 0
 
 ;; QUESTION SECTION:

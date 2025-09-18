@@ -88,3 +88,8 @@ func StringToMsg(s string) (*dns.Msg, error) {
 	}
 	return m, nil
 }
+
+func stringToHeader(line string, m *dns.Msg) {
+	// parse a ';; QUERY, rcode: NOERROR, id: 49123, flags: qr rd ra' like line
+	// if we so EDNS0 stuff a opt RR is added
+}
