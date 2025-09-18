@@ -1,0 +1,15 @@
+;; QUERY, rcode: NOERROR, id: 49123, flags: qr rd ra
+;; EDNS, version: 0, udp: 512
+
+;; QUESTION SECTION:
+miek.nl.                IN      MX
+
+;; PSEUDO SECTION:
+.               CLASS0  NSID    6770646e732d677271: "gpdns-grq"
+
+;; ANSWER SECTION:
+miek.nl.        11381   IN      MX      10 aspmx2.googlemail.com.
+miek.nl.        11381   IN      MX      10 aspmx3.googlemail.com.
+miek.nl.        11381   IN      MX      5 alt1.aspmx.l.google.com.
+miek.nl.        11381   IN      MX      5 alt2.aspmx.l.google.com.
+miek.nl.        11381   IN      MX      1 aspmx.l.google.com.
