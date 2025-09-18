@@ -7,7 +7,7 @@
 
 .SH "DESCRIPTION"
 .PP
-A \fIconffile\fP specifies the internal servers sndns should run and what handlers each of these
+A \fIconffile\fP specifies the internal servers atomdns should run and what handlers each of these
 should chain. The syntax is as follows:
 
 .PP
@@ -47,11 +47,12 @@ Environment variables are supported and either the Unix or Windows form may be u
 or \fB\fC{%ENV_VAR_2%}\fR.
 
 .PP
-You can use the \fB\fCimport\fR "handler" (See sndns\-import(7)) to include parts of other files.
+You can use the \fB\fCimport\fR "handler" (See atomdns\-import(7)) to include parts of other files.
 
 .SH "IMPORT"
 .PP
-You can use the \fB\fCimport\fR "handler" to include parts of other files, see sndns\-import(7).
+You can use the \fB\fCimport\fR "handler" to include parts of other files, see atomdns\-import(7). To prevent infinite
+recursion a maximum of a 1000 imports are allowed.
 
 .SH "SNIPPETS"
 .PP
@@ -76,14 +77,14 @@ example.org {
 .SH "EXAMPLES"
 .PP
 The \fBZONE\fP is root zone \fB\fC.\fR, the \fBhandler\fP is \fIchaos\fP. The \fIchaos\fP plugin takes an (optional) argument:
-\fB\fCsndns-001\fR. This text is returned on a CH class query: \fB\fCdig CH TXT version.bind @localhost\fR.
+\fB\fCatomdns-001\fR. This text is returned on a CH class query: \fB\fCdig CH TXT version.bind @localhost\fR.
 
 .PP
 .RS
 
 .nf
 \&. {
-   chaos sndns\-001
+   chaos atomdns\-001
 }
 
 .fi

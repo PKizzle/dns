@@ -172,19 +172,23 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 }
 
 // When a server is started on the wildcard port, this method can be used to get the actual address and
-// listening port.
-func (s *Server) Addr() string {
-	if x := s.servers[0].Listener; x != nil {
-		return x.Addr().String()
+// listening port. Note that with a wildcard port the servers will all run on a different port. For all
+// returned address the first half are the UDP listening port, the other half is TCP.
+func (s *Server) Addr() []string {
+	addr := make([]string, len(s.servers))
+	for i, srv := range s.servers {
+		if x := srv.Listener; x != nil {
+			addr[i] = x.Addr().String()
+		}
+		if x := srv.PacketConn; x != nil {
+			addr[i] = x.LocalAddr().String()
+		}
 	}
-	if x := s.servers[0].PacketConn; x != nil {
-		return x.LocalAddr().String()
-	}
-	return ""
+	return addr
 }
 
 // NewTest returns a server suitable for testing. Use cancel to shutdown the server
-// Use [server.Addr] to get the listening address and port.
+// Use [server.Addr] to get the listening addresses. NewTest starts 2 servers, one on UDP and another on TCP.
 func NewTest(config string) (*Server, func(), error) {
 	options := ServerOption{Quiet: true, Addr: net.JoinHostPort("::", "0"), Servers: 1}
 	s, err := New("test", strings.NewReader(config), options)

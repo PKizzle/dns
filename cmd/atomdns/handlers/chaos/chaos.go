@@ -12,8 +12,8 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Chaos allows sndns to reply to CH TXT queries and return author or version information.
-// If the name starts with authors. the authors are returned if with version. the version is returned.
+// Chaos allows atomdns to reply to CH TXT queries and return author or version information.
+// If the name starts with "authors." the authors are returned if with "version." the version is returned.
 type Chaos struct {
 	Version string
 	Authors []string

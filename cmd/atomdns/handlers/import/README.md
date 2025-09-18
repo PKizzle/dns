@@ -12,6 +12,8 @@ reference predefined snippets. Both can help to avoid some duplication.
 This is a unique handler in that _import_ can appear outside of a server block. In other words, it
 can appear at the top of a Conffile where an address would normally be.
 
+You can have a maximum of 1000 imports in the configuration, this is to prevent cycles.
+
 ## Syntax
 
 ```

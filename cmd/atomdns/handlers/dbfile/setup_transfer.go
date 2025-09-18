@@ -11,6 +11,7 @@ import (
 
 // Setup transfer handles the transfer options.
 func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) error {
+	d.To, d.From = &Transfer{}, &Transfer{}
 	for co.NextBlock(1) {
 		switch co.Val() {
 		case "}":
