@@ -24,11 +24,8 @@ import (
 // Parse parses the input just enough to group tokens, in
 // order, by server block. No further parsing is performed.
 // Server blocks are returned in the order in which they appear.
-// Directives that do not appear in validDirectives will cause
-// an error. If you do not want to check for valid directives,
-// pass in nil instead.
-func Parse(filename string, input io.Reader, validDirectives []string) ([]ServerBlock, error) {
-	p := parser{Dispenser: newDispenser(filename, input), validDirectives: validDirectives}
+func Parse(filename string, input io.Reader) ([]ServerBlock, error) {
+	p := parser{Dispenser: newDispenser(filename, input)}
 	return p.parseAll()
 }
 
@@ -51,7 +48,6 @@ func allTokens(input io.Reader) ([]Token, error) {
 type parser struct {
 	Dispenser
 	block           ServerBlock // current server block being parsed
-	validDirectives []string    // a directive must be valid or it's an error
 	eof             bool        // if we encounter a valid EOF in a hard place
 	definedSnippets map[string][]Token
 }
@@ -345,11 +341,6 @@ func (p *parser) directive() error {
 	dir := replaceEnvVars(p.Val())
 	nesting := 0
 
-	// TODO: More helpful error message ("did you mean..." or "maybe you need to install its server type")
-	if !p.validDirective(dir) {
-		return p.Errf("unknown directive '%s'", dir)
-	}
-
 	// The directive itself is appended as a relevant token
 	p.block.Tokens[dir] = append(p.block.Tokens[dir], p.tokens[p.cursor])
 	p.block.Directives = append(p.block.Directives, dir)
@@ -401,19 +392,6 @@ func (p *parser) closeCurlyBrace() error {
 		return p.SyntaxErr("}")
 	}
 	return nil
-}
-
-// validDirective returns true if dir is in p.validDirectives.
-func (p *parser) validDirective(dir string) bool {
-	if p.validDirectives == nil {
-		return true
-	}
-	for _, d := range p.validDirectives {
-		if d == dir {
-			return true
-		}
-	}
-	return false
 }
 
 // replaceEnvVars replaces environment variables that appear in the token
