@@ -43,4 +43,4 @@ on port `53` and enables `whoami` handler is:
 }
 ```
 
-Then start `atomdns -p 53 -c Conffile`.
+Then start `atomdns -p 1053 -c Conffile`.
