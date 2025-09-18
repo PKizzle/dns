@@ -56,7 +56,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				return
 			}
 			if err := d.TransferOut(ctx, w, r); err != nil {
-				log.Debug("Error while transfering out")
+				log.Debug("Error while transfering out: " + err.Error())
 			}
 			return
 		}
