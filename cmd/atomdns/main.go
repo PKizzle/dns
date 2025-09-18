@@ -84,7 +84,7 @@ func main() {
 
 	options := atom.ServerOption{
 		Quiet:   flagQuiet,
-		Addr:    net.JoinHostPort("[::]", flagPort),
+		Addr:    net.JoinHostPort("::", flagPort),
 		Servers: runtime.NumCPU() * 3,
 	}
 

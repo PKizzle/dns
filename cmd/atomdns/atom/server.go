@@ -24,8 +24,6 @@ type ServerOption struct {
 	Quiet         bool   // show no startup information
 	Addr          string // address to run on
 	Servers       int    // run this many servers
-	ReuseAddr     bool   // allow reuse address
-	ReusePort     bool   // allow reuse port
 	MaxTCPQueries int    // when to cut a tcp connection
 }
 
@@ -76,10 +74,12 @@ func serve(srv *dns.Server, global *global.Global) {
 
 func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 	s := &Server{quiet: options.Quiet, addr: options.Addr, mux: dns.NewServeMux()}
+
 	global, err := s.parse(conf, r)
 	if err != nil {
 		return nil, err
 	}
+	s.global = global
 
 	s.servers = make([]*dns.Server, options.Servers*2) // *2=udp/tcp
 	for j := range s.servers {
@@ -89,7 +89,7 @@ func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 		}
 		s.servers[j] = &dns.Server{
 			Handler: s.mux, Net: net, Addr: options.Addr,
-			ReuseAddr: options.ReuseAddr, ReusePort: options.ReusePort,
+			ReuseAddr: true, ReusePort: true,
 			MaxTCPQueries: options.MaxTCPQueries,
 		}
 		i := uint64(0)
