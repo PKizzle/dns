@@ -15,7 +15,6 @@ import (
 func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 	d.Zones = map[string]*zone.Zone{}
 	d.ctx, d.cancel = context.WithCancel(context.Background())
-	d.To, d.From = &Transfer{}, &Transfer{}
 
 	if co.Next() {
 		args := co.RemainingArgs()

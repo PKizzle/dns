@@ -45,9 +45,18 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return // ignore request
 		}
 		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
-			err := d.TransferOut(ctx, w, r)
-			if err != nil {
-				// ...
+			if d.To == nil {
+				m := new(dns.Msg)
+				dnsutil.SetReply(m, r)
+				m.Rcode = dns.RcodeRefused
+				m.Data = r.Data
+
+				m.Pack()
+				io.Copy(w, m)
+				return
+			}
+			if err := d.TransferOut(ctx, w, r); err != nil {
+				log.Debug("Error while transfering out")
 			}
 			return
 		}

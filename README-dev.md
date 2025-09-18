@@ -38,6 +38,9 @@ If you have a bunch of values that certain types can take the are named: `ValueT
 For tests name them after the sub-system and the something more specific. This makes it easy to just run the
 tests for that sub-system. `TestZoneParserXXX`, `TestMsgXXX`, etc.
 
+Most tests are table driven with (optional) subtests, the main tests are usually put in a struct called
+`testcases` and while ranging over them at test is named `tc`.
+
 ### Go generate
 
 A lot of things are generated, so when adding an RR run a `go generate ./...`, this might fail on zcopy.go in

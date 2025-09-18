@@ -47,9 +47,10 @@ dbfile FILE {
 ```
 
 - `transfer` details how zone transfers are handled, `from` deals with incoming AXFR from **IP**, and `to`
-  deals with outgoing ones.
+  deals with outgoing ones. Without `transfer` all transfers are prohibited.
 
-  - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order.
+  - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. Notifies
+    from those servers will be matched against **IP**s.
   - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
     If there are no **IP**s specfied the AXFR is open to the entire internet.
@@ -58,6 +59,8 @@ dbfile FILE {
     set the source(s) address when sending the notifies. The TSIG key specification is identical to that of `from`.
     For **IP** you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
     IPv4 address will use a IPv4 source and vice versa.
+
+Note that a bare `transfer` is enough to allow for outgoing transfers.
 
 ## Examples
 
