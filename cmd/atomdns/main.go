@@ -106,7 +106,9 @@ func main() {
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	fmt.Println(banner())
+	if !flagQuiet {
+		fmt.Println(banner())
+	}
 	sig := <-sigchan
 	s.Shutdown(context.TODO())
 	slog.Info(fmt.Sprintf("Signal (%s) received, stopping", sig))
