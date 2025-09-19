@@ -2,21 +2,23 @@
 
 package handlers
 
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/acl"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/any"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/as112"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/chaos"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/cookie"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
-import "codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
+import (
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/acl"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/any"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/as112"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/chaos"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/cookie"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
+)
 
 // StringToHandler is a map of strings to a handler creation function.
 var StringToHandler = map[string]func() Handler{
