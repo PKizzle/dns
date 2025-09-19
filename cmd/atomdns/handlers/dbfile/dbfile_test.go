@@ -2,13 +2,14 @@ package dbfile_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
 )
 
-func TestDbfileTransfer(t *testing.T) {
+func TestDbfileTransferOut(t *testing.T) {
 	testcases := []struct {
 		name    string
 		input   string
@@ -81,4 +82,37 @@ func TestDbfileTransfer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDbfileTransferIn(t *testing.T) {
+	// This runs 2 server where one server transfers out, and the other one transfers in. The test is written
+	// to test the latter.
+	config := `example.org {
+				dbfile zone/testdata/db.example.org {
+					transfer
+			    }
+			}`
+
+	primary, cancel1, err := atom.NewTest(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel1()
+	addr := primary.Addr()
+	config = fmt.Sprintf(`example.org {
+				dbfile db.example.org {
+					transfer {
+						from %s
+					}
+				}
+			}`, addr[1])
+	secondary, cancel2, err := atom.NewTest(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel2()
+	fmt.Printf("%v\n", primary.Addr())
+	fmt.Printf("%v\n", secondary.Addr())
+	// wait for zone file to exist
+	println(config)
 }

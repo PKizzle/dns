@@ -36,11 +36,13 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			}
 		}
 	}
+	// TODO(miek): error when more then 1 and transfer from is active
 	for _, z := range co.Keys() {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
 		log.Info("Startup: reload: " + filepath.Base(d.Path))
+		d.RLock()
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
@@ -51,10 +53,35 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 				return co.Err(err.Error())
 			}
 		}
+		d.RUnlock()
 		return d.Reload()
+	})
+	co.OnStartup(func() error {
+		if len(d.From.IPs) == 0 {
+			return nil
+		}
+		d.RLock()
+		for _, z := range d.Zones {
+			log.Info("Startup: retransfer: " + z.Origin + "in " + filepath.Base(d.Path))
+			err := d.TransferIn(z.Origin)
+			if err != nil {
+				log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z.Origin, d.Path, err))
+			}
+			break
+		}
+		d.RUnlock()
+		return d.Retransfer()
 	})
 	co.OnShutdown(func() error {
 		log.Info("Shutdown: reload")
+		d.cancel()
+		return nil
+	})
+	co.OnShutdown(func() error {
+		if len(d.From.IPs) == 0 {
+			return nil
+		}
+		log.Info("Shutdown: retransfer")
 		d.cancel()
 		return nil
 	})

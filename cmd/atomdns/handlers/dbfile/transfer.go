@@ -2,7 +2,7 @@ package dbfile
 
 import (
 	"context"
-	"net"
+	"fmt"
 	"sync"
 
 	"codeberg.org/miekg/dns"
@@ -39,11 +39,13 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	return nil
 }
 
-func (d *Dbfile) TransferIn(ctx context.Context) error {
+func (d *Dbfile) TransferIn(origin string) error {
+	// save into temp file and then move this file over the dbfile path.
 	c := dns.NewClient()
-	m := dns.NewMsg(dns.Zone(ctx), dns.TypeAXFR)
+	m := dns.NewMsg(origin, dns.TypeAXFR)
+	// compare SOA
 	for _, ip := range d.From.IPs {
-		env, err := c.TransferIn(context.TODO(), m, "tcp", net.JoinHostPort(ip, "53"))
+		env, err := c.TransferIn(context.TODO(), m, "tcp", ip)
 		if err != nil {
 			continue
 		}
@@ -51,6 +53,7 @@ func (d *Dbfile) TransferIn(ctx context.Context) error {
 			if e.Error != nil {
 				// ...
 			}
+			fmt.Printf("%v\n", e.Answer)
 			// e.Answer kan be inserted into the a new zone
 		}
 

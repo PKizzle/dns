@@ -36,7 +36,7 @@ func (d *Dbfile) Reload() error {
 					fallthrough
 				case event.Has(fsnotify.Rename):
 
-					// check which zone needs reloading
+					// check which zone needs reloading. Need RLOCK!
 					for _, z := range d.Zones {
 						if z.Path == event.Name {
 							z1 := zone.New(z.Origin, event.Name)
