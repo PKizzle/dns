@@ -1,9 +1,11 @@
 package template
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"text/template"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -34,10 +36,18 @@ func (t *Template) Setup(co *dnsserver.Controller) (err error) {
 				t.Path = filepath.Join(co.Global.Root, t.Path)
 			}
 		}
-		// test execute the template on startup as do the wacthing
 	}
 	if t.Path == "" {
 		return fmt.Errorf("no template path")
 	}
+	co.OnStartup(func() error {
+		log.Info("Startup: template: " + filepath.Base(t.Path))
+		tmpl, err := template.ParseFiles(t.Path)
+		if err != nil {
+			return err
+		}
+		buf := &bytes.Buffer{}
+		return tmpl.Execute(buf, &Data{})
+	})
 	return nil
 }

@@ -55,13 +55,11 @@ Each template gets the following data (see the godoc of Data):
 
 - `.Zone` the matched zone string (e.g. `example.org.`).
 - `.ID` the query ID.
-- `.Question` the matched question RR, nil if there is no question section.
-- `.Name` the query name, as a string (canonicalized).
+- `.Name` the query name.
 - `.Class` the query class.
-- `.Type` as a string, the RR type requested (e.g. `PTR`).
+- `.Type` the query type.
+- `.Question` the matched question RR.
 - `.Msg` the complete message.
-- `.Match` an array of all matches. `index .Match 0` refers to the whole match.
-- `.Group` a map of the named capture groups.
 - `.ResponseWriter` that holds all the data that can be extracted from the response writer.
 
 ### Full template
