@@ -66,7 +66,7 @@ Each template gets the following data (see the godoc of Data):
 
 ### Resolve to NXDOMAIN
 
-```corefile
+```conffile
 example.org. {
     template .* {
       nxdomain.go.tmpl
@@ -94,7 +94,7 @@ domains.
 
 ### Resolve A/PTR for .example
 
-```corefile
+```conffile
 . {
     template IN A example {
       match ^ip-10-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$

@@ -8,6 +8,7 @@ import "codeberg.org/miekg/dns/cmd/atomdns/handlers/as112"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/chaos"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/cookie"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
+import "codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
@@ -25,6 +26,7 @@ var StringToHandler = map[string]func() Handler{
 	"chaos":    func() Handler { return new(chaos.Chaos) },
 	"cookie":   func() Handler { return new(cookie.Cookie) },
 	"dbfile":   func() Handler { return new(dbfile.Dbfile) },
+	"drunk":    func() Handler { return new(drunk.Drunk) },
 	"log":      func() Handler { return new(log.Log) },
 	"metrics":  func() Handler { return new(metrics.Metrics) },
 	"nsid":     func() Handler { return new(nsid.Nsid) },
