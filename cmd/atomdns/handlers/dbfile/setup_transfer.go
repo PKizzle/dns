@@ -2,7 +2,6 @@ package dbfile
 
 import (
 	"fmt"
-	"net"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -10,21 +9,20 @@ import (
 )
 
 // Setup transfer handles the transfer options.
-func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) error {
+func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) (err error) {
 	d.To, d.From = &Transfer{}, &Transfer{}
 	for co.NextBlock(1) {
 		switch co.Val() {
 		case "}":
 			break
 		case "from":
-			args := co.RemainingArgs()
-			if err := parseIPs(args); err != nil {
+			d.From.IPs, err = co.RemainingAddrs()
+			if err != nil {
 				return co.PropErr(err)
 			}
-			if len(args) == 0 {
-				return co.ArgErr()
+			if len(d.From.IPs) == 0 {
+				co.ArgErr()
 			}
-			d.From.IPs = args
 
 			for co.NextBlock(2) {
 				switch co.Val() {
@@ -36,11 +34,7 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) error {
 			}
 
 		case "to":
-			args := co.RemainingArgs()
-			if err := parseIPs(args); err != nil {
-				return co.PropErr(err)
-			}
-			d.To.IPs = args
+			d.To.IPs, err = co.RemainingAddrs()
 
 			for co.NextBlock(2) {
 				switch co.Val() {
@@ -49,23 +43,21 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) error {
 						return err
 					}
 				case "notify":
-					args := co.RemainingArgs()
-					if len(args) == 0 {
-						return co.ArgErr()
-					}
-					if err := parseIPs(args); err != nil {
+					d.To.Notifies, err = co.RemainingAddrs()
+					if err != nil {
 						return co.PropErr(err)
 					}
-					d.To.Notifies = args
+					if len(d.To.Notifies) == 0 {
+						return co.ArgErr()
+					}
 				case "source":
-					args = co.RemainingArgs()
-					if len(args) == 0 {
-						return co.ArgErr()
-					}
-					if err := parseIPs(args); err != nil {
+					d.To.Sources, err = co.RemainingAddrs()
+					if err != nil {
 						return co.PropErr(err)
 					}
-					d.To.Sources = args
+					if len(d.To.Sources) == 0 {
+						return co.ArgErr()
+					}
 				}
 			}
 			if len(d.To.IPs) == 0 && len(d.To.Notifies) == 0 {
@@ -74,15 +66,6 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) error {
 
 		default:
 			return co.SyntaxErr("expected 'to' or 'from', got: " + co.Val())
-		}
-	}
-	return nil
-}
-
-func parseIPs(args []string) error {
-	for _, arg := range args {
-		if ip := net.ParseIP(arg); ip == nil {
-			return fmt.Errorf("failed to parse IP %q", arg)
 		}
 	}
 	return nil

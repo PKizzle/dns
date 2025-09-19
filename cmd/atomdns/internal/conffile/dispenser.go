@@ -330,22 +330,34 @@ func (d *Dispenser) isNextOnNewLine() bool {
 
 // Addr parses the host and port in the current token, i.e. 127.0.0.0:53 is parsed
 // and returned, same for IPv6 addresses [2004:32]:53. If there is no port the default
-// port will be added (53). If the parsing fails the empty string is returned.
-func (d *Dispenser) Addr() string {
-	s := d.Val()
+// port will be added (53).
+func (d *Dispenser) Addr() (string, error) { return addr(d.Val()) }
+
+// RemainingAddrs calls RemainingArgs and parses search string with like Addr()
+func (d *Dispenser) RemainingAddrs() ([]string, error) {
+	args := d.RemainingArgs()
+	for _, arg := range args {
+		if _, err := addr(arg); err != nil {
+			return nil, err
+		}
+	}
+	return args, nil
+}
+
+func addr(s string) (string, error) {
 	addr, port, err := net.SplitHostPort(s)
 	if port == "" {
 		port = "53"
 	}
 	if err != nil {
 		if net.ParseIP(s) == nil {
-			return ""
+			return "", fmt.Errorf("failed to parse %q as IP", s)
 		}
-		return net.JoinHostPort(s, port)
+		return net.JoinHostPort(s, port), nil
 	}
 
 	if net.ParseIP(addr) == nil {
-		return ""
+		return "", fmt.Errorf("failed to parse %q as IP", addr)
 	}
-	return net.JoinHostPort(addr, port)
+	return net.JoinHostPort(addr, port), nil
 }
