@@ -45,6 +45,7 @@ func StringToMsg(s string) (*dns.Msg, error) {
 			continue
 		}
 
+		// TODO(miek): dynamic update?
 		if strings.HasPrefix(line, ";; QUESTION SECTION:") {
 			state = stateQuestion
 			continue
@@ -184,9 +185,4 @@ func StringToMsg(s string) (*dns.Msg, error) {
 		return nil, err
 	}
 	return m, nil
-}
-
-func stringToHeader(line string, m *dns.Msg) {
-	// parse a ';; QUERY, rcode: NOERROR, id: 49123, flags: qr rd ra' like line
-	// if we so EDNS0 stuff a opt RR is added
 }
