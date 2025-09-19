@@ -62,11 +62,9 @@ Each template gets the following data (see the godoc of Data):
 - `.Msg` the complete message.
 - `.ResponseWriter` that holds all the data that can be extracted from the response writer.
 
-### Full template
-
 ## Examples
 
-### Resolve everything to NXDOMAIN
+### Resolve to NXDOMAIN
 
 ```corefile
 example.org. {
@@ -88,142 +86,16 @@ where `nxdomain.go.tmpl` contains:
 {{.Zone}}   IN SOA ns.icann.org. noc.dns.icann.org. 2025082229 7200 3600 1209600 3600
 ```
 
-1. This template uses the default zone (`.` or all queries)
-2. All queries will be answered (no `fallthrough`)
-3. The answer is always NXDOMAIN
-
 ### Resolve .invalid as NXDOMAIN
 
-The `.invalid` domain is a reserved TLD (see [RFC 2606 Reserved Top Level DNS Names](https://tools.ietf.org/html/rfc2606#section-2)) to indicate invalid domains.
-
-### Block invalid search domain completions
-
-Imagine you run `example.com` with a datacenter `dc1.example.com`. The datacenter domain
-is part of the DNS search domain.
-However `something.example.com.dc1.example.com` would indicate a fully qualified
-domain name (`something.example.com`) that inadvertently has the default domain or search
-path (`dc1.example.com`) added.
-
-```corefile
-. {
-    forward . 8.8.8.8
-
-    template IN ANY example.com.dc1.example.com {
-      rcode NXDOMAIN
-      authority "{{ .Zone }} 60 IN SOA ns.example.com hostmaster.example.com (1 60 60 60 60)"
-    }
-}
-```
-
-A more verbose regex based equivalent would be
-
-```corefile
-. {
-    forward . 8.8.8.8
-
-    template IN ANY example.com {
-      match "example\.com\.(dc1\.example\.com\.)$"
-      rcode NXDOMAIN
-      authority "{{ index .Match 1 }} 60 IN SOA ns.{{ index .Match 1 }} hostmaster.{{ index .Match 1 }} (1 60 60 60 60)"
-      fallthrough
-    }
-}
-```
-
-The regex-based version can do more complex matching/templating while zone-based templating is easier to read and use.
+The `.invalid` domain is a reserved TLD (see [RFC 2606 Reserved Top Level DNS
+Names](https://tools.ietf.org/html/rfc2606#section-2)) to indicate invalid
+domains.
 
 ### Resolve A/PTR for .example
 
 ```corefile
 . {
-    forward . 8.8.8.8
-
-    # ip-a-b-c-d.example A a.b.c.d
-
-    template IN A example {
-      match (^|[.])ip-(?P<a>[0-9]*)-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$
-      answer "{{ .Name }} 60 IN A {{ .Group.a }}.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
-      fallthrough
-    }
-
-    # d.c.b.a.in-addr.arpa PTR ip-a-b-c-d.example
-
-    template IN PTR in-addr.arpa {
-      match ^(?P<d>[0-9]*)[.](?P<c>[0-9]*)[.](?P<b>[0-9]*)[.](?P<a>[0-9]*)[.]in-addr[.]arpa[.]$
-      answer "{{ .Name }} 60 IN PTR ip-{{ .Group.a }}-{{ .Group.b }}-{{ .Group.c }}-{{ .Group.d }}.example."
-    }
-}
-```
-
-An IPv4 address consists of 4 bytes, `a.b.c.d`. Named groups make it less error-prone to reverse the
-IP address in the PTR case. Try to use named groups to explain what your regex and template are doing.
-
-Note that the A record is actually a wildcard: any subdomain of the IP address will resolve to the IP address.
-
-Having templates to map certain PTR/A pairs is a common pattern.
-
-Fallthrough is needed for mixed domains where only some responses are templated.
-
-### Resolve hexadecimal ip pattern using parseInt
-
-```corefile
-. {
-    forward . 8.8.8.8
-
-    template IN A example {
-      match "^ip0a(?P<b>[a-f0-9]{2})(?P<c>[a-f0-9]{2})(?P<d>[a-f0-9]{2})[.]example[.]$"
-      answer "{{ .Name }} 60 IN A 10.{{ parseInt .Group.b 16 8 }}.{{ parseInt .Group.c 16 8 }}.{{ parseInt .Group.d 16 8 }}"
-      fallthrough
-    }
-}
-```
-
-An IPv4 address can be expressed in a more compact form using its hexadecimal encoding.
-For example `ip-10-123-123.example.` can instead be expressed as `ip0a7b7b7b.example.`
-
-### Resolve multiple ip patterns
-
-```corefile
-. {
-    forward . 8.8.8.8
-
-    template IN A example {
-      match "^ip-(?P<a>10)-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]dc[.]example[.]$"
-      match "^(?P<a>[0-9]*)[.](?P<b>[0-9]*)[.](?P<c>[0-9]*)[.](?P<d>[0-9]*)[.]ext[.]example[.]$"
-      answer "{{ .Name }} 60 IN A {{ .Group.a}}.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
-      fallthrough
-    }
-}
-```
-
-Named capture groups can be used to template one response for multiple patterns.
-
-### Resolve A and MX records for IP templates in .example
-
-```corefile
-. {
-    forward . 8.8.8.8
-
-    template IN A example {
-      match ^ip-10-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$
-      answer "{{ .Name }} 60 IN A 10.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
-      fallthrough
-    }
-    template IN MX example {
-      match ^ip-10-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$
-      answer "{{ .Name }} 60 IN MX 10 {{ .Name }}"
-      additional "{{ .Name }} 60 IN A 10.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
-      fallthrough
-    }
-}
-```
-
-### Adding authoritative nameservers to the response
-
-```corefile
-. {
-    forward . 8.8.8.8
-
     template IN A example {
       match ^ip-10-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$
       answer "{{ .Name }} 60 IN A 10.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
@@ -243,35 +115,10 @@ Named capture groups can be used to template one response for multiple patterns.
       additional "ns1.example. 60 IN A 198.51.100.8"
       fallthrough
     }
-}
-```
-
-### Fabricate a CNAME
-
-This example responds with a CNAME to `google.com` for any DNS query made exactly for `foogle.com`.
-The answer will also contain a record for `google.com` if the upstream nameserver can return a record for it of the
-requested type.
-
-```corefile
-. {
-  template IN ANY foogle.com {
-    match "^foogle\.com\.$"
-    answer "foogle.com 60 IN CNAME google.com"
-  }
-  forward . 8.8.8.8
 }
 ```
 
 ## Also see
 
-- [Go regexp](https://golang.org/pkg/regexp/) for details about the regex implementation
-- [RE2 syntax reference](https://github.com/google/re2/wiki/Syntax) for details about the regex syntax
-- [RFC 1034](https://tools.ietf.org/html/rfc1034#section-3.6.1) and [RFC 1035](https://tools.ietf.org/html/rfc1035#section-5) for the resource record format
-- [Go template](https://golang.org/pkg/text/template/) for the template language reference
-
-## Bugs
-
-CoreDNS supports [caddyfile environment variables](https://caddyserver.com/docs/caddyfile#env)
-with notion of `{$ENV_VAR}`. This parser feature will break [Go template variables](https://golang.org/pkg/text/template/#hdr-Variables) notations like`{{$variable}}`.
-The equivalent notation `{{ $variable }}` will work.
-Try to avoid Go template variables in the context of this plugin.
+[Go regexp](https://golang.org/pkg/regexp/) for details about the regex implementation and
+[Go template](https://golang.org/pkg/text/template/) for the template language reference.
