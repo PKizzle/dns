@@ -4,13 +4,12 @@ import "codeberg.org/miekg/dns"
 
 // Data is the structure that the template receives.
 type Data struct {
-	Zone     string
-	ID       uint16
-	Name     string
-	Question dns.RR
-	Class    string
-	Type     string
-	Msg      *dns.Msg
+	Zone  string
+	ID    uint16
+	Name  string
+	Class string
+	Type  string
+	Msg   *dns.Msg
 
 	ResponseWriter
 }

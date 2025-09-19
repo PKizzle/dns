@@ -49,7 +49,6 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		data.Zone = dns.Zone(ctx)
 		data.ID = r.ID
 		data.Name = r.Question[0].Header().Name
-		data.Question = r.Question[0]
 		data.Class = dns.ClassToString[r.Question[0].Header().Class]
 		data.Type = dns.TypeToString[dns.RRToType(r.Question[0])]
 		data.Msg = r
@@ -65,6 +64,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		buf := bufPool.Get().(*bytes.Buffer)
 		err = tmpl.Execute(buf, data)
 		if err != nil {
+			buf.Reset()
 			bufPool.Put(buf)
 			log.Warn(fmt.Sprintf("failed to execute template: %s", err))
 			next.ServeDNS(ctx, w, r)
@@ -72,12 +72,12 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		m, err := dnsutil.StringToMsg(buf.String())
+		buf.Reset()
 		bufPool.Put(buf)
 		if err != nil {
 			dnsutil.SetReply(m, r)
 			m.Rcode = dns.RcodeServerFailure
 		}
-
 		m.Data = r.Data
 
 		m.Pack()
