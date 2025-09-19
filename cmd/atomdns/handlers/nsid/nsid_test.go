@@ -3,7 +3,6 @@ package nsid
 import (
 	"context"
 	"encoding/hex"
-	"log/slog"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -12,8 +11,6 @@ import (
 )
 
 func TestNsid(t *testing.T) {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-
 	in := "Use the force"
 	h := &Nsid{Data: hex.EncodeToString([]byte(in))}
 
