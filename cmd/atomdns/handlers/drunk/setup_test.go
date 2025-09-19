@@ -23,7 +23,7 @@ func TestSetup(t *testing.T) {
 		}`, false, 2, 3, 0},
 		{`drunk {
 			truncate /2
-			delay 3/ 1ms
+			delay /3 1ms
 
 		}`, false, 0, 3, 2},
 		{`erraric {

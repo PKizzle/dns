@@ -10,10 +10,13 @@ import (
 )
 
 func (d *Drunk) Setup(co *dnsserver.Controller) error {
+	d.drop = 2
+	drop := false
 	for co.Next() {
 		for co.NextBlock(0) {
 			switch co.Val() {
 			case "drop":
+				drop = true
 				args := co.RemainingArgs()
 				if len(args) > 1 {
 					return co.ArgErr()
@@ -25,7 +28,6 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 				if !strings.HasPrefix(args[0], "/") {
 					return co.PropErr(fmt.Errorf("no / found"))
 				}
-
 				drop, err := strconv.ParseInt(args[0][1:], 10, 32)
 				if err != nil || drop < 0 {
 					return co.PropErr(fmt.Errorf("not a (positive) number: %q", co.Val()[1:]))
@@ -44,9 +46,13 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 					continue
 				}
 
+				if !strings.HasPrefix(args[0], "/") {
+					return co.PropErr(fmt.Errorf("no / found"))
+				}
 				delay, err := strconv.ParseInt(args[0][1:], 10, 32)
+				fmt.Printf("%v\n", args)
 				if err != nil || delay < 0 {
-					return co.PropErr(fmt.Errorf("not a (positive) number: %q", co.Val()[1:]))
+					return co.PropErr(fmt.Errorf("not a (positive) number: %q", args[0][1:]))
 				}
 				d.delay = uint64(delay)
 
@@ -76,6 +82,9 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 				return co.PropErr()
 			}
 		}
+	}
+	if (d.delay > 0 || d.truncate > 0) && !drop { // delay is set, but we've haven't seen a drop keyword, remove default drop stuff
+		d.drop = 0
 	}
 	return nil
 }
