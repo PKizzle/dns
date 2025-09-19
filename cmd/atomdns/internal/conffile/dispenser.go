@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"strings"
 )
 
@@ -325,4 +326,26 @@ func (d *Dispenser) isNextOnNewLine() bool {
 	curr := d.tokens[d.cursor]
 	next := d.tokens[d.cursor+1]
 	return isNextOnNewLine(curr, next)
+}
+
+// Addr parses the host and port in the current token, i.e. 127.0.0.0:53 is parsed
+// and returned, same for IPv6 addresses [2004:32]:53. If there is no port the default
+// port will be added (53). If the parsing fails the empty string is returned.
+func (d *Dispenser) Addr() string {
+	s := d.Val()
+	addr, port, err := net.SplitHostPort(s)
+	if port == "" {
+		port = "53"
+	}
+	if err != nil {
+		if net.ParseIP(s) == nil {
+			return ""
+		}
+		return net.JoinHostPort(s, port)
+	}
+
+	if net.ParseIP(addr) == nil {
+		return ""
+	}
+	return net.JoinHostPort(addr, port)
 }
