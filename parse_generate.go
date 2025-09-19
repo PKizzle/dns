@@ -18,6 +18,8 @@ var hdr = `
 
 package dns
 
+import "fmt"
+
 `
 
 var parseFunc = template.Must(template.New("packFunc").Parse(`
@@ -31,7 +33,7 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 //	if x, ok := rr.(Packer); ok {
 //		return x.Pack(msg, off)
 //	}
-	return &ParseError{err: "no parse defined"}
+	return &ParseError{err: fmt.Sprintf("no parse defined: %T", rr)}
 }
 
 `))

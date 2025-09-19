@@ -66,7 +66,6 @@ func normalize(rawNet string) string {
 	if idx := strings.IndexAny(rawNet, "/"); idx >= 0 {
 		return rawNet
 	}
-
 	if idx := strings.IndexAny(rawNet, ":"); idx >= 0 {
 		return rawNet + "/128"
 	}

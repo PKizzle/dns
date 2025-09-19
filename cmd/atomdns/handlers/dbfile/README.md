@@ -34,11 +34,11 @@ For extra control you can open the block and define multipe extra properties tha
 ```
 dbfile FILE {
     transfer {
-        from IP [IP]... {
+        from IP[:PORT] [IP[:PORT]]... {
             key NAME ALGORITHM SECRET
         }
-        to [IP]... {
-            notify IP [IP]...
+        to [IP[:PORT]]... {
+            notify IP[:PORT] [IP[:PORT]]...
             source IP [IP]...
             key NAME ALGORITHM SECRET
         }
