@@ -45,7 +45,7 @@ func StringToMsg(s string) (*dns.Msg, error) {
 			continue
 		}
 
-		// TODO(miek): dynamic update?
+		// TODO(miek): dynamic updates?
 		if strings.HasPrefix(line, ";; QUESTION SECTION:") {
 			state = stateQuestion
 			continue
@@ -83,6 +83,7 @@ func StringToMsg(s string) (*dns.Msg, error) {
 			if rcode == -1 || rcode == len(line[opcode+1:])-1 {
 				return nil, fmt.Errorf("bad rcode")
 			}
+
 			rcode += opcode + 3
 			id := strings.Index(line[rcode:], ", ")
 			if id == -1 || id == len(line[rcode:])-1 {
@@ -98,7 +99,7 @@ func StringToMsg(s string) (*dns.Msg, error) {
 				return nil, fmt.Errorf("bad opcode")
 			}
 
-			m.Rcode = dns.StringToRcode[line[opcode+7:rcode-2]]
+			m.Rcode = dns.StringToRcode[line[opcode+9:rcode-2]]
 
 			val, _ := strconv.Atoi(line[rcode+4 : id])
 			m.ID = uint16(val)
@@ -137,7 +138,6 @@ func StringToMsg(s string) (*dns.Msg, error) {
 			}
 
 			state = stateHeader
-			continue
 
 		case stateHeader:
 			// only here *if* we have not seen a question so this is the ;; EDNS line
@@ -153,31 +153,41 @@ func StringToMsg(s string) (*dns.Msg, error) {
 			if err != nil {
 				return nil, err
 			}
-			m.Question = append(m.Question, rr)
+			if rr != nil {
+				m.Question = append(m.Question, rr)
+			}
 		case statePseudo:
 			rr, err := dns.New(line)
 			if err != nil {
 				return nil, err
 			}
-			m.Pseudo = append(m.Pseudo, rr)
+			if rr != nil {
+				m.Pseudo = append(m.Pseudo, rr)
+			}
 		case stateAnswer:
 			rr, err := dns.New(line)
 			if err != nil {
 				return nil, err
 			}
-			m.Answer = append(m.Answer, rr)
+			if rr != nil {
+				m.Answer = append(m.Answer, rr)
+			}
 		case stateAuthority:
 			rr, err := dns.New(line)
 			if err != nil {
 				return nil, err
 			}
-			m.Ns = append(m.Ns, rr)
+			if rr != nil {
+				m.Ns = append(m.Ns, rr)
+			}
 		case stateAdditional:
 			rr, err := dns.New(line)
 			if err != nil {
 				return nil, err
 			}
-			m.Extra = append(m.Extra, rr)
+			if rr != nil {
+				m.Extra = append(m.Extra, rr)
+			}
 		}
 	}
 

@@ -37,8 +37,24 @@ miek.nl.        11381   IN      MX      10 aspmx2.googlemail.com.
 miek.nl.        11381   IN      MX      1 aspmx.l.google.com.
 `,
 		},
+		{
+			in: func() *dns.Msg {
+				m := dns.NewMsg("miek.nl.", dns.TypeMX)
+				m.ID = 49123
+				m.Response, m.RecursionDesired, m.RecursionAvailable = true, true, true
+				m.Rcode = dns.RcodeNameError
+				return m
+			},
+			exp: `
+;; QUERY, rcode: NXDOMAIN, id: 49123, flags: qr rd ra
+;; QUESTION: 1, PSEUDO: 0, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0, DATA SIZE: 0
+
+;; QUESTION SECTION:
+miek.nl.                IN      MX
+`,
+		},
 	}
-	for _, tc := range testcases {
+	for i, tc := range testcases {
 		s := tc.in().String()
 		m, err := StringToMsg(s)
 		if err != nil {
@@ -46,7 +62,7 @@ miek.nl.        11381   IN      MX      1 aspmx.l.google.com.
 		}
 		if trim(m.String()) != trim(tc.exp) {
 			t.Logf("%s\n%s", m.String(), tc.exp)
-			t.Errorf("string representations do not match")
+			t.Errorf("test %d, string representations do not match", i)
 		}
 	}
 }

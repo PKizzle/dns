@@ -13,22 +13,24 @@ import "codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
+import "codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 import "codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
 
 // StringToHandler is a map of strings to a handler creation function.
 var StringToHandler = map[string]func() Handler{
-	"acl":     func() Handler { return new(acl.Acl) },
-	"any":     func() Handler { return new(any.Any) },
-	"as112":   func() Handler { return new(as112.As112) },
-	"chaos":   func() Handler { return new(chaos.Chaos) },
-	"cookie":  func() Handler { return new(cookie.Cookie) },
-	"dbfile":  func() Handler { return new(dbfile.Dbfile) },
-	"log":     func() Handler { return new(log.Log) },
-	"metrics": func() Handler { return new(metrics.Metrics) },
-	"nsid":    func() Handler { return new(nsid.Nsid) },
-	"refuse":  func() Handler { return new(refuse.Refuse) },
-	"sign":    func() Handler { return new(sign.Sign) },
-	"unpack":  func() Handler { return new(unpack.Unpack) },
-	"whoami":  func() Handler { return new(whoami.Whoami) },
+	"acl":      func() Handler { return new(acl.Acl) },
+	"any":      func() Handler { return new(any.Any) },
+	"as112":    func() Handler { return new(as112.As112) },
+	"chaos":    func() Handler { return new(chaos.Chaos) },
+	"cookie":   func() Handler { return new(cookie.Cookie) },
+	"dbfile":   func() Handler { return new(dbfile.Dbfile) },
+	"log":      func() Handler { return new(log.Log) },
+	"metrics":  func() Handler { return new(metrics.Metrics) },
+	"nsid":     func() Handler { return new(nsid.Nsid) },
+	"refuse":   func() Handler { return new(refuse.Refuse) },
+	"sign":     func() Handler { return new(sign.Sign) },
+	"template": func() Handler { return new(template.Template) },
+	"unpack":   func() Handler { return new(unpack.Unpack) },
+	"whoami":   func() Handler { return new(whoami.Whoami) },
 }
