@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 )
 
@@ -21,6 +22,18 @@ func (d *Dbfile) Retransfer() error {
 					break
 				}
 				d.RUnlock()
+				apex := z1.Apex()
+				serial := uint32(0)
+				for _, rr := range apex.RRs {
+					if s, ok := rr.(*dns.SOA); ok {
+						serial = s.Serial
+						break
+					}
+				}
+
+				if !d.From.AvailableFrom(z1.Origin, serial) {
+					continue
+				}
 
 				err := d.TransferIn(z1.Origin)
 				if err != nil {

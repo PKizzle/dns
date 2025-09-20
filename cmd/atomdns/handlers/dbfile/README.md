@@ -49,7 +49,7 @@ dbfile FILE {
 
 - `transfer` details how zone transfers are handled, `from` deals with incoming AXFR from **IP**, and `to`
   deals with outgoing ones. Without `transfer` all transfers are prohibited. When transfer from a secondary
-  _all_ SOA timers are ignored, every 10 time minutes the upstream is check for SOA updates.
+  _all_ SOA timers are ignored, every 10 time minutes the upstream(s) is(/are) check for SOA updates.
 
   - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. Notifies
     from those servers will be matched against **IP**s.
