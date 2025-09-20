@@ -86,38 +86,6 @@ where `nxdomain.go.tmpl` contains:
 {{.Zone}}   IN SOA ns.icann.org. noc.dns.icann.org. 2025082229 7200 3600 1209600 3600
 ```
 
-### Resolve .invalid as NXDOMAIN
-
-The `.invalid` domain is a reserved TLD (see [RFC 2606 Reserved Top Level DNS
-Names](https://tools.ietf.org/html/rfc2606#section-2)) to indicate invalid
-domains.
-
-### Resolve A/PTR for .example
-
-```conffile
-. {
-    template IN A example {
-      match ^ip-10-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$
-      answer "{{ .Name }} 60 IN A 10.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
-      authority  "example. 60 IN NS ns0.example."
-      authority  "example. 60 IN NS ns1.example."
-      additional "ns0.example. 60 IN A 203.0.113.8"
-      additional "ns1.example. 60 IN A 198.51.100.8"
-      fallthrough
-    }
-    template IN MX example {
-      match ^ip-10-(?P<b>[0-9]*)-(?P<c>[0-9]*)-(?P<d>[0-9]*)[.]example[.]$
-      answer "{{ .Name }} 60 IN MX 10 {{ .Name }}"
-      additional "{{ .Name }} 60 IN A 10.{{ .Group.b }}.{{ .Group.c }}.{{ .Group.d }}"
-      authority  "example. 60 IN NS ns0.example."
-      authority  "example. 60 IN NS ns1.example."
-      additional "ns0.example. 60 IN A 203.0.113.8"
-      additional "ns1.example. 60 IN A 198.51.100.8"
-      fallthrough
-    }
-}
-```
-
 ## Also see
 
 [Go regexp](https://golang.org/pkg/regexp/) for details about the regex implementation and

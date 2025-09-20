@@ -73,10 +73,11 @@ notifies to 10.240.1.1
 
 ```conffile
 example.org {
-    file db.example.org
-    transfer {
-        to {
-            notify 10.240.1.1
+    dbfile db.example.org {
+        transfer {
+            to {
+                notify 10.240.1.1
+            }
         }
     }
 }
