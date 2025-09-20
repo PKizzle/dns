@@ -100,14 +100,14 @@ Drop all DNS queries from 192.0.2.0/24:
 
 ## Metrics
 
-If monitoring is enabled (via the \_metrics plugin) then the following metrics are exported:
+If monitoring is enabled (via the _metrics_ handler) then the following metrics are exported:
 
 - `atomdns_acl_blocked_requests_total{zone, network, family}` - counter of DNS requests being blocked.
 - `atomdns_acl_filtered_requests_total{zone, network, family}` - counter of DNS requests being filtered.
 - `atomdns_acl_allowed_requests_total{zone, network, family}` - counter of DNS requests being allowed.
 - `atomdns_acl_dropped_requests_total{zone, network, family}` - counter of DNS requests being dropped.
 
-The `zone`,`network` and `family` labels are explained in the _metrics_ plugin documentation.
+The `zone`,`network` and `family` labels are explained in the _metrics_ handler documentation.
 
 ## Bugs
 

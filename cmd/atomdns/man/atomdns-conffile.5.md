@@ -68,7 +68,7 @@ example.org {
 
 ## Examples
 
-The **ZONE** is root zone `.`, the **handler** is _chaos_. The _chaos_ plugin takes an (optional) argument:
+The **ZONE** is root zone `.`, the **handler** is _chaos_. The _chaos_ handler takes an (optional) argument:
 `atomdns-001`. This text is returned on a CH class query: `dig CH TXT version.bind @localhost`.
 
 ```conffile
