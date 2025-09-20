@@ -33,7 +33,8 @@ global section, see the configuration example below.
   With the `metrics` handler you can enable/disable metrics on a per server basis.
 - With `health` you start a local web server that exports a /health endpoint on **ADDRESS** that returns 200 OK when
   everything is OK. When **LAMEDUCK** which should be a time.Duration in string form is given, the server' shutdown will be
-  delayed for that duration. The default for \*_ADDRESS_ is `:8080`.
+  delayed for that duration. The default for \*_ADDRESS_ is `:8080`. Every 2 seconds atomdns will query itself
+  to get its health so it can export the latency metrics.
 
 ## Examples
 

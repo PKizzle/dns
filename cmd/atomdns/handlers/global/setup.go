@@ -1,6 +1,7 @@
 package global
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
@@ -48,7 +49,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Start: /metrics")
+				log.Info("Start: /metrics on " + addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -78,7 +79,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.Lameduck = delay
 			}
 			g.OnStartup(func() error {
-				log.Info("Start: /health")
+				log.Info("Start: /health on " + addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -107,6 +108,19 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return nil
 				})
 			}
+			ctx := context.Background()
+			ctx, cancel := context.WithCancel(ctx)
+			g.OnStartup(func() error {
+				log.Info("Start: health overload check")
+				go overload(ctx, addr)
+				return nil
+			})
+			g.OnShutdown(func() error {
+				log.Info("Shutdown: health overload check")
+				cancel()
+				return nil
+			})
+
 		}
 	}
 	return nil
