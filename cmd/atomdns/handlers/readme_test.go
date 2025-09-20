@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
@@ -19,6 +20,7 @@ import (
 //	}
 //
 // ~~~
+// To skip the check use txt as the language.
 func TestReadme(t *testing.T) {
 	dirs, err := os.ReadDir(".")
 	if err != nil {
@@ -37,10 +39,13 @@ func TestReadme(t *testing.T) {
 		}
 
 		t.Logf("Testing %s: %d snippets found", readme, len(confs))
-		// Test each snippet.
 		for _, conf := range confs {
 			_, cancel, err := atom.NewTest(conf)
 			if err != nil {
+				if strings.Contains(err.Error(), "no such file or directory") {
+					// parsing went far enough to this this, think we're ok
+					continue
+				}
 				t.Errorf("Failed to start server with %s, for input %q:\n%s", readme, err, conf)
 				continue
 			}

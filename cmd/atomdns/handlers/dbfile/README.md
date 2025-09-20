@@ -99,7 +99,7 @@ Or use a single zone file for multiple origins:
 
 ```conffile
 example.org example.net {
-    file example.org.signed {
+    dbfile example.org.signed {
         transfer {
             to 10.240.1.1
         }
