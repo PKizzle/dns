@@ -61,7 +61,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		return d.Reload()
 	})
 	co.OnStartup(func() error {
-		if len(d.From.IPs) == 0 {
+		if d.From == nil || len(d.From.IPs) == 0 {
 			return nil
 		}
 		d.RLock()
@@ -82,7 +82,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		return nil
 	})
 	co.OnShutdown(func() error {
-		if len(d.From.IPs) == 0 {
+		if d.From == nil || len(d.From.IPs) == 0 {
 			return nil
 		}
 		log.Info("Shutdown: retransfer")
