@@ -2,7 +2,10 @@ package dbfile
 
 import (
 	"context"
-	"net"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"codeberg.org/miekg/dns"
@@ -39,23 +42,42 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	return nil
 }
 
-func (d *Dbfile) TransferIn(ctx context.Context) error {
+func (d *Dbfile) TransferIn(origin string) error {
+	// save into temp file and then move this file over the dbfile path.
 	c := dns.NewClient()
-	m := dns.NewMsg(dns.Zone(ctx), dns.TypeAXFR)
+	m := dns.NewMsg(origin, dns.TypeAXFR)
+	// compare SOA, we do an AXFR so that's an easy test, check for record. zone.Apex().
+
+	f, err := os.CreateTemp(filepath.Dir(d.Path), "xxxxx.transferred")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+
 	for _, ip := range d.From.IPs {
-		env, err := c.TransferIn(context.TODO(), m, "tcp", net.JoinHostPort(ip, "53"))
+		env, err := c.TransferIn(context.TODO(), m, "tcp", ip)
 		if err != nil {
 			continue
 		}
+		soa := 0
 		for e := range env {
 			if e.Error != nil {
-				// ...
+				log.Warn(fmt.Sprintf("Error during transfer of zone %q in %q: %s", origin, d.Path, err))
 			}
-			// e.Answer kan be inserted into the a new zone
+			for _, rr := range e.Answer {
+				if _, ok := rr.(*dns.SOA); ok {
+					soa++
+					if soa > 1 {
+						continue
+					}
+				}
+				io.WriteString(f, rr.String())
+				f.Write([]byte("\n"))
+			}
 		}
-
 		break
 	}
-	// do we want to save this on disk somewhere
-	return nil
+	f.Close()
+	return os.Rename(f.Name(), d.Path)
 }

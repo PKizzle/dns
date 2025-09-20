@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -36,11 +37,16 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			}
 		}
 	}
+	if len(co.Keys()) > 1 && len(d.From.IPs) > 0 {
+		return co.Errf("when transferring from, there can only be a single origin, got: %s", strings.Join(co.Keys(), ", "))
+	}
+
 	for _, z := range co.Keys() {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
 		log.Info("Startup: reload: " + filepath.Base(d.Path))
+		d.RLock()
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
@@ -51,10 +57,35 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 				return co.Err(err.Error())
 			}
 		}
+		d.RUnlock()
 		return d.Reload()
+	})
+	co.OnStartup(func() error {
+		if d.From == nil || len(d.From.IPs) == 0 {
+			return nil
+		}
+		d.RLock()
+		for _, z := range d.Zones {
+			log.Info("Startup: retransfer: " + z.Origin + " in " + filepath.Base(d.Path))
+			err := d.TransferIn(z.Origin)
+			if err != nil {
+				log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z.Origin, d.Path, err))
+			}
+			break
+		}
+		d.RUnlock()
+		return d.Retransfer()
 	})
 	co.OnShutdown(func() error {
 		log.Info("Shutdown: reload")
+		d.cancel()
+		return nil
+	})
+	co.OnShutdown(func() error {
+		if d.From == nil || len(d.From.IPs) == 0 {
+			return nil
+		}
+		log.Info("Shutdown: retransfer")
 		d.cancel()
 		return nil
 	})

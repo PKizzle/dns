@@ -2,13 +2,16 @@ package dbfile_test
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
 )
 
-func TestDbfileTransfer(t *testing.T) {
+func TestDbfileTransferOut(t *testing.T) {
 	testcases := []struct {
 		name    string
 		input   string
@@ -80,5 +83,45 @@ func TestDbfileTransfer(t *testing.T) {
 				t.Fatal("last record should be SOA")
 			}
 		})
+	}
+}
+
+func TestDbfileTransferIn(t *testing.T) {
+	// This runs 2 server where one server transfers out, and the other one transfers in. The test is written
+	// to test the latter.
+	config := `example.org {
+				dbfile zone/testdata/db.example.org {
+					transfer
+			    }
+			}`
+
+	primary, cancel1, err := atom.NewTest(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel1()
+	addr := primary.Addr()
+	config = fmt.Sprintf(`example.org {
+				dbfile db.example.org.transferred {
+					transfer {
+						from %s
+					}
+				}
+			}`, addr[1])
+	_, cancel2, err := atom.NewTest(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel2()
+	// wait for db.example.org.transferred to exist
+	for {
+		_, err := os.Stat("db.example.org.transferred")
+		if err == nil {
+			break
+		}
+		time.Sleep(100 * time.Microsecond)
+	}
+	if err := os.Remove("db.example.org.transferred"); err != nil {
+		t.Fatal("failed to remove file that should exist")
 	}
 }

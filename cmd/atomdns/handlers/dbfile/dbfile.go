@@ -38,7 +38,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			m.Pack()
 			io.Copy(w, m)
 
-			err := d.TransferIn(ctx)
+			err := d.TransferIn(dns.Zone(ctx))
 			if err != nil {
 				// ...
 			}

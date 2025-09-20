@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	handlers = append(handlers, "import") // import only has a readme
+	handlers = append(handlers, []string{"import", "global"}...)
 	for _, h := range handlers {
 		h = strings.ToLower(h)
 		readme := "handlers/" + h + "/README.md"
@@ -76,7 +76,7 @@ workgroup = "atomdns authors"
 	md := markdown.Render(doc, renderer)
 	os.WriteFile("man/atomdns.1", md, 0644)
 
-	b, err = os.ReadFile("man/conffile.5.md")
+	b, err = os.ReadFile("man/atomdns-conffile.5.md")
 	if err != nil {
 		return
 	}
@@ -96,5 +96,5 @@ workgroup = "atomdns authors"
 	doc = markdown.Parse(b, p)
 	renderer = man.NewRenderer(man.RendererOptions{})
 	md = markdown.Render(doc, renderer)
-	os.WriteFile("man/conffile.5", md, 0644)
+	os.WriteFile("man/atomdns-conffile.5", md, 0644)
 }

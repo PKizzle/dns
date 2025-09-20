@@ -7,7 +7,7 @@ _as112_ - an AS112 black hole server
 ## Description
 
 _as112_ is a AS112 black hole handler. It (if it is configured to receive those queries) replies to all
-queries in the following zones with a no data response:
+queries in the following origins with a no data response:
 
 - 10.in-addr.arpa
 - 254.169.in-addr.arpa

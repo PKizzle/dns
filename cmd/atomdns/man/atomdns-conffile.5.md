@@ -8,12 +8,12 @@ A _conffile_ specifies the internal servers atomdns should run and what handlers
 should chain. The syntax is as follows:
 
 ```txt
-ZONE [ZONE]... {
+ORIGIN [ORIGIN]... {
     [HANDLER]...
 }
 ```
 
-The **ZONE** defines for which DNS origins this server should be called, multiple zones are allowed and
+The **ORIGIN** defines for which DNS zones this server should be called, multiple zones are allowed and
 should be _white space_ separated.
 
 When a query comes in, it is matched again all zones for all servers, the server with the longest match on the
@@ -21,23 +21,35 @@ query name will receive the query.
 
 **HANDLER** defines the handlers(s) we want to load into this server. This is optional as well, but as
 server with no handlers will just return SERVFAIL for all queries. Each handlers can have a number of
-properties than can have arguments, see the documentation for each handler.
+properties than can have arguments, see the documentation for each handler (atomdns-**HANDLER**(7)).
 
 The order of the **HANDLER**s is the order in which they are executed! (If you know CoreDNS, this is
-different, as which CoreDNS the order is fixed compile time).
+different, as which CoreDNS the order is fixed compile time). I.e. putting the _log_ handler (atomdns-log(7))
+as last, means no queries are logged.
 
-Comments are allowed and begin with an unquoted hash `#` and continue to the end of the line.
-Comments may be started anywhere on a line.
+Comments are allowed and begin with an unquoted hash `#` and continue to the end of the line. Comments may be
+started anywhere on a line.
 
 Environment variables are supported and either the Unix or Windows form may be used: `{$ENV_VAR_1}`
 or `{%ENV_VAR_2%}`.
 
-You can use the `import` "handler" (See atomdns-import(7)) to include parts of other files.
+## Global
+
+See Conffile can have a global section, this is a section without an origin:
+
+```txt
+{
+    root /var/lib/atomdns
+    metrics localhost:9153
+}
+```
+
+See atomdns-global(7) for more information.
 
 ## Import
 
-You can use the `import` "handler" to include parts of other files, see atomdns-import(7). To prevent infinite
-recursion a maximum of a 1000 imports are allowed.
+You can use the _import_ "handler" to include parts of other files, or snippets that are defined in the config
+file see atomdns-import(7). To prevent infinite recursion a maximum of a 1000 imports are allowed.
 
 ## Snippets
 
