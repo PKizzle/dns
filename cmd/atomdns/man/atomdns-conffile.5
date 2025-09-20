@@ -47,6 +47,25 @@ started anywhere on a line.
 Environment variables are supported and either the Unix or Windows form may be used: \fB\fC{$ENV_VAR_1}\fR
 or \fB\fC{%ENV_VAR_2%}\fR.
 
+.SH "GLOBAL"
+.PP
+See Conffile can have a global section, this is a section without an origin:
+
+.PP
+.RS
+
+.nf
+{
+    root /var/lib/atomdns
+    metrics localhost:9153
+}
+
+.fi
+.RE
+
+.PP
+See atomdns\-global(7) for more information.
+
 .SH "IMPORT"
 .PP
 You can use the \fIimport\fP "handler" to include parts of other files, or snippets that are defined in the config
