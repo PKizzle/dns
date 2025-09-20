@@ -86,7 +86,7 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 			for _, rr := range m.Answer {
 				if s, ok := rr.(*dns.SOA); ok {
 					if dns.CompareSerial(serial, s.Serial) == -1 {
-						// ours is smaller then the remote, transfer
+						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial))
 						return true
 					}
 				}
