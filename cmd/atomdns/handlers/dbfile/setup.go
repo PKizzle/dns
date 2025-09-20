@@ -66,7 +66,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		}
 		d.RLock()
 		for _, z := range d.Zones {
-			log.Info("Startup: retransfer: " + z.Origin + "in " + filepath.Base(d.Path))
+			log.Info("Startup: retransfer: " + z.Origin + " in " + filepath.Base(d.Path))
 			err := d.TransferIn(z.Origin)
 			if err != nil {
 				log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z.Origin, d.Path, err))
