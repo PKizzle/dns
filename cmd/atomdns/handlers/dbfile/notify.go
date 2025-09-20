@@ -74,19 +74,19 @@ func source(ip string, sources []string) net.IP {
 	return nil
 }
 
-// Available return true if the "other side" has a new SOA then we have. The first IP that answers
+// AvailableFrom return true if the "other side" has a newer SOA then we have. The first IP that answers
 // with a higher serial is enough to return true.
-func (t *Transfer) Available(origin string, serial uint32) bool {
+func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 	c := dns.NewClient()
 	m := dns.NewMsg(origin, dns.TypeSOA)
 
 	for _, ip := range t.IPs {
-		m, _, err := c.Exchange(context.TODO(), m, "tcp", net.JoinHostPort(ip, "53"))
+		m, _, err := c.Exchange(context.TODO(), m, "tcp", ip)
 		if err == nil {
 			for _, rr := range m.Answer {
 				if s, ok := rr.(*dns.SOA); ok {
 					if dns.CompareSerial(serial, s.Serial) == -1 {
-						// ours is smaller then the remote, transfer
+						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial))
 						return true
 					}
 				}

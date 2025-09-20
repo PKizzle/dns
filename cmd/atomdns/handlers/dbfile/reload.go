@@ -36,7 +36,7 @@ func (d *Dbfile) Reload() error {
 					fallthrough
 				case event.Has(fsnotify.Rename):
 
-					// check which zone needs reloading. Need RLOCK!
+					// check which zone needs reloading. Need RLOCK! But we also Lock later, this might clash...
 					for _, z := range d.Zones {
 						if z.Path == event.Name {
 							z1 := zone.New(z.Origin, event.Name)
@@ -49,6 +49,7 @@ func (d *Dbfile) Reload() error {
 							d.Unlock()
 
 							log.Info(fmt.Sprintf("Reload of zone %q in %q successful", z.Origin, filepath.Base(event.Name)))
+							go d.To.Notify(z.Origin)
 							break
 						}
 					}

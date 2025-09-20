@@ -2,6 +2,7 @@ package dbfile
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"slices"
 	"sync"
@@ -38,11 +39,24 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			m.Pack()
 			io.Copy(w, m)
 
-			err := d.TransferIn(dns.Zone(ctx))
-			if err != nil {
-				// ...
+			d.RLock()
+			z := d.Zones[dns.Zone(ctx)]
+			d.RUnlock()
+			apex := z.Apex()
+			serial := uint32(0)
+			for _, rr := range apex.RRs {
+				if s, ok := rr.(*dns.SOA); ok {
+					serial = s.Serial
+					break
+				}
 			}
-			return // ignore request
+			if !d.From.AvailableFrom(z.Origin, serial) {
+				log.Warn(fmt.Sprintf("Notify seen for %q, but no newer zone available", z.Origin))
+				return
+			}
+
+			d.TransferIn(dns.Zone(ctx)) // TODO(miek): error handling
+			return
 		}
 		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
 			if d.To == nil {
