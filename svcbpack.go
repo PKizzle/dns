@@ -12,8 +12,8 @@ func unpackSVCB(s *cryptobyte.String) ([]svcb.Pair, error) {
 	var pairs []svcb.Pair
 	key := uint16(0)
 	for !s.Empty() {
-		var data *cryptobyte.String
-		if !s.ReadUint16(&key) || !s.ReadUint16LengthPrefixed(data) {
+		var data cryptobyte.String
+		if !s.ReadUint16(&key) || !s.ReadUint16LengthPrefixed(&data) {
 			return nil, unpack.ErrOverflow
 		}
 		pairFn := svcb.KeyToPair(key)
@@ -22,7 +22,7 @@ func unpackSVCB(s *cryptobyte.String) ([]svcb.Pair, error) {
 		}
 		pair := pairFn()
 
-		if err := svcb.Unpack(pair, data); err != nil {
+		if err := svcb.Unpack(pair, &data); err != nil {
 			return nil, err
 		}
 		pairs = append(pairs, pair)
