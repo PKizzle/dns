@@ -103,6 +103,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.OnShutdown(func() error {
 					log.Info("Shutdown: lameduck mode for " + g.Lameduck.String())
 					g.HealthListener.Close()
+					time.Sleep(g.Lameduck)
 					return nil
 				})
 			}
