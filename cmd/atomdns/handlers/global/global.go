@@ -5,12 +5,18 @@ import (
 	"log/slog"
 	"net"
 	"sync"
+	"time"
 )
 
 type Global struct {
-	Root            string
+	// Root
+	Root string
+	// Metrics
 	MetricsN        uint64
 	MetricsListener net.Listener
+	// Health
+	Lameduck       time.Duration
+	HealthListener net.Listener
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once

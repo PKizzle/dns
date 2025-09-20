@@ -2,6 +2,7 @@ package global
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -63,6 +65,47 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.MetricsListener.Close()
 				return nil
 			})
+		case "health":
+			addr := ":8080"
+			if d.Next() {
+				addr = d.Val()
+			}
+			if d.Next() {
+				delay, err := time.ParseDuration(d.Val())
+				if err != nil || delay < 0 {
+					return d.PropErr(fmt.Errorf("not a (positive) number: %q", d.Val()))
+				}
+				g.Lameduck = delay
+			}
+			g.OnStartup(func() error {
+				log.Info("Start: /health")
+				ln, err := net.Listen("tcp", addr)
+				if err != nil {
+					return err
+				}
+				mux := http.NewServeMux()
+				mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusOK)
+					io.WriteString(w, http.StatusText(http.StatusOK))
+				})
+				server := &http.Server{Handler: mux}
+				go func() { server.Serve(ln) }()
+				g.HealthListener = ln
+				return nil
+			})
+
+			g.OnShutdown(func() error {
+				log.Info("Shutdown: /health")
+				g.HealthListener.Close()
+				return nil
+			})
+			if g.Lameduck > 0 {
+				g.OnShutdown(func() error {
+					log.Info("Shutdown: lameduck mode for " + g.Lameduck.String())
+					g.HealthListener.Close()
+					return nil
+				})
+			}
 		}
 	}
 	return nil

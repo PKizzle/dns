@@ -16,6 +16,7 @@ global section, see the configuration example below.
 {
     root DIRECTORY
     metrics [/N] [ADDRRES]
+    health [ADDRESS [LAMEDUCK]]
     debug
 }
 ```
@@ -30,6 +31,9 @@ global section, see the configuration example below.
   The optional **/N** tells the metric handler to monitor 1 in **N** queries. The default is 10. This needs to
   be a positive integer > 0. This is done to not impair performance too much.
   With the `metrics` handler you can enable/disable metrics on a per server basis.
+- With `health` you start a local web server that exports a /health endpoint on **ADDRESS** that returns 200 OK when
+  everything is OK. When **LAMEDUCK** which should be a time.Duration in string form is given, the server' shutdown will be
+  delayed for that duration. The default for \*_ADDRESS_ is `:8080`.
 
 ## Examples
 
@@ -44,3 +48,22 @@ example.org {
     whoami
 }
 ```
+
+Or run an health endpoint on http://localhost:8091, with a lameduck delay of 2 seconds.
+
+```conffile
+{
+    health localhost:8091 2s
+}
+```
+
+## Metrics
+
+If monitoring is enabled (via `metrics`) and `health` is enabled the following metrics are exported:
+
+- `atomdns_health_request_duration_seconds{}` - `health` performs a self health check
+  once per second on the `/health` endpoint. This metric is the duration to process that request.
+  As this is a local operation it should be fast. A (large) increase in this
+  duration indicates the atomdns process is having trouble keeping up with its query load.
+- `atomdns_health_request_failures_total{}` - The number of times the self health check failed, this also
+  points to imminent failure.

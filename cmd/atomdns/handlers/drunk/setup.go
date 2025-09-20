@@ -50,7 +50,6 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 					return co.PropErr(fmt.Errorf("no / found"))
 				}
 				delay, err := strconv.ParseInt(args[0][1:], 10, 32)
-				fmt.Printf("%v\n", args)
 				if err != nil || delay < 0 {
 					return co.PropErr(fmt.Errorf("not a (positive) number: %q", args[0][1:]))
 				}
