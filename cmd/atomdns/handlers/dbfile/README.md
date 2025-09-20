@@ -54,7 +54,7 @@ dbfile FILE {
   - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. Notifies
     from those servers will be matched against **IP**s.
     If `from` is used _multipe_ origins are disallowed, and will cause an error because the transferred zone
-    cant be shared.
+    cant be shared. To save the zone file the directory of **FILE** must be writeable.
   - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
     If there are no **IP**s specfied the AXFR is open to the entire internet.
