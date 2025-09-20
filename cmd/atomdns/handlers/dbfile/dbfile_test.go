@@ -3,7 +3,9 @@ package dbfile_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
@@ -106,13 +108,20 @@ func TestDbfileTransferIn(t *testing.T) {
 					}
 				}
 			}`, addr[1])
-	secondary, cancel2, err := atom.NewTest(config)
+	_, cancel2, err := atom.NewTest(config)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer cancel2()
-	fmt.Printf("%v\n", primary.Addr())
-	fmt.Printf("%v\n", secondary.Addr())
-	// wait for zone file to exist
-	println(config)
+	// wait for db.example.org.transferred to exist
+	for {
+		_, err := os.Stat("db.example.org.transferred")
+		if err == nil {
+			break
+		}
+		time.Sleep(100 * time.Microsecond)
+	}
+	if err := os.Remove("db.example.org.transferred"); err != nil {
+		t.Fatal("failed to remove file that should exist")
+	}
 }
