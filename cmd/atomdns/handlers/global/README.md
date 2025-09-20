@@ -13,9 +13,11 @@ global section, see the configuration example below.
 ## Syntax
 
 ```txt
-root DIRECTORY
-metrics [/N] [ADDRRES]
-debug
+{
+    root DIRECTORY
+    metrics [/N] [ADDRRES]
+    debug
+}
 ```
 
 - with `root` **DIRECTORY** is the directory to use as the root directory for the server. Any relative path names will
@@ -34,6 +36,11 @@ debug
 ```conffile
 {
     root /var/lib/atomdns
-    metrics localhost:9152
+    metrics localhost:9153
+}
+
+example.org {
+    log
+    whoami
 }
 ```

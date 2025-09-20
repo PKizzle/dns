@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -36,7 +37,10 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			}
 		}
 	}
-	// TODO(miek): error when more then 1 and transfer from is active
+	if len(co.Keys()) > 1 && len(d.From.IPs) > 0 {
+		return co.Errf("when transferring from, there can only be a single origin, got: %s", strings.Join(co.Keys(), ", "))
+	}
+
 	for _, z := range co.Keys() {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}

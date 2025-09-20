@@ -2,7 +2,7 @@
 
 ## Name
 
-_dbfile_ - serve zone data from an RFC 1035-style zone file
+_dbfile_ - serve zone data from an RFC 1035-style file
 
 ## Description
 
@@ -26,8 +26,9 @@ dbfile FILE
 - **FILE** the zone file to load. If the path is relative, the path from the global root config will be
   prepended to it.
 
-If the zone specification contains multiple zones they all will use the _same_ **FILE**. And you must make
-sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names.
+If the origins specification contains multiple origins, they all will use the _same_ **FILE**. And you must make
+sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names. Note that this break
+incoming transfers and thus will lead to an error when attempted.
 
 For extra control you can open the block and define multipe extra properties that deal with zone transfers.
 
@@ -52,7 +53,7 @@ dbfile FILE {
 
   - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. Notifies
     from those servers will be matched against **IP**s.
-    If `from` is used _multipe_ zones are disallowed, and will cause an error because the transferred zone
+    If `from` is used _multipe_ origins are disallowed, and will cause an error because the transferred zone
     cant be shared.
   - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
@@ -93,7 +94,7 @@ www     IN A     127.0.0.1
         IN AAAA  ::1
 ```
 
-Or use a single zone file for multiple zones:
+Or use a single zone file for multiple origins:
 
 ```conffile
 example.org example.net {

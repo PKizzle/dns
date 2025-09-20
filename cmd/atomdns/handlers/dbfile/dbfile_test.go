@@ -100,7 +100,7 @@ func TestDbfileTransferIn(t *testing.T) {
 	defer cancel1()
 	addr := primary.Addr()
 	config = fmt.Sprintf(`example.org {
-				dbfile db.example.org {
+				dbfile db.example.org.transfered {
 					transfer {
 						from %s
 					}

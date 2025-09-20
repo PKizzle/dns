@@ -14,7 +14,7 @@ should chain. The syntax is as follows:
 .RS
 
 .nf
-ZONE [ZONE]... {
+ORIGIN [ORIGIN]... {
     [HANDLER]...
 }
 
@@ -22,7 +22,7 @@ ZONE [ZONE]... {
 .RE
 
 .PP
-The \fBZONE\fP defines for which DNS origins this server should be called, multiple zones are allowed and
+The \fBORIGIN\fP defines for which DNS zones this server should be called, multiple zones are allowed and
 should be \fIwhite space\fP separated.
 
 .PP
@@ -32,27 +32,25 @@ query name will receive the query.
 .PP
 \fBHANDLER\fP defines the handlers(s) we want to load into this server. This is optional as well, but as
 server with no handlers will just return SERVFAIL for all queries. Each handlers can have a number of
-properties than can have arguments, see the documentation for each handler.
+properties than can have arguments, see the documentation for each handler (atomdns\-\fBHANDLER\fP(7)).
 
 .PP
 The order of the \fBHANDLER\fPs is the order in which they are executed! (If you know CoreDNS, this is
-different, as which CoreDNS the order is fixed compile time).
+different, as which CoreDNS the order is fixed compile time). I.e. putting the \fIlog\fP handler (atomdns\-log(7))
+as last, means no queries are logged.
 
 .PP
-Comments are allowed and begin with an unquoted hash \fB\fC#\fR and continue to the end of the line.
-Comments may be started anywhere on a line.
+Comments are allowed and begin with an unquoted hash \fB\fC#\fR and continue to the end of the line. Comments may be
+started anywhere on a line.
 
 .PP
 Environment variables are supported and either the Unix or Windows form may be used: \fB\fC{$ENV_VAR_1}\fR
 or \fB\fC{%ENV_VAR_2%}\fR.
 
-.PP
-You can use the \fB\fCimport\fR "handler" (See atomdns\-import(7)) to include parts of other files.
-
 .SH "IMPORT"
 .PP
-You can use the \fB\fCimport\fR "handler" to include parts of other files, see atomdns\-import(7). To prevent infinite
-recursion a maximum of a 1000 imports are allowed.
+You can use the \fIimport\fP "handler" to include parts of other files, or snippets that are defined in the config
+file see atomdns\-import(7). To prevent infinite recursion a maximum of a 1000 imports are allowed.
 
 .SH "SNIPPETS"
 .PP
