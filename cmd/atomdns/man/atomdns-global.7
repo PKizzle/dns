@@ -17,9 +17,12 @@ global section, see the configuration example below.
 .RS
 
 .nf
-root DIRECTORY
-metrics [/N] [ADDRRES]
-debug
+{
+    root DIRECTORY
+    metrics [/N] [ADDRRES]
+    health [ADDRESS [LAMEDUCK]]
+    debug
+}
 
 .fi
 .RE
@@ -37,6 +40,11 @@ metrics gathering \fB\fCmetrics\fR must be enabled in the global section.
 The optional \fB/N\fP tells the metric handler to monitor 1 in \fBN\fP queries. The default is 10. This needs to
 be a positive integer > 0. This is done to not impair performance too much.
 With the \fB\fCmetrics\fR handler you can enable/disable metrics on a per server basis.
+.IP \(bu 4
+With \fB\fChealth\fR you start a local web server that exports a /health endpoint on \fBADDRESS\fP that returns 200 OK when
+everything is OK. When \fBLAMEDUCK\fP which should be a time.Duration in string form is given, the server' shutdown will be
+delayed for that duration. The default for *\fIADDRESS\fP is \fB\fC:8080\fR. Every 2 seconds atomdns will query itself
+to get its health so it can export the latency metrics.
 
 
 .SH "EXAMPLES"
@@ -46,8 +54,41 @@ With the \fB\fCmetrics\fR handler you can enable/disable metrics on a per server
 .nf
 {
     root /var/lib/atomdns
-    metrics localhost:9152
+    metrics localhost:9153
+}
+
+example.org {
+    log
+    whoami
 }
 
 .fi
 .RE
+
+.PP
+Or run an health endpoint on http://localhost:8091, with a lameduck delay of 2 seconds.
+
+.PP
+.RS
+
+.nf
+{
+    health localhost:8091 2s
+}
+
+.fi
+.RE
+
+.SH "METRICS"
+.PP
+If monitoring is enabled (via \fB\fCmetrics\fR) and \fB\fChealth\fR is enabled the following metrics are exported:
+
+.IP \(bu 4
+\fB\fCatomdns_health_request_duration_seconds{}\fR \- \fB\fChealth\fR performs a self health check
+once per second on the \fB\fC/health\fR endpoint. This metric is the duration to process that request.
+As this is a local operation it should be fast. A (large) increase in this
+duration indicates the atomdns process is having trouble keeping up with its query load.
+.IP \(bu 4
+\fB\fCatomdns_health_request_failures_total{}\fR \- The number of times the self health check failed, this also
+points to imminent failure.
+

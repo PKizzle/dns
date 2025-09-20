@@ -4,7 +4,7 @@
 .SH "DBFILE"
 .SH "NAME"
 .PP
-\fIdbfile\fP \- serve zone data from an RFC 1035\-style zone file
+\fIdbfile\fP \- serve zone data from an RFC 1035\-style file
 
 .SH "DESCRIPTION"
 .PP
@@ -37,8 +37,9 @@ prepended to it.
 
 
 .PP
-If the zone specification contains multiple zones they all will use the \fIsame\fP \fBFILE\fP. And you must make
-sure that zone \fBFILE\fP is generic enough, i.e. use \fB\fC@\fR for origins instead of domain names.
+If the origins specification contains multiple origins, they all will use the \fIsame\fP \fBFILE\fP. And you must make
+sure that zone \fBFILE\fP is generic enough, i.e. use \fB\fC@\fR for origins instead of domain names. Note that this break
+incoming transfers and thus will lead to an error when attempted.
 
 .PP
 For extra control you can open the block and define multipe extra properties that deal with zone transfers.
@@ -66,14 +67,14 @@ dbfile FILE {
 .IP \(bu 4
 \fB\fCtransfer\fR details how zone transfers are handled, \fB\fCfrom\fR deals with incoming AXFR from \fBIP\fP, and \fB\fCto\fR
 deals with outgoing ones. Without \fB\fCtransfer\fR all transfers are prohibited. When transfer from a secondary
-\fIall\fP SOA timers are ignored, every 10 time minutes the upstream is check for SOA updates.
+\fIall\fP SOA timers are ignored, every 10 time minutes the upstream(s) is(/are) check for SOA updates.
 
 .RS
 .IP \(en 4
 \fB\fCfrom\fR allows for multiple upstream \fBIP\fPs to be specified, they will be tried in that order. Notifies
 from those servers will be matched against \fBIP\fPs.
-If \fB\fCfrom\fR is used \fImultipe\fP zones are disallowed, and will cause an error because the transferred zone
-cant be shared.
+If \fB\fCfrom\fR is used \fImultipe\fP origins are disallowed, and will cause an error because the transferred zone
+cant be shared. To save the zone file the directory of \fBFILE\fP must be writeable.
 .IP \(en 4
 The \fB\fCkey\fR specification is for TSIG signed transfers. The \fBSECRET\fP must be base64 encoded.
 .IP \(en 4
@@ -132,7 +133,7 @@ www     IN A     127.0.0.1
 .RE
 
 .PP
-Or use a single zone file for multiple zones:
+Or use a single zone file for multiple origins:
 
 .PP
 .RS
