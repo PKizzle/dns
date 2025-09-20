@@ -73,10 +73,11 @@ notifies to 10.240.1.1
 
 ```conffile
 example.org {
-    file db.example.org
-    transfer {
-        to {
-            notify 10.240.1.1
+    dbfile db.example.org {
+        transfer {
+            to {
+                notify 10.240.1.1
+            }
         }
     }
 }
@@ -98,7 +99,7 @@ Or use a single zone file for multiple origins:
 
 ```conffile
 example.org example.net {
-    file example.org.signed {
+    dbfile example.org.signed {
         transfer {
             to 10.240.1.1
         }
