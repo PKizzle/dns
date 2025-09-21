@@ -17,6 +17,7 @@ global section, see the configuration example below.
     root DIRECTORY
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
+    pprof [ADDRESS]
     debug
 }
 ```
@@ -35,6 +36,8 @@ global section, see the configuration example below.
   everything is OK. When **LAMEDUCK** which should be a time.Duration in string form is given, the server' shutdown will be
   delayed for that duration. The default for \*_ADDRESS_ is `:8080`. Every 2 seconds atomdns will query itself
   to get its health so it can export the latency metrics.
+- With `pprof` you can publish runtime profiling data at the endpoint on
+  **ADDRESS** under `/debug/pprof`. The default is localhost:6053.
 
 ## Examples
 
