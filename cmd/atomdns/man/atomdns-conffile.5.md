@@ -33,6 +33,24 @@ started anywhere on a line.
 Environment variables are supported and either the Unix or Windows form may be used: `{$ENV_VAR_1}`
 or `{%ENV_VAR_2%}`.
 
+As an way to test things Conffile also supports a shorter way of writing things done, but this only works for
+a single server:
+
+```conffile
+ORIGIN [ORIGIN]...
+[HANDLER]...
+```
+
+I.e.
+
+```txt
+example.org
+log
+whoami
+```
+
+Is a valid config and is supported by `atomdns`.
+
 ## Global
 
 See Conffile can have a global section, this is a section without an origin:

@@ -47,6 +47,37 @@ started anywhere on a line.
 Environment variables are supported and either the Unix or Windows form may be used: \fB\fC{$ENV_VAR_1}\fR
 or \fB\fC{%ENV_VAR_2%}\fR.
 
+.PP
+As an way to test things Conffile also supports a shorter way of writing things done, but this only works for
+a single server:
+
+.PP
+.RS
+
+.nf
+ORIGIN [ORIGIN]...
+[HANDLER]...
+
+.fi
+.RE
+
+.PP
+I.e.
+
+.PP
+.RS
+
+.nf
+example.org
+log
+whoami
+
+.fi
+.RE
+
+.PP
+Is a valid config and is supported by \fB\fCatomdns\fR.
+
 .SH "GLOBAL"
 .PP
 See Conffile can have a global section, this is a section without an origin:
