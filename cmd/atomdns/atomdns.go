@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"runtime/pprof"
 	"sort"
 	"strings"
 	"syscall"
@@ -25,15 +24,13 @@ const Version = "005"
 
 func main() {
 	var (
-		flagProfile bool
 		flagHandler bool
 		flagVersion bool
 		flagQuiet   bool
 		flagConf    string
 		flagPort    string
 	)
-	flag.BoolVar(&flagProfile, "cpuprofile", false, "write cpu profile to cpu.out")
-	flag.BoolVar(&flagHandler, "handler", false, "who sorted list of handlers")
+	flag.BoolVar(&flagHandler, "handler", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
 
@@ -48,15 +45,6 @@ func main() {
 	if flagVersion {
 		fmt.Println(Version)
 		return
-	}
-	if flagProfile {
-		f, err := os.Create("cpu.out")
-		if err != nil {
-			slog.Error(err.Error())
-			os.Exit(1)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
 	}
 	if flagHandler {
 		hs := []string{}
