@@ -12,8 +12,8 @@ func unpackDELEG(s *cryptobyte.String) ([]deleg.Info, error) {
 	var infos []deleg.Info
 	key := uint16(0)
 	for !s.Empty() {
-		var data *cryptobyte.String
-		if !s.ReadUint16(&key) || !s.ReadUint16LengthPrefixed(data) {
+		var data cryptobyte.String
+		if !s.ReadUint16(&key) || !s.ReadUint16LengthPrefixed(&data) {
 			return nil, unpack.ErrOverflow
 		}
 		infoFn := deleg.KeyToInfo(key)
@@ -22,7 +22,7 @@ func unpackDELEG(s *cryptobyte.String) ([]deleg.Info, error) {
 		}
 		info := infoFn()
 
-		if err := deleg.Unpack(info, data); err != nil {
+		if err := deleg.Unpack(info, &data); err != nil {
 			return nil, err
 		}
 		infos = append(infos, info)
