@@ -50,7 +50,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Start: /metrics on " + addr)
+				log.Info("Startup: /metrics on " + addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -80,7 +80,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.Lameduck = delay
 			}
 			g.OnStartup(func() error {
-				log.Info("Start: /health on " + addr)
+				log.Info("Startup: /health on " + addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -112,7 +112,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			ctx := context.Background()
 			ctx, cancel := context.WithCancel(ctx)
 			g.OnStartup(func() error {
-				log.Info("Start: health overload check")
+				log.Info("Startup: health overload check")
 				go overload(ctx, addr)
 				return nil
 			})
@@ -127,7 +127,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Start: /debug/pprof on " + addr)
+				log.Info("Startup: /debug/pprof on " + addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
