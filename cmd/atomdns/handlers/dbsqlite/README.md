@@ -17,9 +17,9 @@ The schema used is:
 
 ```sql
 CREATE TABLE rrs (
-name VARCHAR(255) DEFAULT NULL,
-type VARCHAR(10) DEFAULT NULL,
-data VARCHAR(65535) DEFAULT NULL,
+name VARCHAR(255),
+type VARCHAR(10),
+data VARCHAR(65535),
 ttl INTEGER DEFAULT 3600,
 UNIQUE (name, type, data),
 );
