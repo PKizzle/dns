@@ -17,6 +17,8 @@ type Global struct {
 	// Health
 	Lameduck       time.Duration
 	HealthListener net.Listener
+	// Pprof
+	PprofListener net.Listener
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once

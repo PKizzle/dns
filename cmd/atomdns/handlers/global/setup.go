@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	pp "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -120,7 +121,34 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				cancel()
 				return nil
 			})
-
+		case "pprof":
+			addr := "localhost:6053"
+			if d.NextArg() {
+				addr = d.Val()
+			}
+			g.OnStartup(func() error {
+				log.Info("Start: /debug/pprof on " + addr)
+				ln, err := net.Listen("tcp", addr)
+				if err != nil {
+					return err
+				}
+				mux := http.NewServeMux()
+				mux.Handle("/metrics", promhttp.Handler())
+				mux.HandleFunc("/debug/pprof/", pp.Index)
+				mux.HandleFunc("/debug/pprof/cmdline", pp.Cmdline)
+				mux.HandleFunc("/debug/pprof/profile", pp.Profile)
+				mux.HandleFunc("/debug/pprof/symbol", pp.Symbol)
+				mux.HandleFunc("/debug/pprof/trace", pp.Trace)
+				server := &http.Server{Handler: mux}
+				go func() { server.Serve(ln) }()
+				g.PprofListener = ln
+				return nil
+			})
+			g.OnShutdown(func() error {
+				log.Info("Shutdown: /debug/pprof")
+				g.PprofListener.Close()
+				return nil
+			})
 		}
 	}
 	return nil
