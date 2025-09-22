@@ -31,7 +31,7 @@ var funcmap = template.FuncMap{
 	"tolower": strings.ToLower,
 }
 
-var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
+var ErrFunc = template.Must(template.New("errFunc").Parse(`
 func (h *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 `))
 
@@ -39,11 +39,11 @@ var KeyFunc = template.Must(template.New("keyFunc").Funcs(funcmap).Parse(`
 func (h *{{.}}) Key() string { return "{{tolower .}}" }
 `))
 
-var LogVar = template.Must(template.New("logVar").Funcs(funcmap).Parse(`
+var LogVar = template.Must(template.New("logVar").Parse(`
 {{if eq . "Log"}}
-	var _log = slog.Default().With("handler", "{{tolower .}}")
+	var _log = slog.Default().With("handler", h.Key())
 {{else}}
-	var log = slog.Default().With("handler", "{{tolower .}}")
+	var log = slog.Default().With("handler", h.Key())
 {{end}}
 `))
 

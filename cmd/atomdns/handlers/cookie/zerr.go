@@ -11,4 +11,4 @@ func (h *Cookie) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err
 
 func (h *Cookie) Key() string { return "cookie" }
 
-var log = slog.Default().With("handler", "cookie")
+var log = slog.Default().With("handler", h.Key())

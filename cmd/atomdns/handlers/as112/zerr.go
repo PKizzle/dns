@@ -11,4 +11,4 @@ func (h *As112) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.
 
 func (h *As112) Key() string { return "as112" }
 
-var log = slog.Default().With("handler", "as112")
+var log = slog.Default().With("handler", h.Key())

@@ -11,4 +11,4 @@ func (h *Whoami) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err
 
 func (h *Whoami) Key() string { return "whoami" }
 
-var log = slog.Default().With("handler", "whoami")
+var log = slog.Default().With("handler", h.Key())

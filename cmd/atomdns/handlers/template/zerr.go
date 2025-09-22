@@ -11,4 +11,4 @@ func (h *Template) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), e
 
 func (h *Template) Key() string { return "template" }
 
-var log = slog.Default().With("handler", "template")
+var log = slog.Default().With("handler", h.Key())

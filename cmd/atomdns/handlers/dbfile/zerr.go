@@ -11,4 +11,4 @@ func (h *Dbfile) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err
 
 func (h *Dbfile) Key() string { return "dbfile" }
 
-var log = slog.Default().With("handler", "dbfile")
+var log = slog.Default().With("handler", h.Key())
