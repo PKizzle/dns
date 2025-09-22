@@ -2,7 +2,6 @@ package dbsqlite
 
 import (
 	"fmt"
-	"log"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"

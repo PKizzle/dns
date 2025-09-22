@@ -1,11 +1,18 @@
 package dbsqlite
 
 import (
-	"database/sql"
+	"context"
 
+	"codeberg.org/miekg/dns"
 	_ "modernc.org/sqlite"
 )
 
 type Dbsqlite struct {
-	db *sql.DB
+	*Zone
+}
+
+func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
+	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+
+	})
 }

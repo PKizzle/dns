@@ -8,6 +8,7 @@ import (
 
 func TestSetup(t *testing.T) {
 	dbsqlite := new(Dbsqlite)
+	dbsqlite.Zone = new(Zone)
 	co := dnsserver.NewTestController("")
 	dbsqlite.Setup(co)
 }

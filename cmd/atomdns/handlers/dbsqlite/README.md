@@ -26,6 +26,8 @@ UNIQUE (name, type, data),
 );
 ```
 
+Where `COLLATE canonical` is a custom collate functions that is `dns.CompareName`.
+
 You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
 made into fully qualified ones, by just adding the closing dot, no origin is appended.
 
