@@ -2,9 +2,7 @@ package dbfile
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"slices"
 	"sync"
 
 	"codeberg.org/miekg/dns"
@@ -29,49 +27,11 @@ type Dbfile struct {
 func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		if r.Opcode == dns.OpcodeNotify {
-			if !slices.Contains(d.From.IPs, dnsutil.RemoteIP(w)) {
-				return // ignore request
-			}
-			m := new(dns.Msg)
-			dnsutil.SetReply(m, r)
-			m.Authoritative = true
-			m.Data = r.Data
-			m.Pack()
-			io.Copy(w, m)
-
-			d.RLock()
-			z := d.Zones[dns.Zone(ctx)]
-			d.RUnlock()
-			apex := z.Apex()
-			serial := uint32(0)
-			for _, rr := range apex.RRs {
-				if s, ok := rr.(*dns.SOA); ok {
-					serial = s.Serial
-					break
-				}
-			}
-			if !d.From.AvailableFrom(z.Origin, serial) {
-				log.Warn(fmt.Sprintf("Notify seen for %q, but no newer zone available", z.Origin))
-				return
-			}
-
-			d.TransferIn(dns.Zone(ctx)) // TODO(miek): error handling
+			d.HandlerFuncNotify(ctx, w, r)
 			return
 		}
 		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
-			if d.To == nil {
-				m := new(dns.Msg)
-				dnsutil.SetReply(m, r)
-				m.Rcode = dns.RcodeRefused
-				m.Data = r.Data
-
-				m.Pack()
-				io.Copy(w, m)
-				return
-			}
-			if err := d.TransferOut(ctx, w, r); err != nil {
-				log.Debug("Error while transfering out: " + err.Error())
-			}
+			d.HandlerFuncTransfer(ctx, w, r)
 			return
 		}
 

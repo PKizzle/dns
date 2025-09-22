@@ -41,7 +41,7 @@ func (t *Template) Setup(co *dnsserver.Controller) (err error) {
 		return fmt.Errorf("no template path")
 	}
 	co.OnStartup(func() error {
-		log.Info("Startup: executing: " + filepath.Base(t.Path))
+		log.Info("Startup", "executing", filepath.Base(t.Path))
 		tmpl, err := template.ParseFiles(t.Path)
 		if err != nil {
 			return err

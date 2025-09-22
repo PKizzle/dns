@@ -50,7 +50,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup: /metrics on " + addr)
+				log.Info("Startup", "/metrics", addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -63,7 +63,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown: /metrics")
+				log.Info("Shutdown", "/metrics", addr)
 				g.MetricsListener.Close()
 				return nil
 			})
@@ -80,7 +80,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.Lameduck = delay
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup: /health on " + addr)
+				log.Info("Startup", "/health", addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -97,13 +97,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 
 			g.OnShutdown(func() error {
-				log.Info("Shutdown: /health")
+				log.Info("Shutdown", "/health", addr)
 				g.HealthListener.Close()
 				return nil
 			})
 			if g.Lameduck > 0 {
 				g.OnShutdown(func() error {
-					log.Info("Shutdown: lameduck mode for " + g.Lameduck.String())
+					log.Info("Shutdown", "lameduck", g.Lameduck)
 					g.HealthListener.Close()
 					time.Sleep(g.Lameduck)
 					return nil
@@ -112,12 +112,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			ctx := context.Background()
 			ctx, cancel := context.WithCancel(ctx)
 			g.OnStartup(func() error {
-				log.Info("Startup: health overload check")
+				log.Info("Startup", "health", "overload check")
 				go overload(ctx, addr)
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown: health overload check")
+				log.Info("Shutdown", "health", "overload check")
 				cancel()
 				return nil
 			})
@@ -127,7 +127,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup: /debug/pprof on " + addr)
+				log.Info("Startup", "/debug/pprof", addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -145,7 +145,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown: /debug/pprof")
+				log.Info("Shutdown", "/debug/pprof", addr)
 				g.PprofListener.Close()
 				return nil
 			})

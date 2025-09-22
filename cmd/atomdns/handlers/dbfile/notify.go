@@ -3,7 +3,9 @@ package dbfile
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
+	"slices"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -20,6 +22,36 @@ type Transfer struct {
 
 	Notifies []string
 	Sources  []string
+}
+
+func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	if !slices.Contains(d.From.IPs, dnsutil.RemoteIP(w)) {
+		return // ignore request
+	}
+	m := new(dns.Msg)
+	dnsutil.SetReply(m, r)
+	m.Authoritative = true
+	m.Data = r.Data
+	m.Pack()
+	io.Copy(w, m)
+
+	d.RLock()
+	z := d.Zones[dns.Zone(ctx)]
+	d.RUnlock()
+	apex := z.Apex()
+	serial := uint32(0)
+	for _, rr := range apex.RRs {
+		if s, ok := rr.(*dns.SOA); ok {
+			serial = s.Serial
+			break
+		}
+	}
+	if !d.From.AvailableFrom(z.Origin, serial) {
+		log.Warn(fmt.Sprintf("Notify seen for %q, but no newer zone available", z.Origin))
+		return
+	}
+
+	d.TransferIn(dns.Zone(ctx)) // TODO(miek): error handling
 }
 
 // Notify will send notifies to all configured to IP addresses.

@@ -53,11 +53,11 @@ example.org {
 }
 ```
 
-Or run an health endpoint on http://localhost:8091, with a lameduck delay of 2 seconds.
+Or run an health endpoint on http://localhost:8091, with a lameduck delay of 200 ms.
 
 ```conffile
 {
-    health localhost:8091 2s
+    health localhost:8091 200ms
 }
 ```
 

@@ -163,7 +163,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		for _, k := range b.Keys {
 			k = dnsutil.Fqdn(k)
 			if !s.quiet {
-				slog.Info(k, "handlers", strings.Join(names, ","))
+				slog.Info(k, "handlers", "unpack,"+strings.Join(names, ",")+",refuse")
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
 		}

@@ -21,7 +21,7 @@ type Interface interface {
 	// Set sets a node in the zone. It must take care to also fill out any empty non-terminals that are
 	// needed.
 	Set(zone.Node) string
-	// Apex returns the apex of the zone.
+	// Apex returns the apex of the zone. The optional strings indicates which zone's apex to load.
 	Apex() zone.Node
 	// Walk walks the entire walk starting at the apex.
 	Walk(func(zone.Node) bool)

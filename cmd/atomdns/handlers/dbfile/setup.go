@@ -45,7 +45,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
-		log.Info("Startup: reload: " + filepath.Base(d.Path))
+		log.Info("Startup", "reload", filepath.Base(d.Path))
 		d.RLock()
 		for _, z := range d.Zones {
 			_, err := os.Stat(z.Path)
@@ -66,7 +66,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		}
 		d.RLock()
 		for _, z := range d.Zones {
-			log.Info("Startup: retransfer: " + z.Origin + " in " + filepath.Base(d.Path))
+			log.Info("Startup", "retransfer", z.Origin, "file", filepath.Base(d.Path))
 			err := d.TransferIn(z.Origin)
 			if err != nil {
 				log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z.Origin, d.Path, err))
@@ -77,7 +77,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		return d.Retransfer()
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown: reload")
+		log.Info("Shutdown", "reload", filepath.Base(d.Path))
 		d.cancel()
 		return nil
 	})
@@ -85,7 +85,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		if d.From == nil || len(d.From.IPs) == 0 {
 			return nil
 		}
-		log.Info("Shutdown: retransfer")
+		log.Info("Shutdown", "retransfer", filepath.Base(d.Path))
 		d.cancel()
 		return nil
 	})

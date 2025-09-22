@@ -10,7 +10,24 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/dnsutil"
 )
+
+func (d *Dbfile) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	if d.To == nil {
+		m := new(dns.Msg)
+		dnsutil.SetReply(m, r)
+		m.Rcode = dns.RcodeRefused
+		m.Data = r.Data
+
+		m.Pack()
+		io.Copy(w, m)
+		return
+	}
+	if err := d.TransferOut(ctx, w, r); err != nil {
+		log.Debug("Error while transfering out: " + err.Error())
+	}
+}
 
 func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) error {
 	w.Hijack()
