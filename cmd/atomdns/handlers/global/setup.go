@@ -50,13 +50,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-<<<<<<< HEAD
-				log.Info("Startup: /metrics on " + addr)
-||||||| parent of 84f75af (Better)
-				log.Info("Start: /metrics on " + addr)
-=======
 				log.Info("Startup", "/metrics", addr)
->>>>>>> 84f75af (Better)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -133,7 +127,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup: /debug/pprof on " + addr)
+				log.Info("Startup", "/debug/pprof", addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -151,7 +145,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown: /debug/pprof")
+				log.Info("Shutdown", "/debug/pprof", addr)
 				g.PprofListener.Close()
 				return nil
 			})
