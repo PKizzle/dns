@@ -10,7 +10,8 @@ The _dbsqlite_ handler reads zone data from a data and serves that to clients. I
 signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is suppored.
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
 your zones and put the generated records in the datebase. The database needs a custom collation, which means
-it can not be created off-line.
+it can not be created off-line. This handler will never write to the database, for the purpose of generating
+answers the database is completely read-only.
 
 The server will reply with minimal responses by default.
 
@@ -39,7 +40,7 @@ sure the handler gets queries for new zones.
 
 ## Syntax
 
-In it simplests form \_dbsqlite you can use:
+In it simplests form _dbsqlite_ you can use:
 
 ```
 dbsqlite DATABASE

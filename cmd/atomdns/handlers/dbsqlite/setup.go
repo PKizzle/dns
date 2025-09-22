@@ -1,7 +1,7 @@
 package dbsqlite
 
 import (
-	"fmt"
+	"os"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -10,44 +10,47 @@ import (
 )
 
 func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
-	sqlite.MustRegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
-	db, err := sqlx.Open("sqlite", "db")
-	if err != nil {
-		log.Fatal(err)
+	if !co.NextArg() {
+		return co.ArgErr()
 	}
-	defer db.Close()
+	d.Path = co.Val()
+	if co.Next() {
+		d.Path = co.Val()
+	}
+	sqlite.MustRegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
-	_, err = db.Exec(`
-CREATE TABLE rrs (
+	co.OnStartup(func() error {
+		log.Info("Startup: database: " + d.Path)
+		_, err := os.OpenFile("db", os.O_CREATE, 0660)
+		db, err := sqlx.Open("sqlite", "db")
+		if err != nil {
+			return err
+		}
+		d.Zone = &Zone{db}
+		_, err = db.Exec(`
+CREATE TABLE IF NOT EXISTS rrs (
   name                  VARCHAR(255) COLLATE canonical,
   type                  VARCHAR(10),
   data                  VARCHAR(65535),
   ttl                   INTEGER DEFAULT 3600
 );
 	`)
-	if err != nil {
-		println("create", err.Error())
-	}
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	co.OnShutdown(func() error {
+		log.Info("Shutdown: database: " + d.Path)
+		if d.Zone != nil {
+			d.Zone.db.Close()
+		}
+		return nil
+	})
 
-	rrs := []RR{}
-	err = db.Select(&rrs, "SELECT * FROM rrs")
-	for _, rr := range rrs {
-		fmt.Printf("%v\n", rr)
-	}
-	println("***")
-	err = db.Select(&rrs, "SELECT * FROM rrs ORDER BY name COLLATE canonical")
-	if err != nil {
-		println(err.Error())
-	}
-	for _, rr := range rrs {
-		fmt.Printf("%v\n", rr)
-	}
+	/*
+		err = db.Select(&rrs, "SELECT * FROM rrs")
+		err = db.Select(&rrs, "SELECT * FROM rrs ORDER BY name COLLATE canonical")
+	*/
 	return nil
-}
-
-type RR struct {
-	Name string
-	Type string `db:"type"`
-	Data string
-	TTL  int
 }

@@ -8,6 +8,7 @@ import (
 )
 
 type Dbsqlite struct {
+	Path string
 	*Zone
 }
 
