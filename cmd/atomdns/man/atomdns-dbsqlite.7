@@ -13,7 +13,9 @@ signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. O
 The \fIsign\fP handler does \fInot\fP support databases, so you need something like ldns\-signzone to sign and resign
 your zones and put the generated records in the datebase. The database needs a custom collation, which means
 it can not be created off\-line. This handler will never write to the database, for the purpose of generating
-answers the database is completely read\-only.
+answers the database is completely read\-only. An RR that fails to be converted into a propper \fB\fCdns.RR\fR is
+silently discarded, unless \fB\fCdebug\fR is active, see atomdns\-global(7) for details. The class is \fB\fCIN\fR and can't be
+overriden.
 
 .PP
 The server will reply with minimal responses by default.
@@ -26,18 +28,15 @@ The schema used is:
 
 .nf
 CREATE TABLE rrs (
-name VARCHAR(255) COLLATE canonical,
+name VARCHAR(255),
 type VARCHAR(10),
 data VARCHAR(65535),
-ttl INTEGER DEFAULT 3600,
-UNIQUE (name, type, data),
+ttl INTEGER,
+UNIQUE (name, type, data)
 );
 
 .fi
 .RE
-
-.PP
-Where \fB\fCCOLLATE canonical\fR is a custom collate functions that is \fB\fCdns.CompareName\fR.
 
 .PP
 You can just add RRs to this table for \fIany\fP zone and \fIdbsqlite\fP will happily use them. Relative names will be
@@ -47,8 +46,8 @@ made into fully qualified ones, by just adding the closing dot, no origin is app
 .RS
 
 .nf
-sqlite> insert into rrs values ( '\_ssh.\_tcp.host1.example.', 'srv', '10 5 43 example');
-sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com');
+sqlite> insert into rrs values ( '\_ssh.\_tcp.host1.example.', 'srv', '10 5 43 example', 3600);
+sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
 
 .fi
 .RE
@@ -101,3 +100,36 @@ dbsqlite DATABASE {
 
 .fi
 .RE
+
+.SH "EXAMPLES"
+.PP
+Have both \fB\fCexample.org\fR and \fB\fCexample.net\fR read from the same database.
+
+.PP
+.RS
+
+.nf
+example.org example.net {
+    dbsqlite example.db
+}
+
+.fi
+.RE
+
+.PP
+If you want \fIeverything\fP to end up in \fIdbsqlite\fP, you might be tempted to:
+
+.PP
+.RS
+
+.nf
+\&. {
+    dbsqlite root.db
+}
+
+.fi
+.RE
+
+.PP
+But this fails, \fIunless\fP you are actually authoritative for \fB\fC.\fR (the root zone), this because the origins are
+used to find those origins in the database.
