@@ -70,3 +70,24 @@ dbsqlite DATABASE {
     }
 }
 ```
+
+## Examples
+
+Have both `example.org` and `example.net` read from the same database.
+
+```conffile
+example.org example.net {
+    dbsqlite example.db
+}
+```
+
+If you want _everything_ to end up in _dbsqlite_, you might be tempted to:
+
+```conffile
+. {
+    dbsqlite root.db
+}
+```
+
+But this fails, _unless_ you are actually authoritative for `.` (the root zone), this because the origins are
+used to find those origins in the database.

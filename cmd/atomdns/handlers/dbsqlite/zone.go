@@ -8,12 +8,13 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
-	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 )
 
 type Zone struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	Origin string
+	Labels int
 }
 
 var _ dbfile.Interface = &Zone{}
@@ -35,34 +36,14 @@ func (z *Zone) Walk(func(zone.Node) bool) {
 func (z *Zone) AuthoritativeWalk(func(zone.Node, bool) bool) {
 }
 
-func (z *Zone) Retrieve(m *dns.Msg, re *zone.Restart) *dns.Msg {
-	r := new(dns.Msg)
-	dnsutil.SetReply(r, m)
-
-	return r
-}
-
 func (z *Zone) Previous(name string) zone.Node {
-	rrs := []RR{}
-	err := z.Select(&rrs, `SELECT * FROM rrs WHERE name < ? COLLATE canonical ORDER BY name COLLATE canonical DESC LIMIT 1`, name, name)
+	prevs := []string{}
+	err := z.db.Select(&prevs, "SELECT name FROM rrs WHERE name < ? COLLATE canonical ORDER BY name COLLATE canonical DESC LIMIT 1", name)
 	if err != nil {
-		println(err.Error())
 		return zone.Node{}
 	}
-	for _, rr := range rrs {
-		fmt.Printf("LAST found %+v\n", rr)
-	}
-
-	z.Select(&rrs, "SELECT * from rrs ORDER by name COLLATE canonical")
-	for _, rr := range rrs {
-		fmt.Printf("\nfound %+v", rr)
-	}
-	println("****")
-	z.Select(&rrs, "SELECT * from rrs ORDER by name")
-	for _, rr := range rrs {
-		fmt.Printf("\nfound %+v", rr)
-	}
-	return zone.Node{}
+	node, _ := z.Get(prevs[0])
+	return node
 }
 
 func (z *Zone) Get(name string) (zone.Node, bool) {
@@ -74,7 +55,7 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	// But the cache design needs to take into account nxdomain, and do that efficiently.
 
 	rrs := []RR{}
-	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ? ORDER BY name COLLATE canonical", name)
+	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ?", name)
 	if err != nil {
 		return zone.Node{}, false
 	}
@@ -103,25 +84,26 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	return node, true
 }
 
-func (z *Zone) Apex(name ...string) zone.Node {
-	return zone.Node{}
+func (z *Zone) Apex() zone.Node {
+	node, _ := z.Get(z.Origin)
+	return node
 }
 
 func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
 }
 
-func (z *Zone) Count() int {
+func (d *Dbsqlite) Count() int {
 	ints := []int{}
-	if err := z.db.Select(&ints, "SELECT COUNT(*) FROM rrs"); err != nil {
+	if err := d.db.Select(&ints, "SELECT COUNT(*) FROM rrs"); err != nil {
 		return 0
 	}
 	return ints[0]
 }
 
-func (z *Zone) Origins() []string {
+func (d *Dbsqlite) Origins() []string {
 	origins := []string{}
-	z.db.Select(&origins,
+	d.db.Select(&origins,
 		`SELECT DISTINCT name FROM rrs r1
 WHERE NOT EXISTS (
   SELECT 1 FROM rrs r2

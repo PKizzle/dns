@@ -6,11 +6,13 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 	"modernc.org/sqlite"
 )
 
 func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
+	d.Zones = map[string]*Zone{}
 	if !co.NextArg() {
 		return co.ArgErr()
 	}
@@ -18,7 +20,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	if co.Next() {
 		d.Path = co.Val()
 	}
-	sqlite.MustRegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
+	sqlite.RegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
 	co.OnStartup(func() error {
 		log.Info("Startup", "database", d.Path)
@@ -27,7 +29,13 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 		if err != nil {
 			return err
 		}
-		d.Zone = &Zone{db}
+		d.db = db
+		//if len(co.Keys()) > 1 && len(d.From.IPs) > 0 {
+		//	return co.Errf("when transferring from, there can only be a single origin, got: %s", strings.Join(co.Keys(), ", "))
+		//}
+		for _, z := range co.Keys() {
+			d.Zones[dnsutil.Canonical(z)] = &Zone{db: db, Labels: dnsutil.Labels(z), Origin: dnsutil.Canonical(z)}
+		}
 		_, err = db.Exec(`
 CREATE TABLE IF NOT EXISTS rrs (
 name  VARCHAR(255),
@@ -42,20 +50,15 @@ UNIQUE (name, type, data)
 		}
 		return nil
 	})
+	co.OnStartup(func() error {
+		log.Info("Startup", "database", d.Path, "records", d.Count(), "origins", strings.Join(d.Origins(), ","))
+		return nil
+	})
 	co.OnShutdown(func() error {
 		log.Info("Shutdown", "database", d.Path)
-		if d.Zone != nil {
-			d.Zone.db.Close()
-		}
+		d.db.Close()
 		return nil
 	})
 
-	co.OnStartup(func() error {
-		log.Info("Startup", "database", d.Path, "records", d.Zone.Count(), "origins", strings.Join(d.Zone.Origins(), ","))
-		d.Zone.Previous("bogus.example.")
-		println("FFD")
-		d.Zone.Previous("nogus.example.")
-		return nil
-	})
 	return nil
 }

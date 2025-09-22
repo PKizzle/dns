@@ -22,7 +22,7 @@ type Interface interface {
 	// needed.
 	Set(zone.Node) string
 	// Apex returns the apex of the zone. The optional strings indicates which zone's apex to load.
-	Apex(...string) zone.Node
+	Apex() zone.Node
 	// Walk walks the entire walk starting at the apex.
 	Walk(func(zone.Node) bool)
 	// AuthoritativeWalk walks the entire zone starting at the apex, but skips non-authoritative records:
