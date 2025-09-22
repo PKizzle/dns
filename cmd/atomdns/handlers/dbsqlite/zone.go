@@ -12,7 +12,7 @@ type Zone struct {
 // RR is the data we stored in the rrs table.
 type RR struct {
 	Name string
-	Type string `db:"type"`
+	Type string
 	Data string
 	TTL  int
 }
