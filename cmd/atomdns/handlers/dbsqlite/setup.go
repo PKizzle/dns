@@ -2,6 +2,7 @@ package dbsqlite
 
 import (
 	"os"
+	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -50,7 +51,10 @@ UNIQUE (name, type, data)
 	})
 
 	co.OnStartup(func() error {
-		log.Info("Startup", "database", d.Path, "records", d.Zone.Count())
+		log.Info("Startup", "database", d.Path, "records", d.Zone.Count(), "origins", strings.Join(d.Zone.Origins(), ","))
+		d.Zone.Previous("bogus.example.")
+		println("FFD")
+		d.Zone.Previous("nogus.example.")
 		return nil
 	})
 	return nil

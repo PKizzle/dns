@@ -6,13 +6,17 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 )
 
 type Zone struct {
 	db *sqlx.DB
 }
+
+var _ dbfile.Interface = &Zone{}
 
 // RR is the data we stored in the rrs table.
 type RR struct {
@@ -25,6 +29,42 @@ type RR struct {
 func (z *Zone) Load() error            { return nil }
 func (z *Zone) Set(_ zone.Node) string { return "" }
 
+func (z *Zone) Walk(func(zone.Node) bool) {
+}
+
+func (z *Zone) AuthoritativeWalk(func(zone.Node, bool) bool) {
+}
+
+func (z *Zone) Retrieve(m *dns.Msg, re *zone.Restart) *dns.Msg {
+	r := new(dns.Msg)
+	dnsutil.SetReply(r, m)
+
+	return r
+}
+
+func (z *Zone) Previous(name string) zone.Node {
+	rrs := []RR{}
+	err := z.Select(&rrs, `SELECT * FROM rrs WHERE name < ? COLLATE canonical ORDER BY name < ? COLLATE canonical`, name, name)
+	if err != nil {
+		println(err.Error())
+		return zone.Node{}
+	}
+	for _, rr := range rrs {
+		fmt.Printf("LAST found %+v\n", rr)
+	}
+
+	z.Select(&rrs, "SELECT * from rrs ORDER by name COLLATE canonical")
+	for _, rr := range rrs {
+		fmt.Printf("\nfound %+v", rr)
+	}
+	println("****")
+	z.Select(&rrs, "SELECT * from rrs ORDER by name")
+	for _, rr := range rrs {
+		fmt.Printf("\nfound %+v", rr)
+	}
+	return zone.Node{}
+}
+
 func (z *Zone) Get(name string) (zone.Node, bool) {
 	// Get will get name, if that doesn't return anything we do like '%.<name>' this is twofold: get one for
 	// wildcards, and if we get a bunch of _longer_ names we know there are empty non-terminal. TODO(miek):
@@ -36,7 +76,6 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	rrs := []RR{}
 	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ? ORDER BY name COLLATE canonical", name)
 	if err != nil {
-		println(err.Error())
 		return zone.Node{}, false
 	}
 
@@ -64,6 +103,10 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	return node, true
 }
 
+func (z *Zone) Apex(name ...string) zone.Node {
+	return zone.Node{}
+}
+
 func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
 }
@@ -74,4 +117,15 @@ func (z *Zone) Count() int {
 		return 0
 	}
 	return ints[0]
+}
+
+func (z *Zone) Origins() []string {
+	origins := []string{}
+	z.db.Select(&origins,
+		`SELECT DISTINCT name FROM rrs r1
+WHERE NOT EXISTS (
+  SELECT 1 FROM rrs r2
+  WHERE r1.name LIKE '%.' || r2.name AND r1.name != r2.name
+) ORDER BY name COLLATE canonical`)
+	return origins
 }
