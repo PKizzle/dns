@@ -17,7 +17,7 @@ The schema used is:
 
 ```sql
 CREATE TABLE rrs (
-name VARCHAR(255),
+name VARCHAR(255) COLLATE canonical,
 type VARCHAR(10),
 data VARCHAR(65535),
 ttl INTEGER DEFAULT 3600,
