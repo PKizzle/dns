@@ -26,10 +26,10 @@ UNIQUE (name, type, data),
 ```
 
 You can just add RRs to this table for any domain and _dbsqlite_ will happily use them. Relative names will be
-made into fully qualified ones, but adding the closing dot, no origin is appended.
+made into fully qualified ones, by just adding the closing dot, no origin is appended.
 
-    sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
-    sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
+    sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example');
+    sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com');
 
 ## Syntax
 
@@ -41,6 +41,8 @@ dbsqlite DATABASE
 
 - **DATABASE** the file the sqlite database to query. If the path is relative, the path from the global root config will be
   prepended to it.
+
+If **DATABASE** does not exists the file is created and the `rrs` table is initialized.
 
 For extra control you can open the block and define multipe extra properties that deal with zone transfers.
 This is similar to _dbfile_, and we refer to that documentation then to repeat it here.
@@ -59,5 +61,3 @@ dbsqlite DATABASE {
     }
 }
 ```
-
-## Examples
