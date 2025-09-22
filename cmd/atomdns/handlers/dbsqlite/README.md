@@ -19,11 +19,11 @@ The schema used is:
 
 ```sql
 CREATE TABLE rrs (
-name VARCHAR(255) COLLATE canonical,
+name VARCHAR(255),
 type VARCHAR(10),
 data VARCHAR(65535),
-ttl INTEGER DEFAULT 3600,
-UNIQUE (name, type, data),
+ttl INTEGER,
+UNIQUE (name, type, data)
 );
 ```
 
@@ -32,8 +32,8 @@ Where `COLLATE canonical` is a custom collate functions that is `dns.CompareName
 You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
 made into fully qualified ones, by just adding the closing dot, no origin is appended.
 
-    sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example');
-    sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com');
+    sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
+    sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
 
 In other words: this one database can be savely used for all zones you have. Note that you still have to make
 sure the handler gets queries for new zones.

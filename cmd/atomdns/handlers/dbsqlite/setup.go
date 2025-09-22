@@ -29,10 +29,11 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 		d.Zone = &Zone{db}
 		_, err = db.Exec(`
 CREATE TABLE IF NOT EXISTS rrs (
-  name                  VARCHAR(255) COLLATE canonical,
-  type                  VARCHAR(10),
-  data                  VARCHAR(65535),
-  ttl                   INTEGER DEFAULT 3600
+name  VARCHAR(255),
+type  VARCHAR(10),
+data  VARCHAR(65535),
+ttl   INTEGER,
+UNIQUE (name, type, data)
 );
 	`)
 		if err != nil {
@@ -48,6 +49,13 @@ CREATE TABLE IF NOT EXISTS rrs (
 		return nil
 	})
 
+	co.OnStartup(func() error {
+		log.Info("Startup: test")
+
+		d.Get("example.")
+		return nil
+
+	})
 	/*
 		err = db.Select(&rrs, "SELECT * FROM rrs")
 		err = db.Select(&rrs, "SELECT * FROM rrs ORDER BY name COLLATE canonical")
