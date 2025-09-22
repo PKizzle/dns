@@ -26,11 +26,14 @@ UNIQUE (name, type, data),
 );
 ```
 
-You can just add RRs to this table for any domain and _dbsqlite_ will happily use them. Relative names will be
+You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
 made into fully qualified ones, by just adding the closing dot, no origin is appended.
 
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example');
     sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com');
+
+In other words: this one database can be savely used for all zones you have. Note that you still have to make
+sure the handler gets queries for new zones.
 
 ## Syntax
 
