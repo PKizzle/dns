@@ -11,4 +11,4 @@ func (h *Drunk) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.
 
 func (h *Drunk) Key() string { return "drunk" }
 
-var log = slog.Default().With("handler", h.Key())
+var log = slog.Default().With("handler", "drunk")

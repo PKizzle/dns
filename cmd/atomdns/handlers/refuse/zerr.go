@@ -11,4 +11,4 @@ func (h *Refuse) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err
 
 func (h *Refuse) Key() string { return "refuse" }
 
-var log = slog.Default().With("handler", h.Key())
+var log = slog.Default().With("handler", "refuse")
