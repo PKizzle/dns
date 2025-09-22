@@ -40,6 +40,8 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		case *dns.AAAA, *dns.A:
 			m.Answer = []dns.RR{rr}
 			m.Extra = []dns.RR{t}
+		default:
+			m.Rcode = dns.RcodeRefused
 		}
 
 		m = dnsmsg.Funcs(ctx, m)
