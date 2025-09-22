@@ -29,6 +29,9 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	// wildcards, and if we get a bunch of _longer_ names we know there are empty non-terminal. TODO(miek):
 	// figure out how exactly.
 
+	// TODO(miek): this probably warrants a cache that does binary caching
+	// But the cache design needs to take into account nxdomain, and do that efficiently.
+
 	rrs := []RR{}
 	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ? ORDER BY name COLLATE canonical", name)
 	if err != nil {
