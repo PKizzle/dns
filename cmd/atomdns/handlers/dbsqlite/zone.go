@@ -67,3 +67,11 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
 }
+
+func (z *Zone) Count() int {
+	ints := []int{}
+	if err := z.db.Select(&ints, "SELECT COUNT(*) FROM rrs"); err != nil {
+		return 0
+	}
+	return ints[0]
+}

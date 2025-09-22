@@ -20,7 +20,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	sqlite.MustRegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
 	co.OnStartup(func() error {
-		log.Info("Startup: database: " + d.Path)
+		log.Info("Startup", "database", d.Path)
 		_, err := os.OpenFile("db", os.O_CREATE, 0660)
 		db, err := sqlx.Open("sqlite", "db")
 		if err != nil {
@@ -42,7 +42,7 @@ UNIQUE (name, type, data)
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown: database: " + d.Path)
+		log.Info("Shutdown", "database", d.Path)
 		if d.Zone != nil {
 			d.Zone.db.Close()
 		}
@@ -50,15 +50,8 @@ UNIQUE (name, type, data)
 	})
 
 	co.OnStartup(func() error {
-		log.Info("Startup: test")
-
-		d.Get("example.")
+		log.Info("Startup", "database", d.Path, "records", d.Zone.Count())
 		return nil
-
 	})
-	/*
-		err = db.Select(&rrs, "SELECT * FROM rrs")
-		err = db.Select(&rrs, "SELECT * FROM rrs ORDER BY name COLLATE canonical")
-	*/
 	return nil
 }

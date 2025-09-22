@@ -80,7 +80,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 		k.DNSKEY.Header().TTL = s.ttl
 	}
 	co.OnStartup(func() error {
-		log.Info("Startup: signing: " + filepath.Base(s.Path))
+		log.Info("Startup", "signing", filepath.Base(s.Path))
 		for _, z := range s.Zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
@@ -104,7 +104,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 		return s.Resign()
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown: signing")
+		log.Info("Shutdown", "signing", filepath.Base(s.Path))
 		s.cancel()
 		return nil
 	})
