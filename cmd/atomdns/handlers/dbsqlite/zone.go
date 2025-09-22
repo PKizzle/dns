@@ -44,7 +44,7 @@ func (z *Zone) Retrieve(m *dns.Msg, re *zone.Restart) *dns.Msg {
 
 func (z *Zone) Previous(name string) zone.Node {
 	rrs := []RR{}
-	err := z.Select(&rrs, `SELECT * FROM rrs WHERE name < ? COLLATE canonical ORDER BY name < ? COLLATE canonical`, name, name)
+	err := z.Select(&rrs, `SELECT * FROM rrs WHERE name < ? COLLATE canonical ORDER BY name COLLATE canonical DESC LIMIT 1`, name, name)
 	if err != nil {
 		println(err.Error())
 		return zone.Node{}
