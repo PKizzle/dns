@@ -99,7 +99,6 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 
 	// NXDOOMAIN response.
 	if hint != hintDelegation && encloser.Name != r.Question[0].Header().Name {
-		// TODO(miek): identical to nodata..., except the rcode
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
