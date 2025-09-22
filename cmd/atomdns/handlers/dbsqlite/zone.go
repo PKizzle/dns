@@ -1,6 +1,7 @@
 package dbsqlite
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -40,9 +41,9 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	}
 
 	// If deemed OK
-	node := zone.Node{Name: name, RRs: make([]dns.RR, len(rrs))}
+	node := zone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
 	sb := strings.Builder{}
-	for i, rr := range rrs {
+	for _, rr := range rrs {
 		sb.WriteString(rr.Name)
 		sb.WriteByte(' ')
 		sb.WriteString(strconv.Itoa(rr.TTL))
@@ -51,13 +52,15 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 		sb.WriteByte(' ')
 		sb.WriteString(rr.Data)
 		sb.WriteByte('\n')
-		node.RRs[i], err = dns.New(sb.String())
+		rr1, err := dns.New(sb.String())
 		if err != nil {
-			// ...
+			log.Debug(fmt.Sprintf("Failed to convert DB RR to actual RR: %s: %s", sb.String(), err))
+			sb.Reset()
+			continue
 		}
+		node.RRs = append(node.RRs, rr1)
 		sb.Reset()
 	}
-	println(node.String())
 	return node, true
 }
 

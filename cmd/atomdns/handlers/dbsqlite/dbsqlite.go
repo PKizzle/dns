@@ -14,6 +14,5 @@ type Dbsqlite struct {
 
 func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-
 	})
 }

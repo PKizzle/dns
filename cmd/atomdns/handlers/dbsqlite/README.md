@@ -11,7 +11,8 @@ signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. O
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
 your zones and put the generated records in the datebase. The database needs a custom collation, which means
 it can not be created off-line. This handler will never write to the database, for the purpose of generating
-answers the database is completely read-only.
+answers the database is completely read-only. An RR that fails to be converted into a propper `dns.RR` is
+silently discarded, unless `debug` is active, see atom-global(7) for details.
 
 The server will reply with minimal responses by default.
 
