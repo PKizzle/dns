@@ -7,34 +7,24 @@
 //
 // Doing this on insert sucks a bit, but makes the lookup code much more simple (and correct), which is more
 // important for a DNS server.
-package zone
+package dnszone
 
 import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Hints give a hint to z.Msg on what type of answer we got. This could be (mostly?) be done in Msg, but
-// requires redoing work already done, easier to just notify what we have.
-type Hint int
-
-const (
-	hintAnswer Hint = iota
-	hintDelegation
-	hintWildcard
-)
-
 // Retrieve looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA response the message will also contain the correct
 // information. The optional Restart is used to generate the correct CNAME chains.
 // When calling Retrieve for the first time re should be nil.
-func (z *Zone) Retrieve(m *dns.Msg, re *Restart) *dns.Msg {
+func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
 	// so we should be able to Prev to the first label that should fall in this zone.
 	r := new(dns.Msg)
 	dnsutil.SetReply(r, m)
 
-	labels := z.Labels
+	labels := z.Labels()
 	sosynthesis, encloser := Node{}, Node{} // source of synthesis and closes encloser RRset + names.
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
@@ -43,8 +33,8 @@ func (z *Zone) Retrieve(m *dns.Msg, re *Restart) *dns.Msg {
 	qname := r.Question[0].Header().Name
 
 	// Doing apex queries separate simplifies the loop below as we can not have delegation, wildcards, etc.
-	if z.Labels == dnsutil.Labels(qname) {
-		return z.MsgFound(r, z.Apex(), hintAnswer, re)
+	if labels == dnsutil.Labels(qname) {
+		return MsgFound(z, r, z.Apex(), hintAnswer, re)
 	}
 
 	labels++
@@ -81,8 +71,8 @@ Search:
 	}
 
 	if hint == hintWildcard {
-		return z.MsgSynthesize(r, sosynthesis, encloser, re)
+		return Synthesize(z, r, sosynthesis, encloser, re)
 	}
 
-	return z.MsgFound(r, encloser, hint, re)
+	return MsgFound(z, r, encloser, hint, re)
 }

@@ -16,9 +16,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/tidwall/btree"
 )
@@ -27,50 +27,28 @@ import (
 // There is no locking, because after creation this structure is basically read-only.
 // Tree will be used to write, but that has its own locking.
 type Zone struct {
-	Origin string
-	Labels int
+	origin string
+	labels int
 	Path   string
-	Tree   *btree.BTreeG[Node]
+	Tree   *btree.BTreeG[dnszone.Node]
 
-	apex Node // apex node, filled after a Load.
+	apex dnszone.Node // apex node, filled after a Load.
 }
 
-// A Node is a DNS node in the tree.
-type Node struct {
-	Name string
-	RRs  []dns.RR // all the rrs with owner name 'name'.
-}
-
-// Restart is used in the (recursive) calling of Retrieve to complete a CNAME chain. The i index is used to avoid loops
-// in the recursion and we break at 8.
-type Restart struct {
-	Answer []dns.RR // current set of RRs that need to go in the final response
-	I      int      // break recursion at I > 7
-}
-
-func (n Node) String() string {
-	sb := strings.Builder{}
-	for i := range n.RRs {
-		sb.WriteString(n.RRs[i].String())
-		sb.WriteByte('\n')
-	}
-	return sb.String()
-}
-
-func less(a, b Node) bool {
-	x := dns.CompareName(a.Name, b.Name)
-	return x == -1
-}
+var _ dnszone.Interface = &Zone{}
 
 func New(origin, path string) *Zone {
 	z := &Zone{
-		Origin: dnsutil.Canonical(origin),
-		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
+		origin: dnsutil.Canonical(origin),
+		labels: dnsutil.Labels(dnsutil.Canonical(origin)),
 		Path:   func() string { a, _ := filepath.Abs(path); return a }(),
-		Tree:   btree.NewBTreeG(less),
+		Tree:   btree.NewBTreeG(dnszone.Less),
 	}
 	return z
 }
+
+func (z *Zone) Origin() string { return z.origin }
+func (z *Zone) Labels() int    { return z.labels }
 
 // Load loads a new zone with origin from path from z. Load also sets the apex, so the z.Apex can return that.
 func (z *Zone) Load() error {
@@ -78,7 +56,7 @@ func (z *Zone) Load() error {
 	if err != nil {
 		return err
 	}
-	zp := dns.NewZoneParser(f, z.Origin, z.Path)
+	zp := dns.NewZoneParser(f, z.origin, z.Path)
 	zp.SetIncludeAllowed(true)
 	soa := 0
 	// TODO(miek): various optimizations: gather names until we have a different one, then insert.
@@ -88,25 +66,25 @@ func (z *Zone) Load() error {
 		if _, ok := rr.(*dns.SOA); ok {
 			soa++
 		}
-		node := Node{Name: rr.Header().Name, RRs: []dns.RR{rr}}
+		node := dnszone.Node{Name: rr.Header().Name, RRs: []dns.RR{rr}}
 		z.Set(node)
 	}
 	if zp.Err() != nil {
-		return fmt.Errorf("failed to parse zone %q with origin %q: %s ", z.Path, z.Origin, zp.Err())
+		return fmt.Errorf("failed to parse zone %q with origin %q: %s ", z.Path, z.origin, zp.Err())
 	}
 	if soa != 1 {
-		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", z.Path, z.Origin)
+		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", z.Path, z.origin)
 	}
-	z.apex, _ = z.Tree.Get(Node{Name: z.Origin})
+	z.apex, _ = z.Tree.Get(dnszone.Node{Name: z.origin})
 	return nil
 }
 
-func (z *Zone) Apex() Node { return z.apex }
+func (z *Zone) Apex() dnszone.Node { return z.apex }
 
 // Set sets the RRs in the zone. It needs to create any empty non-terminals it has. Meaning for each label
 // a lookup is done if there already is an empty non-terminal, if not an empty set is inserted.
 // We should never be called to insert ENT (or names without RRs attached to them.
-func (z *Zone) Set(node Node) string {
+func (z *Zone) Set(node dnszone.Node) string {
 	// If the name already exist, we can just add our stuff to the node and we are done.
 	n, ok := z.Tree.Get(node)
 	if ok {
@@ -120,17 +98,17 @@ func (z *Zone) Set(node Node) string {
 	// make a.b.example.org, b.example.org. So we need N+2 labels, if this zone has N labels. If we only have
 	// 1 label more, we just created the correct node.
 	labels := dnsutil.Labels(node.Name)
-	if labels == z.Labels+1 {
+	if labels == z.Labels()+1 {
 		return node.Name
 	}
 
 	// Else we create (or check if they exist) the intermediate nodes.
 	off := 0
 	name := node.Name
-	for i := 1; i < labels-z.Labels; i++ {
+	for i := 1; i < labels-z.Labels(); i++ {
 		off, _ = dnsutil.Next(name, off)
 
-		node := Node{Name: name[off:]}
+		node := dnszone.Node{Name: name[off:]}
 		if _, ok := z.Tree.Get(node); ok {
 			continue // already exist, nothing to add
 		}
@@ -140,18 +118,18 @@ func (z *Zone) Set(node Node) string {
 }
 
 // Get gets the node under name from z.
-func (z *Zone) Get(name string) (Node, bool) {
-	n, ok := z.Tree.Get(Node{Name: name})
+func (z *Zone) Get(name string) (dnszone.Node, bool) {
+	n, ok := z.Tree.Get(dnszone.Node{Name: name})
 	if ok {
 		return n, true
 	}
-	return Node{}, false
+	return dnszone.Node{}, false
 }
 
 // Previous returns the logical previous name from name.
-func (z *Zone) Previous(name string) Node {
-	node := Node{}
-	z.Tree.Descend(Node{Name: name}, func(n Node) bool {
+func (z *Zone) Previous(name string) dnszone.Node {
+	node := dnszone.Node{}
+	z.Tree.Descend(dnszone.Node{Name: name}, func(n dnszone.Node) bool {
 		node = n
 		return false
 	})

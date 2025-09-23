@@ -3,6 +3,8 @@ package zone
 import (
 	"fmt"
 	"testing"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 )
 
 func testZoneLoad(t *testing.T) {
@@ -10,7 +12,7 @@ func testZoneLoad(t *testing.T) {
 	if err := z.Load(); err != nil {
 		t.Fatal(err)
 	}
-	z.Walk(func(n Node) bool {
+	z.Walk(func(n dnszone.Node) bool {
 		fmt.Printf("%s :", n.Name)
 		if len(n.RRs) == 0 {
 			fmt.Printf("ENT\n")

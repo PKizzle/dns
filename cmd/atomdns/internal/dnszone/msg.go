@@ -1,14 +1,24 @@
-package zone
+package dnszone
 
 import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// MsgSynthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
+// Hints give a hint to the functions here on what type of answer we got. This could be (mostly?) be done in
+// retreive, but requires redoing work already done, easier to just notify what we have.
+type Hint int
+
+const (
+	hintAnswer Hint = iota
+	hintDelegation
+	hintWildcard
+)
+
+// Synthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
 // more specific. I.e. original qname did not exist. Now we need to assemble the answer plus adding the NSECs
 // that validte the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
-func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart) *dns.Msg {
+func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart) *dns.Msg {
 	// Synthesis, can still lead to no data if the qtype doesn't match.
 	if len(sosynthesis.RRs) > 0 {
 		qtype := dns.RRToType(r.Question[0])
@@ -71,7 +81,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 		}
 		if r.Security { // proving there is no wildcard
 			prev := z.Previous(r.Question[0].Header().Name)
-			if !dns.EqualName(prev.Name, z.Origin) { // we already have the SOA records, don't repeat.
+			if !dns.EqualName(prev.Name, z.Origin()) { // we already have the SOA records, don't repeat.
 				for _, rr := range prev.RRs {
 					if _, ok := rr.(*dns.NSEC); ok {
 						r.Ns = append(r.Ns, rr.Copy())
@@ -89,7 +99,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 	return r
 }
 
-func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.Msg {
+func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.Msg {
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
 	if hint == hintDelegation {
@@ -115,7 +125,7 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 		}
 		if r.Security {
 			prev := z.Previous(r.Question[0].Header().Name)
-			if !dns.EqualName(prev.Name, z.Origin) {
+			if !dns.EqualName(prev.Name, z.Origin()) {
 				for _, rr := range prev.RRs {
 					if _, ok := rr.(*dns.NSEC); ok {
 						r.Ns = append(r.Ns, rr.Copy())
@@ -134,7 +144,7 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 	// If this is a CNAME we need to chase it within the zone for (up to 8?) CNAME chains.
 	for _, rr := range encloser.RRs {
 		if dns.RRToType(rr) == dns.TypeCNAME && qtype != dns.TypeCNAME {
-			return z.MsgCanonical(r, encloser, re)
+			return Canonical(z, r, encloser, re)
 		}
 	}
 	if re != nil {
@@ -210,8 +220,8 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 	return r
 }
 
-// MsgCanonical follow the cname chain.
-func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
+// Canonical follows the cname chain.
+func Canonical(z Interface, r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 	if re == nil {
 		re = new(Restart)
 	}
@@ -230,5 +240,5 @@ func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 	if re.I > 7 {
 		return r
 	}
-	return z.Retrieve(r, re)
+	return Retrieve(z, r, re)
 }

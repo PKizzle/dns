@@ -39,17 +39,17 @@ func (d *Dbfile) Reload() error {
 					// check which zone needs reloading. Need RLOCK! But we also Lock later, this might clash...
 					for _, z := range d.Zones {
 						if z.Path == event.Name {
-							z1 := zone.New(z.Origin, event.Name)
+							z1 := zone.New(z.Origin(), event.Name)
 							if err := z1.Load(); err != nil {
-								log.Error(fmt.Sprintf("Failed reload of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
+								log.Error(fmt.Sprintf("Failed reload of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))
 								continue
 							}
 							d.Lock()
-							d.Zones[z.Origin] = z1
+							d.Zones[z.Origin()] = z1
 							d.Unlock()
 
-							log.Info(fmt.Sprintf("Reload of zone %q in %q successful", z.Origin, filepath.Base(event.Name)))
-							go d.To.Notify(z.Origin)
+							log.Info(fmt.Sprintf("Reload of zone %q in %q successful", z.Origin(), filepath.Base(event.Name)))
+							go d.To.Notify(z.Origin())
 							break
 						}
 					}

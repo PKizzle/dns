@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnstest"
 )
 
@@ -200,7 +201,7 @@ func TestZone(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 
-			rmsg := z.Retrieve(tc.in(), nil)
+			rmsg := dnszone.Retrieve(z, tc.in(), nil)
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)
@@ -356,7 +357,7 @@ func TestZoneWildcard(t *testing.T) {
 				exprrs = append(exprrs, rr)
 			}
 
-			rmsg := z.Retrieve(tc.in(), nil)
+			rmsg := dnszone.Retrieve(z, tc.in(), nil)
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)

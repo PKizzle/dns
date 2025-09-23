@@ -11,6 +11,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -22,7 +23,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		return z, err
 	}
 
-	n := zone.Node{Name: origin}
+	n := dnszone.Node{Name: origin}
 	for _, pair := range s.KeyPairs {
 		n.RRs = append(n.RRs, pair.DNSKEY)
 		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA1).ToCDS())
@@ -37,15 +38,15 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	for i := range nf.nsecs {
 		z.Set(nf.nsecs[i])
 	}
-	z.Set(nf.Last(z.Origin))
+	z.Set(nf.Last(z.Origin()))
 
 	// Now walk again to sign the rest.
 	rrset := []dns.RR{}
-	rrsigs := []zone.Node{}
+	rrsigs := []dnszone.Node{}
 	incep, expir := lifetime(time.Now().UTC())
 
 	options := &dns.SignOption{Pooler: s.pool}
-	z.AuthoritativeWalk(func(n zone.Node, auth bool) bool {
+	z.AuthoritativeWalk(func(n dnszone.Node, auth bool) bool {
 		if !auth || len(n.RRs) == 0 {
 			return true
 		}
@@ -64,7 +65,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 				}
 			}
 
-			rrsignode := zone.Node{Name: n.Name, RRs: make([]dns.RR, 0, len(s.KeyPairs))}
+			rrsignode := dnszone.Node{Name: n.Name, RRs: make([]dns.RR, 0, len(s.KeyPairs))}
 			for _, pair := range s.KeyPairs {
 				rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
 				rrsig.Sign(pair.Signer, rrset, options)
@@ -90,10 +91,10 @@ type nsecfn struct {
 	bitmap []uint16
 	ttl    uint32
 
-	nsecs []zone.Node
+	nsecs []dnszone.Node
 }
 
-func types(n zone.Node, ttl uint32) []uint16 {
+func types(n dnszone.Node, ttl uint32) []uint16 {
 	// while looking at them anyway we set the ttl.
 	types := []uint16{} // pool for this too?
 	for _, rr := range n.RRs {
@@ -108,7 +109,7 @@ func types(n zone.Node, ttl uint32) []uint16 {
 
 // Walk is used when signing a zone. It generates all the NSECs that a zone needs.
 // We can't insert while walking, so we need save the nsec+rssig and insert them post walk.
-func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
+func (nf *nsecfn) Walk(n dnszone.Node, auth bool) bool {
 	if !auth || len(n.RRs) == 0 { // empty non-terminal
 		return true
 	}
@@ -122,16 +123,16 @@ func (nf *nsecfn) Walk(n zone.Node, auth bool) bool {
 }
 
 // Last creates the last NSEC, that loops back to the origin. Walk misses this.
-func (nf *nsecfn) Last(origin string) zone.Node { return nf.nsec(origin) }
+func (nf *nsecfn) Last(origin string) dnszone.Node { return nf.nsec(origin) }
 
 // nsec creates an NSEC + RRSIG(s) node from nf.
-func (nf *nsecfn) nsec(name string) zone.Node {
+func (nf *nsecfn) nsec(name string) dnszone.Node {
 	nsec := &dns.NSEC{
 		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
 		NextDomain: name,
 		TypeBitMap: nf.bitmap,
 	}
-	nsecnode := zone.Node{Name: nf.last}
+	nsecnode := dnszone.Node{Name: nf.last}
 	nsecnode.RRs = append(nsecnode.RRs, nsec)
 
 	for _, pair := range nf.keypairs {
@@ -198,9 +199,9 @@ func (s Sign) Write(z *zone.Zone) error {
 	}
 	defer os.Remove(f.Name())
 
-	log.Debug(fmt.Sprintf("Zone %q in %q is signed and is written to temp. file %s", z.Origin, filepath.Base(z.Path), filepath.Base(f.Name())))
+	log.Debug(fmt.Sprintf("Zone %q in %q is signed and is written to temp. file %s", z.Origin(), filepath.Base(z.Path), filepath.Base(f.Name())))
 
-	z.Walk(func(n zone.Node) bool {
+	z.Walk(func(n dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
 			return true
 		}
@@ -209,6 +210,6 @@ func (s Sign) Write(z *zone.Zone) error {
 	})
 	f.Close()
 	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
-	log.Info(fmt.Sprintf("Zone %q in %q is signed and is written to %s", z.Origin, filepath.Base(z.Path), filepath.Base(target)))
+	log.Info(fmt.Sprintf("Zone %q in %q is signed and is written to %s", z.Origin(), filepath.Base(z.Path), filepath.Base(target)))
 	return os.Rename(f.Name(), target)
 }

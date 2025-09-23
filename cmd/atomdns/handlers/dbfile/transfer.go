@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -45,7 +45,7 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 	d.RUnlock()
 
 	apex := z.Apex()
-	z.Walk(func(n zone.Node) bool {
+	z.Walk(func(n dnszone.Node) bool {
 		env <- &dns.Envelope{Answer: n.RRs}
 		return true
 	})

@@ -8,10 +8,11 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 )
 
 func TestSign(t *testing.T) {
-	dnszone := "miek.nl."
+	testzone := "miek.nl."
 	config := `sign testdata/db.miek.nl {
         		key testdata/Kmiek.nl.+013+59725
 	    	}`
@@ -23,35 +24,35 @@ func TestSign(t *testing.T) {
 		t.Fatal(err)
 	}
 	// because of NewTestController's way of working we miss sign.Zones map, because we don't have keys to add.
-	s.Zones = map[string]*zone.Zone{dnszone: zone.New(dnszone, s.Path)}
+	s.Zones = map[string]*zone.Zone{testzone: zone.New(testzone, s.Path)}
 
-	sz, err := s.Sign(dnszone)
+	sz, err := s.Sign(testzone)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	testcases := []struct {
 		name string
-		a    func() zone.Node
-		b    func() zone.Node
-		ok   func(a, b zone.Node) error
+		a    func() dnszone.Node
+		b    func() dnszone.Node
+		ok   func(a, b dnszone.Node) error
 	}{
 		{
 			"nsec-chain",
-			func() zone.Node { apex, _ := sz.Get(dnszone); return apex },
-			func() zone.Node { next, _ := sz.Get("www." + dnszone); return next },
-			func(a, b zone.Node) error {
+			func() dnszone.Node { apex, _ := sz.Get(testzone); return apex },
+			func() dnszone.Node { next, _ := sz.Get("www." + testzone); return next },
+			func(a, b dnszone.Node) error {
 				for _, rr := range a.RRs {
 					if n, ok := rr.(*dns.NSEC); ok {
-						if n.NextDomain != "a."+dnszone {
-							return fmt.Errorf("next domain is not: %s", "a."+dnszone)
+						if n.NextDomain != "a."+testzone {
+							return fmt.Errorf("next domain is not: %s", "a."+testzone)
 						}
 					}
 				}
 				for _, rr := range b.RRs {
 					if n, ok := rr.(*dns.NSEC); ok {
-						if n.NextDomain != dnszone {
-							return fmt.Errorf("next domain is wrapped back to: %s", dnszone)
+						if n.NextDomain != testzone {
+							return fmt.Errorf("next domain is wrapped back to: %s", testzone)
 						}
 					}
 				}
@@ -60,9 +61,9 @@ func TestSign(t *testing.T) {
 		},
 		{
 			"nsec-bitmap",
-			func() zone.Node { apex, _ := sz.Get(dnszone); return apex },
-			func() zone.Node { return zone.Node{} },
-			func(a, b zone.Node) error {
+			func() dnszone.Node { apex, _ := sz.Get(testzone); return apex },
+			func() dnszone.Node { return dnszone.Node{} },
+			func(a, b dnszone.Node) error {
 				for _, rr := range a.RRs {
 					exp := []uint16{dns.TypeNS, dns.TypeSOA, dns.TypeMX, dns.TypeAAAA, dns.TypeRRSIG, dns.TypeNSEC, dns.TypeDNSKEY, dns.TypeCDS, dns.TypeCDNSKEY}
 					if n, ok := rr.(*dns.NSEC); ok {
