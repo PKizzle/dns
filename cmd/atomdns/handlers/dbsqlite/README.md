@@ -23,7 +23,9 @@ query and may differ with the origins specified in the configuration.
 
 The server will reply with minimal responses by default.
 
-The schema used is:
+### Database
+
+The schema used for the database is:
 
 ```sql
 CREATE TABLE rrs (
@@ -43,6 +45,8 @@ made not be made into fully qualified ones, and for some queries that will not b
 
 This one database can be savely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
+
+#### Importing zone files
 
 If you have a zone file you can use the `.import` feature of SQLite to import the file in one go using the
 excellent "ldns" utils from NLnet Labs (https://www.nlnetlabs.nl/projects/ldns/about/).

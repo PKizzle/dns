@@ -29,8 +29,9 @@ query and may differ with the origins specified in the configuration.
 .PP
 The server will reply with minimal responses by default.
 
+.SH "DATABASE"
 .PP
-The schema used is:
+The schema used for the database is:
 
 .PP
 .RS
@@ -65,6 +66,7 @@ sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600)
 This one database can be savely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
 
+.SS "IMPORTING ZONE FILES"
 .PP
 If you have a zone file you can use the \fB\fC.import\fR feature of SQLite to import the file in one go using the
 excellent "ldns" utils from NLnet Labs (https://www.nlnetlabs.nl/projects/ldns/about/).
