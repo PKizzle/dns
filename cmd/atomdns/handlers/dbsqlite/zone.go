@@ -98,12 +98,9 @@ func (z *Zone) Previous(name string) zone.Node {
 }
 
 func (z *Zone) Get(name string) (zone.Node, bool) {
-	// Get will get name, if that doesn't return anything we do like '%.<name>' this is twofold: get one for
-	// wildcards, and if we get a bunch of _longer_ names we know there are empty non-terminal. TODO(miek):
-	// figure out how exactly.
-
-	// TODO(miek): this probably warrants a cache that does binary caching
-	// But the cache design needs to take into account nxdomain, and do that efficiently.
+	// Get will get name, if that doesn't return anything we do LIKE '%.<name>' this is to shake out empty
+	// non-terminals. If we have something returned we know that <name> is an ENT. Wildcards are handled by
+	// retrieve.
 
 	rrs := []RR{}
 	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ?", name)
@@ -111,28 +108,41 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 		return zone.Node{}, false
 	}
 
-	// If deemed OK
-	node := zone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
-	sb := strings.Builder{}
-	for _, rr := range rrs {
-		sb.WriteString(rr.Name)
-		sb.WriteByte(' ')
-		sb.WriteString(strconv.Itoa(rr.TTL))
-		sb.WriteByte(' ')
-		sb.WriteString(rr.Type)
-		sb.WriteByte(' ')
-		sb.WriteString(rr.Data)
-		sb.WriteByte('\n')
-		rr1, err := dns.New(sb.String())
-		if err != nil {
-			log.Debug(fmt.Sprintf("Failed to convert DB RR to actual RR: %s: %s", sb.String(), err))
+	if len(rrs) > 0 {
+		node := zone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
+		sb := strings.Builder{} // builderPool? TODO(miek)
+		for _, rr := range rrs {
+			sb.WriteString(rr.Name)
+			sb.WriteByte(' ')
+			sb.WriteString(strconv.Itoa(rr.TTL))
+			sb.WriteByte(' ')
+			sb.WriteString(rr.Type)
+			sb.WriteByte(' ')
+			sb.WriteString(rr.Data)
+			sb.WriteByte('\n')
+			rr1, err := dns.New(sb.String())
+			if err != nil {
+				log.Debug(fmt.Sprintf("Failed to convert DB RR to actual RR: %s: %s", sb.String(), err))
+				sb.Reset()
+				continue
+			}
+			node.RRs = append(node.RRs, rr1)
 			sb.Reset()
-			continue
 		}
-		node.RRs = append(node.RRs, rr1)
-		sb.Reset()
+		return node, true
 	}
-	return node, true
+
+	// nothing found, check for empty non-terminals, if this returns a wildcard? Should we exclude wildcards? TODO(miek).
+	names := []string{}
+	err = z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical`, name))
+	if err != nil {
+		return zone.Node{}, false
+	}
+	if len(names) > 0 { // we have found longer names than name, we have an empty non-terminal at name
+		return zone.Node{Name: name}, true
+	}
+
+	return zone.Node{}, false
 }
 
 func (z *Zone) Apex() zone.Node {

@@ -18,6 +18,9 @@ purpose of generating answers the database is completely read-only.
 An RR that fails to be converted into a propper `dns.RR` is silently discarded, unless `debug` is active, see
 atomdns-global(7) for details. The class is `IN` and can't be overriden.
 
+When atomdns startup the _dbsqlite_ handler will log how many origins it found in the database, this is a live
+query and may differ with the origins specified in the configuration.
+
 The server will reply with minimal responses by default.
 
 The schema used is:
