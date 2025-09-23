@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -67,6 +68,19 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		d.RUnlock()
 		for z := range zones {
 			log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(d.Path))
+
+			apex := z.Apex()
+			serial := uint32(0)
+			for _, rr := range apex.RRs {
+				if s, ok := rr.(*dns.SOA); ok {
+					serial = s.Serial
+					break
+				}
+			}
+			if !d.From.AvailableFrom(z.Origin(), serial) {
+				continue
+			}
+
 			err := d.TransferIn(z.Origin())
 			if err != nil {
 				log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z.Origin(), d.Path, err))

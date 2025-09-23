@@ -61,7 +61,6 @@ func (d *Dbfile) TransferIn(origin string) error {
 	// save into temp file and then move this file over the dbfile path.
 	c := dns.NewClient()
 	m := dns.NewMsg(origin, dns.TypeAXFR)
-	// compare SOA, we do an AXFR so that's an easy test, check for record. zone.Apex().
 
 	f, err := os.CreateTemp(filepath.Dir(d.Path), "xxxxx.transferred")
 	if err != nil {
