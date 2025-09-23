@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,7 +44,9 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log.Info("Startup", "reload", filepath.Base(d.Path))
 		d.RLock()
-		for _, z := range d.Zones {
+		zones := maps.Values(d.Zones)
+		d.RUnlock()
+		for z := range zones {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				log.Warn(fmt.Sprintf("Zone %q in file %q does not exist (yet?)", z.Origin(), filepath.Base(z.Path)))
@@ -53,7 +56,6 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 				return co.Err(err.Error())
 			}
 		}
-		d.RUnlock()
 		return d.Reload()
 	})
 	co.OnStartup(func() error {
@@ -61,7 +63,9 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			return nil
 		}
 		d.RLock()
-		for _, z := range d.Zones {
+		zones := maps.Values(d.Zones)
+		d.RUnlock()
+		for z := range zones {
 			log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(d.Path))
 			err := d.TransferIn(z.Origin())
 			if err != nil {
@@ -69,7 +73,6 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			}
 			break
 		}
-		d.RUnlock()
 		return d.Retransfer()
 	})
 	co.OnShutdown(func() error {

@@ -40,9 +40,7 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		w.Close()
 	})
 
-	d.RLock()
-	z := d.Zones[dns.Zone(ctx)]
-	d.RUnlock()
+	z := d.Zone(dns.Zone(ctx))
 
 	apex := z.Apex()
 	z.Walk(func(n dnszone.Node) bool {

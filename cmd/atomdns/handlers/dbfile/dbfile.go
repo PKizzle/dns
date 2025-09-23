@@ -36,9 +36,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 
-		d.RLock()
-		z := d.Zones[dns.Zone(ctx)]
-		d.RUnlock()
+		z := d.Zone(dns.Zone(ctx))
 
 		m := dnszone.Retrieve(z, r, nil)
 		m.Data = r.Data
@@ -46,4 +44,11 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		io.Copy(w, m)
 	})
+}
+
+func (d *Dbfile) Zone(origin string) *zone.Zone {
+	d.RLock()
+	z := d.Zones[origin]
+	d.RUnlock()
+	return z
 }
