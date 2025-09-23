@@ -41,6 +41,24 @@ made not be made into fully qualified ones, and for some queries that will not b
 This one database can be savely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
 
+If you have a zone file you can use the `.import` feature of SQLite to import the file in one go using the
+excellent "ldns" utils from NLnet Labs (https://www.nlnetlabs.nl/projects/ldns/about/).
+
+    ldns-read-zone db.example.org  | sed 's/;.*$//' | sed 's/ $//'  | \
+    awk '{print $1 "," $4 "," substr($0, index($0, $5)) "," $2}' > csv.example.org
+
+And then:
+
+    sqlite3 /tmp/db <<EOF
+    heredoc> .mode csv
+    heredoc> BEGIN;
+    heredoc> .import csv.example.org rrs
+    heredoc> COMMIT;
+    heredoc> EOF
+
+Where the `ldns-read-zone` pipeline removes trailing whitespace, and the helpful comments after DNSKEY
+records, then `awk` re-arranges it into the proper format.
+
 ## Syntax
 
 In it simplests form _dbsqlite_ you can use:
