@@ -45,7 +45,7 @@ type Node struct {
 // in the recursion and we break at 8.
 type Restart struct {
 	Answer []dns.RR // current set of RRs that need to go in the final response
-	i      int      // break recursion at i > 7
+	I      int      // break recursion at I > 7
 }
 
 func (n Node) String() string {

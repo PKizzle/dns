@@ -226,8 +226,8 @@ func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 			re.Answer = append(re.Answer, rr)
 		}
 	}
-	re.i++
-	if re.i > 7 {
+	re.I++
+	if re.I > 7 {
 		return r
 	}
 	return z.Retrieve(r, re)
