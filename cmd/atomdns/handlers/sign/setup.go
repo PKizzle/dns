@@ -25,14 +25,10 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 	s.Zones = map[string]*zone.Zone{}
 	s.Directory = co.Global.Root
 	if co.Next() {
-		args := co.RemainingArgs()
-		if len(args) != 1 {
+		if !co.Next() {
 			return co.ArgErr()
 		}
-		s.Path = args[0]
-		if !filepath.IsAbs(s.Path) {
-			s.Path = filepath.Join(co.Global.Root, s.Path)
-		}
+		s.Path = co.Path()
 		s.Directory = filepath.Dir(s.Path)
 		for co.NextBlock(0) {
 			switch co.Val() {

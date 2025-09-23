@@ -31,10 +31,7 @@ func (t *Template) Setup(co *dnsserver.Controller) (err error) {
 		}
 
 		if co.NextBlock(0) {
-			t.Path = co.Val()
-			if !filepath.IsAbs(t.Path) {
-				t.Path = filepath.Join(co.Global.Root, t.Path)
-			}
+			t.Path = co.Path()
 		}
 	}
 	if t.Path == "" {
