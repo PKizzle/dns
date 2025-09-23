@@ -15,7 +15,8 @@ answers the database is completely read-only. An RR that fails to be converted i
 silently discarded, unless `debug` is active, see atomdns-global(7) for details. The class is `IN` and can't be
 overriden.
 
-The server will reply with minimal responses by default.
+The server will reply with minimal responses by default. The _dbsqlite_ handler will _never_ write to the
+database.
 
 The schema used is:
 
@@ -30,7 +31,7 @@ UNIQUE (name, type, data)
 ```
 
 You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
-made into fully qualified ones, by just adding the closing dot, no origin is appended.
+made not be made into fully qualified ones, and for some queries that will not be matched and silently _not_ included.
 
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
     sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
@@ -51,15 +52,13 @@ dbsqlite DATABASE
 
 If **DATABASE** does not exists the file is created and the `rrs` table is initialized.
 
-For extra control you can open the block and define multipe extra properties that deal with zone transfers.
-This is similar to _dbfile_, and we refer to that documentation then to repeat it here.
+For extra control you can open the block and define multipe extra properties that deal with zone transfers. Only outgoing zone
+transfers are supported.
+It is similar to _dbfile_, and we refer to that documentation then to repeat it here.
 
 ```
 dbsqlite DATABASE {
     transfer {
-        from IP[:PORT] [IP[:PORT]]... {
-            key NAME ALGORITHM SECRET
-        }
         to [IP[:PORT]]... {
             notify IP[:PORT] [IP[:PORT]]...
             source IP [IP]...

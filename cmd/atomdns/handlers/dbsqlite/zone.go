@@ -8,6 +8,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -30,10 +31,60 @@ type RR struct {
 func (z *Zone) Load() error            { return nil }
 func (z *Zone) Set(_ zone.Node) string { return "" }
 
-func (z *Zone) Walk(func(zone.Node) bool) {
+func (z *Zone) Walk(fn func(zone.Node) bool) {
+	// For some reason this give no names, but:
+	// err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE '%.?' COLLATE canonical`, z.Origin)
+	// this does:
+	names := []string{}
+	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.Origin))
+	if err != nil {
+		return
+	}
+	for _, name := range names {
+		n, ok := z.Get(name)
+		if !ok {
+			continue
+		}
+		if !fn(n) {
+			return
+		}
+	}
 }
 
-func (z *Zone) AuthoritativeWalk(func(zone.Node, bool) bool) {
+func (z *Zone) AuthoritativeWalk(fn func(zone.Node, bool) bool) {
+	// See comment in Walk, we keep track of delegations, also see dbfile/zone.Walk.
+	names := []string{}
+	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.Origin))
+	if err != nil {
+		return
+	}
+
+	delegated := map[string]struct{}{}
+
+	z.Walk(func(n zone.Node) bool {
+		if len(n.Name) > len(z.Origin) { // apex also has NSes, if we add those the entire zone would be delegated
+			for _, rr := range n.RRs {
+				if _, ok := rr.(*dns.NS); ok {
+					delegated[n.Name] = struct{}{}
+					break
+				}
+			}
+		}
+		auth, end := true, false
+		i, j := 0, 0
+		for ; !end; j, end = dnsutil.Next(n.Name, i) {
+			if len(n.Name[j:]) < len(z.Origin) {
+				break
+			}
+			if _, ok := delegated[n.Name[j:]]; ok {
+				auth = false
+				break
+			}
+			i++
+		}
+
+		return fn(n, auth)
+	})
 }
 
 func (z *Zone) Previous(name string) zone.Node {

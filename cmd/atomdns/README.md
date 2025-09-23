@@ -15,8 +15,12 @@ Currently atomdns is able to:
 - Provide query logging (_log_).
 - Access control for queryes (_acl_).
 - Provide metrics (by using Prometheus) (_metrics_).
+- Serve from a SQLite file (_dbsqlite_).
 - ... and more.
 - Serve as a router to router queries to some other (recursive) nameserver (_route_). [TODO]
+
+Each of these handlers has its own manual page, i.e. see atomdns-dbfile(7) for more information on the
+_dbfile_ handler.
 
 ## Compilation from Source
 
@@ -43,4 +47,4 @@ on port `53` and enables `whoami` handler is:
 }
 ```
 
-Then start `atomdns -p 1053 -c Conffile`.
+Then start `atomdns -p 1053 -c Conffile`. See atomdns-conffile(7) for more information.

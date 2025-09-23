@@ -30,9 +30,6 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 			return err
 		}
 		d.db = db
-		//if len(co.Keys()) > 1 && len(d.From.IPs) > 0 {
-		//	return co.Errf("when transferring from, there can only be a single origin, got: %s", strings.Join(co.Keys(), ", "))
-		//}
 		for _, z := range co.Keys() {
 			d.Zones[dnsutil.Canonical(z)] = &Zone{db: db, Labels: dnsutil.Labels(z), Origin: dnsutil.Canonical(z)}
 		}
@@ -45,10 +42,7 @@ ttl   INTEGER,
 UNIQUE (name, type, data)
 );
 	`)
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	})
 	co.OnStartup(func() error {
 		log.Info("Startup", "database", d.Path, "records", d.Count(), "origins", strings.Join(d.Origins(), ","))
