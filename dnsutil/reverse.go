@@ -39,7 +39,7 @@ func ReverseAddr(ip net.IP) (arpa string) {
 			buf = append(buf, '.')
 		}
 		// Append "in-addr.arpa." and return (buf already has the final .)
-		buf = append(buf, IP4arpa...)
+		buf = append(buf, IP4arpa[1:]...)
 		return string(buf)
 	}
 	// Must be IPv6
@@ -50,7 +50,7 @@ func ReverseAddr(ip net.IP) (arpa string) {
 		buf = append(buf, hexDigit[v&0xF], '.', hexDigit[v>>4], '.')
 	}
 	// Append "ip6.arpa." and return (buf already has the final .)
-	buf = append(buf, IP6arpa...)
+	buf = append(buf, IP6arpa[1:]...)
 	return string(buf)
 }
 
