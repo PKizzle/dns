@@ -30,16 +30,16 @@ func (s *Sign) Resign() error {
 					time.Sleep(2 * time.Second)
 					for _, z := range s.Zones {
 						if z.Path == event.Name {
-							zs, err := s.Sign(z.Origin)
+							zs, err := s.Sign(z.Origin())
 							if err != nil {
-								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
+								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))
 								break
 							}
 							if err := s.Write(zs); err != nil {
-								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(event.Name), err))
+								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))
 								break
 							}
-							log.Info(fmt.Sprintf("Resign of zone %q in %q successful", z.Origin, filepath.Base(event.Name)))
+							log.Info(fmt.Sprintf("Resign of zone %q in %q successful", z.Origin(), filepath.Base(event.Name)))
 						}
 					}
 				default:
@@ -51,18 +51,18 @@ func (s *Sign) Resign() error {
 				log.Debug("Zone watch event error", "err", err)
 			case <-ticker.C:
 				for _, z := range s.Zones {
-					expired, err := s.Expired(z.Origin)
+					expired, err := s.Expired(z.Origin())
 					if !expired {
-						log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin, filepath.Base(z.Path)))
+						log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin(), filepath.Base(z.Path)))
 						continue
 					}
-					zs, err := s.Sign(z.Origin)
+					zs, err := s.Sign(z.Origin())
 					if err != nil {
-						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(z.Path), err))
+						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(z.Path), err))
 						continue
 					}
 					if err := s.Write(zs); err != nil {
-						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin, filepath.Base(z.Path), err))
+						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(z.Path), err))
 						continue
 					}
 				}

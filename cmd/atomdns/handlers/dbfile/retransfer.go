@@ -37,7 +37,7 @@ func (d *Dbfile) Retransfer() error {
 
 				err := d.TransferIn(z1.Origin())
 				if err != nil {
-					log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z1.Origin, d.Path, err))
+					log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z1.Origin(), d.Path, err))
 					continue
 				}
 			case <-d.ctx.Done():

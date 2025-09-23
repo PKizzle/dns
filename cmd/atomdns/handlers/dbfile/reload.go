@@ -48,7 +48,7 @@ func (d *Dbfile) Reload() error {
 							d.Zones[z.Origin()] = z1
 							d.Unlock()
 
-							log.Info(fmt.Sprintf("Reload of zone %q in %q successful", z.Origin, filepath.Base(event.Name)))
+							log.Info(fmt.Sprintf("Reload of zone %q in %q successful", z.Origin(), filepath.Base(event.Name)))
 							go d.To.Notify(z.Origin())
 							break
 						}
