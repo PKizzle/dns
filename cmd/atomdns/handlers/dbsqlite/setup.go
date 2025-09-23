@@ -31,7 +31,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 		}
 		d.db = db
 		for _, z := range co.Keys() {
-			d.Zones[dnsutil.Canonical(z)] = &Zone{db: db, Labels: dnsutil.Labels(z), Origin: dnsutil.Canonical(z)}
+			d.Zones[dnsutil.Canonical(z)] = &Zone{db: db, labels: dnsutil.Labels(z), origin: dnsutil.Canonical(z)}
 		}
 		_, err = db.Exec(`
 CREATE TABLE IF NOT EXISTS rrs (

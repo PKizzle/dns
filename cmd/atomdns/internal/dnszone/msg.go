@@ -10,9 +10,9 @@ import (
 type Hint int
 
 const (
-	HintAnswer Hint = iota
-	HintDelegation
-	HintWildcard
+	hintAnswer Hint = iota
+	hintDelegation
+	hintWildcard
 )
 
 // Synthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
@@ -102,13 +102,13 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart
 func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.Msg {
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
-	if hint == HintDelegation {
+	if hint == hintDelegation {
 		section = &r.Ns
 		qtype = dns.TypeNS
 	}
 
 	// NXDOOMAIN response.
-	if hint != HintDelegation && encloser.Name != r.Question[0].Header().Name {
+	if hint != hintDelegation && encloser.Name != r.Question[0].Header().Name {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
@@ -159,7 +159,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 		if dns.RRToType(rr) == qtype {
 			*section = append(*section, rr.Copy())
 		}
-		if hint == HintDelegation {
+		if hint == hintDelegation {
 			if n, ok := rr.(*dns.NS); ok {
 				// if the owner name is a child of the target we need to find the glue
 				if dnsutil.IsBelow(rr.Header().Name, n.Ns) {
@@ -188,7 +188,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 				if s.TypeCovered == qtype {
 					*section = append(*section, rr.Copy())
 				}
-				if hint == HintDelegation {
+				if hint == hintDelegation {
 					if s.TypeCovered == dns.TypeDS {
 						*section = append(*section, rr.Copy())
 					}
@@ -240,5 +240,5 @@ func Canonical(z Interface, r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 	if re.I > 7 {
 		return r
 	}
-	return z.Retrieve(r, re)
+	return Retrieve(z, r, re)
 }

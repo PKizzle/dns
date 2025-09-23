@@ -46,8 +46,8 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 			break
 		}
 	}
-	if !d.From.AvailableFrom(z.Origin, serial) {
-		log.Warn(fmt.Sprintf("Notify seen for %q, but no newer zone available", z.Origin))
+	if !d.From.AvailableFrom(z.Origin(), serial) {
+		log.Warn(fmt.Sprintf("Notify seen for %q, but no newer zone available", z.Origin()))
 		return
 	}
 

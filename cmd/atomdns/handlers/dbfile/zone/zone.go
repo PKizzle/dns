@@ -28,7 +28,7 @@ import (
 // Tree will be used to write, but that has its own locking.
 type Zone struct {
 	origin string
-	Labels int
+	labels int
 	Path   string
 	Tree   *btree.BTreeG[dnszone.Node]
 
@@ -40,7 +40,7 @@ var _ dnszone.Interface = &Zone{}
 func New(origin, path string) *Zone {
 	z := &Zone{
 		origin: dnsutil.Canonical(origin),
-		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
+		labels: dnsutil.Labels(dnsutil.Canonical(origin)),
 		Path:   func() string { a, _ := filepath.Abs(path); return a }(),
 		Tree:   btree.NewBTreeG(dnszone.Less),
 	}
@@ -48,6 +48,7 @@ func New(origin, path string) *Zone {
 }
 
 func (z *Zone) Origin() string { return z.origin }
+func (z *Zone) Labels() int    { return z.labels }
 
 // Load loads a new zone with origin from path from z. Load also sets the apex, so the z.Apex can return that.
 func (z *Zone) Load() error {
@@ -97,14 +98,14 @@ func (z *Zone) Set(node dnszone.Node) string {
 	// make a.b.example.org, b.example.org. So we need N+2 labels, if this zone has N labels. If we only have
 	// 1 label more, we just created the correct node.
 	labels := dnsutil.Labels(node.Name)
-	if labels == z.Labels+1 {
+	if labels == z.Labels()+1 {
 		return node.Name
 	}
 
 	// Else we create (or check if they exist) the intermediate nodes.
 	off := 0
 	name := node.Name
-	for i := 1; i < labels-z.Labels; i++ {
+	for i := 1; i < labels-z.Labels(); i++ {
 		off, _ = dnsutil.Next(name, off)
 
 		node := dnszone.Node{Name: name[off:]}

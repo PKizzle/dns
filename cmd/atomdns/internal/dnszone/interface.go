@@ -1,9 +1,5 @@
 package dnszone
 
-import (
-	"codeberg.org/miekg/dns"
-)
-
 // Interface defines the methods for each db* implementation. This is currently unused, and if used
 // this needs to live in the pkg/db or something, not tucked away here.
 //
@@ -11,8 +7,6 @@ import (
 type Interface interface {
 	// Load loads a zone.
 	Load() error
-	// Retrieve takes an incoming message and prepares a reply that is ready to be send back to the client.
-	Retrieve(*dns.Msg, *Restart) *dns.Msg
 	// Get returns the node under key. The boolean is true when something is found.
 	Get(string) (Node, bool)
 	// Previous returns the previous node for string. If the node under key exists that one is returned.
@@ -24,6 +18,9 @@ type Interface interface {
 	Apex() Node
 	// Origin returns the origin of the zone as string.
 	Origin() string
+	// Labels returns the number of labels from the origin. This is method to allow the implementation some
+	// head room for optimizations.
+	Labels() int
 	// Walk walks the entire walk starting at the apex.
 	Walk(func(Node) bool)
 	// AuthoritativeWalk walks the entire zone starting at the apex, but skips non-authoritative records:

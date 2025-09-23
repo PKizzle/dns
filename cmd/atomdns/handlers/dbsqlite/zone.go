@@ -6,19 +6,18 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 )
 
 type Zone struct {
 	db     *sqlx.DB
-	Origin string
-	Labels int
+	origin string
+	labels int
 }
 
-var _ dbfile.Interface = &Zone{}
+var _ dnszone.Interface = &Zone{}
 
 // RR is the data we stored in the rrs table.
 type RR struct {
@@ -28,15 +27,17 @@ type RR struct {
 	TTL  int
 }
 
-func (z *Zone) Load() error            { return nil }
-func (z *Zone) Set(_ zone.Node) string { return "" }
+func (z *Zone) Load() error               { return nil }
+func (z *Zone) Set(_ dnszone.Node) string { return "" }
+func (z *Zone) Origin() string            { return z.origin }
+func (z *Zone) Labels() int               { return z.labels }
 
-func (z *Zone) Walk(fn func(zone.Node) bool) {
+func (z *Zone) Walk(fn func(dnszone.Node) bool) {
 	// For some reason this give no names, but:
-	// err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE '%.?' COLLATE canonical`, z.Origin)
+	// err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE '%.?' COLLATE canonical`, z.origin)
 	// this does:
 	names := []string{}
-	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.Origin))
+	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.origin))
 	if err != nil {
 		return
 	}
@@ -51,18 +52,18 @@ func (z *Zone) Walk(fn func(zone.Node) bool) {
 	}
 }
 
-func (z *Zone) AuthoritativeWalk(fn func(zone.Node, bool) bool) {
+func (z *Zone) AuthoritativeWalk(fn func(dnszone.Node, bool) bool) {
 	// See comment in Walk, we keep track of delegations, also see dbfile/zone.Walk.
 	names := []string{}
-	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.Origin))
+	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.origin))
 	if err != nil {
 		return
 	}
 
 	delegated := map[string]struct{}{}
 
-	z.Walk(func(n zone.Node) bool {
-		if len(n.Name) > len(z.Origin) { // apex also has NSes, if we add those the entire zone would be delegated
+	z.Walk(func(n dnszone.Node) bool {
+		if len(n.Name) > len(z.Origin()) { // apex also has NSes, if we add those the entire zone would be delegated
 			for _, rr := range n.RRs {
 				if _, ok := rr.(*dns.NS); ok {
 					delegated[n.Name] = struct{}{}
@@ -73,7 +74,7 @@ func (z *Zone) AuthoritativeWalk(fn func(zone.Node, bool) bool) {
 		auth, end := true, false
 		i, j := 0, 0
 		for ; !end; j, end = dnsutil.Next(n.Name, i) {
-			if len(n.Name[j:]) < len(z.Origin) {
+			if len(n.Name[j:]) < len(z.Origin()) {
 				break
 			}
 			if _, ok := delegated[n.Name[j:]]; ok {
@@ -87,17 +88,17 @@ func (z *Zone) AuthoritativeWalk(fn func(zone.Node, bool) bool) {
 	})
 }
 
-func (z *Zone) Previous(name string) zone.Node {
+func (z *Zone) Previous(name string) dnszone.Node {
 	prevs := []string{}
 	err := z.db.Select(&prevs, "SELECT name FROM rrs WHERE name < ? COLLATE canonical ORDER BY name COLLATE canonical DESC LIMIT 1", name)
 	if err != nil {
-		return zone.Node{}
+		return dnszone.Node{}
 	}
 	node, _ := z.Get(prevs[0])
 	return node
 }
 
-func (z *Zone) Get(name string) (zone.Node, bool) {
+func (z *Zone) Get(name string) (dnszone.Node, bool) {
 	// Get will get name, if that doesn't return anything we do LIKE '%.<name>' this is to shake out empty
 	// non-terminals. If we have something returned we know that <name> is an ENT. Wildcards are handled by
 	// retrieve.
@@ -105,11 +106,11 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	rrs := []RR{}
 	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ?", name)
 	if err != nil {
-		return zone.Node{}, false
+		return dnszone.Node{}, false
 	}
 
 	if len(rrs) > 0 {
-		node := zone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
+		node := dnszone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
 		sb := strings.Builder{} // builderPool? TODO(miek)
 		for _, rr := range rrs {
 			sb.WriteString(rr.Name)
@@ -136,39 +137,20 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 	names := []string{}
 	err = z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical`, name))
 	if err != nil {
-		return zone.Node{}, false
+		return dnszone.Node{}, false
 	}
 	if len(names) > 0 { // we have found longer names than name, we have an empty non-terminal at name
-		return zone.Node{Name: name}, true
+		return dnszone.Node{Name: name}, true
 	}
 
-	return zone.Node{}, false
+	return dnszone.Node{}, false
 }
 
-func (z *Zone) Apex() zone.Node {
-	node, _ := z.Get(z.Origin)
+func (z *Zone) Apex() dnszone.Node {
+	node, _ := z.Get(z.Origin())
 	return node
 }
 
 func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
-}
-
-func (d *Dbsqlite) Count() int {
-	ints := []int{}
-	if err := d.db.Select(&ints, "SELECT COUNT(*) FROM rrs"); err != nil {
-		return 0
-	}
-	return ints[0]
-}
-
-func (d *Dbsqlite) Origins() []string {
-	origins := []string{}
-	d.db.Select(&origins,
-		`SELECT DISTINCT name FROM rrs r1
-WHERE NOT EXISTS (
-  SELECT 1 FROM rrs r2
-  WHERE r1.name LIKE '%.' || r2.name AND r1.name != r2.name
-) ORDER BY name COLLATE canonical`)
-	return origins
 }

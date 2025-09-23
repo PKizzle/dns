@@ -31,11 +31,11 @@ func (d *Dbfile) Retransfer() error {
 					}
 				}
 
-				if !d.From.AvailableFrom(z1.Origin, serial) {
+				if !d.From.AvailableFrom(z1.Origin(), serial) {
 					continue
 				}
 
-				err := d.TransferIn(z1.Origin)
+				err := d.TransferIn(z1.Origin())
 				if err != nil {
 					log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z1.Origin, d.Path, err))
 					continue
