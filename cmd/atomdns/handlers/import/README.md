@@ -72,4 +72,4 @@ import ../zones/*
 
 ## See Also
 
-See conffile(5).
+See atomdns-conffile(5).

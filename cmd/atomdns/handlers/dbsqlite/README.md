@@ -7,7 +7,7 @@ _dbsqilte_ - serve zone data from a SQLite database
 ## Description
 
 The _dbsqlite_ handler reads zone data from a data and serves that to clients. If the database contains
-signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is suppored. You can
+signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is supported. You can
 create the database completely off-line, if it holds the correct data, _dbsqlite_ will happily serve from it.
 
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
@@ -16,8 +16,8 @@ it can not be created off-line. When started the database file will be created a
 to it (if it does not already exist). After this step, the handler will never write to the database, for the
 purpose of generating answers the database is completely read-only.
 
-An RR that fails to be converted into a propper `dns.RR` is silently discarded, unless `debug` is active, see
-atomdns-global(7) for details. The class is `IN` and can't be overriden.
+An RR that fails to be converted into a proper `dns.RR` is silently discarded, unless `debug` is active, see
+atomdns-global(7) for details. The class is `IN` and can't be overridden.
 
 When atomdns startup the _dbsqlite_ handler will log how many origins it found in the database, this is a live
 query and may differ with the origins specified in the configuration.
@@ -44,7 +44,7 @@ made not be made into fully qualified ones, and for some queries that will not b
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
     sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
 
-This one database can be savely used for all zones you have. Note that you still have to make sure the handler
+This one database can be safely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
 
 #### Importing zone files
@@ -69,7 +69,7 @@ records, then `awk` re-arranges it into the proper format.
 
 ## Syntax
 
-In it simplests form _dbsqlite_ you can use:
+In it simplest form _dbsqlite_ you can use:
 
 ```
 dbsqlite DATABASE
@@ -80,7 +80,7 @@ dbsqlite DATABASE
 
 If **DATABASE** does not exists the file is created and the `rrs` table is initialized.
 
-For extra control you can open the block and define multipe extra properties that deal with zone transfers. Only outgoing zone
+For extra control you can open the block and define multiple extra properties that deal with zone transfers. Only outgoing zone
 transfers are supported.
 It is similar to _dbfile_, and we refer to that documentation then to repeat it here.
 

@@ -74,7 +74,7 @@ example.org. {
 }
 ```
 
-where `nxdomain.go.tmpl` contains:
+Where `nxdomain.go.tmpl` contains:
 
 ```txt
 ;; QUERY, rcode: NOERROR, id: {{.ID}}, flags: qr rd ra
