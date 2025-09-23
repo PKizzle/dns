@@ -1,3 +1,5 @@
+# atomdns
+
 atomdns is a DNS server/router, written in Go, that chains handlers. Each handler performs a (DNS) function.
 It architecture is identical to HTTP servers with middleware. The order if the handlers in the configuration
 determines the order in which they are executed. (If you know CoreDNS; you might know that has a fixed order -
@@ -10,7 +12,7 @@ provided out of the box you can add it by writing a handler.
 Currently atomdns is able to:
 
 - Serve zone data from a file; with DNSSEC support (_dbfile_), plus:
-  - Zone tranfers and notifies.
+  - Zone transfers and notifies.
   - DNSSEC signing (_sign_).
 - Provide query logging (_log_).
 - Access control for queryes (_acl_).

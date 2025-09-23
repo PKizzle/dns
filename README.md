@@ -28,7 +28,7 @@ lean and mean philosophy. Server side and client side programming is supported, 
 resolvers with it.
 
 We try to keep the "main" branch as sane as possible and at the bleeding edge of standards, avoiding breaking
-changes wherever reasonable. but because this version is young, we allow ourselves some more headroom.
+changes wherever reasonable. But because this version is young, we allow ourselves some more headroom.
 
 The naming of types follows the RFCs. EDNS0 types are similarly named, for instance, DHU (Ds Hash Understood).
 If there is a clash between an actual RR's and an EDNS0 one, the EDNS0 type will get an 'E' as prefix, e.g.
