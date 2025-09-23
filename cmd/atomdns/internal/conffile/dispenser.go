@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"path/filepath"
 	"strings"
 )
 
@@ -361,13 +360,4 @@ func addr(s string) (string, error) {
 		return "", fmt.Errorf("failed to parse %q as IP", addr)
 	}
 	return net.JoinHostPort(addr, port), nil
-}
-
-// Path returns the value under d.Val() as a path, if the path is not absolute co.Global.Root is prefixed.
-func (d *Dispenser) Path() string {
-	if filepath.IsAbs(d.Val()) {
-		return d.Val()
-	}
-	return filepath.Join(d.Global.Root, d.Val())
-
 }

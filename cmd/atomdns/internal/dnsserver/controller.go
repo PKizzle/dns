@@ -1,6 +1,8 @@
 package dnsserver
 
 import (
+	"path/filepath"
+
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 )
@@ -22,4 +24,11 @@ func (c *Controller) OnShutdown(fn func() error) { c.Global.OnShutdown(fn) }
 func NewTestController(input string) *Controller {
 	d := conffile.NewTestDispenser(input)
 	return &Controller{Dispenser: d, Global: &global.Global{}}
+}
+
+func (c *Controller) Path() string {
+	if filepath.IsAbs(c.Dispenser.Val()) {
+		return c.Dispenser.Val()
+	}
+	return filepath.Join(c.Global.Root, c.Dispenser.Val())
 }
