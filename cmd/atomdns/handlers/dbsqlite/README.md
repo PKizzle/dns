@@ -7,7 +7,8 @@ _dbsqilte_ - serve zone data from a SQLite database
 ## Description
 
 The _dbsqlite_ handler reads zone data from a data and serves that to clients. If the database contains
-signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is suppored.
+signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is suppored. You can
+create the database completely off-line, if it holds the correct data, _dbsqlite_ will happily serve from it.
 
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
 your zones and put the generated records in the datebase. The database needs a custom collation, which means
