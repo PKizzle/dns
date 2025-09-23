@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
@@ -15,6 +16,8 @@ type Dbsqlite struct {
 
 	db    *sqlx.DB
 	Zones map[string]*Zone // read-only after startup
+
+	To *dbfile.Transfer
 }
 
 func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {

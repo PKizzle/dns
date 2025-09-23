@@ -91,6 +91,5 @@ func TestSetup(t *testing.T) {
 				t.Errorf("test %d: expected %s, got %s", i, tc.exp.From.TSIGSecret, dbfile.From.TSIGSecret)
 			}
 		}
-
 	}
 }

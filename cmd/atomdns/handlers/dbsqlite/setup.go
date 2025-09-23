@@ -13,12 +13,21 @@ import (
 
 func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	d.Zones = map[string]*Zone{}
-	if !co.NextArg() {
-		return co.ArgErr()
-	}
-	d.Path = co.Val()
-	if co.Next() {
-		d.Path = co.Val()
+	for co.Next() {
+		if !co.NextArg() {
+			return co.ArgErr()
+		}
+		d.Path = co.Path()
+		for co.NextBlock(0) {
+			switch co.Val() {
+			case "transfer":
+				if err := d.SetupTransfer(co); err != nil {
+					return err
+				}
+			default:
+				return co.ArgErr()
+			}
+		}
 	}
 	sqlite.RegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
