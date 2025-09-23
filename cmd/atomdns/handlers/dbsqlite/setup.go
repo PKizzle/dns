@@ -2,6 +2,7 @@ package dbsqlite
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -13,6 +14,17 @@ import (
 
 func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	d.Zones = map[string]*Zone{}
+	for co.Next() {
+		args := co.RemainingArgs()
+		if len(args) != 1 {
+			return co.ArgErr()
+		}
+		d.Path = args[0]
+		if !filepath.IsAbs(d.Path) {
+			d.Path = filepath.Join(co.Global.Root, d.Path)
+		}
+	}
+
 	if !co.NextArg() {
 		return co.ArgErr()
 	}
