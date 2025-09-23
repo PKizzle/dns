@@ -4,6 +4,7 @@ import (
 	"slices"
 	"testing"
 
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
@@ -21,7 +22,7 @@ func TestSetup(t *testing.T) {
                                 }
                         }
                 }`,
-			&dbsqlite{Path: "db.example", To: &Transfer{IPs: []string{}, Notifies: []string{"10.240.1.1"}}},
+			&Dbsqlite{Path: "db.example", To: &dbfile.Transfer{IPs: []string{}, Notifies: []string{"10.240.1.1"}}},
 		},
 		{
 			`dbsqlite db.example {
@@ -31,7 +32,7 @@ func TestSetup(t *testing.T) {
                                 }
                         }
                 }`,
-			&dbsqlite{Path: "db.example", To: &Transfer{IPs: []string{"172.16.16.1"}, Notifies: []string{"10.240.1.1"}}},
+			&Dbsqlite{Path: "db.example", To: &dbfile.Transfer{IPs: []string{"172.16.16.1"}, Notifies: []string{"10.240.1.1"}}},
 		},
 		{
 			`dbsqlite db.example {
@@ -41,19 +42,15 @@ func TestSetup(t *testing.T) {
                                         key miek.nl hmac-sha224 aGFsbG8K
                                         source 10.10.10.10
                                 }
-                                from 244.22.21.10
                         }
                 }`,
-			&dbsqlite{
+			&Dbsqlite{
 				Path: "db.example",
-				To: &Transfer{
+				To: &dbfile.Transfer{
 					IPs:        []string{"172.16.16.1"},
 					Sources:    []string{"10.10.10.10"},
 					Notifies:   []string{"10.240.1.1"},
 					TSIGSecret: "aGFsbG8K",
-				},
-				From: &Transfer{
-					IPs: []string{"244.22.21.10"},
 				},
 			},
 		},

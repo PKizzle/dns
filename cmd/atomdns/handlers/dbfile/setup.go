@@ -22,7 +22,6 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			return co.ArgErr()
 		}
 		d.Path = co.Path()
-		println(d.Path)
 		for co.NextBlock(0) {
 			switch co.Val() {
 			case "transfer":
