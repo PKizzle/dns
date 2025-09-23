@@ -30,7 +30,6 @@ func (d *Dbfile) Retransfer() error {
 						break
 					}
 				}
-
 				if !d.From.AvailableFrom(z1.Origin(), serial) {
 					continue
 				}

@@ -29,6 +29,7 @@ func main() {
 		flagQuiet   bool
 		flagConf    string
 		flagPort    string
+		flagAddr    string
 	)
 	flag.BoolVar(&flagHandler, "handler", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
@@ -36,6 +37,8 @@ func main() {
 
 	flag.StringVar(&flagPort, "port", "53", "default port")
 	flag.StringVar(&flagPort, "p", "53", "default port")
+	flag.StringVar(&flagAddr, "addr", "::", "address to listen on")
+	flag.StringVar(&flagAddr, "a", "::", "address to listen on")
 	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
 	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
 	flag.BoolVar(&flagQuiet, "quiet", false, "mute startup notifications")
@@ -58,7 +61,7 @@ func main() {
 
 	options := atom.ServerOption{
 		Quiet:   flagQuiet,
-		Addr:    net.JoinHostPort("::", flagPort),
+		Addr:    net.JoinHostPort(flagAddr, flagPort),
 		Servers: runtime.NumCPU() * 3,
 	}
 

@@ -35,9 +35,7 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 	m.Pack()
 	io.Copy(w, m)
 
-	d.RLock()
-	z := d.Zones[dns.Zone(ctx)]
-	d.RUnlock()
+	z := d.Zone(dns.Zone(ctx))
 	apex := z.Apex()
 	serial := uint32(0)
 	for _, rr := range apex.RRs {

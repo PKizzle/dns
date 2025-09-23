@@ -2,6 +2,7 @@ package dbfile
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"time"
 
@@ -37,7 +38,10 @@ func (d *Dbfile) Reload() error {
 				case event.Has(fsnotify.Rename):
 
 					// check which zone needs reloading. Need RLOCK! But we also Lock later, this might clash...
-					for _, z := range d.Zones {
+					d.RLock()
+					zones := maps.Values(d.Zones)
+					d.RUnlock()
+					for z := range zones {
 						if z.Path == event.Name {
 							z1 := zone.New(z.Origin(), event.Name)
 							if err := z1.Load(); err != nil {

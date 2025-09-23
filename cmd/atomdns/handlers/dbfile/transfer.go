@@ -40,9 +40,7 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		w.Close()
 	})
 
-	d.RLock()
-	z := d.Zones[dns.Zone(ctx)]
-	d.RUnlock()
+	z := d.Zone(dns.Zone(ctx))
 
 	apex := z.Apex()
 	z.Walk(func(n dnszone.Node) bool {
@@ -63,7 +61,6 @@ func (d *Dbfile) TransferIn(origin string) error {
 	// save into temp file and then move this file over the dbfile path.
 	c := dns.NewClient()
 	m := dns.NewMsg(origin, dns.TypeAXFR)
-	// compare SOA, we do an AXFR so that's an easy test, check for record. zone.Apex().
 
 	f, err := os.CreateTemp(filepath.Dir(d.Path), "xxxxx.transferred")
 	if err != nil {
