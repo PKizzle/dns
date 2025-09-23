@@ -5,14 +5,14 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Hints give a hint to z.Msg on what type of answer we got. This could be (mostly?) be done in Msg, but
-// requires redoing work already done, easier to just notify what we have.
+// Hints give a hint to the functions here on what type of answer we got. This could be (mostly?) be done in
+// retreive, but requires redoing work already done, easier to just notify what we have.
 type Hint int
 
 const (
-	hintAnswer Hint = iota
-	hintDelegation
-	hintWildcard
+	HintAnswer Hint = iota
+	HintDelegation
+	HintWildcard
 )
 
 // Synthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
@@ -102,13 +102,13 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart
 func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.Msg {
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
-	if hint == hintDelegation {
+	if hint == HintDelegation {
 		section = &r.Ns
 		qtype = dns.TypeNS
 	}
 
 	// NXDOOMAIN response.
-	if hint != hintDelegation && encloser.Name != r.Question[0].Header().Name {
+	if hint != HintDelegation && encloser.Name != r.Question[0].Header().Name {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Copy())
@@ -159,7 +159,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 		if dns.RRToType(rr) == qtype {
 			*section = append(*section, rr.Copy())
 		}
-		if hint == hintDelegation {
+		if hint == HintDelegation {
 			if n, ok := rr.(*dns.NS); ok {
 				// if the owner name is a child of the target we need to find the glue
 				if dnsutil.IsBelow(rr.Header().Name, n.Ns) {
@@ -188,7 +188,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 				if s.TypeCovered == qtype {
 					*section = append(*section, rr.Copy())
 				}
-				if hint == hintDelegation {
+				if hint == HintDelegation {
 					if s.TypeCovered == dns.TypeDS {
 						*section = append(*section, rr.Copy())
 					}

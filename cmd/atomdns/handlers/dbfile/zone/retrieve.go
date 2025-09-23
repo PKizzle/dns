@@ -11,31 +11,22 @@ package zone
 
 import (
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
-)
-
-// Hints give a hint to z.Msg on what type of answer we got. This could be (mostly?) be done in Msg, but
-// requires redoing work already done, easier to just notify what we have.
-type Hint int
-
-const (
-	hintAnswer Hint = iota
-	hintDelegation
-	hintWildcard
 )
 
 // Retrieve looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA response the message will also contain the correct
 // information. The optional Restart is used to generate the correct CNAME chains.
 // When calling Retrieve for the first time re should be nil.
-func (z *Zone) Retrieve(m *dns.Msg, re *Restart) *dns.Msg {
+func (z *Zone) Retrieve(m *dns.Msg, re *dnszone.Restart) *dns.Msg {
 	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
 	// so we should be able to Prev to the first label that should fall in this zone.
 	r := new(dns.Msg)
 	dnsutil.SetReply(r, m)
 
 	labels := z.Labels
-	sosynthesis, encloser := Node{}, Node{} // source of synthesis and closes encloser RRset + names.
+	sosynthesis, encloser := dnszone.Node{}, dnszone.Node{} // source of synthesis and closes encloser RRset + names.
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
 	// record set from the zone. The second loop (in z.Msg) then creates a message with the correct RRs in the sections.
@@ -44,11 +35,11 @@ func (z *Zone) Retrieve(m *dns.Msg, re *Restart) *dns.Msg {
 
 	// Doing apex queries separate simplifies the loop below as we can not have delegation, wildcards, etc.
 	if z.Labels == dnsutil.Labels(qname) {
-		return z.MsgFound(r, z.Apex(), hintAnswer, re)
+		return dnszone.MsgFound(z, r, z.Apex(), dnszone.HintAnswer, re)
 	}
 
 	labels++
-	hint := hintAnswer
+	hint := dnszone.HintAnswer
 	encloser = z.Apex()
 Search:
 	for i, start := dnsutil.Prev(qname, labels); !start; i, start = dnsutil.Prev(qname, labels) {
@@ -59,7 +50,7 @@ Search:
 			// Check for delegation, thus NS and (later) DELEG records. If this set contain NS records we have a delegation.
 			for _, rr := range node.RRs {
 				if _, ok := rr.(*dns.NS); ok {
-					hint = hintDelegation
+					hint = dnszone.HintDelegation
 					break Search
 				}
 			}
@@ -73,16 +64,16 @@ Search:
 			node, ok := z.Get("*." + qname[i+j:])
 			if ok {
 				sosynthesis = node
-				hint = hintWildcard
+				hint = dnszone.HintWildcard
 			}
 		}
 
 		labels++
 	}
 
-	if hint == hintWildcard {
-		return z.MsgSynthesize(r, sosynthesis, encloser, re)
+	if hint == dnszone.HintWildcard {
+		return dnszone.Synthesize(z, r, sosynthesis, encloser, re)
 	}
 
-	return z.MsgFound(r, encloser, hint, re)
+	return dnszone.MsgFound(z, r, encloser, hint, re)
 }
