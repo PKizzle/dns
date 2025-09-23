@@ -8,15 +8,17 @@ _dbsqilte_ - serve zone data from a SQLite database
 
 The _dbsqlite_ handler reads zone data from a data and serves that to clients. If the database contains
 signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is suppored.
+
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
 your zones and put the generated records in the datebase. The database needs a custom collation, which means
-it can not be created off-line. This handler will never write to the database, for the purpose of generating
-answers the database is completely read-only. An RR that fails to be converted into a propper `dns.RR` is
-silently discarded, unless `debug` is active, see atomdns-global(7) for details. The class is `IN` and can't be
-overriden.
+it can not be created off-line. When started the database file will be created and the schema will be written
+to it (if it does not already exist). After this step, the handler will never write to the database, for the
+purpose of generating answers the database is completely read-only.
 
-The server will reply with minimal responses by default. The _dbsqlite_ handler will _never_ write to the
-database.
+An RR that fails to be converted into a propper `dns.RR` is silently discarded, unless `debug` is active, see
+atomdns-global(7) for details. The class is `IN` and can't be overriden.
+
+The server will reply with minimal responses by default.
 
 The schema used is:
 
@@ -36,8 +38,8 @@ made not be made into fully qualified ones, and for some queries that will not b
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
     sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
 
-In other words: this one database can be savely used for all zones you have. Note that you still have to make
-sure the handler gets queries for new zones.
+This one database can be savely used for all zones you have. Note that you still have to make sure the handler
+gets queries for new zones.
 
 ## Syntax
 
