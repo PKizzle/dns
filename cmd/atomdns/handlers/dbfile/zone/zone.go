@@ -16,9 +16,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/tidwall/btree"
 )
@@ -30,36 +30,9 @@ type Zone struct {
 	Origin string
 	Labels int
 	Path   string
-	Tree   *btree.BTreeG[Node]
+	Tree   *btree.BTreeG[dnszone.Node]
 
-	apex Node // apex node, filled after a Load.
-}
-
-// A Node is a DNS node in the tree.
-type Node struct {
-	Name string
-	RRs  []dns.RR // all the rrs with owner name 'name'.
-}
-
-// Restart is used in the (recursive) calling of Retrieve to complete a CNAME chain. The i index is used to avoid loops
-// in the recursion and we break at 8.
-type Restart struct {
-	Answer []dns.RR // current set of RRs that need to go in the final response
-	I      int      // break recursion at I > 7
-}
-
-func (n Node) String() string {
-	sb := strings.Builder{}
-	for i := range n.RRs {
-		sb.WriteString(n.RRs[i].String())
-		sb.WriteByte('\n')
-	}
-	return sb.String()
-}
-
-func less(a, b Node) bool {
-	x := dns.CompareName(a.Name, b.Name)
-	return x == -1
+	apex dnszone.Node // apex node, filled after a Load.
 }
 
 func New(origin, path string) *Zone {
@@ -67,7 +40,7 @@ func New(origin, path string) *Zone {
 		Origin: dnsutil.Canonical(origin),
 		Labels: dnsutil.Labels(dnsutil.Canonical(origin)),
 		Path:   func() string { a, _ := filepath.Abs(path); return a }(),
-		Tree:   btree.NewBTreeG(less),
+		Tree:   btree.NewBTreeG(dnszone.Less),
 	}
 	return z
 }
