@@ -8,12 +8,18 @@ _dbsqilte_ - serve zone data from a SQLite database
 
 The _dbsqlite_ handler reads zone data from a data and serves that to clients. If the database contains
 signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is suppored.
+
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
 your zones and put the generated records in the datebase. The database needs a custom collation, which means
-it can not be created off-line. This handler will never write to the database, for the purpose of generating
-answers the database is completely read-only. An RR that fails to be converted into a propper `dns.RR` is
-silently discarded, unless `debug` is active, see atomdns-global(7) for details. The class is `IN` and can't be
-overriden.
+it can not be created off-line. When started the database file will be created and the schema will be written
+to it (if it does not already exist). After this step, the handler will never write to the database, for the
+purpose of generating answers the database is completely read-only.
+
+An RR that fails to be converted into a propper `dns.RR` is silently discarded, unless `debug` is active, see
+atomdns-global(7) for details. The class is `IN` and can't be overriden.
+
+When atomdns startup the _dbsqlite_ handler will log how many origins it found in the database, this is a live
+query and may differ with the origins specified in the configuration.
 
 The server will reply with minimal responses by default.
 
@@ -30,13 +36,31 @@ UNIQUE (name, type, data)
 ```
 
 You can just add RRs to this table for _any_ zone and _dbsqlite_ will happily use them. Relative names will be
-made into fully qualified ones, by just adding the closing dot, no origin is appended.
+made not be made into fully qualified ones, and for some queries that will not be matched and silently _not_ included.
 
     sqlite> insert into rrs values ( '_ssh._tcp.host1.example.', 'srv', '10 5 43 example', 3600);
     sqlite> insert into rrs values ( 'subdel.example', 'ns', 'ns.example.com', 3600);
 
-In other words: this one database can be savely used for all zones you have. Note that you still have to make
-sure the handler gets queries for new zones.
+This one database can be savely used for all zones you have. Note that you still have to make sure the handler
+gets queries for new zones.
+
+If you have a zone file you can use the `.import` feature of SQLite to import the file in one go using the
+excellent "ldns" utils from NLnet Labs (https://www.nlnetlabs.nl/projects/ldns/about/).
+
+    ldns-read-zone db.example.org  | sed 's/;.*$//' | sed 's/ $//'  | \
+    awk '{print $1 "," $4 "," substr($0, index($0, $5)) "," $2}' > csv.example.org
+
+And then:
+
+    sqlite3 /tmp/db <<EOF
+    heredoc> .mode csv
+    heredoc> BEGIN;
+    heredoc> .import csv.example.org rrs
+    heredoc> COMMIT;
+    heredoc> EOF
+
+Where the `ldns-read-zone` pipeline removes trailing whitespace, and the helpful comments after DNSKEY
+records, then `awk` re-arranges it into the proper format.
 
 ## Syntax
 
@@ -51,15 +75,13 @@ dbsqlite DATABASE
 
 If **DATABASE** does not exists the file is created and the `rrs` table is initialized.
 
-For extra control you can open the block and define multipe extra properties that deal with zone transfers.
-This is similar to _dbfile_, and we refer to that documentation then to repeat it here.
+For extra control you can open the block and define multipe extra properties that deal with zone transfers. Only outgoing zone
+transfers are supported.
+It is similar to _dbfile_, and we refer to that documentation then to repeat it here.
 
 ```
 dbsqlite DATABASE {
     transfer {
-        from IP[:PORT] [IP[:PORT]]... {
-            key NAME ALGORITHM SECRET
-        }
         to [IP[:PORT]]... {
             notify IP[:PORT] [IP[:PORT]]...
             source IP [IP]...

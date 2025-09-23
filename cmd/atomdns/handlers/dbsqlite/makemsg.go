@@ -1,14 +1,15 @@
-package zone
+package dbsqlite
 
 import (
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // MsgSynthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
 // more specific. I.e. original qname did not exist. Now we need to assemble the answer plus adding the NSECs
 // that validte the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
-func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart) *dns.Msg {
+func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser zone.Node, re *zone.Restart) *dns.Msg {
 	// Synthesis, can still lead to no data if the qtype doesn't match.
 	if len(sosynthesis.RRs) > 0 {
 		qtype := dns.RRToType(r.Question[0])
@@ -89,7 +90,7 @@ func (z *Zone) MsgSynthesize(r *dns.Msg, sosynthesis, encloser Node, re *Restart
 	return r
 }
 
-func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.Msg {
+func (z *Zone) MsgFound(r *dns.Msg, encloser zone.Node, hint Hint, re *zone.Restart) *dns.Msg {
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
 	if hint == hintDelegation {
@@ -211,9 +212,9 @@ func (z *Zone) MsgFound(r *dns.Msg, encloser Node, hint Hint, re *Restart) *dns.
 }
 
 // MsgCanonical follow the cname chain.
-func (z *Zone) MsgCanonical(r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
+func (z *Zone) MsgCanonical(r *dns.Msg, encloser zone.Node, re *zone.Restart) *dns.Msg {
 	if re == nil {
-		re = new(Restart)
+		re = new(zone.Restart)
 	}
 
 	for _, rr := range encloser.RRs {

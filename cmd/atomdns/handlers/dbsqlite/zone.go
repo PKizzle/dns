@@ -8,6 +8,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -30,10 +31,60 @@ type RR struct {
 func (z *Zone) Load() error            { return nil }
 func (z *Zone) Set(_ zone.Node) string { return "" }
 
-func (z *Zone) Walk(func(zone.Node) bool) {
+func (z *Zone) Walk(fn func(zone.Node) bool) {
+	// For some reason this give no names, but:
+	// err := z.db.Select(&names, `SELECT DISTINCT name FROM rrs WHERE name LIKE '%.?' COLLATE canonical`, z.Origin)
+	// this does:
+	names := []string{}
+	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.Origin))
+	if err != nil {
+		return
+	}
+	for _, name := range names {
+		n, ok := z.Get(name)
+		if !ok {
+			continue
+		}
+		if !fn(n) {
+			return
+		}
+	}
 }
 
-func (z *Zone) AuthoritativeWalk(func(zone.Node, bool) bool) {
+func (z *Zone) AuthoritativeWalk(fn func(zone.Node, bool) bool) {
+	// See comment in Walk, we keep track of delegations, also see dbfile/zone.Walk.
+	names := []string{}
+	err := z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical OR name = '%[1]s' ORDER BY name COLLATE canonical`, z.Origin))
+	if err != nil {
+		return
+	}
+
+	delegated := map[string]struct{}{}
+
+	z.Walk(func(n zone.Node) bool {
+		if len(n.Name) > len(z.Origin) { // apex also has NSes, if we add those the entire zone would be delegated
+			for _, rr := range n.RRs {
+				if _, ok := rr.(*dns.NS); ok {
+					delegated[n.Name] = struct{}{}
+					break
+				}
+			}
+		}
+		auth, end := true, false
+		i, j := 0, 0
+		for ; !end; j, end = dnsutil.Next(n.Name, i) {
+			if len(n.Name[j:]) < len(z.Origin) {
+				break
+			}
+			if _, ok := delegated[n.Name[j:]]; ok {
+				auth = false
+				break
+			}
+			i++
+		}
+
+		return fn(n, auth)
+	})
 }
 
 func (z *Zone) Previous(name string) zone.Node {
@@ -47,12 +98,9 @@ func (z *Zone) Previous(name string) zone.Node {
 }
 
 func (z *Zone) Get(name string) (zone.Node, bool) {
-	// Get will get name, if that doesn't return anything we do like '%.<name>' this is twofold: get one for
-	// wildcards, and if we get a bunch of _longer_ names we know there are empty non-terminal. TODO(miek):
-	// figure out how exactly.
-
-	// TODO(miek): this probably warrants a cache that does binary caching
-	// But the cache design needs to take into account nxdomain, and do that efficiently.
+	// Get will get name, if that doesn't return anything we do LIKE '%.<name>' this is to shake out empty
+	// non-terminals. If we have something returned we know that <name> is an ENT. Wildcards are handled by
+	// retrieve.
 
 	rrs := []RR{}
 	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ?", name)
@@ -60,28 +108,41 @@ func (z *Zone) Get(name string) (zone.Node, bool) {
 		return zone.Node{}, false
 	}
 
-	// If deemed OK
-	node := zone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
-	sb := strings.Builder{}
-	for _, rr := range rrs {
-		sb.WriteString(rr.Name)
-		sb.WriteByte(' ')
-		sb.WriteString(strconv.Itoa(rr.TTL))
-		sb.WriteByte(' ')
-		sb.WriteString(rr.Type)
-		sb.WriteByte(' ')
-		sb.WriteString(rr.Data)
-		sb.WriteByte('\n')
-		rr1, err := dns.New(sb.String())
-		if err != nil {
-			log.Debug(fmt.Sprintf("Failed to convert DB RR to actual RR: %s: %s", sb.String(), err))
+	if len(rrs) > 0 {
+		node := zone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
+		sb := strings.Builder{} // builderPool? TODO(miek)
+		for _, rr := range rrs {
+			sb.WriteString(rr.Name)
+			sb.WriteByte(' ')
+			sb.WriteString(strconv.Itoa(rr.TTL))
+			sb.WriteByte(' ')
+			sb.WriteString(rr.Type)
+			sb.WriteByte(' ')
+			sb.WriteString(rr.Data)
+			sb.WriteByte('\n')
+			rr1, err := dns.New(sb.String())
+			if err != nil {
+				log.Debug(fmt.Sprintf("Failed to convert DB RR to actual RR: %s: %s", sb.String(), err))
+				sb.Reset()
+				continue
+			}
+			node.RRs = append(node.RRs, rr1)
 			sb.Reset()
-			continue
 		}
-		node.RRs = append(node.RRs, rr1)
-		sb.Reset()
+		return node, true
 	}
-	return node, true
+
+	// nothing found, check for empty non-terminals, if this returns a wildcard? Should we exclude wildcards? TODO(miek).
+	names := []string{}
+	err = z.db.Select(&names, fmt.Sprintf(`SELECT DISTINCT name FROM rrs WHERE name LIKE '%%.%[1]s' COLLATE canonical`, name))
+	if err != nil {
+		return zone.Node{}, false
+	}
+	if len(names) > 0 { // we have found longer names than name, we have an empty non-terminal at name
+		return zone.Node{Name: name}, true
+	}
+
+	return zone.Node{}, false
 }
 
 func (z *Zone) Apex() zone.Node {

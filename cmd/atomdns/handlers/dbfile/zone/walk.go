@@ -9,7 +9,7 @@ import (
 // The order of the walk is ascending order: from apex to longest child.
 func (z *Zone) Walk(fn func(Node) bool) { z.Tree.Scan(fn) }
 
-// AuthWalk walks the the zone, but keeps track of authoritative names and call fn auth a boolean
+// AuthoritativeWalk walks the the zone, but keeps track of authoritative names and call fn auth a boolean
 // indicating is the name is considered that.
 func (z *Zone) AuthoritativeWalk(fn func(Node, bool) bool) {
 	delegated := map[string]struct{}{}
