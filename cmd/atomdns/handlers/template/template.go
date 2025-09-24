@@ -3,8 +3,8 @@ package template
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
+	"log/slog"
 	"regexp"
 	"slices"
 	"sync"
@@ -21,9 +21,8 @@ type Template struct {
 	Types  []uint16
 }
 
-// TODO(miek): keep in toplevel?
 var bufPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return new(bytes.Buffer)
 	},
 }
@@ -41,7 +40,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		tmpl, err := template.ParseFiles(t.Path)
 		if err != nil {
-			log.Warn(fmt.Sprintf("failed to find and parse: %s", t.Path))
+			log.Warn("Failed to find or parse", "path", t.Path)
 			next.ServeDNS(ctx, w, r) // call next so we hit the refused at some point
 			return
 		}
@@ -67,7 +66,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		if err != nil {
 			buf.Reset()
 			bufPool.Put(buf)
-			log.Warn(fmt.Sprintf("failed to execute template: %s", err))
+			log.Warn("Failed to execute template", "path", t.Path, slog.Any("error", err))
 			next.ServeDNS(ctx, w, r)
 			return
 		}
@@ -83,7 +82,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug(err.Error())
+			log.Debug("Pack failure", slog.Any("error", err))
 		}
 		io.Copy(w, m)
 	})

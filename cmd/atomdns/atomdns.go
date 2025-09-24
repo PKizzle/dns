@@ -67,17 +67,18 @@ func main() {
 
 	confdata, err := os.ReadFile(flagConf)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("Failed to parse configuration", slog.String("path", flagConf), slog.Any("error", err))
 		os.Exit(1)
 	}
 	s, err := atom.New(flagConf, bytes.NewReader(confdata), options)
 	if err != nil {
+		slog.Error("Failed to create server", slog.Any("error", err))
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
 
 	if err := s.Start(); err != nil {
-		slog.Error(err.Error())
+		slog.Error("Failed to start server", slog.Any("error", err))
 		os.Exit(1)
 	}
 
@@ -88,7 +89,7 @@ func main() {
 	}
 	sig := <-sigchan
 	s.Shutdown(context.TODO())
-	slog.Info(fmt.Sprintf("Signal (%s) received, stopping", sig))
+	slog.Info("Received signal, stopping", "signal", sig)
 }
 
 func banner() string {

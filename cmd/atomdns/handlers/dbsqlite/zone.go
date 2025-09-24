@@ -2,6 +2,7 @@ package dbsqlite
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
@@ -124,7 +125,7 @@ func (z *Zone) Get(name string) (dnszone.Node, bool) {
 			sb.WriteByte('\n')
 			rr1, err := dns.New(sb.String())
 			if err != nil {
-				log.Debug(fmt.Sprintf("Failed to convert DB RR to actual RR: %s: %s", sb.String(), err))
+				log.Debug("Failed to convert to dns.RR", "rr", sb, slog.Any("error", err))
 				sb.Reset()
 				continue
 			}
