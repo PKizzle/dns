@@ -9,6 +9,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
 )
@@ -24,6 +25,11 @@ type Dbsqlite struct {
 
 func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
+			d.HandlerFuncTransfer(ctx, w, r)
+			return
+		}
+
 		z := d.Zones[dns.Zone(ctx)]
 
 		m := dnszone.Retrieve(z, r, nil)
