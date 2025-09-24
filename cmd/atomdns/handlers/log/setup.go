@@ -23,10 +23,10 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 				case <-sigchan:
 					signal.Notify(sigchan, syscall.SIGUSR1)
 					if state.Load() {
-						_log.Info("Disabling query logging")
+						_log.Info("Received signal, disabling query logging")
 						state.Store(false)
 					} else {
-						_log.Info("Enabling query logging")
+						_log.Info("Received signal, enabling query logging")
 						state.Store(true)
 					}
 				case <-ctx.Done():
