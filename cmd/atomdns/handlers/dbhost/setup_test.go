@@ -11,9 +11,9 @@ func TestSetup(t *testing.T) {
 		input string
 		exp   *Dbhost
 	}{
-		{`dbhost`, &Dbhost{Path: "/etc/hosts"}},
+		{`dbhost`, &Dbhost{Path: "/etc/hosts", ttl: 3600}},
 		{`dbhost /dev/null`,
-			&Dbhost{Path: "/dev/null"}},
+			&Dbhost{Path: "/dev/null", ttl: 3600}},
 		{`dbhost {
 			ttl 5
 		}`,
