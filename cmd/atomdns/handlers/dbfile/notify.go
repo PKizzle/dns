@@ -94,7 +94,7 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 		}
 		time.Sleep(time.Second)
 	}
-	return fmt.Errorf("upstream %q did not accept our notify for zone %", ip, m.Question[0].Header().Name)
+	return fmt.Errorf("upstream %q did not accept our notify for zone %q", ip, m.Question[0].Header().Name)
 }
 
 // returns the correct family address or nil, or nil when nothing is needed.
