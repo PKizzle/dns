@@ -2,6 +2,7 @@ package sign
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -29,7 +30,7 @@ func (s *Sign) Resign() error {
 					// see dbfile/reload.go for why we wait
 					time.Sleep(2 * time.Second)
 					for _, z := range s.Zones {
-						if z.Path == event.Name {
+						if z.Path == path.Clean(event.Name) {
 							zs, err := s.Sign(z.Origin())
 							if err != nil {
 								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))

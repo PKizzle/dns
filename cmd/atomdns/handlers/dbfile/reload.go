@@ -3,6 +3,7 @@ package dbfile
 import (
 	"fmt"
 	"maps"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -42,7 +43,7 @@ func (d *Dbfile) Reload() error {
 					zones := maps.Values(d.Zones)
 					d.RUnlock()
 					for z := range zones {
-						if z.Path == event.Name {
+						if z.Path == path.Clean(event.Name) {
 							z1 := zone.New(z.Origin(), event.Name)
 							if err := z1.Load(); err != nil {
 								log.Error(fmt.Sprintf("Failed reload of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))

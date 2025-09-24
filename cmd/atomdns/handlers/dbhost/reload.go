@@ -2,6 +2,7 @@ package dbhost
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -35,7 +36,7 @@ func (d *Dbhost) Reload() error {
 					fallthrough
 				case event.Has(fsnotify.Rename):
 
-					if d.Path == event.Name {
+					if d.Path == path.Clean(event.Name) {
 						if err := d.Load(); err != nil {
 							log.Error(fmt.Sprintf("Failed reload of hosts file in %q: %s", filepath.Base(event.Name), err))
 							continue
