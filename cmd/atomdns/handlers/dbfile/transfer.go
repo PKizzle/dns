@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
@@ -24,38 +23,14 @@ func (d *Dbfile) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, 
 		io.Copy(w, m)
 		return
 	}
-	if err := d.TransferOut(ctx, w, r); err != nil {
-		log.Debug("Failure to transfer out", slog.Any("error", err))
-	}
-}
-
-func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) error {
-	w.Hijack()
-	env := make(chan *dns.Envelope)
-	c := dns.NewClient()
-	var wg sync.WaitGroup
-
-	wg.Go(func() {
-		c.TransferOut(w, r, env)
-		w.Close()
-	})
-
 	z := d.Zone(dns.Zone(ctx))
 
-	apex := z.Apex()
-	z.Walk(func(n dnszone.Node) bool {
-		env <- &dns.Envelope{Answer: n.RRs}
-		return true
-	})
-	for _, rr := range apex.RRs {
-		if s, ok := rr.(*dns.SOA); ok {
-			env <- &dns.Envelope{Answer: []dns.RR{s}}
-		}
+	if err := dnszone.TransferOut(z, ctx, w, r); err != nil {
+		log.Debug("Failure to transfer out", slog.Any("error", err))
+		return
 	}
-	close(env)
 	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
 	alog.Info("Successful transfer out")
-	return nil
 }
 
 func (d *Dbfile) TransferIn(origin string) error {
