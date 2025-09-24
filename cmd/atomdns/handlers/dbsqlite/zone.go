@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
@@ -108,10 +109,10 @@ func (z *Zone) Get(name string) (dnszone.Node, bool) {
 	if err != nil {
 		return dnszone.Node{}, false
 	}
+	sb := builderPool.Get().(*strings.Builder)
 
 	if len(rrs) > 0 {
 		node := dnszone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}
-		sb := strings.Builder{} // builderPool? TODO(miek)
 		for _, rr := range rrs {
 			sb.WriteString(rr.Name)
 			sb.WriteByte(' ')
@@ -130,6 +131,8 @@ func (z *Zone) Get(name string) (dnszone.Node, bool) {
 			node.RRs = append(node.RRs, rr1)
 			sb.Reset()
 		}
+		sb.Reset()
+		builderPool.Put(sb)
 		return node, true
 	}
 
@@ -153,4 +156,10 @@ func (z *Zone) Apex() dnszone.Node {
 
 func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
+}
+
+var builderPool = &sync.Pool{
+	New: func() any {
+		return &strings.Builder{}
+	},
 }
