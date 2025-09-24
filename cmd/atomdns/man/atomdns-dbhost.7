@@ -9,7 +9,8 @@
 .SH "DESCRIPTION"
 .PP
 The \fIdbhost\fP handler is useful for serving data from a \fB\fC/etc/hosts\fR file. It watches the file and reloads it
-when written to.
+when written to. The \fIdbhost\fP handler can only reply to A, AAAA and PTR queries, all others are deferred to
+the next handler(s).
 
 .PP
 The \fIdbhost\fP handler can be used with readily available hosts files that block access to advertising servers.
@@ -47,7 +48,7 @@ PTR records for reverse lookups are generated automatically.
 
 .nf
 dbhost [FILE] {
-    ttl SECONDS
+    ttl TTL
 }
 
 .fi
@@ -57,7 +58,7 @@ dbhost [FILE] {
 \fBFILE\fP the hosts file to read and parse. If the path is relative the path from the \fIroot\fP
 handler will be prepended to it. Defaults to\fB\fC/etc/hosts\fR if omitted.
 .IP \(bu 4
-\fB\fCttl\fR change the DNS TTL of the records generated (forward and reverse). The default is 3600 seconds (1 hour).
+\fB\fCttl\fR change the \fBTTL\fP of the records generated (forward and reverse). The default is 3600 seconds (1 hour).
 
 
 .SH "EXAMPLES"
