@@ -2,16 +2,27 @@
 
 package dns
 
-import ()
+import (
+	"io"
+)
 
 // This is copied to zdnstest.go in the main package to also have access to these functions and not have an
 // import cycle. See dnstest_generate.go.
 
 // New calls [New], but panics if an error is returned.
 func dnstestNew(s string) RR {
-	r, err := New(s)
+	rr, err := New(s)
 	if err != nil {
-		panic("dnsutil: " + err.Error())
+		panic("dnstest: " + err.Error())
 	}
-	return r
+	return rr
+}
+
+// Read calls [Read], but panics if an error is returned.
+func dnstestRead(r io.Reader) RR {
+	rr, err := Read(r)
+	if err != nil {
+		panic("dnstest: " + err.Error())
+	}
+	return rr
 }

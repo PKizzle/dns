@@ -45,9 +45,11 @@ wins.
     _dns_ package.
   - Package _dnstest_ contains functions and types that help you test, similar to the _httptest_ package.
   - Package _svcb_ holds all details of the SVCB/HTTPS record.
-  - Many helper/debug functions are moved in _internal_ packages.
+  - Pacakge _deleg_ holds details for the DELEG record.
+  - Many helper/debug functions are moved into _internal_ packages, making the top-level much, much cleaner.
 - Fast.
-  - The cmd/reflect server does 350K/280K UDP/TCP respectively.
+  - The cmd/reflect server does 400K/380K UDP/TCP respectively on the right hardware.
+    (As stated, unsure why other machines qps numbers are lower).
 - Improved naming by embracing sub-packages.
 
 # Users

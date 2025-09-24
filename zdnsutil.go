@@ -240,6 +240,10 @@ func dnsutilSetReply(m, r *Msg) *Msg {
 	}
 	m.Rcode = RcodeSuccess
 	m.Question = r.Question
+	m.Answer = nil
+	m.Ns = nil
+	m.Extra = nil
+	m.Pseudo = nil
 	return m
 }
 
