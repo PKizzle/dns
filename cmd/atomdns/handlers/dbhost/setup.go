@@ -1,6 +1,8 @@
 package dbhost
 
 import (
+	"context"
+	"path/filepath"
 	"strconv"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -8,6 +10,7 @@ import (
 
 func (d *Dbhost) Setup(co *dnsserver.Controller) error {
 	d.Path = "/etc/hosts"
+	d.ctx, d.cancel = context.WithCancel(context.Background())
 	for co.Next() {
 		paths := co.RemainingPaths()
 		if len(paths) > 1 {
@@ -35,5 +38,20 @@ func (d *Dbhost) Setup(co *dnsserver.Controller) error {
 			}
 		}
 	}
-	return d.Load()
+
+	co.OnStartup(func() error {
+		log.Info("Startup", "reload", filepath.Base(d.Path))
+		if err := d.Load(); err != nil {
+			return co.Err(err.Error())
+		}
+		return d.Reload()
+	})
+
+	co.OnShutdown(func() error {
+		log.Info("Shutdown", "reload", filepath.Base(d.Path))
+		d.cancel()
+		return nil
+	})
+
+	return nil
 }

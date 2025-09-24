@@ -17,6 +17,9 @@ type Dbhost struct {
 
 	Data         map[string]dnszone.Node
 	sync.RWMutex // protects Data
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func (d *Dbhost) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
