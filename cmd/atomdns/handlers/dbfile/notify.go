@@ -112,11 +112,15 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 
 	for _, ip := range t.IPs {
 		m, _, err := c.Exchange(context.TODO(), m, "tcp", ip)
+		if err != nil {
+			log.Error(fmt.Sprintf("Upstream %s did not accept our query: %s", ip, err), "transfer", origin)
+			continue
+		}
 		if err == nil {
 			for _, rr := range m.Answer {
 				if s, ok := rr.(*dns.SOA); ok {
 					if dns.CompareSerial(serial, s.Serial) == -1 {
-						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial))
+						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial), "transfer", origin)
 						return true
 					}
 				}
