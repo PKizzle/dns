@@ -35,7 +35,7 @@ func (d *Dbhost) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		n, ok := d.Data[dnsutil.Canonical(qname)]
 		d.RUnlock()
 		if !ok {
-			// we don't own the exact name
+			// we only own the exact name
 			next.ServeDNS(ctx, w, r)
 			return
 		}
@@ -43,7 +43,7 @@ func (d *Dbhost) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		dnsutil.SetReply(m, r)
 		for _, rr := range n.RRs {
 			if dns.RRToType(rr) == qtype {
-				m.Answer = append(m.Answer, rr)
+				m.Answer = append(m.Answer, rr.Copy())
 			}
 		}
 

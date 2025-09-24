@@ -9,7 +9,7 @@ import (
 )
 
 func (d *Dbhost) Setup(co *dnsserver.Controller) error {
-	d.Path = "/etc/hosts"
+	d.Path, d.ttl = "/etc/hosts", 3600
 	d.ctx, d.cancel = context.WithCancel(context.Background())
 	for co.Next() {
 		paths := co.RemainingPaths()
