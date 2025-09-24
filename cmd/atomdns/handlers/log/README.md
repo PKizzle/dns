@@ -6,12 +6,14 @@ _log_ - log queries
 
 ## Description
 
-By just using _log_ you dump all queries on standard output. Note that for busy
-servers logging will incur a performance hit. The _log_ handler only logs
-properties of the incoming query.
+By just using _log_ you dump all queries on standard output. Note that for busy servers logging will incur a
+performance hit. The _log_ handler only logs properties of the incoming query.
 
-Enabling or disabling the _log_ handler only affects the query logging, any
-other logging from atomdns will show up regardless.
+Enabling or disabling the _log_ handler only affects the query logging, any other logging from atomdns will
+show up regardless.
+
+The logging of a running server can be toggled by sending the processs a SIGUSR1 signal. This is a process
+wide toggle, all logging of all server is enabled or disabled.
 
 ## Syntax
 
@@ -35,3 +37,7 @@ Which says:
 - Advertised UDP buffer: `1232`.
 - Header flags: `rd ad`.
 - Opcode: `QUERY`.
+
+## Also See
+
+signal(7).
