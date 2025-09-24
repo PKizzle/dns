@@ -54,6 +54,10 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 
 // Notify will send notifies to all configured to IP addresses.
 func (t *Transfer) Notify(origin string) error {
+	if len(t.IPs) == 0 {
+		return nil
+	}
+
 	m := new(dns.Msg)
 	m.Authoritative = true
 	m.Opcode = dns.OpcodeNotify
