@@ -54,6 +54,10 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 
 // Notify will send notifies to all configured to IP addresses.
 func (t *Transfer) Notify(origin string) error {
+	if len(t.IPs) == 0 {
+		return nil
+	}
+
 	m := new(dns.Msg)
 	m.Authoritative = true
 	m.Opcode = dns.OpcodeNotify
@@ -112,11 +116,15 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 
 	for _, ip := range t.IPs {
 		m, _, err := c.Exchange(context.TODO(), m, "tcp", ip)
+		if err != nil {
+			log.Error(fmt.Sprintf("Upstream %s did not accept our query: %s", ip, err), "transfer", origin)
+			continue
+		}
 		if err == nil {
 			for _, rr := range m.Answer {
 				if s, ok := rr.(*dns.SOA); ok {
 					if dns.CompareSerial(serial, s.Serial) == -1 {
-						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial))
+						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial), "transfer", origin)
 						return true
 					}
 				}

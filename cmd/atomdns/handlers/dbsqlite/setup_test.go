@@ -22,7 +22,7 @@ func TestSetup(t *testing.T) {
                                 }
                         }
                 }`,
-			&Dbsqlite{Path: "db.example", To: &dbfile.Transfer{IPs: []string{}, Notifies: []string{"10.240.1.1"}}},
+			&Dbsqlite{Path: "db.example", To: &dbfile.Transfer{IPs: []string{}, Notifies: []string{"10.240.1.1:53"}}},
 		},
 		{
 			`dbsqlite db.example {
@@ -32,7 +32,7 @@ func TestSetup(t *testing.T) {
                                 }
                         }
                 }`,
-			&Dbsqlite{Path: "db.example", To: &dbfile.Transfer{IPs: []string{"172.16.16.1"}, Notifies: []string{"10.240.1.1"}}},
+			&Dbsqlite{Path: "db.example", To: &dbfile.Transfer{IPs: []string{"172.16.16.1:53"}, Notifies: []string{"10.240.1.1:53"}}},
 		},
 		{
 			`dbsqlite db.example {
@@ -47,9 +47,9 @@ func TestSetup(t *testing.T) {
 			&Dbsqlite{
 				Path: "db.example",
 				To: &dbfile.Transfer{
-					IPs:        []string{"172.16.16.1"},
-					Sources:    []string{"10.10.10.10"},
-					Notifies:   []string{"10.240.1.1"},
+					IPs:        []string{"172.16.16.1:53"},
+					Sources:    []string{"10.10.10.10:53"},
+					Notifies:   []string{"10.240.1.1:53"},
 					TSIGSecret: "aGFsbG8K",
 				},
 			},

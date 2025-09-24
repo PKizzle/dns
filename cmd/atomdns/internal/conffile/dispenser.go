@@ -336,28 +336,23 @@ func (d *Dispenser) Addr() (string, error) { return addr(d.Val()) }
 // RemainingAddrs calls RemainingArgs and parses search string with like Addr()
 func (d *Dispenser) RemainingAddrs() ([]string, error) {
 	args := d.RemainingArgs()
-	for _, arg := range args {
-		if _, err := addr(arg); err != nil {
+	for i := range args {
+		addr, err := addr(args[i])
+		if err != nil {
 			return nil, err
 		}
+		args[i] = addr
 	}
 	return args, nil
 }
 
 func addr(s string) (string, error) {
 	addr, port, err := net.SplitHostPort(s)
-	if port == "" {
-		port = "53"
-	}
 	if err != nil {
 		if net.ParseIP(s) == nil {
 			return "", fmt.Errorf("failed to parse %q as IP", s)
 		}
-		return net.JoinHostPort(s, port), nil
-	}
-
-	if net.ParseIP(addr) == nil {
-		return "", fmt.Errorf("failed to parse %q as IP", addr)
+		return net.JoinHostPort(s, "53"), nil
 	}
 	return net.JoinHostPort(addr, port), nil
 }
