@@ -53,7 +53,7 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		}
 	}
 	close(env)
-
+	log.Info(fmt.Sprintf("Transferred out zone %q in %q", z, d.Path))
 	return nil
 }
 
@@ -92,6 +92,7 @@ func (d *Dbfile) TransferIn(origin string) error {
 		}
 		break
 	}
+	log.Info(fmt.Sprintf("Transferred in zone %q in %qs", origin, d.Path))
 	f.Close()
 	return os.Rename(f.Name(), d.Path)
 }
