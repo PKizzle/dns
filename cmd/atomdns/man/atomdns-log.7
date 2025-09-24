@@ -8,13 +8,16 @@
 
 .SH "DESCRIPTION"
 .PP
-By just using \fIlog\fP you dump all queries on standard output. Note that for busy
-servers logging will incur a performance hit. The \fIlog\fP handler only logs
-properties of the incoming query.
+By just using \fIlog\fP you dump all queries on standard output. Note that for busy servers logging will incur a
+performance hit. The \fIlog\fP handler only logs properties of the incoming query.
 
 .PP
-Enabling or disabling the \fIlog\fP handler only affects the query logging, any
-other logging from atomdns will show up regardless.
+Enabling or disabling the \fIlog\fP handler only affects the query logging, any other logging from atomdns will
+show up regardless.
+
+.PP
+The logging of a running server can be toggled by sending the processs a SIGUSR1 signal. This is a process
+wide toggle, all logging of all server is enabled or disabled.
 
 .SH "SYNTAX"
 .PP
@@ -58,3 +61,7 @@ Header flags: \fB\fCrd ad\fR.
 .IP \(bu 4
 Opcode: \fB\fCQUERY\fR.
 
+
+.SH "ALSO SEE"
+.PP
+signal(7).
