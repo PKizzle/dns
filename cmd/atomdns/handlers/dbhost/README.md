@@ -37,13 +37,13 @@ PTR records for reverse lookups are generated automatically.
 
 ```txt
 dbhost [FILE] {
-    ttl SECONDS
+    ttl TTL
 }
 ```
 
 - **FILE** the hosts file to read and parse. If the path is relative the path from the _root_
   handler will be prepended to it. Defaults to`/etc/hosts` if omitted.
-- `ttl` change the DNS TTL of the records generated (forward and reverse). The default is 3600 seconds (1 hour).
+- `ttl` change the **TTL** of the records generated (forward and reverse). The default is 3600 seconds (1 hour).
 
 ## Examples
 

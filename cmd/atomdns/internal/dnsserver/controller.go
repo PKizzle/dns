@@ -32,3 +32,20 @@ func (c *Controller) Path() string {
 	}
 	return filepath.Join(c.Global.Root, c.Dispenser.Val())
 }
+
+func (c *Controller) RemainingPaths() []string {
+	args := c.RemainingArgs()
+	if len(args) == 0 {
+		return nil
+	}
+	paths := make([]string, len(args))
+
+	for i, arg := range args {
+		if filepath.IsAbs(arg) {
+			paths[i] = arg
+			continue
+		}
+		paths[i] = filepath.Join(c.Global.Root, arg)
+	}
+	return paths
+}

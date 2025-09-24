@@ -1,41 +1,39 @@
 package dbhost
 
 import (
-	"strings"
+	"strconv"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
 func (d *Dbhost) Setup(co *dnsserver.Controller) error {
-	if co.Next() {
-
-		args := co.RemainingArgs()
-		if len(args) > 1 {
+	d.Path = "/etc/hosts"
+	for co.Next() {
+		paths := co.RemainingPaths()
+		if len(paths) > 1 {
 			return co.ArgErr()
 		}
-		if len(args) == 1 {
-			c.Version = args[0]
+		if len(paths) == 1 {
+			d.Path = paths[0]
 		}
-		authors := []string{}
-		for co.NextBlock(0) {
+
+		if co.NextBlock(0) {
 			switch co.Val() {
-			case "authors":
-				for co.NextBlock(1) {
-					authors = append(authors, strings.TrimSpace(co.Val()))
-					for co.NextLine() {
-						if co.Val() == "}" {
-							break
-						}
-						authors = append(authors, strings.TrimSpace(co.Val()))
-					}
+			case "ttl":
+				args := co.RemainingArgs()
+				if len(args) == 0 {
+					return co.ArgErr()
 				}
+				ttl, err := strconv.ParseUint(args[0], 10, 32)
+				if err != nil {
+					return co.PropErr(err)
+				}
+				d.ttl = uint32(ttl)
+
 			default:
 				return co.PropErr()
 			}
 		}
-		if len(authors) > 0 {
-			c.Authors = authors
-		}
 	}
-	return nil
+	return d.Load()
 }

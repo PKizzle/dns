@@ -3,18 +3,23 @@ package dbhost
 import (
 	"bufio"
 	"bytes"
-	"io"
 	"net"
+	"os"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func (d *Dbhost) Load(r io.Reader) {
+func (d *Dbhost) Load() error {
+	f, err := os.Open(d.Path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 	data := map[string]dnszone.Node{}
 
-	scanner := bufio.NewScanner(r)
+	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		if i := bytes.Index(line, []byte{'#'}); i >= 0 {
@@ -36,9 +41,9 @@ func (d *Dbhost) Load(r io.Reader) {
 				n = dnszone.Node{Name: key}
 			}
 			if v6 {
-				n.RRs = append(n.RRs, &dns.AAAA{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: uint32(d.TTL)}, AAAA: ip})
+				n.RRs = append(n.RRs, &dns.AAAA{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, AAAA: ip})
 			} else {
-				n.RRs = append(n.RRs, &dns.A{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: uint32(d.TTL)}, A: ip})
+				n.RRs = append(n.RRs, &dns.A{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, A: ip})
 			}
 			data[key] = n
 
@@ -47,7 +52,7 @@ func (d *Dbhost) Load(r io.Reader) {
 			if !ok {
 				n = dnszone.Node{Name: rev}
 			}
-			n.RRs = append(n.RRs, &dns.PTR{Hdr: dns.Header{Name: rev, Class: dns.ClassINET, TTL: uint32(d.TTL)}, Ptr: dnsutil.Fqdn(string(f))})
+			n.RRs = append(n.RRs, &dns.PTR{Hdr: dns.Header{Name: rev, Class: dns.ClassINET, TTL: d.ttl}, Ptr: dnsutil.Fqdn(string(f))})
 			data[rev] = n
 		}
 	}
@@ -55,4 +60,5 @@ func (d *Dbhost) Load(r io.Reader) {
 	d.Lock()
 	d.Data = data
 	d.Unlock()
+	return nil
 }

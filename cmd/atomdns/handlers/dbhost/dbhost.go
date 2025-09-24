@@ -13,7 +13,7 @@ import (
 
 type Dbhost struct {
 	Path string
-	TTL  int
+	ttl  uint32
 
 	Data         map[string]dnszone.Node
 	sync.RWMutex // protects Data
