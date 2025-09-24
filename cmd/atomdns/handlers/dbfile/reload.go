@@ -1,7 +1,7 @@
 package dbfile
 
 import (
-	"fmt"
+	"log/slog"
 	"maps"
 	"path"
 	"path/filepath"
@@ -44,16 +44,17 @@ func (d *Dbfile) Reload() error {
 					d.RUnlock()
 					for z := range zones {
 						if z.Path == path.Clean(event.Name) {
+							alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
 							z1 := zone.New(z.Origin(), event.Name)
 							if err := z1.Load(); err != nil {
-								log.Error(fmt.Sprintf("Failed reload of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))
+								alog.Error("Failed to reload", slog.Any("error", err))
 								continue
 							}
 							d.Lock()
 							d.Zones[z.Origin()] = z1
 							d.Unlock()
 
-							log.Info(fmt.Sprintf("Reload of zone %q in %q successful", z.Origin(), filepath.Base(event.Name)))
+							alog.Info("Successful reload")
 							go d.To.Notify(z.Origin())
 							break
 						}
@@ -64,7 +65,7 @@ func (d *Dbfile) Reload() error {
 				if !ok {
 					continue
 				}
-				log.Debug("Zone watch event error", "err", err)
+				log.Debug("Zone watch event error", slog.Any("error", err))
 			case <-d.ctx.Done():
 				watcher.Close()
 				return
