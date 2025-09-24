@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -29,14 +30,29 @@ func (d *Dbhost) Load(r io.Reader) {
 		v6 := bytes.Index(fs[0], []byte{':'}) > -1
 		ip := net.ParseIP(string(fs[0]))
 		for _, f := range fs[1:] {
-			if v6 {
-				n, ok := data[
-				println(dnsutil.Fqdn(string(f)), "IN", "AAAA", ip.String())
-			} else {
-				println(dnsutil.Fqdn(string(f)), "IN", "A", ip.String())
+			key := dnsutil.Canonical(string(f))
+			n, ok := data[key]
+			if !ok {
+				n = dnszone.Node{Name: key}
 			}
-			println(dnsutil.ReverseAddr(ip), "IN", "PTR", dnsutil.Fqdn(string(f)))
-		}
+			if v6 {
+				n.RRs = append(n.RRs, &dns.AAAA{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: uint32(d.TTL)}, AAAA: ip})
+			} else {
+				n.RRs = append(n.RRs, &dns.A{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: uint32(d.TTL)}, A: ip})
+			}
+			data[key] = n
 
+			rev := dnsutil.Canonical(dnsutil.ReverseAddr(ip))
+			n, ok = data[rev]
+			if !ok {
+				n = dnszone.Node{Name: rev}
+			}
+			n.RRs = append(n.RRs, &dns.PTR{Hdr: dns.Header{Name: rev, Class: dns.ClassINET, TTL: uint32(d.TTL)}, Ptr: dnsutil.Fqdn(string(f))})
+			data[rev] = n
+		}
 	}
+
+	d.Lock()
+	d.Data = data
+	d.Unlock()
 }
