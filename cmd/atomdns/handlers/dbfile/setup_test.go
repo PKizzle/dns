@@ -21,7 +21,7 @@ func TestSetup(t *testing.T) {
         			}
 			}
 		}`,
-			&Dbfile{Path: "db.example", To: &Transfer{IPs: []string{}, Notifies: []string{"10.240.1.1"}}},
+			&Dbfile{Path: "db.example", To: &Transfer{IPs: []string{}, Notifies: []string{"10.240.1.1:53"}}},
 		},
 		{
 			`dbfile db.example {
@@ -31,7 +31,7 @@ func TestSetup(t *testing.T) {
         			}
 			}
 		}`,
-			&Dbfile{Path: "db.example", To: &Transfer{IPs: []string{"172.16.16.1"}, Notifies: []string{"10.240.1.1"}}},
+			&Dbfile{Path: "db.example", To: &Transfer{IPs: []string{"172.16.16.1:53"}, Notifies: []string{"10.240.1.1:53"}}},
 		},
 		{
 			`dbfile db.example {
@@ -47,13 +47,13 @@ func TestSetup(t *testing.T) {
 			&Dbfile{
 				Path: "db.example",
 				To: &Transfer{
-					IPs:        []string{"172.16.16.1"},
-					Sources:    []string{"10.10.10.10"},
-					Notifies:   []string{"10.240.1.1"},
+					IPs:        []string{"172.16.16.1:53"},
+					Sources:    []string{"10.10.10.10:53"},
+					Notifies:   []string{"10.240.1.1:53"},
 					TSIGSecret: "aGFsbG8K",
 				},
 				From: &Transfer{
-					IPs: []string{"244.22.21.10"},
+					IPs: []string{"244.22.21.10:53"},
 				},
 			},
 		},
