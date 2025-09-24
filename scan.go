@@ -133,6 +133,10 @@ func New(s string) (RR, error) {
 	return readRR(strings.NewReader(s), "")
 }
 
+// Read behaves like [New] but reads from an io.Reader. Note the reader must include an ending newline,
+// otherwise the parsing will fail.
+func Read(r io.Reader) (RR, error) { return readRR(r, "") }
+
 func readRR(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTTL)

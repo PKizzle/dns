@@ -1,15 +1,28 @@
 package dnstest
 
-import "codeberg.org/miekg/dns"
+import (
+	"io"
+
+	"codeberg.org/miekg/dns"
+)
 
 // This is copied to zdnstest.go in the main package to also have access to these functions and not have an
 // import cycle. See dnstest_generate.go.
 
 // New calls [dns.New], but panics if an error is returned.
 func New(s string) dns.RR {
-	r, err := dns.New(s)
+	rr, err := dns.New(s)
 	if err != nil {
-		panic("dnsutil: " + err.Error())
+		panic("dnstest: " + err.Error())
 	}
-	return r
+	return rr
+}
+
+// Read calls [dns.Read], but panics if an error is returned.
+func Read(r io.Reader) dns.RR {
+	rr, err := dns.Read(r)
+	if err != nil {
+		panic("dnstest: " + err.Error())
+	}
+	return rr
 }
