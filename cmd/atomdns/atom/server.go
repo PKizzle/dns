@@ -64,7 +64,7 @@ func serve(ch chan error, srv *dns.Server, global *global.Global) {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.global.Shutdown(); err != nil {
-		slog.Warn("Failed to run shutdown: " + err.Error())
+		slog.Warn("Failed to run shutdown", slog.Any("error", err))
 	}
 	for _, srv := range s.servers {
 		srv.Shutdown(context.TODO())
