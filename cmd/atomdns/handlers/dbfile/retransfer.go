@@ -1,7 +1,8 @@
 package dbfile
 
 import (
-	"fmt"
+	"log/slog"
+	"path/filepath"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -36,7 +37,8 @@ func (d *Dbfile) Retransfer() error {
 
 				err := d.TransferIn(z1.Origin())
 				if err != nil {
-					log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z1.Origin(), d.Path, err))
+					alog := log.With(slog.String("zone", z1.Origin()), slog.String("path", filepath.Base(d.Path)))
+					alog.Error("Failed to transfer", slog.Any("error", err))
 					continue
 				}
 			case <-d.ctx.Done():

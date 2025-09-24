@@ -2,7 +2,7 @@ package global
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -21,14 +21,14 @@ func overload(ctx context.Context, addr string) {
 			if err != nil {
 				HealthDuration.Observe(time.Since(start).Seconds())
 				HealthFailures.Inc()
-				log.Warn(fmt.Sprintf("Local health check failed: %s", err))
+				log.Error("Failed health", slog.Any("error", err))
 				continue
 			}
 			resp.Body.Close()
 			elapsed := time.Since(start)
 			HealthDuration.Observe(elapsed.Seconds())
 			if elapsed > time.Second { // 1s is pretty random, but a *local* scrape taking that long isn't good
-				log.Warn(fmt.Sprintf("Local health check took more than 1s: %s", elapsed))
+				log.Warn("Slow health", slog.Duration("elapsed", elapsed))
 			}
 
 		case <-ctx.Done():

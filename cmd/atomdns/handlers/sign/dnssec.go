@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -167,19 +168,20 @@ func (s *Sign) Expired(origin string) (bool, error) {
 	i := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
+			alog := log.With(slog.String("zone", origin), slog.String("path", filepath.Base(f.Name())))
 			if !s.ValidPeriod(now) {
-				log.Info(fmt.Sprintf("Signature's validity period has passed completey of zone %q in %q", origin, filepath.Base(f.Name())))
+				alog.Warn("Signature's validity period has passed")
 				return true, nil
 			}
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			left := expire.Sub(now) - expireDays
 			left /= 24 * time.Hour
-			expired := expireDays / (24 * time.Hour)
+			expired := fmt.Sprintf("%d", expireDays/(24*time.Hour))
 			if expire.Sub(now) < expireDays {
-				log.Info(fmt.Sprintf("Less than %d days (%d) left before expiration of zone %q in %q", expired, left, origin, filepath.Base(f.Name())))
+				alog.Warn("Less than "+expired+" days left before expiration", slog.Duration("left", left))
 				return true, nil
 			} else {
-				log.Info(fmt.Sprintf("More than %d days (%d) left before expiration of zone %q in %q", expired, left, origin, filepath.Base(f.Name())))
+				alog.Info("More than "+expired+" days left before expiration", slog.Duration("left", left))
 				return false, nil
 			}
 		}
@@ -199,7 +201,8 @@ func (s Sign) Write(z *zone.Zone) error {
 	}
 	defer os.Remove(f.Name())
 
-	log.Debug(fmt.Sprintf("Zone %q in %q is signed and is written to temp. file %s", z.Origin(), filepath.Base(z.Path), filepath.Base(f.Name())))
+	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
+	alog.Debug("Successful resign", slog.String("temp", f.Name()))
 
 	z.Walk(func(n dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
@@ -210,6 +213,6 @@ func (s Sign) Write(z *zone.Zone) error {
 	})
 	f.Close()
 	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
-	log.Info(fmt.Sprintf("Zone %q in %q is signed and is written to %s", z.Origin(), filepath.Base(z.Path), filepath.Base(target)))
+	alog.Info("Successful resign", slog.String("written", target))
 	return os.Rename(f.Name(), target)
 }
