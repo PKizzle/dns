@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"slices"
+	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -45,7 +47,7 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 		}
 	}
 	if !d.From.AvailableFrom(z.Origin(), serial) {
-		log.Warn(fmt.Sprintf("Notify seen for %q, but no newer zone available", z.Origin()))
+		log.Warn("Notify seen, but no newer zone available", "zone", z.Origin())
 		return
 	}
 
@@ -72,16 +74,18 @@ func (t *Transfer) Notify(origin string) error {
 			lasterr = err
 		}
 	}
-	log.Debug(fmt.Sprintf("Sent notifies for zone %q to %v", origin, t.IPs))
+	alog := log.With("upstream", strings.Join(t.IPs, ","), "zone", origin)
+	alog.Debug("Sent notifies")
 	return lasterr
 }
 
 func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
 	for range 3 {
+		alog := log.With("upstream", ip, "zone", m.Question[0].Header().Name)
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
 		if err != nil {
-			log.Error(fmt.Sprintf("Failed to sent notify: %s", err))
+			alog.Error("Failed to sent notify", slog.Any("error", err))
 			time.Sleep(time.Second)
 			continue
 		}
@@ -90,7 +94,7 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 		}
 		time.Sleep(time.Second)
 	}
-	return fmt.Errorf("notify for zone %q was not accepted by %q", m.Question[0].Header().Name, ip)
+	return fmt.Errorf("upstream %q did not accept our notify for zone %q", ip, m.Question[0].Header().Name)
 }
 
 // returns the correct family address or nil, or nil when nothing is needed.
@@ -115,16 +119,17 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 	m := dns.NewMsg(origin, dns.TypeSOA)
 
 	for _, ip := range t.IPs {
+		alog := log.With("upstream", ip, "zone", origin)
 		m, _, err := c.Exchange(context.TODO(), m, "tcp", ip)
 		if err != nil {
-			log.Error(fmt.Sprintf("Upstream %s did not accept our query: %s", ip, err), "transfer", origin)
+			alog.Error("Upstream did not accept our query", slog.Any("error", err))
 			continue
 		}
 		if err == nil {
 			for _, rr := range m.Answer {
 				if s, ok := rr.(*dns.SOA); ok {
 					if dns.CompareSerial(serial, s.Serial) == -1 {
-						log.Debug(fmt.Sprintf("Upstream serial %d is higher than ours %d", serial, s.Serial), "transfer", origin)
+						alog.Debug("Upstream serial is higher than ours", "serial", s.Serial, "upstream-serial", serial)
 						return true
 					}
 				}

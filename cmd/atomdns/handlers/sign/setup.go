@@ -7,6 +7,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -78,15 +79,16 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log.Info("Startup", "signing", filepath.Base(s.Path))
 		for _, z := range s.Zones {
+			alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
-				log.Error(fmt.Sprintf("Zone %q in %q does not exist", z.Origin(), filepath.Base(z.Path)))
+				alog.Error("Zone does not exist")
 				return co.Err(err.Error())
 			}
 
 			expired, err := s.Expired(z.Origin())
 			if !expired {
-				log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin(), filepath.Base(z.Path)))
+				alog.Info("Zone has valid signatures")
 				continue
 			}
 			zs, err := s.Sign(z.Origin())

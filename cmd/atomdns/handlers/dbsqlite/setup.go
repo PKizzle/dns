@@ -2,6 +2,7 @@ package dbsqlite
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -32,7 +33,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	sqlite.RegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
 	co.OnStartup(func() error {
-		log.Info("Startup", "database", d.Path)
+		log.Info("Startup", "path", filepath.Base(d.Path))
 		_, err := os.OpenFile("db", os.O_CREATE, 0660)
 		db, err := sqlx.Open("sqlite", "db")
 		if err != nil {
@@ -54,11 +55,11 @@ UNIQUE (name, type, data)
 		return err
 	})
 	co.OnStartup(func() error {
-		log.Info("Startup", "database", d.Path, "records", d.Count(), "origins", strings.Join(d.Origins(), ","))
+		log.Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", strings.Join(d.Origins(), ","))
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "database", d.Path)
+		log.Info("Shutdown", "path", filepath.Base(d.Path))
 		d.db.Close()
 		return nil
 	})

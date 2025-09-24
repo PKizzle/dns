@@ -3,7 +3,7 @@ package dbfile
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log/slog"
 	"maps"
 	"os"
 	"path/filepath"
@@ -48,9 +48,10 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		zones := maps.Values(d.Zones)
 		d.RUnlock()
 		for z := range zones {
+			alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
-				log.Warn(fmt.Sprintf("Zone %q in file %q does not exist (yet?)", z.Origin(), filepath.Base(z.Path)))
+				alog.Warn("Waiting for zone to appear")
 				continue
 			}
 			if err := z.Load(); err != nil {
@@ -83,7 +84,8 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 
 			err := d.TransferIn(z.Origin())
 			if err != nil {
-				log.Error(fmt.Sprintf("Failed transfer of zone %q in %q: %s", z.Origin(), d.Path, err))
+				alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
+				alog.Error("Failed to transfer", slog.Any("error", err))
 			}
 			break
 		}

@@ -3,6 +3,7 @@ package dbfile
 import (
 	"context"
 	"io"
+	"log/slog"
 	"sync"
 
 	"codeberg.org/miekg/dns"
@@ -43,7 +44,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug(err.Error())
+			log.Debug("Pack failure", slog.Any("error", err))
 		}
 		io.Copy(w, m)
 	})

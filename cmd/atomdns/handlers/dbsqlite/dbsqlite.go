@@ -3,6 +3,7 @@ package dbsqlite
 import (
 	"context"
 	"io"
+	"log/slog"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
@@ -30,7 +31,7 @@ func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug(err.Error())
+			log.Debug("Pack failure", slog.Any("error", err))
 		}
 		io.Copy(w, m)
 	})

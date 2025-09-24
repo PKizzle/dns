@@ -2,8 +2,8 @@ package dbfile
 
 import (
 	"context"
-	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -25,7 +25,7 @@ func (d *Dbfile) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, 
 		return
 	}
 	if err := d.TransferOut(ctx, w, r); err != nil {
-		log.Debug("Error while transfering out: " + err.Error())
+		log.Debug("Failure to transfer out", slog.Any("error", err))
 	}
 }
 
@@ -53,7 +53,8 @@ func (d *Dbfile) TransferOut(ctx context.Context, w dns.ResponseWriter, r *dns.M
 		}
 	}
 	close(env)
-	log.Info(fmt.Sprintf("Transferred out zone %q in %q", z.Origin(), filepath.Base(d.Path)))
+	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
+	alog.Info("Successful transfer out")
 	return nil
 }
 
@@ -77,7 +78,8 @@ func (d *Dbfile) TransferIn(origin string) error {
 		soa := 0
 		for e := range env {
 			if e.Error != nil {
-				log.Warn(fmt.Sprintf("Error during transfer of zone %q in %q: %s", origin, filepath.Base(d.Path), err))
+				alog := log.With(slog.String("zone", origin), slog.String("path", filepath.Base(d.Path)))
+				alog.Warn("Failed to transfer in", slog.Any("error", err))
 			}
 			for _, rr := range e.Answer {
 				if _, ok := rr.(*dns.SOA); ok {
@@ -92,7 +94,8 @@ func (d *Dbfile) TransferIn(origin string) error {
 		}
 		break
 	}
-	log.Info(fmt.Sprintf("Transferred in zone %q in %qs", origin, filepath.Base(d.Path)))
 	f.Close()
+	alog := log.With(slog.String("zone", origin), slog.String("path", filepath.Base(d.Path)))
+	alog.Info("Successful transfer in")
 	return os.Rename(f.Name(), d.Path)
 }

@@ -1,7 +1,7 @@
 package sign
 
 import (
-	"fmt"
+	"log/slog"
 	"path"
 	"path/filepath"
 	"time"
@@ -30,17 +30,18 @@ func (s *Sign) Resign() error {
 					// see dbfile/reload.go for why we wait
 					time.Sleep(2 * time.Second)
 					for _, z := range s.Zones {
+						alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
 						if z.Path == path.Clean(event.Name) {
 							zs, err := s.Sign(z.Origin())
 							if err != nil {
-								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))
+								alog.Error("Failed to resign", slog.Any("error", err))
 								break
 							}
 							if err := s.Write(zs); err != nil {
-								log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(event.Name), err))
+								alog.Error("Failed to resign", slog.Any("error", err))
 								break
 							}
-							log.Info(fmt.Sprintf("Resign of zone %q in %q successful", z.Origin(), filepath.Base(event.Name)))
+							alog.Info("Successful resign")
 						}
 					}
 				default:
@@ -49,23 +50,25 @@ func (s *Sign) Resign() error {
 				if !ok {
 					continue
 				}
-				log.Debug("Zone watch event error", "err", err)
+				log.Debug("Zone watch event error", slog.Any("error", err))
 			case <-ticker.C:
 				for _, z := range s.Zones {
+					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
 					expired, err := s.Expired(z.Origin())
 					if !expired {
-						log.Info(fmt.Sprintf("Zone %q in %q has valid signatures", z.Origin(), filepath.Base(z.Path)))
+						alog.Info("Zone has valid signatures")
 						continue
 					}
 					zs, err := s.Sign(z.Origin())
 					if err != nil {
-						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(z.Path), err))
+						alog.Error("Failed to resign", slog.Any("error", err))
 						continue
 					}
 					if err := s.Write(zs); err != nil {
-						log.Error(fmt.Sprintf("Failed resign of zone %q in %q: %s", z.Origin(), filepath.Base(z.Path), err))
+						alog.Error("Failed to resign", slog.Any("error", err))
 						continue
 					}
+					alog.Info("Successful resign")
 				}
 
 			case <-s.ctx.Done():

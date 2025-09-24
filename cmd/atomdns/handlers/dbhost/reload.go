@@ -1,7 +1,7 @@
 package dbhost
 
 import (
-	"fmt"
+	"log/slog"
 	"path"
 	"path/filepath"
 	"time"
@@ -37,11 +37,12 @@ func (d *Dbhost) Reload() error {
 				case event.Has(fsnotify.Rename):
 
 					if d.Path == path.Clean(event.Name) {
+						alog := log.With(slog.String("path", filepath.Base(event.Name)))
 						if err := d.Load(); err != nil {
-							log.Error(fmt.Sprintf("Failed reload of hosts file in %q: %s", filepath.Base(event.Name), err))
+							alog.Error("Failed to reload", slog.Any("error", err))
 							continue
 						}
-						log.Info(fmt.Sprintf("Reload of hosts file in %q successful", filepath.Base(event.Name)))
+						alog.Info("Successful reload")
 						break
 					}
 				default:
@@ -50,7 +51,7 @@ func (d *Dbhost) Reload() error {
 				if !ok {
 					continue
 				}
-				log.Debug("Hosts file watch event error", "err", err)
+				log.Debug("Zone watch event error", slog.Any("error", err))
 			case <-d.ctx.Done():
 				watcher.Close()
 				return
