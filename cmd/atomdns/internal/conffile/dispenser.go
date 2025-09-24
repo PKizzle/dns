@@ -215,7 +215,7 @@ func (d *Dispenser) Keys() []string { return d.keys }
 // to fill the arguments, then true will be returned.
 func (d *Dispenser) Args(targets ...*string) bool {
 	enough := true
-	for i := 0; i < len(targets); i++ {
+	for i := range len(targets) {
 		if !d.NextArg() {
 			enough = false
 			break
