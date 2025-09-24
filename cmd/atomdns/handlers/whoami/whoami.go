@@ -45,7 +45,6 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		m = dnsmsg.Funcs(ctx, m)
-
 		if err := m.Pack(); err != nil {
 			log.Debug(err.Error())
 		}

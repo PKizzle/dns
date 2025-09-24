@@ -6,6 +6,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
@@ -26,8 +27,11 @@ func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m := dnszone.Retrieve(z, r, nil)
 		m.Data = r.Data
-		m.Pack()
 
+		m = dnsmsg.Funcs(ctx, m)
+		if err := m.Pack(); err != nil {
+			log.Debug(err.Error())
+		}
 		io.Copy(w, m)
 	})
 }

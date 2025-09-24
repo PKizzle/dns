@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -62,8 +63,11 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		m.Data = r.Data
-		m.Pack()
+
+		m = dnsmsg.Funcs(ctx, m)
+		if err := m.Pack(); err != nil {
+			log.Debug(err.Error())
+		}
 		io.Copy(w, m)
-		return
 	})
 }

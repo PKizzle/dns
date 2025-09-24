@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -80,7 +81,10 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		m.Data = r.Data
 
-		m.Pack()
+		m = dnsmsg.Funcs(ctx, m)
+		if err := m.Pack(); err != nil {
+			log.Debug(err.Error())
+		}
 		io.Copy(w, m)
 	})
 }
