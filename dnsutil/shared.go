@@ -296,7 +296,7 @@ func StringToTime(s string) (uint32, error) {
 
 // Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
 // format into account, i.e. "@" means the origin in name. Absolute will return name if called
-// with an empty origin. Name is assumed to be a valid domain name.
+// with an empty origin. If Name is not a valid domain name, the empty string is returned.
 func Absolute(name, origin string) string {
 	if origin == "" {
 		return name
@@ -304,7 +304,10 @@ func Absolute(name, origin string) string {
 	if name == "@" {
 		return origin
 	}
-	if name == "\n" { // this can happen when a zone is parsed, internal quirk, should not be here...
+	if name == "\n" || name == "" { // this can happen when a zone is parsed, internal quirk, should not be here...
+		return ""
+	}
+	if IsName(name) == false { // done to make the conversion via dnsutil_generate.go work.
 		return ""
 	}
 	if IsFqdn(name) {
