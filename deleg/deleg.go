@@ -71,6 +71,8 @@ func KeyToInfo(k uint16) func() Info {
 		return func() Info { return new(SERVERIPV6) }
 	case KeyServerName:
 		return func() Info { return new(SERVERNAME) }
+	case KeyIncludeDelegi:
+		return func() Info { return new(INCLUDEDELEGI) }
 	default:
 		return nil
 	}
@@ -85,6 +87,8 @@ func InfoToKey(i Info) uint16 {
 		return KeyServerIPv6
 	case *SERVERNAME:
 		return KeyServerName
+	case *INCLUDEDELEGI:
+		return KeyIncludeDelegi
 	}
 	return KeyReserved
 }
