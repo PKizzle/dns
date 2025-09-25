@@ -69,9 +69,15 @@ func main() {
 		//
 
 		fmt.Fprintf(b, "func (rr *%s) compare(b RR) (x int) {\n", rrname)
-
 		strct := spec.Type.(*ast.StructType)
+
+		if strct.Fields.List[0].Type != nil && len(strct.Fields.List[0].Names) == 0 {
+			fmt.Fprintf(b, "return rr.%s.compare(b)\n", strct.Fields.List[0].Type)
+			fmt.Fprint(b, "}\n\n")
+			continue
+		}
 		for _, field := range strct.Fields.List {
+
 			if len(field.Names) == 0 {
 				continue
 			}

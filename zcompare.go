@@ -640,7 +640,7 @@ func (rr *LOC) compare(b RR) (x int) {
 }
 
 func (rr *SIG) compare(b RR) (x int) {
-	return 0
+	return rr.RRSIG.compare(b)
 }
 
 func (rr *RRSIG) compare(b RR) (x int) {
@@ -704,7 +704,7 @@ func (rr *RRSIG) compare(b RR) (x int) {
 }
 
 func (rr *NXT) compare(b RR) (x int) {
-	return 0
+	return rr.NSEC.compare(b)
 }
 
 func (rr *NSEC) compare(b RR) (x int) {
@@ -719,11 +719,11 @@ func (rr *NSEC) compare(b RR) (x int) {
 }
 
 func (rr *DLV) compare(b RR) (x int) {
-	return 0
+	return rr.DS.compare(b)
 }
 
 func (rr *CDS) compare(b RR) (x int) {
-	return 0
+	return rr.DS.compare(b)
 }
 
 func (rr *DS) compare(b RR) (x int) {
@@ -831,11 +831,11 @@ func (rr *SSHFP) compare(b RR) (x int) {
 }
 
 func (rr *KEY) compare(b RR) (x int) {
-	return 0
+	return rr.DNSKEY.compare(b)
 }
 
 func (rr *CDNSKEY) compare(b RR) (x int) {
-	return 0
+	return rr.DNSKEY.compare(b)
 }
 
 func (rr *DNSKEY) compare(b RR) (x int) {
@@ -1334,7 +1334,7 @@ func (rr *SVCB) compare(b RR) (x int) {
 }
 
 func (rr *HTTPS) compare(b RR) (x int) {
-	return 0
+	return rr.SVCB.compare(b)
 }
 
 func (rr *DELEG) compare(b RR) (x int) {
@@ -1342,7 +1342,7 @@ func (rr *DELEG) compare(b RR) (x int) {
 }
 
 func (rr *DELEGI) compare(b RR) (x int) {
-	return 0
+	return rr.DELEG.compare(b)
 }
 
 func (rr *ANY) compare(b RR) (x int) {
