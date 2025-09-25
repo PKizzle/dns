@@ -148,6 +148,9 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			}
 			name = append(name, '.')
 		case 0xC0: // pointer
+			if msgBuf == nil {
+				return "", &Error{"pointer in uncompressable name"}
+			}
 			var c1 byte
 			if !cs.ReadUint8(&c1) {
 				return "", &Error{"overflow"}

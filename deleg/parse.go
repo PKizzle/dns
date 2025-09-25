@@ -83,3 +83,22 @@ func (s *SERVERNAME) parse(b, o string) error {
 	s.Hostnames = hostnames
 	return nil
 }
+
+func (s *INCLUDEDELEGI) parse(b, o string) error {
+	if len(b) == 0 {
+		return errors.New("dns: delegincludedelegi: empty domains")
+	}
+
+	domains := make([]string, 0, strings.Count(b, ",")+1)
+	for len(b) > 0 {
+		var e string
+		e, b, _ = strings.Cut(b, ",")
+		e = dnsutilAbsolute(e, o)
+		if e == "" {
+			return errors.New("dns: delegincludedelegi: bad domain")
+		}
+		domains = append(domains, e)
+	}
+	s.Domains = domains
+	return nil
+}
