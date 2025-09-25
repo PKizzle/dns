@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-func UnpackDELEG(s *cryptobyte.String) ([]Info, error) {
+func Unpack(s *cryptobyte.String) ([]Info, error) {
 	var infos []Info
 	key := uint16(0)
 	for !s.Empty() {
@@ -22,7 +22,7 @@ func UnpackDELEG(s *cryptobyte.String) ([]Info, error) {
 		}
 		info := infoFn()
 
-		if err := Unpack(info, &data); err != nil {
+		if err := _unpack(info, &data); err != nil {
 			return nil, &unpack.Error{Err: err.Error()}
 		}
 		infos = append(infos, info)
@@ -30,7 +30,7 @@ func UnpackDELEG(s *cryptobyte.String) ([]Info, error) {
 	return infos, nil
 }
 
-func PackDELEG(infos []Info, msg []byte, off int) (off1 int, err error) {
+func Pack(infos []Info, msg []byte, off int) (off1 int, err error) {
 	infos = slices.Clone(infos)
 	prev := KeyReserved
 	for _, info := range infos {
@@ -39,7 +39,7 @@ func PackDELEG(infos []Info, msg []byte, off int) (off1 int, err error) {
 			return len(msg), pack.Errorf("repeated DELEG keys are not allowed")
 		}
 		prev = key
-		off, err = Pack(info, msg, off)
+		off, err = _pack(info, msg, off)
 		if err != nil {
 			return len(msg), &pack.Error{Err: err.Error()}
 		}

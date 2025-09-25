@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-func UnpackSVCB(s *cryptobyte.String) ([]Pair, error) {
+func Unpack(s *cryptobyte.String) ([]Pair, error) {
 	var pairs []Pair
 	key := uint16(0)
 	for !s.Empty() {
@@ -22,7 +22,7 @@ func UnpackSVCB(s *cryptobyte.String) ([]Pair, error) {
 		}
 		pair := pairFn()
 
-		if err := Unpack(pair, &data); err != nil {
+		if err := _unpack(pair, &data); err != nil {
 			return nil, &unpack.Error{Err: err.Error()}
 		}
 		pairs = append(pairs, pair)
@@ -30,7 +30,7 @@ func UnpackSVCB(s *cryptobyte.String) ([]Pair, error) {
 	return pairs, nil
 }
 
-func PackSVCB(pairs []Pair, msg []byte, off int) (off1 int, err error) {
+func Pack(pairs []Pair, msg []byte, off int) (off1 int, err error) {
 	pairs = slices.Clone(pairs)
 	prev := KeyReserved
 	for _, pair := range pairs {
@@ -39,7 +39,7 @@ func PackSVCB(pairs []Pair, msg []byte, off int) (off1 int, err error) {
 			return len(msg), pack.Errorf("repeated SVCB keys are not allowed")
 		}
 		prev = key
-		off, err = Pack(pair, msg, off)
+		off, err = _pack(pair, msg, off)
 		if err != nil {
 			return len(msg), &pack.Error{Err: err.Error()}
 		}

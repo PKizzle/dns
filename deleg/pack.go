@@ -14,8 +14,8 @@ import (
 
 // should all be generated...
 
-// Pack converts an info to wire-format. Only exported to make it available to the dns packer.
-func Pack(i Info, msg []byte, off int) (int, error) {
+// _pack converts an info to wire-format.
+func _pack(i Info, msg []byte, off int) (int, error) {
 	switch x := i.(type) {
 	case *SERVERIPV4:
 		return x.pack(msg, off)
@@ -25,8 +25,8 @@ func Pack(i Info, msg []byte, off int) (int, error) {
 	return 0, fmt.Errorf("dns: no deleg pack defined")
 }
 
-// Unpack converts wire-format to an info. Only exported to make it available to the dns unpacker.
-func Unpack(i Info, data *cryptobyte.String) error {
+// unpack converts wire-format to an info.
+func _unpack(i Info, data *cryptobyte.String) error {
 	switch x := i.(type) {
 	case *SERVERIPV4:
 		return x.unpack(data)
@@ -85,6 +85,7 @@ func (s *SERVERIPV6) unpack(sc *cryptobyte.String) error {
 	}
 	return nil
 }
+
 func packTLV(p Info, msg []byte, off int) (off1 int, err error) {
 	key := InfoToKey(p)
 	length := uint16(p.Len()) - tlv // now here we do the rdata length, not the 4 octets we encoding here

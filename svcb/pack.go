@@ -12,10 +12,8 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// should all be generated...
-
-// Pack converts a pair to wire-format. Only exported to make it available to the dns packer.
-func Pack(p Pair, msg []byte, off int) (int, error) {
+// _pack converts a pair to wire-format.
+func _pack(p Pair, msg []byte, off int) (int, error) {
 	switch x := p.(type) {
 	case *MANDATORY:
 		return x.pack(msg, off)
@@ -41,8 +39,8 @@ func Pack(p Pair, msg []byte, off int) (int, error) {
 	return 0, fmt.Errorf("dns: no svcb pack defined")
 }
 
-// Unpack converts wire-format to a pair. Only exported to make it available to the dns unpacker.
-func Unpack(p Pair, data *cryptobyte.String) error {
+// _unpack converts wire-format to a pair. Only exported to make it available to the dns unpacker.
+func _unpack(p Pair, data *cryptobyte.String) error {
 	switch x := p.(type) {
 	case *MANDATORY:
 		return x.unpack(data)
