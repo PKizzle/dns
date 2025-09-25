@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/internal/pack"
 )
 
 func Parse(p Pair, b, o string) error {
@@ -133,7 +134,7 @@ func (s *IPV4HINT) parse(b string) error {
 }
 
 func (s *ECHCONFIG) parse(b string) error {
-	x, err := fromBase64([]byte(b)) // todo, move frombase64 somewhere...
+	x, err := pack.Base64([]byte(b))
 	if err != nil {
 		return errors.New("dns: svcbech: bad base64 ech")
 	}
