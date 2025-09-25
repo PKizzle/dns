@@ -324,7 +324,16 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 	for e := range env {
 		m := new(Msg)
 		m.Authoritative = true
-		dnsutilSetReply(m, r)
+
+		// dnsutil.SetReply as used here, but led to all kinds of cyclic imports, just use that very static code here.
+		m.ID, m.Rcode = r.ID, RcodeSuccess
+		m.Response, m.Opcode = true, r.Opcode
+		m.RecursionDesired = r.RecursionDesired
+		m.CheckingDisabled = r.CheckingDisabled
+		m.Security = r.Security
+		m.Question = r.Question
+		m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
+
 		m.Answer = e.Answer
 		if t != nil {
 			m.Pseudo = []RR{t} // will overwrite the bits that matter

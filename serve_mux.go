@@ -160,8 +160,15 @@ func refuse(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.Data = r.Data
 
-	dnsutilSetReply(m, r)
-	m.Rcode = RcodeRefused
+	// dnsutil.SetReply as used here, but led to all kinds of cyclic imports, just use that very static code here.
+	m.ID, m.Rcode = r.ID, RcodeRefused
+	m.Response, m.Opcode = true, r.Opcode
+	m.RecursionDesired = r.RecursionDesired
+	m.CheckingDisabled = r.CheckingDisabled
+	m.Security = r.Security
+	m.Question = r.Question
+	m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
+
 	m.Pack()
 	io.Copy(w, m)
 }

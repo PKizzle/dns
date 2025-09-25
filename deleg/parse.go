@@ -66,22 +66,20 @@ func (s *SERVERIPV6) parse(b string) error {
 }
 
 func (s *SERVERNAME) parse(b, o string) error {
-	/*
-		if len(b) == 0 {
-			return errors.New("dns: delegservername: empty hostnames")
-		}
+	if len(b) == 0 {
+		return errors.New("dns: delegservername: empty hostnames")
+	}
 
-		hostnames := make([]string, 0, strings.Count(b, ",")+1)
-		for len(b) > 0 {
-			var e string
-			e, b, _ = strings.Cut(b, ",")
-			if !dnsutil.IsName(e) {
-				return errors.New("dns: delegservername: bad hostname")
-			}
-			e = dnsutil.Absolute(e, o)
-			hostnames = append(hostnames, e)
+	hostnames := make([]string, 0, strings.Count(b, ",")+1)
+	for len(b) > 0 {
+		var e string
+		e, b, _ = strings.Cut(b, ",")
+		e = dnsutilAbsolute(e, o)
+		if e == "" {
+			return errors.New("dns: delegservername: bad hostname")
 		}
-		s.Hostnames = hostnames
-	*/
+		hostnames = append(hostnames, e)
+	}
+	s.Hostnames = hostnames
 	return nil
 }

@@ -22,13 +22,11 @@ var hdr = `
 
 `
 
-const out = "zdnsutil.go"
-
 func main() {
 	flag.Parse()
 	node, fset, err := generate.Ast("dnsutil/shared.go")
 	if err != nil {
-		log.Fatalf("Failed to generate %s: %v", out, err)
+		log.Fatalf("Failed to generate %v: %v", outs, err)
 	}
 
 	node.Name = ast.NewIdent("dns")
@@ -56,7 +54,7 @@ func main() {
 	source := &bytes.Buffer{}
 	source.WriteString(hdr)
 	if err := printer.Fprint(source, fset, node); err != nil {
-		log.Fatalf("Failed to generate %s: %v", out, err)
+		log.Fatalf("Failed to generate %v: %v", outs, err)
 	}
 
 	// silly: go over bytes and remove `dns.` everyhwere.
@@ -66,5 +64,15 @@ func main() {
 		replace := append([]byte(" dnsutil"), fix[1:]...)
 		source2 = bytes.Replace(source2, fix, replace, -1)
 	}
-	generate.Write(bytes.NewBuffer(source2), out)
+	for _, out := range outs {
+		switch out {
+		case "deleg/zdnsutil.go":
+			source2 = bytes.Replace(source2, []byte("package dns"), []byte("package deleg"), 1)
+		case "svcb/zdnsutil.go":
+			source2 = bytes.Replace(source2, []byte("package deleg"), []byte("package svcb"), 1)
+		}
+		generate.Write(bytes.NewBuffer(source2), out)
+	}
 }
+
+var outs = []string{"zdnsutil.go", "deleg/zdnsutil.go", "svcb/zdnsutil.go"}
