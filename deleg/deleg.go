@@ -14,12 +14,12 @@ import (
 
 // Keys as defined in the DELEG draft.
 const (
-	KeyReserved uint16 = 0
-
 	KeyServerIPv4 uint16 = iota + 1
 	KeyServerIPv6
 	KeyServerName
 	KeyIncludeDelegi
+
+	KeyReserved uint16 = 65535
 )
 
 // Info defines a key=value pair for the DELEG/DELEGI RR type. A DELEG RR can have multiple infos appended to it.
