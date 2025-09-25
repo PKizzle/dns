@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"slices"
 	"strings"
@@ -85,7 +84,7 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 		alog := log.With("upstream", ip, "zone", m.Question[0].Header().Name)
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
 		if err != nil {
-			alog.Error("Failed to sent notify", slog.Any("error", err))
+			alog.Error("Failed to sent notify", Err(err))
 			time.Sleep(time.Second)
 			continue
 		}
@@ -122,7 +121,7 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 		alog := log.With("upstream", ip, "zone", origin)
 		m, _, err := c.Exchange(context.TODO(), m, "tcp", ip)
 		if err != nil {
-			alog.Error("Upstream did not accept our query", slog.Any("error", err))
+			alog.Error("Upstream did not accept our query", Err(err))
 			continue
 		}
 		if err == nil {

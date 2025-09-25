@@ -3,7 +3,6 @@ package any
 import (
 	"context"
 	"io"
-	"log/slog"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
@@ -26,7 +25,7 @@ func (a *Any) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", slog.Any("error", err))
+			log.Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

@@ -25,7 +25,7 @@ func (d *Dbsqlite) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter
 	z := d.Zones[dns.Zone(ctx)]
 
 	if err := dnszone.TransferOut(z, ctx, w, r); err != nil {
-		log.Debug("Failure to transfer out", slog.Any("error", err))
+		log.Debug("Failure to transfer out", Err( err))
 		return
 	}
 	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))

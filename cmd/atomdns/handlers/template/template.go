@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"log/slog"
 	"regexp"
 	"slices"
 	"sync"
@@ -66,7 +65,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		if err != nil {
 			buf.Reset()
 			bufPool.Put(buf)
-			log.Warn("Failed to execute template", "path", t.Path, slog.Any("error", err))
+			log.Warn("Failed to execute template", "path", t.Path, Err(err))
 			next.ServeDNS(ctx, w, r)
 			return
 		}
@@ -82,7 +81,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", slog.Any("error", err))
+			log.Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

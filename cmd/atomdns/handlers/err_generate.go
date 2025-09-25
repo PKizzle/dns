@@ -33,6 +33,8 @@ var funcmap = template.FuncMap{
 
 var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
 func (h *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+
+func Err(err error) slog.Attr { return slog.Any("error", err) }
 `))
 
 var KeyFunc = template.Must(template.New("keyFunc").Funcs(funcmap).Parse(`

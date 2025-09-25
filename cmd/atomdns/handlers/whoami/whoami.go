@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 
 	"codeberg.org/miekg/dns"
@@ -47,7 +46,7 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", slog.Any("error", err))
+			log.Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

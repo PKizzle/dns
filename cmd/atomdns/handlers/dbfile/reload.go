@@ -47,7 +47,7 @@ func (d *Dbfile) Reload() error {
 							alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
 							z1 := zone.New(z.Origin(), event.Name)
 							if err := z1.Load(); err != nil {
-								alog.Error("Failed to reload", slog.Any("error", err))
+								alog.Error("Failed to reload", Err( err))
 								continue
 							}
 							d.Lock()
@@ -65,7 +65,7 @@ func (d *Dbfile) Reload() error {
 				if !ok {
 					continue
 				}
-				log.Debug("Zone watch event error", slog.Any("error", err))
+				log.Debug("Zone watch event error", Err( err))
 			case <-d.ctx.Done():
 				watcher.Close()
 				return

@@ -3,7 +3,6 @@ package drunk
 import (
 	"context"
 	"io"
-	"log/slog"
 	"net"
 	"sync/atomic"
 	"time"
@@ -67,7 +66,7 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", slog.Any("error", err))
+			log.Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

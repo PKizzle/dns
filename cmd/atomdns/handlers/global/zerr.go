@@ -2,9 +2,13 @@
 
 package global
 
-import "fmt"
-import "log/slog"
+import (
+	"fmt"
+	"log/slog"
+)
 
 func (h *Global) Err(err error) error { return fmt.Errorf("handler.global: %s", err.Error()) }
+
+func Err(err error) slog.Attr { return slog.Any("error", err) }
 
 var log = slog.Default().With("handler", "global")

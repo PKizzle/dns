@@ -3,7 +3,6 @@ package refuse
 import (
 	"context"
 	"io"
-	"log/slog"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -19,7 +18,7 @@ func (r *Refuse) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		dnsutil.SetReply(m, r)
 		m.Rcode = dns.RcodeRefused
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", slog.Any("error", err))
+			log.Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

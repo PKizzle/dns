@@ -9,6 +9,8 @@ import (
 
 func (h *Dbfile) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
 
+func Err(err error) slog.Attr { return slog.Any("error", err) }
+
 func (h *Dbfile) Key() string { return "dbfile" }
 
 var log = slog.Default().With("handler", "dbfile")

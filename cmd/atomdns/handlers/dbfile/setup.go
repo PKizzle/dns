@@ -85,7 +85,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			err := d.TransferIn(z.Origin())
 			if err != nil {
 				alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
-				alog.Error("Failed to transfer", slog.Any("error", err))
+				alog.Error("Failed to transfer", Err( err))
 			}
 			break
 		}
