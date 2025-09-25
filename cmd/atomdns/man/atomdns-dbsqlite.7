@@ -14,10 +14,12 @@ create the database completely off\-line, if it holds the correct data, \fIdbsql
 
 .PP
 The \fIsign\fP handler does \fInot\fP support databases, so you need something like ldns\-signzone to sign and resign
-your zones and put the generated records in the datebase. The database needs a custom collation, which means
-it can not be created off\-line. When started the database file will be created and the schema will be written
-to it (if it does not already exist). After this step, the handler will never write to the database, for the
-purpose of generating answers the database is completely read\-only.
+your zones and put the generated records in the database.
+
+.PP
+When started the database file will be created and the schema will be written to it (if it does not already
+exist). After this step, the handler will never write to the database, for the purpose of generating answers
+the database is completely read\-only. The database can be prepared beforehand.
 
 .PP
 An RR that fails to be converted into a proper \fB\fCdns.RR\fR is silently discarded, unless \fB\fCdebug\fR is active, see
@@ -101,7 +103,7 @@ heredoc> EOF
 .RE
 
 .PP
-Where the \fB\fCldns-read-zone\fR pipeline removes trailing whitespace, and the helpful comments after DNSKEY
+Where the \fB\fCldns-read-zone\fR pipeline removes trailing white space, and the helpful comments after DNSKEY
 records, then \fB\fCawk\fR re\-arranges it into the proper format.
 
 .SH "SYNTAX"
@@ -178,4 +180,4 @@ If you want \fIeverything\fP to end up in \fIdbsqlite\fP, you might be tempted t
 
 .PP
 But this fails, \fIunless\fP you are actually authoritative for \fB\fC.\fR (the root zone), this because the origins are
-used to find those origins in the database.
+used to find those in the database.

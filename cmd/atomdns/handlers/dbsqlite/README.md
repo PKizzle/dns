@@ -11,10 +11,11 @@ signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. O
 create the database completely off-line, if it holds the correct data, _dbsqlite_ will happily serve from it.
 
 The _sign_ handler does _not_ support databases, so you need something like ldns-signzone to sign and resign
-your zones and put the generated records in the datebase. The database needs a custom collation, which means
-it can not be created off-line. When started the database file will be created and the schema will be written
-to it (if it does not already exist). After this step, the handler will never write to the database, for the
-purpose of generating answers the database is completely read-only.
+your zones and put the generated records in the database.
+
+When started the database file will be created and the schema will be written to it (if it does not already
+exist). After this step, the handler will never write to the database, for the purpose of generating answers
+the database is completely read-only. The database can be prepared beforehand.
 
 An RR that fails to be converted into a proper `dns.RR` is silently discarded, unless `debug` is active, see
 atomdns-global(7) for details. The class is `IN` and can't be overridden.
@@ -64,7 +65,7 @@ And then:
     heredoc> COMMIT;
     heredoc> EOF
 
-Where the `ldns-read-zone` pipeline removes trailing whitespace, and the helpful comments after DNSKEY
+Where the `ldns-read-zone` pipeline removes trailing white space, and the helpful comments after DNSKEY
 records, then `awk` re-arranges it into the proper format.
 
 ## Syntax
@@ -115,4 +116,4 @@ If you want _everything_ to end up in _dbsqlite_, you might be tempted to:
 ```
 
 But this fails, _unless_ you are actually authoritative for `.` (the root zone), this because the origins are
-used to find those origins in the database.
+used to find those in the database.
