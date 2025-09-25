@@ -23,7 +23,7 @@ func UnpackDELEG(s *cryptobyte.String) ([]Info, error) {
 		info := infoFn()
 
 		if err := Unpack(info, &data); err != nil {
-			return nil, err
+			return nil, &unpack.Error{Err: err.Error()}
 		}
 		infos = append(infos, info)
 	}
@@ -41,7 +41,7 @@ func PackDELEG(infos []Info, msg []byte, off int) (off1 int, err error) {
 		prev = key
 		off, err = Pack(info, msg, off)
 		if err != nil {
-			return len(msg), err
+			return len(msg), &pack.Error{Err: err.Error()}
 		}
 	}
 	return off, nil

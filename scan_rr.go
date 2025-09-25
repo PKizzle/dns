@@ -1859,7 +1859,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 func (rr *HTTPS) parse(c *zlexer, o string) *ParseError { return rr.SVCB.parse(c, o) }
 
 func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
-	// TODO: unify with SVCB
+	// TODO(miek): unify with SVCB
 	// Values (if any)
 	l, _ := c.Next()
 	var xs []deleg.Info

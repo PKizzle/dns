@@ -83,14 +83,18 @@ func InfoToKey(i Info) uint16 {
 		return KeyServerIPv4
 	case *SERVERIPV6:
 		return KeyServerIPv6
+	case *SERVERNAME:
+		return KeyServerName
 	}
 	return KeyReserved
 }
 
-// SERVERNAME info add servernames to the DELEG RR.
+// SERVERNAME info add nameserver hosts names to the DELEG RR.
 type SERVERNAME struct {
 	Hostnames []string `dns:"domain-name"`
 }
+
+func (s *SERVERNAME) String() string { return strings.Join(s.Hostnames, ",") }
 
 func (s *SERVERNAME) Len() int {
 	l := tlv
@@ -100,12 +104,25 @@ func (s *SERVERNAME) Len() int {
 	return l
 }
 
+// INCLUDEDELEGI info adds DELEGI domains to the DELEG RR.
+type INCLUDEDELEGI struct {
+	Domains []string `dns:"domain-name"`
+}
+
+func (s *INCLUDEDELEGI) String() string { return strings.Join(s.Domains, ",") }
+
+func (s *INCLUDEDELEGI) Len() int {
+	l := tlv
+	for i := range s.Domains {
+		l += len(s.Domains[i]) + 1
+	}
+	return l
+}
+
 // SERVERIPV4 info adds IPv4 addresses to the DELEG RR.
 type SERVERIPV4 struct {
 	IPs []net.IP
 }
-
-func (s *SERVERNAME) String() string { return strings.Join(s.Hostnames, ",") }
 
 func (s *SERVERIPV4) Len() int { return tlv + 4*len(s.IPs) }
 
@@ -134,6 +151,7 @@ func (s *SERVERIPV6) String() string {
 
 const tlv = 4
 
-func (s *SERVERIPV4) Copy() Info { return &SERVERIPV4{slices.Clone(s.IPs)} }
-func (s *SERVERIPV6) Copy() Info { return &SERVERIPV6{slices.Clone(s.IPs)} }
-func (s *SERVERNAME) Copy() Info { return &SERVERNAME{slices.Clone(s.Hostnames)} }
+func (s *SERVERIPV4) Copy() Info    { return &SERVERIPV4{slices.Clone(s.IPs)} }
+func (s *SERVERIPV6) Copy() Info    { return &SERVERIPV6{slices.Clone(s.IPs)} }
+func (s *SERVERNAME) Copy() Info    { return &SERVERNAME{slices.Clone(s.Hostnames)} }
+func (s *INCLUDEDELEGI) Copy() Info { return &INCLUDEDELEGI{slices.Clone(s.Domains)} }

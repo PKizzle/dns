@@ -23,7 +23,7 @@ func UnpackSVCB(s *cryptobyte.String) ([]Pair, error) {
 		pair := pairFn()
 
 		if err := Unpack(pair, &data); err != nil {
-			return nil, err
+			return nil, &unpack.Error{Err: err.Error()}
 		}
 		pairs = append(pairs, pair)
 	}
@@ -41,7 +41,7 @@ func PackSVCB(pairs []Pair, msg []byte, off int) (off1 int, err error) {
 		prev = key
 		off, err = Pack(pair, msg, off)
 		if err != nil {
-			return len(msg), err
+			return len(msg), &pack.Error{Err: err.Error()}
 		}
 	}
 	return off, nil

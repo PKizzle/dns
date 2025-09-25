@@ -7,6 +7,7 @@ import (
 )
 
 func TestDELEG(t *testing.T) {
+	// TODO(miek): include more tests, or rename the test.
 	testcases := []struct {
 		in  string
 		exp string
@@ -27,5 +28,4 @@ func TestDELEG(t *testing.T) {
 		}
 		println(rr.String())
 	}
-
 }
