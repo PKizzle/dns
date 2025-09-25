@@ -15,10 +15,10 @@ import (
 const (
 	KeyReserved uint16 = 0
 
-	KeyServerIP4 uint16 = iota + 1
-	KeyServerIP6
+	KeyServerIPv4 uint16 = iota + 1
+	KeyServerIPv6
 	KeyServerName
-	KeyIncludeName
+	KeyIncludeDelegi
 )
 
 // Info defines a key=value pair for the DELEG/DELEGI RR type. A DELEG RR can have multiple infos appended to it.
@@ -42,10 +42,10 @@ func KeyToString(k uint16) string {
 }
 
 var keyToString = map[uint16]string{
-	KeyServerIP4:   "server-ip4",
-	KeyServerIP6:   "server-ip6",
-	KeyServerName:  "server-name",
-	KeyIncludeName: "include-name",
+	KeyServerIPv4:    "server-ipv4",
+	KeyServerIPv6:    "server-ipv6",
+	KeyServerName:    "server-name",
+	KeyIncludeDelegi: "include-delegi",
 }
 
 // StringtoKey is the reverse of KeyToString and takes keyXXXX into account.
@@ -65,10 +65,12 @@ var stringToKey = reverse.Int16(keyToString)
 // KeyToInfo convert the key value to a Info.
 func KeyToInfo(k uint16) func() Info {
 	switch k {
-	case KeyServerIP4:
-		return func() Info { return new(SERVERIP4) }
-	case KeyServerIP6:
-		return func() Info { return new(SERVERIP6) }
+	case KeyServerIPv4:
+		return func() Info { return new(SERVERIPV4) }
+	case KeyServerIPv6:
+		return func() Info { return new(SERVERIPV6) }
+	case KeyServerName:
+		return func() Info { return new(SERVERNAME) }
 	default:
 		return nil
 	}
@@ -77,22 +79,37 @@ func KeyToInfo(k uint16) func() Info {
 // InfoToKey is the reverse of KeyToInfo.
 func InfoToKey(i Info) uint16 {
 	switch i.(type) {
-	case *SERVERIP4:
-		return KeyServerIP4
-	case *SERVERIP6:
-		return KeyServerIP6
+	case *SERVERIPV4:
+		return KeyServerIPv4
+	case *SERVERIPV6:
+		return KeyServerIPv6
 	}
 	return KeyReserved
 }
 
-// SERVERIP4 info adds IPv4 addresses to the DELEG RR.
-type SERVERIP4 struct {
+// SERVERNAME info add servernames to the DELEG RR.
+type SERVERNAME struct {
+	Hostnames []string `dns:"domain-name"`
+}
+
+func (s *SERVERNAME) Len() int {
+	l := tlv
+	for i := range s.Hostnames {
+		l += len(s.Hostnames[i]) + 1
+	}
+	return l
+}
+
+// SERVERIPV4 info adds IPv4 addresses to the DELEG RR.
+type SERVERIPV4 struct {
 	IPs []net.IP
 }
 
-func (s *SERVERIP4) Len() int { return tlv + 4*len(s.IPs) }
+func (s *SERVERNAME) String() string { return strings.Join(s.Hostnames, ",") }
 
-func (s *SERVERIP4) String() string {
+func (s *SERVERIPV4) Len() int { return tlv + 4*len(s.IPs) }
+
+func (s *SERVERIPV4) String() string {
 	str := make([]string, len(s.IPs))
 	for i, e := range s.IPs {
 		x := e.To4()
@@ -104,14 +121,14 @@ func (s *SERVERIP4) String() string {
 	return strings.Join(str, ",")
 }
 
-// SERVERIP6 info adds IPv6 addresses to the DELEG RR.
-type SERVERIP6 struct {
+// SERVERIPV6 info adds IPv6 addresses to the DELEG RR.
+type SERVERIPV6 struct {
 	IPs []net.IP
 }
 
-func (s *SERVERIP6) Len() int { return tlv + 16*len(s.IPs) }
+func (s *SERVERIPV6) Len() int { return tlv + 16*len(s.IPs) }
 
-func (s *SERVERIP6) String() string {
+func (s *SERVERIPV6) String() string {
 	str := make([]string, len(s.IPs))
 	for i, e := range s.IPs {
 		x := e.To4()
@@ -125,5 +142,6 @@ func (s *SERVERIP6) String() string {
 
 const tlv = 4
 
-func (s *SERVERIP4) Copy() Info { return &SERVERIP4{slices.Clone(s.IPs)} }
-func (s *SERVERIP6) Copy() Info { return &SERVERIP4{slices.Clone(s.IPs)} }
+func (s *SERVERIPV4) Copy() Info { return &SERVERIPV4{slices.Clone(s.IPs)} }
+func (s *SERVERIPV6) Copy() Info { return &SERVERIPV6{slices.Clone(s.IPs)} }
+func (s *SERVERNAME) Copy() Info { return &SERVERNAME{slices.Clone(s.Hostnames)} }

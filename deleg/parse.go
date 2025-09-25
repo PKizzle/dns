@@ -9,9 +9,9 @@ import (
 
 func Parse(i Info, b string) error {
 	switch x := i.(type) {
-	case *SERVERIP6:
+	case *SERVERIPV6:
 		return x.parse(b)
-	case *SERVERIP4:
+	case *SERVERIPV4:
 		return x.parse(b)
 	}
 	return fmt.Errorf("dns: no deleg parse defined")
@@ -19,12 +19,12 @@ func Parse(i Info, b string) error {
 
 // should all be generated, allthough the difference are huge...
 
-func (s *SERVERIP4) parse(b string) error {
+func (s *SERVERIPV4) parse(b string) error {
 	if len(b) == 0 {
-		return errors.New("dns: delegserverip4: empty ips")
+		return errors.New("dns: delegserveripv4: empty ips")
 	}
 	if strings.Contains(b, ":") {
-		return errors.New("dns: delegserverip4: expected ipv4, got ipv6")
+		return errors.New("dns: delegserveripv4: expected ipv4, got ipv6")
 	}
 
 	ips := make([]net.IP, 0, strings.Count(b, ",")+1)
@@ -33,7 +33,7 @@ func (s *SERVERIP4) parse(b string) error {
 		e, b, _ = strings.Cut(b, ",")
 		ip := net.ParseIP(e).To4()
 		if ip == nil {
-			return errors.New("dns: delegserverip4: bad ip")
+			return errors.New("dns: delegserveripv4: bad ip")
 		}
 		ips = append(ips, ip)
 	}
@@ -41,9 +41,9 @@ func (s *SERVERIP4) parse(b string) error {
 	return nil
 }
 
-func (s *SERVERIP6) parse(b string) error {
+func (s *SERVERIPV6) parse(b string) error {
 	if len(b) == 0 {
-		return errors.New("dns: delegserverip6: empty ips")
+		return errors.New("dns: delegserveripv6: empty ips")
 	}
 
 	ips := make([]net.IP, 0, strings.Count(b, ",")+1)
@@ -52,10 +52,10 @@ func (s *SERVERIP6) parse(b string) error {
 		e, b, _ = strings.Cut(b, ",")
 		ip := net.ParseIP(e)
 		if ip == nil {
-			return errors.New("dns: delegserverip6: bad ip")
+			return errors.New("dns: delegserveripv6: bad ip")
 		}
 		if ip.To4() != nil {
-			return errors.New("dns: delegserverip6: expected ipv6, got ipv4-mapped-ipv6")
+			return errors.New("dns: delegserveripv6: expected ipv6, got ipv4-mapped-ipv6")
 		}
 		ips = append(ips, ip)
 	}

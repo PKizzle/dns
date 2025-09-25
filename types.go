@@ -1496,7 +1496,7 @@ func (rr *DELEG) String() string {
 	for _, i := range rr.Value {
 		sb.WriteByte(' ')
 		k := deleg.InfoToKey(i)
-		sb.WriteString(svcb.KeyToString(k))
+		sb.WriteString(deleg.KeyToString(k))
 		sb.WriteByte('=')
 		sb.WriteByte('"')
 		sb.WriteString(i.String())

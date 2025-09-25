@@ -1915,7 +1915,7 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 			}
-			infoFn := deleg.KeyToInfo(svcb.StringToKey(key))
+			infoFn := deleg.KeyToInfo(deleg.StringToKey(key))
 			if infoFn == nil {
 				return &ParseError{file: l.token, err: "bad DELEG key", lex: l}
 			}
