@@ -72,7 +72,7 @@ func main() {
 		strct := spec.Type.(*ast.StructType)
 
 		if strct.Fields.List[0].Type != nil && len(strct.Fields.List[0].Names) == 0 {
-			fmt.Fprintf(b, "return rr.%[1]s.compare(b.(*%[1]s))\n", strct.Fields.List[0].Type)
+			fmt.Fprintf(b, "return rr.%[1]s.compare(&b.(*%[2]s).%[1]s)\n", strct.Fields.List[0].Type, rrname)
 			fmt.Fprint(b, "}\n\n")
 			continue
 		}
