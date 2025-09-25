@@ -10,7 +10,7 @@ import (
 )
 
 func (d *Drunk) Setup(co *dnsserver.Controller) error {
-	d.drop = 2
+	d.drop = 4
 	drop := false
 	for co.Next() {
 		for co.NextBlock(0) {
@@ -39,8 +39,7 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 					return co.ArgErr()
 				}
 
-				// Defaults.
-				d.delay = 2
+				d.delay = 4
 				d.duration = 100 * time.Millisecond
 				if len(args) == 0 {
 					continue

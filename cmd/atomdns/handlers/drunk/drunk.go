@@ -3,6 +3,7 @@ package drunk
 import (
 	"context"
 	"io"
+	"log/slog"
 	"net"
 	"sync/atomic"
 	"time"
@@ -35,8 +36,6 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m.Authoritative = true
 		m.Truncated = trunc
 
-		// small dance to copy rrA or rrAAAA into a non-pointer var that allows us to overwrite the ownername
-		// in a non-racy way.
 		switch r.Question[0].(type) {
 		case *dns.A:
 			rr := &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: net.ParseIP("192.0.2.53")}
@@ -46,9 +45,11 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			m.Answer = []dns.RR{rr}
 		default:
 			if drop {
+				log.Debug("Dropping")
 				return
 			}
 			if delay {
+				log.Debug("Delaying", slog.Duration("delay", d.duration))
 				time.Sleep(d.duration)
 			}
 			next.ServeDNS(ctx, w, r)
@@ -56,9 +57,11 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		if drop {
+			log.Debug("Dropping")
 			return
 		}
 		if delay {
+			log.Debug("Delaying", slog.Duration("delay", d.duration))
 			time.Sleep(d.duration)
 		}
 

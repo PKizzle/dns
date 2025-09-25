@@ -22,8 +22,8 @@ drunk {
 }
 ```
 
-- `drop`: drop every /**N** query, the default every second one (/2).
-- `truncate`: truncate every /**M** query, the default is /2.
+- `drop`: drop every /**N** query, the default is one in four (/4).
+- `truncate`: truncate every /**M** query, the default is /4.
 - `delay`: delay every /**L** query for **DURATION**, the default for is /22 and
   the default for **DURATION** is 100ms.
 
