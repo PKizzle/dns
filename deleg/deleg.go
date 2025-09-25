@@ -112,11 +112,7 @@ func (s *SERVERIPV4) Len() int { return tlv + 4*len(s.IPs) }
 func (s *SERVERIPV4) String() string {
 	str := make([]string, len(s.IPs))
 	for i, e := range s.IPs {
-		x := e.To4()
-		if x == nil {
-			return "<nil>"
-		}
-		str[i] = x.String()
+		str[i] = e.String()
 	}
 	return strings.Join(str, ",")
 }
@@ -131,11 +127,7 @@ func (s *SERVERIPV6) Len() int { return tlv + 16*len(s.IPs) }
 func (s *SERVERIPV6) String() string {
 	str := make([]string, len(s.IPs))
 	for i, e := range s.IPs {
-		x := e.To4()
-		if x == nil {
-			return "<nil>"
-		}
-		str[i] = x.String()
+		str[i] = e.String()
 	}
 	return strings.Join(str, ",")
 }

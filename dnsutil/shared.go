@@ -293,3 +293,25 @@ func StringToTime(s string) (uint32, error) {
 	}
 	return uint32(t.Unix() - mod*MaxSerialIncrement), nil
 }
+
+// Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
+// format into account, i.e. "@" means the origin in name. Absolute will return name if called
+// with an empty origin. Name is assumed to be a valid domain name.
+func Absolute(name, origin string) string {
+	if origin == "" {
+		return name
+	}
+	if name == "@" {
+		return origin
+	}
+	if name == "\n" { // this can happen when a zone is parsed, internal quirk, should not be here...
+		return ""
+	}
+	if IsFqdn(name) {
+		return name
+	}
+	if origin == "." {
+		return name + origin
+	}
+	return name + "." + origin
+}

@@ -10,7 +10,7 @@ import (
 	"codeberg.org/miekg/dns/internal/ddd"
 )
 
-func Parse(p Pair, b string) error {
+func Parse(p Pair, b, o string) error {
 	switch x := p.(type) {
 	case *MANDATORY:
 		return x.parse(b)

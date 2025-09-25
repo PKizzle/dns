@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"net"
 	"strings"
+
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func Parse(i Info, b string) error {
+func Parse(i Info, b, o string) error {
 	switch x := i.(type) {
 	case *SERVERIPV6:
 		return x.parse(b)
 	case *SERVERIPV4:
 		return x.parse(b)
+	case *SERVERNAME:
+		return x.parse(b, o)
 	}
 	return fmt.Errorf("dns: no deleg parse defined")
 }
@@ -59,6 +63,26 @@ func (s *SERVERIPV6) parse(b string) error {
 		}
 		ips = append(ips, ip)
 	}
-	s.IPs = ips
+	s.IPs = ipshttps://github.com/NvChad/NvChad/issues/3345
 	return nil
+}
+
+func (s *SERVERNAME) parse(b, o string) error {
+	if len(b) == 0 {
+		return errors.New("dns: delegservername: empty hostnames")
+	}
+
+	hostnames := make([]string, 0, strings.Count(b, ",")+1)
+	for len(b) > 0 {
+		var e string
+		e, b, _ = strings.Cut(b, ",")
+		if !dnsutil.IsName(e) {
+			return errors.New("dns: delegservername: bad hostnames")
+		}
+		e = dnsutil.Absolute(e, o)
+		hostnames = append(hostnames, e)
+	}
+	s.Hostnames = hostnames
+	return nil
+
 }

@@ -1832,7 +1832,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
 			}
 			pair := pairFn()
-			if err := svcb.Parse(pair, value); err != nil {
+			if err := svcb.Parse(pair, value, o); err != nil {
 				return &ParseError{file: l.token, wrappedErr: err, lex: l}
 			}
 			xs = append(xs, pair)
@@ -1920,7 +1920,7 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 				return &ParseError{file: l.token, err: "bad DELEG key", lex: l}
 			}
 			info := infoFn()
-			if err := deleg.Parse(info, value); err != nil {
+			if err := deleg.Parse(info, value, o); err != nil {
 				return &ParseError{file: l.token, wrappedErr: err, lex: l}
 			}
 			xs = append(xs, info)
