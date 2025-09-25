@@ -63,7 +63,7 @@ func (s *SERVERIPV6) parse(b string) error {
 		}
 		ips = append(ips, ip)
 	}
-	s.IPs = ipshttps://github.com/NvChad/NvChad/issues/3345
+	s.IPs = ips
 	return nil
 }
 
@@ -77,7 +77,7 @@ func (s *SERVERNAME) parse(b, o string) error {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
 		if !dnsutil.IsName(e) {
-			return errors.New("dns: delegservername: bad hostnames")
+			return errors.New("dns: delegservername: bad hostname")
 		}
 		e = dnsutil.Absolute(e, o)
 		hostnames = append(hostnames, e)
