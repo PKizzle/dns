@@ -297,7 +297,7 @@ func dnsutilStringToTime(s string) (uint32, error) {
 
 // Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
 // format into account, i.e. "@" means the origin in name. Absolute will return name if called
-// with an empty origin. If Name is not a valid domain name, the empty string is returned.
+// with an empty origin. If Name is not a valid domain name, the empty string is also returned.
 func dnsutilAbsolute(name, origin string) string {
 	if origin == "" {
 		return name
