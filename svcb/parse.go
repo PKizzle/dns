@@ -187,3 +187,53 @@ func (s *LOCAL) parse(b string) error {
 	s.Data = data
 	return nil
 }
+
+// pairToString converts the value of an SVCB parameter into a DNS presentation-format string.
+func pairToString(s []byte) string {
+	var str strings.Builder
+	str.Grow(4 * len(s))
+	for _, e := range s {
+		if ' ' <= e && e <= '~' {
+			switch e {
+			case '"', ';', ' ', '\\':
+				str.WriteByte('\\')
+				str.WriteByte(e)
+			default:
+				str.WriteByte(e)
+			}
+		} else {
+			str.WriteString(ddd.Escape(e))
+		}
+	}
+	return str.String()
+}
+
+// stringToPair parses a DNS presentation-format string into an SVCB parameter value.
+func stringToPair(b string) ([]byte, error) {
+	data := make([]byte, 0, len(b))
+	for i := 0; i < len(b); {
+		if b[i] != '\\' {
+			data = append(data, b[i])
+			i++
+			continue
+		}
+		if i+1 == len(b) {
+			return nil, errors.New("dns: escape unterminated")
+		}
+		if ddd.IsDigit(b[i+1]) {
+			if i+3 < len(b) && ddd.IsDigit(b[i+2]) && ddd.IsDigit(b[i+3]) {
+				a, err := strconv.ParseUint(b[i+1:i+4], 10, 8)
+				if err == nil {
+					i += 4
+					data = append(data, byte(a))
+					continue
+				}
+			}
+			return nil, errors.New("dns: bad escaped octet")
+		} else {
+			data = append(data, b[i+1])
+			i += 2
+		}
+	}
+	return data, nil
+}

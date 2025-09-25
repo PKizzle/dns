@@ -23,7 +23,7 @@ func Unpack(s *cryptobyte.String) ([]Pair, error) {
 		pair := pairFn()
 
 		if err := _unpack(pair, &data); err != nil {
-			return nil, &unpack.Error{Err: err.Error()}
+			return nil, err
 		}
 		pairs = append(pairs, pair)
 	}
@@ -41,7 +41,7 @@ func Pack(pairs []Pair, msg []byte, off int) (off1 int, err error) {
 		prev = key
 		off, err = _pack(pair, msg, off)
 		if err != nil {
-			return len(msg), &pack.Error{Err: err.Error()}
+			return len(msg), err
 		}
 	}
 	return off, nil
