@@ -258,13 +258,14 @@ func dnsutilStringToTime(s string) (uint32, error) {
 }
 
 // Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
-// format into account, i.e. "@" means the origin in name. Absolute will return name if called
-// with an empty origin. If Name is not a valid domain name, the empty string is also returned.
+// format into account, i.e. "@" means the origin in name.
+// If Name is not a valid domain name, the empty string is also returned. If the origin is needed to be
+// appended, but is empty the empty string is returned.
 func dnsutilAbsolute(name, origin string) string {
-	if origin == "" {
-		return name
-	}
 	if name == "@" {
+		if origin == "" {
+			return ""
+		}
 		return origin
 	}
 	if name == "\n" || name == "" { // this can happen when a zone is parsed, internal quirk, should not be here...
@@ -275,6 +276,9 @@ func dnsutilAbsolute(name, origin string) string {
 	}
 	if dnsutilIsFqdn(name) {
 		return name
+	}
+	if origin == "" {
+		return ""
 	}
 	if origin == "." {
 		return name + origin
