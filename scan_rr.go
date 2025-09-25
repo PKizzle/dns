@@ -123,8 +123,8 @@ func (rr *AAAA) parse(c *zlexer, o string) *ParseError {
 
 func (rr *NS) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad NS Ns", lex: l}
 	}
 	rr.Ns = name
@@ -133,8 +133,8 @@ func (rr *NS) parse(c *zlexer, o string) *ParseError {
 
 func (rr *PTR) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad PTR Ptr", lex: l}
 	}
 	rr.Ptr = name
@@ -143,8 +143,8 @@ func (rr *PTR) parse(c *zlexer, o string) *ParseError {
 
 func (rr *NSAPPTR) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad NSAP-PTR Ptr", lex: l}
 	}
 	rr.Ptr = name
@@ -153,8 +153,8 @@ func (rr *NSAPPTR) parse(c *zlexer, o string) *ParseError {
 
 func (rr *RP) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	mbox, mboxOk := toAbsoluteName(l.token, o)
-	if l.err || !mboxOk {
+	mbox := dnsutilAbsolute(l.token, o)
+	if l.err || mbox == "" {
 		return &ParseError{err: "bad RP Mbox", lex: l}
 	}
 	rr.Mbox = mbox
@@ -163,8 +163,8 @@ func (rr *RP) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next()
 	rr.Txt = l.token
 
-	txt, txtOk := toAbsoluteName(l.token, o)
-	if l.err || !txtOk {
+	txt := dnsutilAbsolute(l.token, o)
+	if l.err || txt == "" {
 		return &ParseError{err: "bad RP Txt", lex: l}
 	}
 	rr.Txt = txt
@@ -174,8 +174,8 @@ func (rr *RP) parse(c *zlexer, o string) *ParseError {
 
 func (rr *MR) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad MR Mr", lex: l}
 	}
 	rr.Mr = name
@@ -184,8 +184,8 @@ func (rr *MR) parse(c *zlexer, o string) *ParseError {
 
 func (rr *MB) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad MB Mb", lex: l}
 	}
 	rr.Mb = name
@@ -194,8 +194,8 @@ func (rr *MB) parse(c *zlexer, o string) *ParseError {
 
 func (rr *MG) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad MG Mg", lex: l}
 	}
 	rr.Mg = name
@@ -250,8 +250,8 @@ func (rr *ISDN) parse(c *zlexer, o string) *ParseError {
 
 func (rr *MINFO) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	rmail, rmailOk := toAbsoluteName(l.token, o)
-	if l.err || !rmailOk {
+	rmail := dnsutilAbsolute(l.token, o)
+	if l.err || rmail == "" {
 		return &ParseError{err: "bad MINFO Rmail", lex: l}
 	}
 	rr.Rmail = rmail
@@ -260,8 +260,8 @@ func (rr *MINFO) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next()
 	rr.Email = l.token
 
-	email, emailOk := toAbsoluteName(l.token, o)
-	if l.err || !emailOk {
+	email := dnsutilAbsolute(l.token, o)
+	if l.err || email == "" {
 		return &ParseError{err: "bad MINFO Email", lex: l}
 	}
 	rr.Email = email
@@ -271,8 +271,8 @@ func (rr *MINFO) parse(c *zlexer, o string) *ParseError {
 
 func (rr *MF) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad MF Mf", lex: l}
 	}
 	rr.Mf = name
@@ -281,8 +281,8 @@ func (rr *MF) parse(c *zlexer, o string) *ParseError {
 
 func (rr *MD) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad MD Md", lex: l}
 	}
 	rr.Md = name
@@ -301,8 +301,8 @@ func (rr *MX) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Mx = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad MX Mx", lex: l}
 	}
 	rr.Mx = name
@@ -322,8 +322,8 @@ func (rr *RT) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Host = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad RT Host", lex: l}
 	}
 	rr.Host = name
@@ -343,8 +343,8 @@ func (rr *AFSDB) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Hostname = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad AFSDB Hostname", lex: l}
 	}
 	rr.Hostname = name
@@ -372,8 +372,8 @@ func (rr *KX) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Exchanger = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad KX Exchanger", lex: l}
 	}
 	rr.Exchanger = name
@@ -382,8 +382,8 @@ func (rr *KX) parse(c *zlexer, o string) *ParseError {
 
 func (rr *CNAME) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad CNAME Target", lex: l}
 	}
 	rr.Target = name
@@ -392,8 +392,8 @@ func (rr *CNAME) parse(c *zlexer, o string) *ParseError {
 
 func (rr *DNAME) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad DNAME Target", lex: l}
 	}
 	rr.Target = name
@@ -402,8 +402,8 @@ func (rr *DNAME) parse(c *zlexer, o string) *ParseError {
 
 func (rr *SOA) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	ns, nsOk := toAbsoluteName(l.token, o)
-	if l.err || !nsOk {
+	ns := dnsutilAbsolute(l.token, o)
+	if l.err || ns == "" {
 		return &ParseError{err: "bad SOA Ns", lex: l}
 	}
 	rr.Ns = ns
@@ -412,8 +412,8 @@ func (rr *SOA) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next()
 	rr.Mbox = l.token
 
-	mbox, mboxOk := toAbsoluteName(l.token, o)
-	if l.err || !mboxOk {
+	mbox := dnsutilAbsolute(l.token, o)
+	if l.err || mbox == "" {
 		return &ParseError{err: "bad SOA Mbox", lex: l}
 	}
 	rr.Mbox = mbox
@@ -489,8 +489,8 @@ func (rr *SRV) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Target = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad SRV Target", lex: l}
 	}
 	rr.Target = name
@@ -575,8 +575,8 @@ func (rr *NAPTR) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Replacement = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad NAPTR Replacement", lex: l}
 	}
 	rr.Replacement = name
@@ -585,8 +585,8 @@ func (rr *NAPTR) parse(c *zlexer, o string) *ParseError {
 
 func (rr *TALINK) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	previousName, previousNameOk := toAbsoluteName(l.token, o)
-	if l.err || !previousNameOk {
+	previousName := dnsutilAbsolute(l.token, o)
+	if l.err || previousName == "" {
 		return &ParseError{err: "bad TALINK PreviousName", lex: l}
 	}
 	rr.PreviousName = previousName
@@ -595,8 +595,8 @@ func (rr *TALINK) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next()
 	rr.NextName = l.token
 
-	nextName, nextNameOk := toAbsoluteName(l.token, o)
-	if l.err || !nextNameOk {
+	nextName := dnsutilAbsolute(l.token, o)
+	if l.err || nextName == "" {
 		return &ParseError{err: "bad TALINK NextName", lex: l}
 	}
 	rr.NextName = nextName
@@ -770,8 +770,8 @@ func (rr *HIP) parse(c *zlexer, o string) *ParseError {
 	for l.value != zNewline && l.value != zEOF {
 		switch l.value {
 		case zString:
-			name, nameOk := toAbsoluteName(l.token, o)
-			if l.err || !nameOk {
+			name := dnsutilAbsolute(l.token, o)
+			if l.err || name == "" {
 				return &ParseError{err: "bad HIP RendezvousServers", lex: l}
 			}
 			xs = append(xs, name)
@@ -992,8 +992,8 @@ func (rr *RRSIG) parse(c *zlexer, o string) *ParseError {
 	c.Next() // zBlank
 	l, _ = c.Next()
 	rr.SignerName = l.token
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad RRSIG SignerName", lex: l}
 	}
 	rr.SignerName = name
@@ -1011,8 +1011,8 @@ func (rr *NXT) parse(c *zlexer, o string) *ParseError { return rr.NSEC.parse(c, 
 
 func (rr *NSEC) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad NSEC NextDomain", lex: l}
 	}
 	rr.NextDomain = name
@@ -1601,8 +1601,8 @@ func (rr *LP) parse(c *zlexer, o string) *ParseError {
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
 	rr.Fqdn = l.token
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{err: "bad LP Fqdn", lex: l}
 	}
 	rr.Fqdn = name
@@ -1669,8 +1669,8 @@ func (rr *PX) parse(c *zlexer, o string) *ParseError {
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
 	rr.Map822 = l.token
-	map822, map822Ok := toAbsoluteName(l.token, o)
-	if l.err || !map822Ok {
+	map822 := dnsutilAbsolute(l.token, o)
+	if l.err || map822 == "" {
 		return &ParseError{err: "bad PX Map822", lex: l}
 	}
 	rr.Map822 = map822
@@ -1678,8 +1678,8 @@ func (rr *PX) parse(c *zlexer, o string) *ParseError {
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
 	rr.Mapx400 = l.token
-	mapx400, mapx400Ok := toAbsoluteName(l.token, o)
-	if l.err || !mapx400Ok {
+	mapx400 := dnsutilAbsolute(l.token, o)
+	if l.err || mapx400 == "" {
 		return &ParseError{err: "bad PX Mapx400", lex: l}
 	}
 	rr.Mapx400 = mapx400
@@ -1766,8 +1766,8 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next() // zString
 	rr.Target = l.token
 
-	name, nameOk := toAbsoluteName(l.token, o)
-	if l.err || !nameOk {
+	name := dnsutilAbsolute(l.token, o)
+	if l.err || name == "" {
 		return &ParseError{file: l.token, err: "bad SVCB Target", lex: l}
 	}
 	rr.Target = name
@@ -1832,7 +1832,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
 			}
 			pair := pairFn()
-			if err := svcb.Parse(pair, value); err != nil {
+			if err := svcb.Parse(pair, value, o); err != nil {
 				return &ParseError{file: l.token, wrappedErr: err, lex: l}
 			}
 			xs = append(xs, pair)
@@ -1859,7 +1859,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 func (rr *HTTPS) parse(c *zlexer, o string) *ParseError { return rr.SVCB.parse(c, o) }
 
 func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
-	// TODO: unify with SVCB
+	// TODO(miek): unify with SVCB
 	// Values (if any)
 	l, _ := c.Next()
 	var xs []deleg.Info
@@ -1915,12 +1915,12 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 					}
 				}
 			}
-			infoFn := deleg.KeyToInfo(svcb.StringToKey(key))
+			infoFn := deleg.KeyToInfo(deleg.StringToKey(key))
 			if infoFn == nil {
 				return &ParseError{file: l.token, err: "bad DELEG key", lex: l}
 			}
 			info := infoFn()
-			if err := deleg.Parse(info, value); err != nil {
+			if err := deleg.Parse(info, value, o); err != nil {
 				return &ParseError{file: l.token, wrappedErr: err, lex: l}
 			}
 			xs = append(xs, info)

@@ -347,7 +347,7 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 // It also checks that the Zone Key bit (RFC 4034 2.1.1) is set on the DNSKEY
 // and that the Protocol field is set to 3 (RFC 4034 2.1.2). Options can not be nil.
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
-	if !dnsutilIsRRset(rrset) {
+	if !isRRset(rrset) {
 		return ErrRRset
 	}
 	if RRToType(rrset[0]) != rr.TypeCovered {
@@ -481,4 +481,21 @@ func (rr *RRSIG) sigBuf() []byte {
 // Signption are options that are given to the signer and verifier.
 type SignOption struct {
 	Pooler // If Pooler is set is will be used for all memory allocations.
+}
+
+// IsRRset is duplicated here, as isRRset to avoid a host of cyclic imports.
+func isRRset(rrset []RR) bool {
+	if len(rrset) == 0 {
+		return false
+	}
+	base := rrset[0].Header()
+	basetype := RRToType(rrset[0])
+	for _, rr := range rrset[1:] {
+		h := rr.Header()
+		htype := RRToType(rr)
+		if htype != basetype || h.Class != base.Class || h.Name != base.Name {
+			return false
+		}
+	}
+	return true
 }

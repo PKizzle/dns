@@ -15,7 +15,7 @@ func TestSetup(t *testing.T) {
 		truncate  uint64
 	}{
 		// oks
-		{`drunk`, false, 2, 0, 0},
+		{`drunk`, false, 4, 0, 0},
 		{`drunk {
 			drop /2
 			delay /3 1ms
@@ -29,7 +29,7 @@ func TestSetup(t *testing.T) {
 		{`erraric {
 			drop /3
 			delay
-		}`, false, 3, 2, 0},
+		}`, false, 3, 4, 0},
 		// fails
 		{`drunk {
 			drop -1

@@ -22,6 +22,8 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
+	"codeberg.org/miekg/dns/deleg"
+	"codeberg.org/miekg/dns/svcb"
 )
 
 `
@@ -89,9 +91,9 @@ func main() {
 				case `dns:"nsec"`:
 					o("off, err = packNSEC(rr.%s, msg, off)\n")
 				case `dns:"pairs"`:
-					o("off, err = packSVCB(rr.%s, msg, off)\n")
+					o("off, err = svcb.PackSVCB(rr.%s, msg, off)\n")
 				case `dns:"infos"`:
-					o("off, err = packDELEG(rr.%s, msg, off)\n")
+					o("off, err = deleg.PackDELEG(rr.%s, msg, off)\n")
 				case `dns:"domain-name"`:
 					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
 				default:
@@ -248,9 +250,9 @@ if rr.%s != "-" {
 				case `dns:"nsec"`:
 					unpackField("unpackNSEC")
 				case `dns:"pairs"`:
-					unpackField("unpackSVCB")
+					unpackField("svcb.UnpackSVCB")
 				case `dns:"infos"`:
-					unpackField("unpackDELEG")
+					unpackField("deleg.UnpackDELEG")
 				case `dns:"domain-name"`:
 					unpackFieldBuf("unpack.Names")
 				default:

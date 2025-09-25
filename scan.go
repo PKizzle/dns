@@ -367,8 +367,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zNewline:
 				st = zExpectOwnerDir
 			case zOwner:
-				name, ok := toAbsoluteName(l.token, zp.origin)
-				if !ok {
+				name := dnsutilAbsolute(l.token, zp.origin)
+				if name == "" {
 					return zp.setParseError("bad owner name", l)
 				}
 
@@ -426,8 +426,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zBlank:
 				l, _ := zp.c.Next()
 				if l.value == zString {
-					name, ok := toAbsoluteName(l.token, zp.origin)
-					if !ok {
+					name := dnsutilAbsolute(l.token, zp.origin)
+					if name == "" {
 						return zp.setParseError("bad origin name", l)
 					}
 
@@ -525,8 +525,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError(err.err, err.lex)
 			}
 
-			name, ok := toAbsoluteName(l.token, zp.origin)
-			if !ok {
+			name := dnsutilAbsolute(l.token, zp.origin)
+			if name == "" {
 				return zp.setParseError("bad origin name", l)
 			}
 
@@ -1338,45 +1338,6 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 		val /= 10
 	}
 	return e, uint8(val), true
-}
-
-func toAbsoluteName(name, origin string) (absolute string, ok bool) {
-	// check for an explicit origin reference
-	if name == "@" {
-		// require a nonempty origin
-		if origin == "" {
-			return "", false
-		}
-		return origin, true
-	}
-
-	if name == "\n" {
-		return "", false
-	}
-
-	// require a valid domain name
-	ok = dnsutilIsName(name)
-	if !ok || name == "" {
-		return "", false
-	}
-
-	// check if name is already absolute
-	if dnsutilIsFqdn(name) {
-		return name, true
-	}
-
-	// require a nonempty origin
-	if origin == "" {
-		return "", false
-	}
-	return appendOrigin(name, origin), true
-}
-
-func appendOrigin(name, origin string) string {
-	if origin == "." {
-		return name + origin
-	}
-	return name + "." + origin
 }
 
 // LOC record helper function

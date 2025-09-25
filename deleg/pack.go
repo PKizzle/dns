@@ -17,9 +17,9 @@ import (
 // Pack converts an info to wire-format. Only exported to make it available to the dns packer.
 func Pack(i Info, msg []byte, off int) (int, error) {
 	switch x := i.(type) {
-	case *SERVERIP4:
+	case *SERVERIPV4:
 		return x.pack(msg, off)
-	case *SERVERIP6:
+	case *SERVERIPV6:
 		return x.pack(msg, off)
 	}
 	return 0, fmt.Errorf("dns: no deleg pack defined")
@@ -28,15 +28,15 @@ func Pack(i Info, msg []byte, off int) (int, error) {
 // Unpack converts wire-format to an info. Only exported to make it available to the dns unpacker.
 func Unpack(i Info, data *cryptobyte.String) error {
 	switch x := i.(type) {
-	case *SERVERIP4:
+	case *SERVERIPV4:
 		return x.unpack(data)
-	case *SERVERIP6:
+	case *SERVERIPV6:
 		return x.unpack(data)
 	}
 	return fmt.Errorf("dns: no deleg unpack defined")
 }
 
-func (s *SERVERIP4) pack(msg []byte, off int) (int, error) {
+func (s *SERVERIPV4) pack(msg []byte, off int) (int, error) {
 	off, err := packTLV(s, msg, off)
 	if err != nil {
 		return off, err
@@ -50,7 +50,7 @@ func (s *SERVERIP4) pack(msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func (s *SERVERIP4) unpack(sc *cryptobyte.String) error {
+func (s *SERVERIPV4) unpack(sc *cryptobyte.String) error {
 	for !sc.Empty() {
 		ip, err := unpack.A(sc)
 		if err != nil {
@@ -61,7 +61,7 @@ func (s *SERVERIP4) unpack(sc *cryptobyte.String) error {
 	return nil
 }
 
-func (s *SERVERIP6) pack(msg []byte, off int) (int, error) {
+func (s *SERVERIPV6) pack(msg []byte, off int) (int, error) {
 	off, err := packTLV(s, msg, off)
 	if err != nil {
 		return off, err
@@ -75,7 +75,7 @@ func (s *SERVERIP6) pack(msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func (s *SERVERIP6) unpack(sc *cryptobyte.String) error {
+func (s *SERVERIPV6) unpack(sc *cryptobyte.String) error {
 	for !sc.Empty() {
 		ip, err := unpack.AAAA(sc)
 		if err != nil {

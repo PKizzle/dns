@@ -27,3 +27,41 @@ func Question(m *dns.Msg) (z string, t uint16) {
 	t = dns.RRToType(m.Question[0])
 	return z, t
 }
+
+// SetReply creates a reply message from r. It copies the ID, opcode, rcode and question, r's Data buffer is not copied.
+// In the header the RecursionDesired, CheckingDisabled and Security are copied.
+func SetReply(m, r *dns.Msg) *dns.Msg {
+	m.ID = r.ID
+	m.Response = true
+	m.Opcode = r.Opcode
+	if m.Opcode == dns.OpcodeQuery {
+		m.RecursionDesired = r.RecursionDesired
+		m.CheckingDisabled = r.CheckingDisabled
+		m.Security = r.Security
+	}
+	m.Rcode = dns.RcodeSuccess
+	m.Question = r.Question
+	m.Answer = nil
+	m.Ns = nil
+	m.Extra = nil
+	m.Pseudo = nil
+	return m
+}
+
+// IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
+// This means the RRs need to have the same type, name, and class. Duplicate RRs are not detected.
+func IsRRset(rrset []dns.RR) bool {
+	if len(rrset) == 0 {
+		return false
+	}
+	base := rrset[0].Header()
+	basetype := dns.RRToType(rrset[0])
+	for _, rr := range rrset[1:] {
+		h := rr.Header()
+		htype := dns.RRToType(rr)
+		if htype != basetype || h.Class != base.Class || h.Name != base.Name {
+			return false
+		}
+	}
+	return true
+}

@@ -37,6 +37,3 @@ func OpcodeToString(o uint8) string {
 	}
 	return "OPCODE" + strconv.Itoa(int(o))
 }
-
-// MaxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
-const MaxSerialIncrement = 2147483647

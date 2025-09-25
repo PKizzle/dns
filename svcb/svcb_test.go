@@ -43,7 +43,7 @@ func TestSVCB(t *testing.T) {
 			t.Error("key constant is not in sync: ", keyCode)
 			continue
 		}
-		err := svcb.Parse(pair, o.data)
+		err := svcb.Parse(pair, o.data, "")
 		if err != nil {
 			t.Error("failed to parse svc pair: ", o.key)
 			continue
