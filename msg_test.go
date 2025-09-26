@@ -109,3 +109,15 @@ func TestMsgExtendedRcode(t *testing.T) {
 		t.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
 	}
 }
+
+func FuzzMsgPack(f *testing.F) {
+	binaries := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
+	for _, binary := range binaries {
+		buf, _ := os.ReadFile("testdata/" + binary)
+		f.Add(buf)
+	}
+	f.Fuzz(func(t *testing.T, b []byte) {
+		m := &dns.Msg{Data: b}
+		m.Unpack()
+	})
+}
