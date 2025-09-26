@@ -21,12 +21,17 @@ func TestDELEG(t *testing.T) {
 			"$ORIGIN example.\nexample.   DELEG server-name=ns2,ns3.example.org.\n",
 			dnstest.New("example. IN 3600  DELEG server-name=ns2.example.,ns3.example.org."),
 		},
+		{
+			"example.   DELEG\n",
+			dnstest.New("example. IN 3600  DELEG"),
+		},
 	}
 	for i, tc := range testcases {
 		rr, err := dns.New(tc.in)
 		if err != nil {
 			t.Fatal(err)
 		}
+		t.Logf("%s\n", rr)
 		if !dns.Equal(rr, tc.exp) {
 			t.Errorf("test %d, expected %s, got %s", i, rr, tc.exp)
 		}
