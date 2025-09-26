@@ -1,4 +1,4 @@
-package atom
+package atomtest
 
 import (
 	"context"
@@ -12,7 +12,7 @@ func TestServer(t *testing.T) {
 	whoami
 }`
 
-	s, _, err := NewTest(input)
+	s, _, err := New(input)
 	if err != nil {
 		t.Fatal(err)
 	}

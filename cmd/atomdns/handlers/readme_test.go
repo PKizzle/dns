@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"codeberg.org/miekg/dns/cmd/atomdns/atom"
+	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
 )
 
 // TestReadme parses all README.mds of the hanlder and checks if every example Conffile.
@@ -40,7 +40,7 @@ func TestReadme(t *testing.T) {
 
 		t.Logf("Testing %s: %d snippets found", readme, len(confs))
 		for _, conf := range confs {
-			_, cancel, err := atom.NewTest(conf)
+			_, cancel, err := atomtest.New(conf)
 			if err != nil {
 				if strings.Contains(err.Error(), "no such file or directory") {
 					// parsing went far enough to this this, think we're ok
