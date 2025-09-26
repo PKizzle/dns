@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -185,18 +184,4 @@ func (s *Server) Addr() []string {
 		}
 	}
 	return addr
-}
-
-// NewTest returns a server suitable for testing. Use cancel to shutdown the server
-// Use [server.Addr] to get the listening addresses. NewTest starts 2 servers, one on UDP and another on TCP.
-func NewTest(config string) (*Server, func(), error) {
-	options := ServerOption{Quiet: true, Addr: net.JoinHostPort("::", "0"), Servers: 1}
-	s, err := New("test", strings.NewReader(config), options)
-	if err != nil {
-		return nil, nil, err
-	}
-	if err := s.Start(); err != nil {
-		return nil, nil, err
-	}
-	return s, func() { s.Shutdown(context.TODO()) }, nil
 }

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/atom"
+	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
 )
 
 func TestDbfileTransferOut(t *testing.T) {
@@ -47,7 +47,7 @@ func TestDbfileTransferOut(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			server, cancel, err := atom.NewTest(tc.input)
+			server, cancel, err := atomtest.New(tc.input)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -95,7 +95,7 @@ func TestDbfileTransferIn(t *testing.T) {
 			    }
 			}`
 
-	primary, cancel1, err := atom.NewTest(config)
+	primary, cancel1, err := atomtest.New(config)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestDbfileTransferIn(t *testing.T) {
 					}
 				}
 			}`, addr[1])
-	_, cancel2, err := atom.NewTest(config)
+	_, cancel2, err := atomtest.New(config)
 	if err != nil {
 		t.Fatal(err)
 	}
