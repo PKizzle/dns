@@ -6,10 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
-	"net"
 	"os"
 	"os/signal"
-	"runtime"
 	"sort"
 	"strings"
 	"syscall"
@@ -26,23 +24,13 @@ func main() {
 	var (
 		flagHandler bool
 		flagVersion bool
-		flagQuiet   bool
 		flagConf    string
-		flagPort    string
-		flagAddr    string
 	)
 	flag.BoolVar(&flagHandler, "handler", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
-
-	flag.StringVar(&flagPort, "port", "53", "default port")
-	flag.StringVar(&flagPort, "p", "53", "default port")
-	flag.StringVar(&flagAddr, "addr", "::", "address to listen on")
-	flag.StringVar(&flagAddr, "a", "::", "address to listen on")
 	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
 	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
-	flag.BoolVar(&flagQuiet, "quiet", false, "mute startup notifications")
-	flag.BoolVar(&flagQuiet, "q", false, "mute startup notifications")
 
 	flag.Parse()
 	if flagVersion {
@@ -59,18 +47,12 @@ func main() {
 		return
 	}
 
-	options := atom.ServerOption{
-		Quiet:   flagQuiet,
-		Addr:    net.JoinHostPort(flagAddr, flagPort),
-		Servers: runtime.NumCPU() * 3,
-	}
-
 	confdata, err := os.ReadFile(flagConf)
 	if err != nil {
 		slog.Error("Failed to parse configuration", slog.String("path", flagConf), slog.Any("error", err))
 		os.Exit(1)
 	}
-	s, err := atom.New(flagConf, bytes.NewReader(confdata), options)
+	s, err := atom.New(flagConf, bytes.NewReader(confdata))
 	if err != nil {
 		slog.Error("Failed to create server", slog.Any("error", err))
 		slog.Error(err.Error())
@@ -84,7 +66,7 @@ func main() {
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	if !flagQuiet {
+	if !s.Quiet {
 		fmt.Println(banner())
 	}
 	sig := <-sigchan

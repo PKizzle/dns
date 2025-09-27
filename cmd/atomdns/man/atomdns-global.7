@@ -23,6 +23,10 @@ global section, see the configuration example below.
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
     debug
+    server {
+        quiet
+        addr ADDRESS
+    }
 }
 
 .fi
@@ -49,6 +53,31 @@ to get its health so it can export the latency metrics.
 .IP \(bu 4
 With \fB\fCpprof\fR you can publish runtime profiling data at the endpoint on
 \fBADDRESS\fP under \fB\fC/debug/pprof\fR. The default is localhost:6053.
+.IP \(bu 4
+With \fB\fCserver\fR you set server option, defined are:
+
+.RS
+.IP \(en 4
+\fB\fCquiet\fR: show banner during startup, and less messages.
+.IP \(en 4
+\fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:53\fR.
+.IP \(en 4
+\fB\fClimits\fR set furhter limits:
+
+.RS
+.IP \(bu 4
+\fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 128, \-1 disables.
+.IP \(bu 4
+\fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*3\fR, this can be a bare number,
+like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in
+lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
+back to the client.
+This is again multiplied by 2 for 50% UDP, and 50% TCP server. So \fB\fCrun 5\fR, will start 10 server
+instances.
+
+.RE
+
+.RE
 
 
 .SH "EXAMPLES"
@@ -59,6 +88,12 @@ With \fB\fCpprof\fR you can publish runtime profiling data at the endpoint on
 {
     root /var/lib/atomdns
     metrics localhost:9153
+    server {
+        limits {
+            tcp \-1
+            run NumCPU()*3
+        }
+    }
 }
 
 example.org {

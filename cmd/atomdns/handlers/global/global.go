@@ -1,7 +1,6 @@
 package global
 
 import (
-	"log/slog"
 	"net"
 	"sync"
 	"time"
@@ -18,6 +17,11 @@ type Global struct {
 	HealthListener net.Listener
 	// Pprof
 	PprofListener net.Listener
+	// Server
+	Quiet         bool
+	Addr          string
+	MaxTCPQueries int
+	Servers       int
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once
@@ -34,7 +38,6 @@ func (g *Global) Startup() error {
 	g.onceStartup.Do(func() {
 		wg.Add(1)
 		go func() {
-			slog.Debug("Running startup functions", slog.Int("count", len(g.onStartup)))
 			for _, fn := range g.onStartup {
 				if err := fn(); err != nil {
 					errs = append(errs, err)
@@ -60,7 +63,6 @@ func (g *Global) Shutdown() error {
 		for _, fn := range g.onShutdown {
 			wg.Add(1)
 			go func() {
-				slog.Debug("Running shutdown functions", slog.Int("count", len(g.onStartup)))
 				if err := fn(); err != nil {
 					errs = append(errs, err)
 				}

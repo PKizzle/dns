@@ -10,6 +10,7 @@ import (
 	pp "net/http/pprof"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,8 @@ import (
 
 func (g *Global) Setup(d conffile.Dispenser) error {
 	g.Root, _ = os.Getwd()
+	g.Addr = "[::]:53"
+	g.MaxTCPQueries = 128
 	if d.Next() {
 		switch d.Val() {
 		case "root":
@@ -31,6 +34,64 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
 			}
+		case "server":
+			for d.NextBlock(0) {
+				switch d.Val() {
+				case "quiet":
+					g.Quiet = true
+				case "addr":
+					addrs, err := d.RemainingAddrs()
+					if err != nil {
+						return d.PropErr(err)
+					}
+					if len(addrs) != 1 {
+						return d.PropErr(fmt.Errorf("need single address"))
+					}
+					g.Addr = addrs[0]
+				case "limits":
+					for d.NextBlock(1) {
+						switch d.Val() {
+						case "tcp":
+							limits := d.RemainingArgs()
+							if len(limits) != 1 {
+								return d.PropErr(fmt.Errorf("need single limit"))
+							}
+							n, err := strconv.Atoi(limits[0])
+							if err != nil || n < -1 {
+								return d.PropErr(fmt.Errorf("not a number: %q", limits[0]))
+							}
+							g.MaxTCPQueries = n
+						case "run":
+							exprs := d.RemainingArgs()
+							if len(exprs) != 1 {
+								return d.PropErr(fmt.Errorf("need single expression"))
+							}
+							if strings.HasPrefix(strings.ToLower(exprs[0]), "numcpu()*") {
+								n, err := strconv.Atoi(exprs[0][len("numcpu()*"):])
+								if err != nil || n < 0 {
+									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
+								}
+								g.Servers = runtime.NumCPU() * 3
+							} else {
+								n, err := strconv.Atoi(exprs[0])
+								if err != nil || n < 0 {
+									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
+								}
+								g.Servers = n
+							}
+						default:
+							return d.ArgErr()
+						}
+					}
+
+				default:
+					return d.ArgErr()
+				}
+			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "server", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
+				return nil
+			})
 		case "debug":
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "metrics":

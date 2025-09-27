@@ -18,21 +18,14 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-type ServerOption struct {
-	Quiet         bool   // show no startup information
-	Addr          string // address to run on
-	Servers       int    // run this many servers
-	MaxTCPQueries int    // when to cut a tcp connection
-}
-
 type Server struct {
 	global  *global.Global
 	servers []*dns.Server
 	mux     *dns.ServeMux
 	started chan error
 
-	quiet bool
-	addr  string
+	// Quiet startup
+	Quiet bool
 }
 
 func (s *Server) Start() error {
@@ -71,9 +64,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// New returns a new server that has parsed the config in and r and applied the options.
-func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
-	s := &Server{quiet: options.Quiet, addr: options.Addr, mux: dns.NewServeMux()}
+// New returns a new server that has parsed the config in and r.
+func New(conf string, r io.Reader) (*Server, error) {
+	s := &Server{mux: dns.NewServeMux()}
 
 	global, err := s.parse(conf, r)
 	if err != nil {
@@ -81,7 +74,7 @@ func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 	}
 	s.global = global
 
-	s.servers = make([]*dns.Server, options.Servers*2) // *2=udp/tcp
+	s.servers = make([]*dns.Server, global.Servers*2) // *2=udp/tcp
 	s.started = make(chan error, len(s.servers))
 	for j := range s.servers {
 		net := "tcp"
@@ -89,9 +82,9 @@ func New(conf string, r io.Reader, options ServerOption) (*Server, error) {
 			net = "udp"
 		}
 		s.servers[j] = &dns.Server{
-			Handler: s.mux, Net: net, Addr: options.Addr,
-			ReuseAddr: true, ReusePort: true,
-			MaxTCPQueries: options.MaxTCPQueries,
+			Handler: s.mux, Net: net, Addr: global.Addr,
+			MaxTCPQueries: global.MaxTCPQueries,
+			ReuseAddr:     true, ReusePort: true,
 		}
 		i := uint64(0)
 		N := global.MetricsN
@@ -161,7 +154,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		// for all keys (=zones) add this chain
 		for _, k := range b.Keys {
 			k = dnsutil.Fqdn(k)
-			if !s.quiet {
+			if !s.Quiet {
 				slog.Info(k, "handlers", "unpack,"+strings.Join(names, ",")+",refuse")
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))

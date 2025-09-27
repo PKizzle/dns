@@ -19,6 +19,10 @@ global section, see the configuration example below.
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
     debug
+    server {
+        quiet
+        addr ADDRESS
+    }
 }
 ```
 
@@ -38,6 +42,17 @@ global section, see the configuration example below.
   to get its health so it can export the latency metrics.
 - With `pprof` you can publish runtime profiling data at the endpoint on
   **ADDRESS** under `/debug/pprof`. The default is localhost:6053.
+- With `server` you set server option, defined are:
+  - `quiet`: show banner during startup, and less messages.
+  - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
+  - `limits` set furhter limits:
+    - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.
+    - `run` **EXPR**, run this many servers the default is `NumCPU*3`, this can be a bare number,
+      like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
+      lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
+      back to the client.
+      This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will start 10 server
+      instances.
 
 ## Examples
 
@@ -45,6 +60,12 @@ global section, see the configuration example below.
 {
     root /var/lib/atomdns
     metrics localhost:9153
+    server {
+        limits {
+            tcp -1
+            run NumCPU()*3
+        }
+    }
 }
 
 example.org {
