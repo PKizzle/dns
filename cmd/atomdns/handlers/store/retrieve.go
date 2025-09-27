@@ -16,6 +16,7 @@ func (s *Store) Retrieve(m *dns.Msg) *dns.Msg {
 			if node.Rcode == dns.RcodeNameError {
 				return s.NodeFound(m, node)
 			}
+			println(labels, qlabels)
 			if labels == qlabels { // -1???
 				// matched entire name, then also return, otherwise continue
 				return s.NodeFound(m, node)

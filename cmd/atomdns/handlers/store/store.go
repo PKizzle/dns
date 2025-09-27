@@ -4,12 +4,10 @@ import (
 	"context"
 	"io"
 	"sync"
-	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
 	"codeberg.org/miekg/dns/dnstest"
-	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/tidwall/btree"
 )
 
@@ -22,15 +20,24 @@ type Store struct {
 
 func (s *Store) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		m := s.Retrieve(r)
+		if m != nil {
+			m.Data = r.Data
+			m = dnsmsg.Funcs(ctx, m)
+			if err := m.Pack(); err != nil {
+				log.Debug("Pack failure", Err(err))
+			}
+			io.Copy(w, m)
+			return
+		}
+
 		rw := dnstest.NewRecorder(w)
+
 		next.ServeDNS(ctx, rw, r)
 
-		RequestDuration.WithLabelValues(dns.Zone(ctx), net, fam).Observe(time.Since(rw.Start).Seconds())
-		ResponseSize.WithLabelValues(dns.Zone(ctx), net, fam).Observe(float64(len(rw.Msg.Data)))
-		Responses.WithLabelValues(dns.Zone(ctx), net, fam, dnsutil.RcodeToString(rw.Msg.Rcode)).Inc()
+		// check for rcodes
 
-		io.Copy(w, rw.Msg)
-
+		m = rw.Msg
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
