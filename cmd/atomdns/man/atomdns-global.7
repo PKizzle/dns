@@ -26,6 +26,10 @@ global section, see the configuration example below.
     server {
         quiet
         addr ADDRESS
+        limits {
+            tcp LIMIT
+            run EXPR
+        }
     }
 }
 
@@ -62,7 +66,7 @@ With \fB\fCserver\fR you set server option, defined are:
 .IP \(en 4
 \fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:53\fR.
 .IP \(en 4
-\fB\fClimits\fR set furhter limits:
+\fB\fClimits\fR set further limits:
 
 .RS
 .IP \(bu 4
@@ -71,9 +75,8 @@ With \fB\fCserver\fR you set server option, defined are:
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*3\fR, this can be a bare number,
 like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in
 lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
-back to the client.
-This is again multiplied by 2 for 50% UDP, and 50% TCP server. So \fB\fCrun 5\fR, will start 10 server
-instances.
+back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So \fB\fCrun 5\fR, will
+start 10 server instances.
 
 .RE
 

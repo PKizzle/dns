@@ -2,7 +2,6 @@ package atomtest
 
 import (
 	"context"
-	"net"
 	"strings"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
@@ -10,9 +9,29 @@ import (
 
 // New returns a server suitable for testing. Use cancel to shutdown the server
 // Use [server.Addr] to get the listening addresses. NewTest starts 2 servers, one on UDP and another on TCP.
+// The config will be prefixed with:
+//
+//	{
+//		server {
+//			addr [::]:0
+//			limits {
+//				run 1
+//			}
+//		}
+//	}
 func New(config string) (*atom.Server, func(), error) {
-	options := atom.ServerOption{Quiet: true, Addr: net.JoinHostPort("::", "0"), Servers: 1}
-	s, err := atom.New("test", strings.NewReader(config), options)
+	testconfig := `
+{
+	server {
+		addr [::]:0
+		limits {
+			run 1
+		}
+	}
+}
+`
+	config = testconfig + config
+	s, err := atom.New("test", strings.NewReader(config))
 	if err != nil {
 		return nil, nil, err
 	}

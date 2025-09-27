@@ -22,6 +22,10 @@ global section, see the configuration example below.
     server {
         quiet
         addr ADDRESS
+        limits {
+            tcp LIMIT
+            run EXPR
+        }
     }
 }
 ```
@@ -45,18 +49,17 @@ global section, see the configuration example below.
 - With `server` you set server option, defined are:
   - `quiet`: show banner during startup, and less messages.
   - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
-  - `limits` set furhter limits:
+  - `limits` set further limits:
     - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.
     - `run` **EXPR**, run this many servers the default is `NumCPU*3`, this can be a bare number,
       like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
       lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
-      back to the client.
-      This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will start 10 server
-      instances.
+      back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
+      start 10 server instances.
 
 ## Examples
 
-```conffile
+```txt
 {
     root /var/lib/atomdns
     metrics localhost:9153
@@ -76,7 +79,7 @@ example.org {
 
 Or run an health endpoint on http://localhost:8091, with a lameduck delay of 200 ms.
 
-```conffile
+```txt
 {
     health localhost:8091 200ms
 }

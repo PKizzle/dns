@@ -210,6 +210,8 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.PprofListener.Close()
 				return nil
 			})
+		default:
+			return d.PropErr()
 		}
 	}
 	return nil

@@ -52,7 +52,7 @@ Where:
 
 Start a server on the default port and load the _whoami_ handler and disable metrics.
 
-```conffile
+```txt
 {
     metrics
     debug
