@@ -11,7 +11,7 @@ import (
 
 const (
 	wakeup = 5 * time.Minute
-	dump   = 15 * time.Second
+	dump   = 3 * time.Second
 )
 
 var group singleflight.Group

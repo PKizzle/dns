@@ -11,6 +11,7 @@ import (
 // A node is stored in the store.
 type Node struct {
 	Name   string
+	Type   uint16
 	Rcode  uint16
 	Time   time.Time
 	Answer []dns.RR
@@ -21,7 +22,10 @@ type Node struct {
 // Less compares nodes a, b by Name and returns true if a is less than b.
 func Less(a, b Node) bool {
 	x := dns.CompareName(a.Name, b.Name)
-	return x == -1
+	if x != 0 {
+		return x == -1
+	}
+	return a.Type < b.Type
 }
 
 // Get gets the node under name from the store.

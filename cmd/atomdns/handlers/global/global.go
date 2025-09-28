@@ -62,7 +62,7 @@ func (g *Global) Shutdown() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceShutdown.Do(func() {
-		slog.Debug("Shutdown functions", slog.Int("total", len(g.onStartup)))
+		slog.Debug("Shutdown functions", slog.Int("total", len(g.onShutdown)))
 		for _, fn := range g.onShutdown {
 			wg.Add(1)
 			go func() {
