@@ -1,7 +1,6 @@
 package dbsqlite
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -33,9 +32,8 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	sqlite.RegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
 	co.OnStartup(func() error {
-		log.Info("Startup", "path", filepath.Base(d.Path))
-		_, err := os.OpenFile("db", os.O_CREATE, 0660)
-		db, err := sqlx.Open("sqlite", "db")
+		log.Info("Startup", "initializing", filepath.Base(d.Path))
+		db, err := sqlx.Open("sqlite", d.Path)
 		if err != nil {
 			return err
 		}

@@ -6,7 +6,7 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Walk walks the zone and call fn on each element found, as long as f returns true the walk is continued.
+// Walk walks the zone and calls fn on each element found, as long as f returns true the walk is continued.
 // The order of the walk is ascending order: from apex to longest child.
 func (z *Zone) Walk(fn func(dnszone.Node) bool) { z.Tree.Scan(fn) }
 
