@@ -16,6 +16,7 @@ func (s *Store) Retrieve(m *dns.Msg) *dns.Msg {
 			if node.Rcode == dns.RcodeNameError {
 				return s.NodeFound(m, node)
 			}
+			// TODO(miek): remove
 			println(labels, qlabels)
 			if labels == qlabels { // -1???
 				// matched entire name, then also return, otherwise continue
@@ -39,8 +40,8 @@ func (s *Store) NodeFound(m *dns.Msg, node Node) *dns.Msg {
 	}
 	r.Rcode = node.Rcode
 	r.Question = []dns.RR{m.Question[0]}
-	r.Answer = node.Msg.Answer
-	r.Ns = node.Msg.Ns
-	r.Extra = node.Msg.Extra
+	r.Answer = node.Answer
+	r.Ns = node.Ns
+	r.Extra = node.Extra
 	return r
 }

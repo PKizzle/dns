@@ -35,8 +35,6 @@ func (s *Store) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		next.ServeDNS(ctx, rw, r)
 
-		// check for rcodes
-
 		m = rw.Msg
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
