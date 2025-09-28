@@ -8,8 +8,10 @@
 
 .SH "DESCRIPTION"
 .PP
-With \fIstore\fP you cache messages for faster retrieval. The responses code on responses will be checked as
-\fIstore\fP will only cache RcodeNameError and RcodeSuccess.
+With \fIstore\fP messages are cached for faster retrieval. The responses code on responses will be checked as
+\fIstore\fP will only cache RcodeNameError and RcodeSuccess. Items will be cached for a minimum of 600 seconds (5
+minutes), or their actual TTL with a maximum of a week (604800 seconds). After that they are evicted from the
+cache. For each cached elements a random jitter of up to 2 hours is added.
 
 .SH "SYNTAX"
 .PP
