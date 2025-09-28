@@ -44,5 +44,3 @@ Time is the timestamp of when this partical node was added, this is used for pur
 is the response code of the message, only RcodeNameError is of importance here, if such a node is found, there
 can't be anything below that name. Name is the canonicalized name of the node, this was the original query
 that lead to this reponse.
-
-The cache it self is a binary tree implementation that is also used in _dbfile_.
