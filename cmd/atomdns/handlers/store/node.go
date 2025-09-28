@@ -51,3 +51,9 @@ func (s *Store) Set(m *dns.Msg) string {
 	s.Tree.Set(node)
 	return node.Name
 }
+
+// Delete removes a node from the store.
+func (s *Store) Delete(name string) bool {
+	// TODO: implement
+	return false
+}
