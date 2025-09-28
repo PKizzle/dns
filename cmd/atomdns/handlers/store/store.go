@@ -20,8 +20,7 @@ type Store struct {
 
 func (s *Store) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		m := s.Retrieve(r)
-		if m != nil {
+		if m := s.Retrieve(r); m != nil {
 			m.Data = r.Data
 			m = dnsmsg.Funcs(ctx, m)
 			if err := m.Pack(); err != nil {
@@ -35,11 +34,13 @@ func (s *Store) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		next.ServeDNS(ctx, rw, r)
 
-		m = rw.Msg
+		m := rw.Msg
 		m = dnsmsg.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
+
+		s.Set(m)
 	})
 }
