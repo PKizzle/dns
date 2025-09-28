@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"io"
-	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
@@ -12,9 +11,6 @@ import (
 )
 
 type Store struct {
-	// Max contains the longest existing name we seem for a suffix. Searches are capped at this limit.
-	sync.RWMutex // protects Max
-	// Tree contains the cached nodes.
 	Tree *btree.BTreeG[Node]
 }
 

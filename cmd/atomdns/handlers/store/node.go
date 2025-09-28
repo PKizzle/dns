@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -39,10 +40,21 @@ func (s *Store) Set(m *dns.Msg) string {
 	if m.Question[0].Header().Class != dns.ClassINET {
 		return ""
 	}
+	minttl := uint32(600)
+	for rr := range m.All() {
+		if rr.Header().TTL > minttl {
+			minttl = rr.Header().TTL
+		}
+	}
+
+	if minttl > 604800 /* week */ {
+		minttl = 604800
+	}
+
 	node := Node{
 		Name:   m.Question[0].Header().Name,
 		Rcode:  m.Rcode,
-		Time:   time.Now(),
+		Time:   time.Now().Add(time.Duration(minttl) * time.Second),
 		Answer: m.Answer,
 		Ns:     m.Ns,
 		Extra:  m.Extra,
@@ -54,6 +66,29 @@ func (s *Store) Set(m *dns.Msg) string {
 
 // Delete removes a node from the store.
 func (s *Store) Delete(name string) bool {
-	// TODO: implement
-	return false
+	_, ok := s.Tree.Delete(Node{Name: name})
+	return ok
+}
+
+func (n Node) String() string {
+	// TODO(miek): builderPool for all of these?
+	sb := strings.Builder{}
+	sb.WriteString(n.Name)
+	sb.WriteByte(' ')
+	sb.WriteString(dns.RcodeToString[n.Rcode])
+	sb.WriteByte(' ')
+	sb.WriteString(n.Time.String())
+	for i := range n.Answer {
+		sb.WriteString(n.Answer[i].String())
+		sb.WriteByte('\n')
+	}
+	for i := range n.Ns {
+		sb.WriteString(n.Answer[i].String())
+		sb.WriteByte('\n')
+	}
+	for i := range n.Extra {
+		sb.WriteString(n.Answer[i].String())
+		sb.WriteByte('\n')
+	}
+	return sb.String()
 }
