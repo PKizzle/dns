@@ -72,7 +72,6 @@ func main() {
 		strct := spec.Type.(*ast.StructType)
 
 		if generate.IsEmbedded(strct) {
-			// embedded
 			fmt.Fprintf(b, "return rr.%[1]s.compare(&b.(*%[2]s).%[1]s)\n", strct.Fields.List[0].Type, rrname)
 			fmt.Fprint(b, "}\n\n")
 			continue
