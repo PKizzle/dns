@@ -33,7 +33,7 @@ const (
 type Pair interface {
 	String() string // String returns the string representation of the value.
 	Len() int       // Len returns the length of value in the wire format.
-	Copy() Pair     // Copy returns a deep copy of the Pair.
+	DeepCopy() Pair // DeepCopy returns a deep copy of the Pair.
 }
 
 // KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
@@ -383,16 +383,16 @@ func (s *LOCAL) Len() int { return tlv + len(s.Data) }
 
 const tlv = 4
 
-func (s *MANDATORY) Copy() Pair     { return &MANDATORY{slices.Clone(s.Key)} }
-func (s *ALPN) Copy() Pair          { return &ALPN{slices.Clone(s.Alpn)} }
-func (_ *NODEFAULTALPN) Copy() Pair { return &NODEFAULTALPN{} }
-func (s *PORT) Copy() Pair          { return &PORT{s.Port} }
-func (s *ECHCONFIG) Copy() Pair     { return &ECHCONFIG{slices.Clone(s.ECH)} }
-func (_ *OHTTP) Copy() Pair         { return &OHTTP{} }
-func (s *DOHPATH) Copy() Pair       { return &DOHPATH{Template: s.Template} }
-func (s *LOCAL) Copy() Pair         { return &LOCAL{s.KeyCode, slices.Clone(s.Data)} }
+func (s *MANDATORY) DeepCopy() Pair     { return &MANDATORY{slices.Clone(s.Key)} }
+func (s *ALPN) DeepCopy() Pair          { return &ALPN{slices.Clone(s.Alpn)} }
+func (_ *NODEFAULTALPN) DeepCopy() Pair { return &NODEFAULTALPN{} }
+func (s *PORT) DeepCopy() Pair          { return &PORT{s.Port} }
+func (s *ECHCONFIG) DeepCopy() Pair     { return &ECHCONFIG{slices.Clone(s.ECH)} }
+func (_ *OHTTP) DeepCopy() Pair         { return &OHTTP{} }
+func (s *DOHPATH) DeepCopy() Pair       { return &DOHPATH{Template: s.Template} }
+func (s *LOCAL) DeepCopy() Pair         { return &LOCAL{s.KeyCode, slices.Clone(s.Data)} }
 
-func (s *IPV4HINT) Copy() Pair {
+func (s *IPV4HINT) DeepCopy() Pair {
 	hint := make([]net.IP, len(s.Hint))
 	for i, ip := range s.Hint {
 		hint[i] = slices.Clone(ip)
@@ -400,7 +400,7 @@ func (s *IPV4HINT) Copy() Pair {
 	return &IPV4HINT{Hint: hint}
 }
 
-func (s *IPV6HINT) Copy() Pair {
+func (s *IPV6HINT) DeepCopy() Pair {
 	hint := make([]net.IP, len(s.Hint))
 	for i, ip := range s.Hint {
 		hint[i] = slices.Clone(ip)
