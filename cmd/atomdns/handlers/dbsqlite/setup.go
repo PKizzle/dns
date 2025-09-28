@@ -1,7 +1,6 @@
 package dbsqlite
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -34,8 +33,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 
 	co.OnStartup(func() error {
 		log.Info("Startup", "path", filepath.Base(d.Path))
-		_, err := os.OpenFile("db", os.O_CREATE, 0660)
-		db, err := sqlx.Open("sqlite", "db")
+		db, err := sqlx.Open("sqlite", d.Path)
 		if err != nil {
 			return err
 		}

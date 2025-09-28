@@ -17,29 +17,31 @@ const (
 var group singleflight.Group
 
 func (s *Store) Setup(co *dnsserver.Controller) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	for co.Next() {
-	}
 	s.Tree = btree.NewBTreeG(Less)
+	ctx, cancel := context.WithCancel(context.Background())
+	co.Next()
 
 	co.OnStartup(func() error {
 		log.Info("Startup", "evict", wakeup)
-		ticker := time.NewTicker(wakeup)
-		tick2 := time.NewTicker(dump)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				group.Do("evict", func() (any, error) {
-					s.Evict()
-					return nil, nil
-				})
-			case <-tick2.C:
-				s.Dump()
-			case <-ctx.Done():
-				return nil
+		go func() {
+			ticker := time.NewTicker(wakeup)
+			tick2 := time.NewTicker(dump)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					group.Do("evict", func() (any, error) {
+						s.Evict()
+						return nil, nil
+					})
+				case <-tick2.C:
+					s.Dump()
+				case <-ctx.Done():
+					return
+				}
 			}
-		}
+		}()
+		return nil
 	})
 	co.OnShutdown(func() error {
 		log.Info("Shutdown", "evict", wakeup)

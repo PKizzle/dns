@@ -1,6 +1,7 @@
 package global
 
 import (
+	"log/slog"
 	"net"
 	"sync"
 	"time"
@@ -36,6 +37,7 @@ func (g *Global) Startup() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceStartup.Do(func() {
+		slog.Debug("Running startup functions", slog.Int("count", len(g.onStartup)))
 		wg.Add(1)
 		go func() {
 			for _, fn := range g.onStartup {
@@ -60,6 +62,7 @@ func (g *Global) Shutdown() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceShutdown.Do(func() {
+		slog.Debug("Running shutdown functions", slog.Int("count", len(g.onStartup)))
 		for _, fn := range g.onShutdown {
 			wg.Add(1)
 			go func() {
