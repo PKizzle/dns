@@ -6,9 +6,15 @@ import (
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"github.com/tidwall/btree"
+	"golang.org/x/sync/singleflight"
 )
 
-const wakeup = 5 * time.Minute
+const (
+	wakeup = 5 * time.Minute
+	dump   = 15 * time.Second
+)
+
+var group singleflight.Group
 
 func (s *Store) Setup(co *dnsserver.Controller) error {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -19,11 +25,17 @@ func (s *Store) Setup(co *dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log.Info("Startup", "evict", wakeup)
 		ticker := time.NewTicker(wakeup)
+		tick2 := time.NewTicker(dump)
 		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:
-
+				group.Do("evict", func() (any, error) {
+					s.Evict()
+					return nil, nil
+				})
+			case <-tick2.C:
+				s.Dump()
 			case <-ctx.Done():
 				return nil
 			}

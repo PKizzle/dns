@@ -6,10 +6,10 @@ _store_ - store DNS responses
 
 ## Description
 
-With _store_ you cache messages for faster retrieval. The responses code on responses will be checked as
+With _store_ messages are cached for faster retrieval. The responses code on responses will be checked as
 _store_ will only cache RcodeNameError and RcodeSuccess. Items will be cached for a minimum of 600 seconds (5
 minutes), or their actual TTL with a maximum of a week (604800 seconds). After that they are evicted from the
-cache.
+cache. For each cached elements a random jitter of up to 2 hours is added.
 
 ## Syntax
 

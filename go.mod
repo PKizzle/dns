@@ -4,11 +4,13 @@ go 1.25.0
 
 require (
 	github.com/fsnotify/fsnotify v1.9.0
+	github.com/infobloxopen/go-trees v0.0.0-20221216143356-66ceba885ebc
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/tidwall/btree v1.8.1
 	golang.org/x/crypto v0.42.0
 	golang.org/x/net v0.44.0
+	golang.org/x/sync v0.15.0
 	golang.org/x/sys v0.36.0
 	modernc.org/sqlite v1.39.0
 )
@@ -20,7 +22,6 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20250810172220-2e2c11897d1a // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/infobloxopen/go-trees v0.0.0-20221216143356-66ceba885ebc // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mmarkdown/mmark/v2 v2.2.47 // indirect

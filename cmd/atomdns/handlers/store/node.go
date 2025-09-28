@@ -1,6 +1,7 @@
 package store
 
 import (
+	"math/rand/v2"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ func (s *Store) Set(m *dns.Msg) string {
 	node := Node{
 		Name:   m.Question[0].Header().Name,
 		Rcode:  m.Rcode,
-		Time:   time.Now().Add(time.Duration(minttl) * time.Second),
+		Time:   time.Now().Add((time.Duration(int(minttl)+rand.IntN(7200)) * time.Second)),
 		Answer: m.Answer,
 		Ns:     m.Ns,
 		Extra:  m.Extra,
