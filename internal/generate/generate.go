@@ -142,3 +142,10 @@ func Write(b *bytes.Buffer, out string) {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
 }
+
+func IsEmbedded(strct *ast.StructType) bool {
+	if len(strct.Fields.List) == 1 {
+		return strct.Fields.List[0].Type != nil && len(strct.Fields.List[0].Names) == 0
+	}
+	return false
+}

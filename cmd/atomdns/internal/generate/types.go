@@ -1,10 +1,14 @@
 package generate
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
+	"log"
+	"os"
 	"reflect"
 )
 
@@ -40,4 +44,16 @@ func Types(file string) ([]string, error) {
 		}
 	}
 	return types, nil
+}
+
+func Write(b *bytes.Buffer, out string) {
+	formatted, err := format.Source(b.Bytes())
+	if err != nil {
+		b.WriteTo(os.Stderr)
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
+
+	if err := os.WriteFile(out, formatted, 0640); err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
 }

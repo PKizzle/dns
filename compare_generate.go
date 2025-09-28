@@ -71,7 +71,7 @@ func main() {
 		fmt.Fprintf(b, "func (rr *%s) compare(b RR) (x int) {\n", rrname)
 		strct := spec.Type.(*ast.StructType)
 
-		if strct.Fields.List[0].Type != nil && len(strct.Fields.List[0].Names) == 0 {
+		if generate.IsEmbedded(strct) {
 			fmt.Fprintf(b, "return rr.%[1]s.compare(&b.(*%[2]s).%[1]s)\n", strct.Fields.List[0].Type, rrname)
 			fmt.Fprint(b, "}\n\n")
 			continue

@@ -861,6 +861,25 @@ func (m *Msg) All() iter.Seq[RR] {
 	}
 }
 
+// Copy returns a shallow copy of the message, specifically the RR contained in the message are copied by
+// reference, not via DeepCopy. If m was hijacked via [Msg.Hijack] the returned Msg will not be hijacked.
+func (m *Msg) Copy() *Msg {
+	return &Msg{
+		MsgHeader: m.MsgHeader,
+		qtype:     m.qtype,
+		Question:  m.Question,
+		Answer:    m.Answer,
+		Ns:        m.Ns,
+		Extra:     m.Extra,
+		ps:        m.ps,
+		Pseudo:    m.Pseudo,
+		Stateful:  m.Stateful,
+		Data:      m.Data,
+		Options:   m.Options,
+		msgPool:   m.msgPool,
+	}
+}
+
 // NewMsg returns a new message with the question section sets to z (z is made fully qualified) and the type t. If the type isn't know nil
 // is returned, the recursion desired bit is set.
 func NewMsg(z string, t uint16) *Msg {
