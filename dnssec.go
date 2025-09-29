@@ -231,7 +231,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 		return ErrKey
 	}
 	if options.Pooler == nil {
-		options.Pooler = newNoopPool(DefaultMsgSize)
+		options.Pooler = newNoopPool(MinMsgSize)
 	}
 
 	h0 := rrset[0].Header()
@@ -368,7 +368,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	}
 
 	if options.Pooler == nil {
-		options.Pooler = newNoopPool(DefaultMsgSize)
+		options.Pooler = newNoopPool(MinMsgSize)
 	}
 
 	rr.Hdr.Name = rrset[0].Header().Name
