@@ -1,13 +1,13 @@
 # atomdns
 
 atomdns is a DNS server/router, written in Go, that chains handlers. Each handler performs a (DNS) function.
-It architecture is identical to HTTP servers with middleware. The order if the handlers in the configuration
+Its architecture is identical to HTTP servers with middleware. The order of the handlers in the configuration
 determines the order in which they are executed. (If you know CoreDNS; you might know that has a fixed order -
 atomdns is _different_).
 
 atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns you
 are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
-provided out of the box you can add it by writing a handler.
+provided out of the box, you can add it by writing a handler.
 
 Currently atomdns is able to:
 
