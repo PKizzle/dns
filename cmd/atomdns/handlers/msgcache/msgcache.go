@@ -1,4 +1,4 @@
-package store
+package msgcache
 
 import (
 	"context"
@@ -10,19 +10,19 @@ import (
 	"github.com/tidwall/btree"
 )
 
-type Store struct {
+type Msgcache struct {
 	Tree *btree.BTreeG[Node]
 }
 
-func (s *Store) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
+func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		if m := s.Retrieve(r); m != nil {
-			m.Data = r.Data
-			m = dnsmsg.Funcs(ctx, m)
-			if err := m.Pack(); err != nil {
+		if x := m.Retrieve(r); m != nil {
+			x.Data = r.Data
+			x = dnsmsg.Funcs(ctx, x)
+			if err := x.Pack(); err != nil {
 				log.Debug("Pack failure", Err(err))
 			}
-			io.Copy(w, m)
+			io.Copy(w, x)
 			return
 		}
 
@@ -30,13 +30,13 @@ func (s *Store) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		next.ServeDNS(ctx, rw, r)
 
-		m := rw.Msg
-		m = dnsmsg.Funcs(ctx, m)
-		if err := m.Pack(); err != nil {
+		x := rw.Msg
+		x = dnsmsg.Funcs(ctx, x)
+		if err := x.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}
-		io.Copy(w, m)
+		io.Copy(w, x)
 
-		s.Set(m)
+		m.Set(x)
 	})
 }

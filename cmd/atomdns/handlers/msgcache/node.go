@@ -1,4 +1,4 @@
-package store
+package msgcache
 
 import (
 	"math/rand/v2"
@@ -29,8 +29,8 @@ func Less(a, b Node) bool {
 }
 
 // Get gets the node under name from the store.
-func (s *Store) Get(name string) (Node, bool) {
-	n, ok := s.Tree.Get(Node{Name: name})
+func (m *Msgcache) Get(name string) (Node, bool) {
+	n, ok := m.Tree.Get(Node{Name: name})
 	if ok {
 		return n, true
 	}
@@ -38,15 +38,15 @@ func (s *Store) Get(name string) (Node, bool) {
 }
 
 // Set sets the node under name from the store. If successful it return the name, otherwise the empty string.
-func (s *Store) Set(m *dns.Msg) string {
-	if m.Rcode != dns.RcodeNameError && m.Rcode != dns.RcodeSuccess {
+func (m *Msgcache) Set(x *dns.Msg) string {
+	if x.Rcode != dns.RcodeNameError && x.Rcode != dns.RcodeSuccess {
 		return ""
 	}
-	if m.Question[0].Header().Class != dns.ClassINET {
+	if x.Question[0].Header().Class != dns.ClassINET {
 		return ""
 	}
 	minttl := uint32(600)
-	for rr := range m.All() {
+	for rr := range x.All() {
 		if rr.Header().TTL > minttl {
 			minttl = rr.Header().TTL
 		}
@@ -57,21 +57,22 @@ func (s *Store) Set(m *dns.Msg) string {
 	}
 
 	node := Node{
-		Name:   m.Question[0].Header().Name,
-		Rcode:  m.Rcode,
+		Name:   x.Question[0].Header().Name,
+		Type:   dns.RRToType(x.Question[0]),
+		Rcode:  x.Rcode,
 		Time:   time.Now().Add((time.Duration(int(minttl)+rand.IntN(7200)) * time.Second)),
-		Answer: m.Answer,
-		Ns:     m.Ns,
-		Extra:  m.Extra,
+		Answer: x.Answer,
+		Ns:     x.Ns,
+		Extra:  x.Extra,
 	}
 
-	s.Tree.Set(node)
+	m.Tree.Set(node)
 	return node.Name
 }
 
 // Delete removes a node from the store.
-func (s *Store) Delete(name string) bool {
-	_, ok := s.Tree.Delete(Node{Name: name})
+func (m *Msgcache) Delete(name string) bool {
+	_, ok := m.Tree.Delete(Node{Name: name})
 	return ok
 }
 

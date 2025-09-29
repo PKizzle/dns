@@ -1,4 +1,4 @@
-package store
+package msgcache
 
 import (
 	"context"
@@ -16,8 +16,8 @@ const (
 
 var group singleflight.Group
 
-func (s *Store) Setup(co *dnsserver.Controller) error {
-	s.Tree = btree.NewBTreeG(Less)
+func (m *Msgcache) Setup(co *dnsserver.Controller) error {
+	m.Tree = btree.NewBTreeG(Less)
 	ctx, cancel := context.WithCancel(context.Background())
 	co.Next()
 
@@ -31,11 +31,11 @@ func (s *Store) Setup(co *dnsserver.Controller) error {
 				select {
 				case <-ticker.C:
 					group.Do("evict", func() (any, error) {
-						s.Evict()
+						m.Evict()
 						return nil, nil
 					})
 				case <-tick2.C:
-					s.Dump()
+					m.Dump()
 				case <-ctx.Done():
 					return
 				}
