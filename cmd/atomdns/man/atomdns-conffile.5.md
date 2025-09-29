@@ -13,8 +13,11 @@ ORIGIN [ORIGIN]... {
 }
 ```
 
-The **ORIGIN** defines for which DNS zones this server should be called, multiple zones are allowed and
-should be _white space_ separated.
+Such a section is called a server block. Each block defines the handlers this particular server should run
+when it gets a query.
+
+The **ORIGIN** defines for which DNS zones this server should be called, multiple zones are allowed and must
+be _white space_ separated.
 
 When a query comes in, it is matched again all zones for all servers, the server with the longest match on the
 query name will receive the query.

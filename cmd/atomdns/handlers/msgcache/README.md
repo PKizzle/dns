@@ -29,6 +29,10 @@ example.org {
 }
 ```
 
+## Bugs
+
+This handler is not deemed ready yet.
+
 ## Design
 
 The _msgcache_ caches nodes that are build up as follows, in brackets are the Go types:

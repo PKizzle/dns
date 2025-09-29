@@ -22,8 +22,12 @@ ORIGIN [ORIGIN]... {
 .RE
 
 .PP
-The \fBORIGIN\fP defines for which DNS zones this server should be called, multiple zones are allowed and
-should be \fIwhite space\fP separated.
+Such a section is called a server block. Each block defines the handlers this particular server should run
+when it gets a query.
+
+.PP
+The \fBORIGIN\fP defines for which DNS zones this server should be called, multiple zones are allowed and must
+be \fIwhite space\fP separated.
 
 .PP
 When a query comes in, it is matched again all zones for all servers, the server with the longest match on the

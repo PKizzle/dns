@@ -16,24 +16,35 @@ transfering those to secondaries or just exporting metrics. There are many handl
 respective manual pages.
 
 .PP
+The \fIglobal\fP handler describes the options that are also used in starting the server, see atomdns\-global(7)
+for more information. Normally you would need something like this, to listen on all interfaces on port 53:
+
+.PP
+.RS
+
+.nf
+{
+    server {
+        addr [::]:53
+    }
+}
+
+
+.fi
+.RE
+
+.PP
 Available options:
 
 .TP
 \fB\-c\fP, \fB\-conf\fP \fBFILE\fP
-specify Corefile to load, if not given atomdns will look for a \fB\fCConffile\fR in the current
-directory.
+specify Corefile to load, if not given atomdns will look for a \fB\fCConffile\fR in the current directory.
 .TP
-\fB\-p\fP, \fB\-\-port\fP \fBPORT\fP
-override default port (53) to listen on.
-.TP
-\fB\-handlers\fP
+\fB\-handler\fP
 list all handlers and quit.
 .TP
 \fB\-v\fP, \fB\-version\fP
 show version and quit.
-.TP
-\fB\-cpuprofile\fP
-write a cpu profile to "cpu.out".
 
 
 .SH "AUTHORS"
@@ -46,4 +57,4 @@ Apache License 2.0
 
 .SH "SEE ALSO"
 .PP
-See Conffile(5)
+See atomdns\-conffile(5), and atomdns\-global(7).

@@ -123,6 +123,8 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		break
 	}
 
+	registered := map[string]struct{}{}
+
 	for _, b := range blocks {
 		if b.Keys == nil {
 			continue
@@ -153,11 +155,17 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		hs = append(hs, new(refuse.Refuse))
 		// for all keys (=zones) add this chain
 		for _, k := range b.Keys {
-			k = dnsutil.Fqdn(k)
+			k = dnsutil.Canonical(k)
+
+			if _, ok := registered[k]; ok {
+				return global, fmt.Errorf("origin already registered: %s", k)
+			}
+
 			if !s.Quiet {
 				slog.Info(k, "handlers", "unpack,"+strings.Join(names, ",")+",refuse")
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
+			registered[k] = struct{}{}
 		}
 	}
 	return global, nil
