@@ -2,7 +2,6 @@ package msgcache
 
 import (
 	"math/rand/v2"
-	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -74,27 +73,4 @@ func (m *Msgcache) Set(x *dns.Msg) string {
 func (m *Msgcache) Delete(name string) bool {
 	_, ok := m.Tree.Delete(Node{Name: name})
 	return ok
-}
-
-func (n Node) String() string {
-	// TODO(miek): builderPool for all of these?
-	sb := strings.Builder{}
-	sb.WriteString(n.Name)
-	sb.WriteByte(' ')
-	sb.WriteString(dns.RcodeToString[n.Rcode])
-	sb.WriteByte(' ')
-	sb.WriteString(n.Time.String())
-	for i := range n.Answer {
-		sb.WriteString(n.Answer[i].String())
-		sb.WriteByte('\n')
-	}
-	for i := range n.Ns {
-		sb.WriteString(n.Answer[i].String())
-		sb.WriteByte('\n')
-	}
-	for i := range n.Extra {
-		sb.WriteString(n.Answer[i].String())
-		sb.WriteByte('\n')
-	}
-	return sb.String()
 }

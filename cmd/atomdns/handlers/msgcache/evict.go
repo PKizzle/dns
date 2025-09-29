@@ -33,8 +33,7 @@ func (m *Msgcache) Dump() {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 	fmt.Fprintln(tw, "RCODE\tTYPE\tEXPIRE\tNAME")
 	fn := func(n Node) bool {
-		fmt.Fprintln(tw, n.Rcode, n.Type, n.Time.Format(time.UnixDate), n.Name)
-		fmt.Printf("%s\n", n)
+		fmt.Fprintln(tw, n.Rcode, "\t", n.Type, "\t", n.Time.Format(time.UnixDate), "\t", n.Name)
 		return true
 	}
 	m.Tree.Scan(fn)

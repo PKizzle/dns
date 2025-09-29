@@ -16,7 +16,7 @@ type Msgcache struct {
 
 func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		if x := m.Retrieve(r); m != nil {
+		if x := m.Retrieve(r); x != nil {
 			x.Data = r.Data
 			x = dnsmsg.Funcs(ctx, x)
 			if err := x.Pack(); err != nil {
