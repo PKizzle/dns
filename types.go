@@ -78,6 +78,7 @@ const (
 	TypeZONEMD     uint16 = 63
 	TypeSVCB       uint16 = 64
 	TypeHTTPS      uint16 = 65
+	TypeDSYNC      uint16 = 66
 	TypeSPF        uint16 = 99
 	TypeUINFO      uint16 = 100
 	TypeUID        uint16 = 101
@@ -1508,6 +1509,34 @@ func (rr *DELEG) String() string {
 type DELEGI struct{ DELEG }
 
 func (rr *DELEGI) String() string { return rr.DELEG.String() }
+
+// See RFC 9859
+type DSYNC struct {
+	Hdr    Header
+	Type   uint16
+	Scheme uint8
+	Port   uint16
+	Target string `dns:"domain-name"`
+}
+
+func (rr *DSYNC) String() string {
+	sb := sprintHeader(rr)
+
+	sb.WriteString(TypeToString[rr.Type])
+	sb.WriteByte(' ')
+	if rr.Scheme == 1 {
+		sb.WriteString("NOTIFY")
+	} else {
+		sb.WriteString(strconv.Itoa(int(rr.Scheme)))
+	}
+	sb.WriteByte(' ')
+
+	sb.WriteString(strconv.Itoa(int(rr.Port)))
+	sb.WriteByte(' ')
+	sb.WriteString(rr.Target)
+
+	return sb.String()
+}
 
 // Meta RRs
 

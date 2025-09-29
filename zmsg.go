@@ -2247,6 +2247,47 @@ func (rr *DELEGI) unpack(data, msgBuf []byte) (err error) {
 	return nil
 }
 
+func (rr *DSYNC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = pack.Uint16(rr.Type, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = pack.Uint8(rr.Scheme, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = pack.Uint16(rr.Port, msg, off)
+	if err != nil {
+		return off, err
+	}
+	off, err = pack.Name(rr.Target, msg, off, compression, false)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *DSYNC) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint16(&rr.Type) {
+		return unpack.ErrOverflow
+	}
+	if !s.ReadUint8(&rr.Scheme) {
+		return unpack.ErrOverflow
+	}
+	if !s.ReadUint16(&rr.Port) {
+		return unpack.ErrOverflow
+	}
+	rr.Target, err = unpack.Name(&s, msgBuf)
+	if err != nil {
+		return err
+	}
+	if !s.Empty() {
+		return unpack.Errorf("trailing record data: %s", "DSYNC")
+	}
+	return nil
+}
+
 func (rr *ANY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	return off, nil
 }

@@ -558,6 +558,15 @@ func (rr *DELEGI) Len() int {
 	return l
 }
 
+func (rr *DSYNC) Len() int {
+	l := rr.Hdr.Len()
+	l += 2 // Type
+	l++    // Scheme
+	l += 2 // Port
+	l += len(rr.Target) + 1
+	return l
+}
+
 func (rr *ANY) Len() int {
 	l := rr.Hdr.Len()
 	return l
