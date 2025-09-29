@@ -126,7 +126,7 @@ type PADDING struct {
 }
 
 func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
-func (o *PADDING) String() string { return "" } // tODO miek
+func (o *PADDING) String() string { return "" } // TODO(miek)
 
 // EXPIRE implements the EDNS0 option as described in RFC 7314.
 //

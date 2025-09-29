@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
-	etypes = []string{"ZONEVERSION", "EDE"} // overwrite with the ones we have done
+	etypes = []string{"ZONEVERSION", "EDE", "NSID"} // overwrite with the ones we have done
 
 	types = append(types, etypes...)
 
