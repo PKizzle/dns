@@ -162,6 +162,8 @@ func compare(a, b RR) int {
 		return x.compare(b)
 	case *DELEGI:
 		return x.compare(b)
+	case *DSYNC:
+		return x.compare(b)
 	case *ANY:
 		return x.compare(b)
 	case *AXFR:
@@ -1343,6 +1345,38 @@ func (rr *DELEG) compare(b RR) (x int) {
 
 func (rr *DELEGI) compare(b RR) (x int) {
 	return rr.DELEG.compare(&b.(*DELEGI).DELEG)
+}
+
+func (rr *DSYNC) compare(b RR) (x int) {
+	x = int(rr.Type) - int(b.(*DSYNC).Type)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Scheme) - int(b.(*DSYNC).Scheme)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = int(rr.Port) - int(b.(*DSYNC).Port)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = CompareName(rr.Target, b.(*DSYNC).Target)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	return 0
 }
 
 func (rr *ANY) compare(b RR) (x int) {

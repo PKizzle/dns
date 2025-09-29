@@ -1946,6 +1946,33 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 
 func (rr *DELEGI) parse(c *zlexer, o string) *ParseError { return rr.DELEG.parse(c, o) }
 
+func (rr *DSYNC) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	rr.Type = StringToType[l.token]
+
+	c.Next()        // zBlank
+	l, _ = c.Next() // zString
+	if strings.ToUpper(l.token) == "NOTIFY" || l.token == "1" {
+		rr.Scheme = 1
+	}
+
+	c.Next()        // zBlank
+	l, _ = c.Next() // zString
+	port, err := strconv.ParseUint(l.token, 10, 32)
+	if err != nil {
+		return &ParseError{err: "bad DSYNC Port"}
+	}
+	rr.Port = uint16(port)
+
+	c.Next()        // zBlank
+	l, _ = c.Next() // zString
+	rr.Target = dnsutilAbsolute(l.token, o)
+	if l.err || rr.Target == "" {
+		return &ParseError{err: "bad DSYNC Target", lex: l}
+	}
+	return slurpRemainder(c)
+}
+
 // escapedStringOffset finds the offset within a string (which may contain escape
 // sequences) that corresponds to a certain byte offset. If the input offset is
 // out of bounds, -1 is returned (which is *not* considered an error).

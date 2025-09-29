@@ -637,6 +637,16 @@ func (rr *DELEG) DeepCopy() RR {
 func (rr *DELEGI) DeepCopy() RR {
 	return &DELEGI{*rr.DELEG.DeepCopy().(*DELEG)}
 }
+func (rr *DSYNC) DeepCopy() RR {
+	return &DSYNC{
+		rr.Hdr,
+		rr.Type,
+		rr.Scheme,
+		rr.Port,
+		rr.Target,
+	}
+}
+
 func (rr *ANY) DeepCopy() RR {
 	return &ANY{
 		rr.Hdr,

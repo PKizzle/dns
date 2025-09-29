@@ -162,6 +162,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *DELEGI:
 		return x.parse(c, o)
+	case *DSYNC:
+		return x.parse(c, o)
 	case *ANY:
 		return x.parse(c, o)
 	case *AXFR:

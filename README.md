@@ -168,6 +168,7 @@ _all of them_
 - 9567 - DNS Error Reporting
 - 9606 - DNS Resolver Information
 - 9660 - Zone version
+- 9859 - DSYNC RR
 - draft-ietf-compact-denial - CO bit
 - draft-ietf-deleg - DELEG RR
 

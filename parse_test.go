@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 			func(rr RR) error {
 				alpn := rr.(*SVCB).Value[0].(*svcb.ALPN).Alpn
 				if "h2" != alpn[0] {
-					fmt.Errorf("parsing alpn failed, wanted %v got %v", "h2", alpn)
+					return fmt.Errorf("parsing alpn failed, wanted %v got %v", "h2", alpn)
 				}
 				return nil
 			},
@@ -45,6 +45,22 @@ func TestNew(t *testing.T) {
 					if v[i] != alpn[i] {
 						return fmt.Errorf("parsing alpn failed, wanted %v got %v", v, alpn)
 					}
+				}
+				return nil
+			},
+		},
+		{
+			"DSYNC", `child._dsync.example.  IN DSYNC  CDS NOTIFY 5300 rr-endpoint.example.`,
+			func(rr RR) error {
+				dsync := rr.(*DSYNC)
+				if dsync.Scheme != 1 {
+					return fmt.Errorf("parsing DSYNC failed, expected scheme 1, got %d", dsync.Scheme)
+				}
+				if dsync.Port != 5300 {
+					return fmt.Errorf("parsing DSYNC failed, expected port 5300, got %d", dsync.Port)
+				}
+				if dsync.Target != "rr-endpoint.example." {
+					return fmt.Errorf("parsing DSYNC failed, expected port rr-endpoint.example., got %s", "rr-endpoint.example.")
 				}
 				return nil
 			},
