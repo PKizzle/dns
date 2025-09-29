@@ -17,11 +17,12 @@ import (
 // Retrieve looks up the qname and qtype in the Zone z. It returns a message with the RRs (if found) in the
 // correct places. In case of NXDOMAIN or NODATA response the message will also contain the correct
 // information. The optional Restart is used to generate the correct CNAME chains.
-// When calling Retrieve for the first time re should be nil.
+// When calling Retrieve for the first time re should be nil. The returned message has been copied from m and
+// shares its buffer.
 func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 	// If here, we are guaranteed that this zone has the correct origin and the qname falls in this zone.
 	// so we should be able to Prev to the first label that should fall in this zone.
-	r := new(dns.Msg)
+	r := m.Copy()
 	dnsutil.SetReply(r, m)
 
 	labels := z.Labels()

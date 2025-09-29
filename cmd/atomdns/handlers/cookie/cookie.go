@@ -20,7 +20,7 @@ func (c *Cookie) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		for _, o := range r.Pseudo {
 			if cc, ok := o.(*dns.COOKIE); ok {
 				if len(cc.Cookie) < 16 || len(cc.Cookie) > 40 {
-					m := &dns.Msg{Data: r.Data}
+					m := r.Copy()
 					dnsutil.SetReply(m, r)
 					m.Rcode = dns.RcodeFormatError
 					m.Pack()

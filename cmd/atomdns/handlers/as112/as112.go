@@ -71,8 +71,7 @@ func (a *As112) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		qname, _ := dnsutil.Question(r)
 		for z, rr := range zones {
 			if dnsutil.IsBelow(z, qname) {
-				m := new(dns.Msg)
-				m.Data = r.Data
+				m := r.Copy()
 				dnsutil.SetReply(m, r)
 				m.Authoritative = true
 				m.Ns = []dns.RR{rr}

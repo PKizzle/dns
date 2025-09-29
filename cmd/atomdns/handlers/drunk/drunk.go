@@ -31,7 +31,7 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		delay := d.delay > 0 && i%d.delay == 0
 		trunc := d.truncate > 0 && i&d.truncate == 0
 
-		m := new(dns.Msg)
+		m := r.Copy()
 		dnsutil.SetReply(m, r)
 		m.Authoritative = true
 		m.Truncated = trunc

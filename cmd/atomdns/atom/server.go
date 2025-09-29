@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -39,6 +40,7 @@ func (s *Server) Start() error {
 			return err
 		}
 	}
+	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered))
 	return nil
 }
 
@@ -108,7 +110,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		return nil, err
 	}
 
-	global := &global.Global{}
+	global := &global.Global{Registered: make(map[string]struct{})}
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
@@ -122,8 +124,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		}
 		break
 	}
-
-	registered := map[string]struct{}{}
+	global.Config = conf
 
 	for _, b := range blocks {
 		if b.Keys == nil {
@@ -157,7 +158,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		for _, k := range b.Keys {
 			k = dnsutil.Canonical(k)
 
-			if _, ok := registered[k]; ok {
+			if _, ok := global.Registered[k]; ok {
 				return global, fmt.Errorf("origin already registered: %s", k)
 			}
 
@@ -165,7 +166,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 				slog.Info(k, "handlers", "unpack,"+strings.Join(names, ",")+",refuse")
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
-			registered[k] = struct{}{}
+			global.Registered[k] = struct{}{}
 		}
 	}
 	return global, nil

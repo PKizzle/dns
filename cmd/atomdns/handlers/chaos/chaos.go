@@ -33,7 +33,7 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		qname := dnsutil.Canonical(r.Question[0].Header().Name)
-		m := &dns.Msg{Data: r.Data} // reuse buffer
+		m := r.Copy()
 		dnsutil.SetReply(m, r)
 		hdr := dns.Header{Name: qname, Class: dns.ClassCHAOS}
 
