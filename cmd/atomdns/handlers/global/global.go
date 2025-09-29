@@ -28,6 +28,9 @@ type Global struct {
 	onceShutdown sync.Once
 	onStartup    []func() error // Functions to execute on startup
 	onShutdown   []func() error // Function to execute on shutdown
+
+	Config     string              // path to config file
+	Registered map[string]struct{} // registered zones
 }
 
 func (g *Global) OnStartup(fn func() error)  { g.onStartup = append(g.onStartup, fn) }

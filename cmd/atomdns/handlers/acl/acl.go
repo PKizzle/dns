@@ -16,7 +16,6 @@ type Acl struct {
 
 func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-
 		net := dnsutil.Network(w)
 		fam := strconv.Itoa(dnsutil.Family(w))
 
@@ -35,7 +34,7 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 			case actionBlock:
 
-				m := new(dns.Msg)
+				m := r.Copy()
 				dnsutil.SetReply(m, r)
 				m.Data = r.Data
 				m.Rcode = dns.RcodeRefused
@@ -49,7 +48,7 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 			case actionFilter:
 
-				m := new(dns.Msg)
+				m := r.Copy()
 				dnsutil.SetReply(m, r)
 				m.Data = r.Data
 				m.Rcode = dns.RcodeRefused

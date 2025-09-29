@@ -30,13 +30,12 @@ func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		next.ServeDNS(ctx, rw, r)
 
-		x := rw.Msg
-		x = dnsmsg.Funcs(ctx, x)
-		if err := x.Pack(); err != nil {
+		rw.Msg = dnsmsg.Funcs(ctx, rw.Msg)
+		if err := rw.Msg.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}
-		io.Copy(w, x)
+		io.Copy(w, rw.Msg)
 
-		m.Set(x)
+		m.Set(rw.Msg)
 	})
 }

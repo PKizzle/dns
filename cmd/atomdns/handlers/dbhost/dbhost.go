@@ -39,7 +39,7 @@ func (d *Dbhost) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-		m := &dns.Msg{Data: r.Data}
+		m := r.Copy()
 		dnsutil.SetReply(m, r)
 		for _, rr := range n.RRs {
 			if dns.RRToType(rr) == qtype {
@@ -48,7 +48,6 @@ func (d *Dbhost) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		m = dnsmsg.Funcs(ctx, m)
-
 		if err := m.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}
