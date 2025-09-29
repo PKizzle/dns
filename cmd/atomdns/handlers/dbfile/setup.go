@@ -60,50 +60,48 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		}
 		return d.Reload()
 	})
-	co.OnStartup(func() error {
-		if d.From == nil || len(d.From.IPs) == 0 {
-			return nil
-		}
-		d.RLock()
-		zones := maps.Values(d.Zones)
-		d.RUnlock()
-		for z := range zones {
-			log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(d.Path))
+	if d.From != nil && len(d.From.IPs) > 0 {
+		co.OnStartup(func() error {
+			d.RLock()
+			zones := maps.Values(d.Zones)
+			d.RUnlock()
+			for z := range zones {
+				log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(d.Path))
 
-			apex := z.Apex()
-			serial := uint32(0)
-			for _, rr := range apex.RRs {
-				if s, ok := rr.(*dns.SOA); ok {
-					serial = s.Serial
-					break
+				apex := z.Apex()
+				serial := uint32(0)
+				for _, rr := range apex.RRs {
+					if s, ok := rr.(*dns.SOA); ok {
+						serial = s.Serial
+						break
+					}
 				}
-			}
-			if !d.From.AvailableFrom(z.Origin(), serial) {
-				continue
-			}
+				if !d.From.AvailableFrom(z.Origin(), serial) {
+					continue
+				}
 
-			err := d.TransferIn(z.Origin())
-			if err != nil {
-				alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
-				alog.Error("Failed to transfer", Err( err))
+				err := d.TransferIn(z.Origin())
+				if err != nil {
+					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
+					alog.Error("Failed to transfer", Err(err))
+				}
+				break
 			}
-			break
-		}
-		return d.Retransfer()
-	})
+			return d.Retransfer()
+		})
+	}
 	co.OnShutdown(func() error {
 		log.Info("Shutdown", "reload", filepath.Base(d.Path))
 		d.cancel()
 		return nil
 	})
-	co.OnShutdown(func() error {
-		if d.From == nil || len(d.From.IPs) == 0 {
+	if d.From != nil && len(d.From.IPs) > 0 {
+		co.OnShutdown(func() error {
+			log.Info("Shutdown", "retransfer", filepath.Base(d.Path))
+			d.cancel()
 			return nil
-		}
-		log.Info("Shutdown", "retransfer", filepath.Base(d.Path))
-		d.cancel()
-		return nil
-	})
+		})
+	}
 
 	return nil
 }
