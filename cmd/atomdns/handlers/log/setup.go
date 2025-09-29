@@ -14,7 +14,7 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	co.OnStartup(func() error {
-		_log.Info("Startup", "signal", syscall.SIGUSR1)
+		_log.Info("Startup", "signal", "USR1")
 		sigchan := make(chan os.Signal, 1)
 		go func() {
 			signal.Notify(sigchan, syscall.SIGUSR1)
@@ -38,7 +38,7 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 	})
 
 	co.OnShutdown(func() error {
-		_log.Info("Shutdown", "signal", syscall.SIGUSR1)
+		_log.Info("Shutdown", "signal", "USR1")
 		cancel()
 		return nil
 	})

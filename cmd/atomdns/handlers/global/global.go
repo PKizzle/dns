@@ -37,7 +37,7 @@ func (g *Global) Startup() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceStartup.Do(func() {
-		slog.Debug("Startup functions", slog.Int("total", len(g.onStartup)))
+		slog.Info("Startup functions", slog.Int("total", len(g.onStartup)))
 		wg.Add(1)
 		go func() {
 			for _, fn := range g.onStartup {
@@ -62,7 +62,7 @@ func (g *Global) Shutdown() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceShutdown.Do(func() {
-		slog.Debug("Shutdown functions", slog.Int("total", len(g.onShutdown)))
+		slog.Info("Shutdown functions", slog.Int("total", len(g.onShutdown)))
 		for _, fn := range g.onShutdown {
 			wg.Add(1)
 			go func() {
