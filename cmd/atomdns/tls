@@ -1,0 +1,7 @@
+tls {
+                issuer acme {
+                        dir https://acme-staging-v02.api.letsencrypt.org/directory
+                        profile shortlived
+                        disable_tlsalpn_challenge
+                }
+        }
