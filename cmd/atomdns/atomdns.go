@@ -18,7 +18,7 @@ import (
 
 //go:generate go run man_generate.go
 
-const Version = "008"
+const Version = "009"
 
 func main() {
 	var (
