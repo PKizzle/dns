@@ -20,9 +20,6 @@ import (
 )
 
 func (g *Global) Setup(d conffile.Dispenser) error {
-	g.Root, _ = os.Getwd()
-	g.Addr = "[::]:53"
-	g.MaxTCPQueries = 128
 	if d.Next() {
 		switch d.Val() {
 		case "root":

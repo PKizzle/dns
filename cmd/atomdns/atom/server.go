@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -75,7 +77,6 @@ func New(conf string, r io.Reader) (*Server, error) {
 		return nil, err
 	}
 	s.global = global
-
 	s.servers = make([]*dns.Server, global.Servers*2) // *2=udp/tcp
 	s.started = make(chan error, len(s.servers))
 	for j := range s.servers {
@@ -110,7 +111,14 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		return nil, err
 	}
 
-	global := &global.Global{Registered: make(map[string]struct{})}
+	global := &global.Global{
+		Registered:    make(map[string]struct{}),
+		Config:        conf,
+		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
+		Addr:          "[::]:53",
+		MaxTCPQueries: 128,
+		Servers:       runtime.NumCPU() * 3,
+	}
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
@@ -124,7 +132,6 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		}
 		break
 	}
-	global.Config = conf
 
 	for _, b := range blocks {
 		if b.Keys == nil {
