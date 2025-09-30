@@ -19,7 +19,7 @@ func TestSetup(t *testing.T) {
 		{`metrics /10 localhost`, &Global{MetricsN: 10, Root: cwd}},
 	}
 	for i, tc := range testcases {
-		global := new(Global)
+		global := &Global{Root: tc.exp.Root}
 		d := conffile.NewTestDispenser(tc.input)
 		err := global.Setup(d)
 		if err != nil {
