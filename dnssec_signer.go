@@ -273,5 +273,5 @@ func rawSignatureData(rrset []RR, s *RRSIG, options SignOption) (buf []byte, err
 	for _, rr := range rrset {
 		_, off, _ = packRR(rr, rrbuf, off, nil)
 	}
-	return rrbuf, nil
+	return rrbuf[:off], nil
 }
