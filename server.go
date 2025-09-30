@@ -350,8 +350,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			srv.serveDNS(w, r)
 			wg.Done()
 		}()

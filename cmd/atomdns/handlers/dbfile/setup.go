@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
@@ -47,6 +48,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		d.RLock()
 		zones := maps.Values(d.Zones)
 		d.RUnlock()
+		time.Sleep(10 * time.Second)
 		for z := range zones {
 			alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
 			_, err := os.Stat(z.Path)
