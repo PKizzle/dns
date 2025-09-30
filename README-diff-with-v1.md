@@ -5,9 +5,9 @@
 - `RR` lost the `Type` and `Rdlength` fields, type is derived from the Go type, `Rdlength` served no function
   at all.
 - `context.Context` is used in the correct places.
-- `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern (usually) zone that lead to
+- `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern zone that lead to
   invocation of this Handler.
-- `internal/*` packages that hold code that used to be private, but was cluttering; also allowed for better
+- `internal/*` packages that hold code that used to be private, but was cluttering the top level directory; also allowed for better
   naming.
   - builtin perf testing with internal/dnsperf
 - Interfaces do not have private methods.
@@ -21,19 +21,21 @@
   - question section: holds `[]RR`
   - pseudo section: holds `[]RR`
 
-  This will be extended (later/TODO) to allow reading from a text presentation format.
+  Pseudo section RR (EDNS0 OPT) can also be parsed from their (also unique to this library) presentation format.
 
-  There is also a `Stateful` section in the message that holds DNS Stateful Operation (DSO)
-  records, these records will also be _RRs_.
+  There is also a `Stateful` section in the message that holds DNS Stateful Operation (DSO) records, these
+  records are also _RRs_.
 
 - `New` will return an RR, `NewRR` will be gone.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
 - More:
   - msg is a io.Writer.
   - msg.Data can be re-used between request and reply in Exchange.
+  - msg.Data can be returned to a server buffer pool, for reuse in new messages.
   - private RRs are easier.
   - private EDNS0 are implementable.
 - SVCB record got its own package _dns/svcb_ where all the key-values (called `svcb.Pair`) now reside.
+- DELEG record also got its own package _dns/deleg/_, where its key-values (called `deleg.Info`) live.
 - IsDuplicate is gone in favor of Compare and a full support for the `sort.Interface`, so you can just
   sort RRs in an RRset.
 - Copied, sanitized and removed tests that accumulated over 16 years of development.
@@ -104,7 +106,7 @@ OLD                                                                  | NEW
                                                                      | ;; QUESTION: 1, PSEUDO: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0, DATA SIZE: 25
 ;; OPT PSEUDOSECTION:                                                |
 ; EDNS: version 0; flags:; udp: 512                                  | ;; PSEUDO SECTION:
-; NSID: 6770646e732d616d73  (g)(p)(d)(n)(s)(-)(a)(m)(s)              | .               CLASS0  NSID    6770 ; ("gpdns-ams")
+; NSID: 6770646e732d616d73  (g)(p)(d)(n)(s)(-)(a)(m)(s)              | .               CLASS0  NSID    6770; "gpdns-ams"
                                                                      |
 ;; QUESTION SECTION:                                                 |
 ;miek.nl.       IN       MX                                          | ;; QUESTION SECTION:
@@ -129,3 +131,22 @@ things down.
 The default implementation of `dns.ResponseWriter` is thread safe and this allows for TCP pipelining, which
 is thusly implemented in `dns.Server`. Writing or reading data is now done with `io.Copy` no more `ReadMsg` or
 `WriteMsg`.
+
+A handler for instance:
+
+```
+OLD                                                      | NEW
+                                                         |
+func HelloServer(w dns.ResponseWriter, req *dns.Msg) {   | func HelloServer(ctx contect.Context, w ResponseWriter, req *Msg) {
+	m := new(dns.Msg)                                    |     m := req.Copy()
+	m.SetReply(req)                                      |     dnsutil.SetReply(m, req)
+                                                         |
+	m.Extra = make([]dns.RR, 1)                          |     m.Extra = []dns.RR{
+	m.Extra[0] = &TXT{                                   |         &TXT{Hdr: dns.Header{Name: m.Question[0].Name, Class: dns.ClassINET},
+        Hdr: dns.RR_Header{Name: m.Question[0].Name,     |              Txt: []string{"Hello world"}}
+        Rrtype: dns.TypeTXT, Class: dns.ClassINET},      |     }
+        Txt: []string{"Hello world"}                     |
+    }                                                    |     m.Pack()
+	w.WriteMsg(m)                                        |     io.Copy(w, m)
+}                                                        | }
+```

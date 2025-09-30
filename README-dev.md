@@ -44,5 +44,5 @@ Most tests are table driven with (optional) subtests, the main tests are usually
 ### Go generate
 
 A lot of things are generated, so when adding an RR run a `go generate ./...`, this might fail on zcopy.go in
-that case remove the file zcopy.go and in dns.go remove `Copier` from then `RR` interface. Run go generate,
-and re-add `Copier`.
+that case remove the file zdeepcopy.go and in dns.go remove `DeepCopier` from then `RR` interface. Run go
+generate, and re-add `DeepCopier`.

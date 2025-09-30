@@ -56,6 +56,8 @@ wins.
 
 A not-so-up-to-date-list-that-may-be-actually-current:
 
+- atomdns - included in cmd/atomdns - a high performance DNS server, based on the principles of CoreDNS, but
+  faster and simpler.
 - sndns - my (Miek) private fork of CoreDNS.
 
 Send pull request if you want to be listed here.
