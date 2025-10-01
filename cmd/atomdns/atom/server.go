@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/atom/atomhttp"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
@@ -27,13 +28,16 @@ type Server struct {
 	mux     *dns.ServeMux
 	started chan error
 
+	httpservers []*atomhttp.Server
+	httpstarted chan error
+
 	// Quiet startup
 	Quiet bool
 }
 
 func (s *Server) Start() error {
 	for i := range s.servers {
-		go serve(s.started, s.servers[i], s.global)
+		go Serve(s.started, s.servers[i], s.global)
 	}
 	// drain the channel, we either get a nil for success or otherwise an error _for each server_ started
 	for range s.servers {
@@ -42,11 +46,20 @@ func (s *Server) Start() error {
 			return err
 		}
 	}
+	for i := range s.httpservers {
+		go atomhttp.Serve(s.httpstarted, s.httpservers[i])
+	}
+	for range s.httpservers {
+		if err, _ := <-s.httpstarted; err != nil {
+			return err
+		}
+	}
+
 	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered))
 	return nil
 }
 
-func serve(ch chan error, srv *dns.Server, global *global.Global) {
+func Serve(ch chan error, srv *dns.Server, global *global.Global) {
 	if err := global.Startup(); err != nil {
 		ch <- err
 		return
@@ -102,6 +115,9 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
+
+	s.httpservers = []*atomhttp.Server{atomhttp.New(s.mux, global)}
+	s.httpstarted = make(chan error, len(s.httpservers))
 	return s, nil
 }
 

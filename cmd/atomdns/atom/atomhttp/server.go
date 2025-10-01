@@ -2,37 +2,33 @@ package atomhttp
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
+	"codeberg.org/miekg/dns/dnshttp"
 )
 
 type Server struct {
-	server  *http.Server
-	started chan error
-	// timeouts 'n shit
+	server *http.Server
+	mux    *dns.ServeMux
 }
 
-func (s *Server) Start() error {
-	go serve(s.started, s.server)
-
-	for range 1 {
-		err := <-s.started
-		if err != nil {
-			return err
-		}
-	}
-	//	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered))
-	return nil
-}
-
-func serve(ch chan error, srv *http.Server) {
-	if err := srv.ListenAndServe(); err != nil {
+func Serve(ch chan error, srv *Server) {
+	l, err := net.Listen("tcp", ":8080")
+	if err != nil {
 		ch <- err
 		return
 	}
-	// tls
+
+	go func() {
+		if err := http.Serve(l, nil); err != nil {
+			ch <- err
+			return
+		}
+	}()
+	ch <- nil
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
@@ -40,10 +36,22 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func New(mux *dns.ServeMux, global *global.Global) (*Server, error) {
+func New(mux *dns.ServeMux, global *global.Global) *Server {
 	s := new(Server)
-	s.started = make(chan error, 1)
+	s.mux = mux
 	s.server = new(http.Server)
-	s.server.Addr = "[::]:8053"
-	return s, nil
+	s.server.Addr = "[::]:8053" // reuse port 'n shit
+	return s
+}
+
+// ServeHTTP is the handler that gets the HTTP request and converts to the dns format, calls the hanlders
+// converts it back and write it to the client.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	msg, err := dnshttp.Request(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	s.mux.ServeDNS(context.Background(), w, msg)
 }
