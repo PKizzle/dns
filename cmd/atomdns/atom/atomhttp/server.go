@@ -39,14 +39,14 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func New(addr string, mux *dns.ServeMux, global *global.Global) *Server {
 	s := new(Server)
 	s.mux = mux
-	s.server = new(http.Server)
-	s.server.Addr = addr
+	s.server = &http.Server{Addr: addr, Handler: s}
 	return s
 }
 
 // ServeHTTP is the handler that gets the HTTP request and converts to the dns format, calls the hanlders
 // converts it back and write it to the client.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	println("hallo")
 	m, err := dnshttp.Request(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

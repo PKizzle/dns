@@ -68,7 +68,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 								if err != nil || n < 0 {
 									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
 								}
-								g.Servers = runtime.NumCPU() * 3
+								g.Servers = runtime.NumCPU() * n
 							} else {
 								n, err := strconv.Atoi(exprs[0])
 								if err != nil || n < 0 {
@@ -110,7 +110,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 								if err != nil || n < 0 {
 									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
 								}
-								g.Servers = runtime.NumCPU() * 3
+								g.HttpServers = runtime.NumCPU() * n
 							} else {
 								n, err := strconv.Atoi(exprs[0])
 								if err != nil || n < 0 {
@@ -133,7 +133,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 			if g.HttpAddr != "" {
 				g.OnStartup(func() error {
-					log.Info("Startup", "http", g.HttpAddr, g.HttpServers)
+					log.Info("Startup", "http", g.HttpAddr, "run", g.HttpServers)
 					return nil
 				})
 			}
