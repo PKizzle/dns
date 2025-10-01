@@ -75,7 +75,8 @@ Send pull request if you want to be listed here.
 - AXFR/IXFR.
 - TSIG, SIG(0).
 - Dynamic updates.
-- DNS over TLS (DoT): encrypted connection between client and server over TCP.
+- DNS over TLS (DOT): encrypted connection between client and server over TCP.
+- DNS over HTTP (DOH), see the _dnshttp_ package.
 - Examples included the cmd/ directory.
 
 Have fun!
