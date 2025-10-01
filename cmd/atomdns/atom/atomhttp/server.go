@@ -47,11 +47,18 @@ func New(mux *dns.ServeMux, global *global.Global) *Server {
 // ServeHTTP is the handler that gets the HTTP request and converts to the dns format, calls the hanlders
 // converts it back and write it to the client.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	msg, err := dnshttp.Request(r)
+	m, err := dnshttp.Request(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	println(m.String())
 
-	s.mux.ServeDNS(context.Background(), w, msg)
+	hw := ResponseWriter{}
+
+	s.mux.ServeDNS(context.Background(), hw, m)
+}
+
+type ResponseWriter struct {
+	dns.ResponseWriter
 }
