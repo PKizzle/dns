@@ -18,7 +18,7 @@ import (
 //go:generate go run dnsutil_generate.go
 //go:generate go run dnstest_generate.go
 //go:generate go run compare_generate.go
-//go:generate go run deepcopy_generate.go
+//go:generate go run clone_generate.go
 
 const (
 	// DefaultMsgSize is the standard default for messages larger than 512 bytes.
@@ -43,7 +43,7 @@ type RR interface {
 	// a slightly too large value is OK.
 	Len() int
 
-	DeepCopier
+	Cloner
 }
 
 // If an RR implements the Typer interface it will be used to return the type of RR in the RRToType function.
@@ -80,10 +80,10 @@ type Token {
 type: TokenBlank, TokenString, TokenQuote, not TokenEOF or TokenNewline
 */
 
-// The DeepCopier interface defines a copy function that returns a deep copy of the RR.
+// The Cloner interface defines a clone function that returns a deep copy of the RR.
 // All RRs defined in this package implement this interface.
-type DeepCopier interface {
-	DeepCopy() RR
+type Cloner interface {
+	Clone() RR
 }
 
 // Comparer interface defines a compare function that returns -1, 0, or +1.
@@ -111,7 +111,7 @@ type Header struct {
 
 func (h *Header) Len() int        { return len(h.Name) + 1 + 10 } // +1 because miek.nl. is actually .miek.nl.
 func (h *Header) Header() *Header { return h }
-func (h *Header) DeepCopy() RR    { return &Header{h.Name, h.Class, h.TTL, h.t} }
+func (h *Header) Clone() RR       { return &Header{h.Name, h.Class, h.TTL, h.t} }
 
 // String returns the string representation of h.
 // Note that as the RR type is derived from the RR containing this header, getting the text

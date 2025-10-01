@@ -27,7 +27,7 @@ const (
 type Info interface {
 	String() string // String returns the string representation of the value.
 	Len() int       // Len returns the length of value in the wire format.
-	DeepCopy() Info // DeepCopy returns a deep copy of the Info.
+	Clone() Info    // Clone returns a deep copy of the Info.
 }
 
 // KeyToString return the string representation for k.  For KeyReserved the empty string is returned. For
@@ -156,7 +156,7 @@ func (s *SERVERIPV6) String() string {
 
 const tlv = 4
 
-func (s *SERVERIPV4) DeepCopy() Info    { return &SERVERIPV4{slices.Clone(s.IPs)} }
-func (s *SERVERIPV6) DeepCopy() Info    { return &SERVERIPV6{slices.Clone(s.IPs)} }
-func (s *SERVERNAME) DeepCopy() Info    { return &SERVERNAME{slices.Clone(s.Hostnames)} }
-func (s *INCLUDEDELEGI) DeepCopy() Info { return &INCLUDEDELEGI{slices.Clone(s.Domains)} }
+func (s *SERVERIPV4) Clone() Info    { return &SERVERIPV4{slices.Clone(s.IPs)} }
+func (s *SERVERIPV6) Clone() Info    { return &SERVERIPV6{slices.Clone(s.IPs)} }
+func (s *SERVERNAME) Clone() Info    { return &SERVERNAME{slices.Clone(s.Hostnames)} }
+func (s *INCLUDEDELEGI) Clone() Info { return &INCLUDEDELEGI{slices.Clone(s.Domains)} }

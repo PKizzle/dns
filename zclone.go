@@ -3,32 +3,33 @@
 package dns
 
 import (
+	"slices"
+
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/svcb"
-	"slices"
 )
 
-func (rr *NULL) DeepCopy() RR {
+func (rr *NULL) Clone() RR {
 	return &NULL{
 		rr.Hdr,
 		rr.Null,
 	}
 }
 
-func (rr *NXNAME) DeepCopy() RR {
+func (rr *NXNAME) Clone() RR {
 	return &NXNAME{
 		rr.Hdr,
 	}
 }
 
-func (rr *CNAME) DeepCopy() RR {
+func (rr *CNAME) Clone() RR {
 	return &CNAME{
 		rr.Hdr,
 		rr.Target,
 	}
 }
 
-func (rr *HINFO) DeepCopy() RR {
+func (rr *HINFO) Clone() RR {
 	return &HINFO{
 		rr.Hdr,
 		rr.Cpu,
@@ -36,21 +37,21 @@ func (rr *HINFO) DeepCopy() RR {
 	}
 }
 
-func (rr *MB) DeepCopy() RR {
+func (rr *MB) Clone() RR {
 	return &MB{
 		rr.Hdr,
 		rr.Mb,
 	}
 }
 
-func (rr *MG) DeepCopy() RR {
+func (rr *MG) Clone() RR {
 	return &MG{
 		rr.Hdr,
 		rr.Mg,
 	}
 }
 
-func (rr *MINFO) DeepCopy() RR {
+func (rr *MINFO) Clone() RR {
 	return &MINFO{
 		rr.Hdr,
 		rr.Rmail,
@@ -58,28 +59,28 @@ func (rr *MINFO) DeepCopy() RR {
 	}
 }
 
-func (rr *MR) DeepCopy() RR {
+func (rr *MR) Clone() RR {
 	return &MR{
 		rr.Hdr,
 		rr.Mr,
 	}
 }
 
-func (rr *MF) DeepCopy() RR {
+func (rr *MF) Clone() RR {
 	return &MF{
 		rr.Hdr,
 		rr.Mf,
 	}
 }
 
-func (rr *MD) DeepCopy() RR {
+func (rr *MD) Clone() RR {
 	return &MD{
 		rr.Hdr,
 		rr.Md,
 	}
 }
 
-func (rr *MX) DeepCopy() RR {
+func (rr *MX) Clone() RR {
 	return &MX{
 		rr.Hdr,
 		rr.Preference,
@@ -87,7 +88,7 @@ func (rr *MX) DeepCopy() RR {
 	}
 }
 
-func (rr *AFSDB) DeepCopy() RR {
+func (rr *AFSDB) Clone() RR {
 	return &AFSDB{
 		rr.Hdr,
 		rr.Subtype,
@@ -95,14 +96,14 @@ func (rr *AFSDB) DeepCopy() RR {
 	}
 }
 
-func (rr *X25) DeepCopy() RR {
+func (rr *X25) Clone() RR {
 	return &X25{
 		rr.Hdr,
 		rr.PSDNAddress,
 	}
 }
 
-func (rr *ISDN) DeepCopy() RR {
+func (rr *ISDN) Clone() RR {
 	return &ISDN{
 		rr.Hdr,
 		rr.Address,
@@ -110,7 +111,7 @@ func (rr *ISDN) DeepCopy() RR {
 	}
 }
 
-func (rr *RT) DeepCopy() RR {
+func (rr *RT) Clone() RR {
 	return &RT{
 		rr.Hdr,
 		rr.Preference,
@@ -118,21 +119,21 @@ func (rr *RT) DeepCopy() RR {
 	}
 }
 
-func (rr *NS) DeepCopy() RR {
+func (rr *NS) Clone() RR {
 	return &NS{
 		rr.Hdr,
 		rr.Ns,
 	}
 }
 
-func (rr *PTR) DeepCopy() RR {
+func (rr *PTR) Clone() RR {
 	return &PTR{
 		rr.Hdr,
 		rr.Ptr,
 	}
 }
 
-func (rr *RP) DeepCopy() RR {
+func (rr *RP) Clone() RR {
 	return &RP{
 		rr.Hdr,
 		rr.Mbox,
@@ -140,7 +141,7 @@ func (rr *RP) DeepCopy() RR {
 	}
 }
 
-func (rr *SOA) DeepCopy() RR {
+func (rr *SOA) Clone() RR {
 	return &SOA{
 		rr.Hdr,
 		rr.Ns,
@@ -153,28 +154,28 @@ func (rr *SOA) DeepCopy() RR {
 	}
 }
 
-func (rr *TXT) DeepCopy() RR {
+func (rr *TXT) Clone() RR {
 	return &TXT{
 		rr.Hdr,
 		slices.Clone(rr.Txt),
 	}
 }
 
-func (rr *SPF) DeepCopy() RR {
+func (rr *SPF) Clone() RR {
 	return &SPF{
 		rr.Hdr,
 		slices.Clone(rr.Txt),
 	}
 }
 
-func (rr *AVC) DeepCopy() RR {
+func (rr *AVC) Clone() RR {
 	return &AVC{
 		rr.Hdr,
 		slices.Clone(rr.Txt),
 	}
 }
 
-func (rr *SRV) DeepCopy() RR {
+func (rr *SRV) Clone() RR {
 	return &SRV{
 		rr.Hdr,
 		rr.Priority,
@@ -184,7 +185,7 @@ func (rr *SRV) DeepCopy() RR {
 	}
 }
 
-func (rr *NAPTR) DeepCopy() RR {
+func (rr *NAPTR) Clone() RR {
 	return &NAPTR{
 		rr.Hdr,
 		rr.Order,
@@ -196,7 +197,7 @@ func (rr *NAPTR) DeepCopy() RR {
 	}
 }
 
-func (rr *CERT) DeepCopy() RR {
+func (rr *CERT) Clone() RR {
 	return &CERT{
 		rr.Hdr,
 		rr.Type,
@@ -206,28 +207,28 @@ func (rr *CERT) DeepCopy() RR {
 	}
 }
 
-func (rr *DNAME) DeepCopy() RR {
+func (rr *DNAME) Clone() RR {
 	return &DNAME{
 		rr.Hdr,
 		rr.Target,
 	}
 }
 
-func (rr *A) DeepCopy() RR {
+func (rr *A) Clone() RR {
 	return &A{
 		rr.Hdr,
 		rr.A,
 	}
 }
 
-func (rr *AAAA) DeepCopy() RR {
+func (rr *AAAA) Clone() RR {
 	return &AAAA{
 		rr.Hdr,
 		rr.AAAA,
 	}
 }
 
-func (rr *PX) DeepCopy() RR {
+func (rr *PX) Clone() RR {
 	return &PX{
 		rr.Hdr,
 		rr.Preference,
@@ -236,7 +237,7 @@ func (rr *PX) DeepCopy() RR {
 	}
 }
 
-func (rr *GPOS) DeepCopy() RR {
+func (rr *GPOS) Clone() RR {
 	return &GPOS{
 		rr.Hdr,
 		rr.Longitude,
@@ -245,7 +246,7 @@ func (rr *GPOS) DeepCopy() RR {
 	}
 }
 
-func (rr *LOC) DeepCopy() RR {
+func (rr *LOC) Clone() RR {
 	return &LOC{
 		rr.Hdr,
 		rr.Version,
@@ -258,10 +259,11 @@ func (rr *LOC) DeepCopy() RR {
 	}
 }
 
-func (rr *SIG) DeepCopy() RR {
-	return &SIG{*rr.RRSIG.DeepCopy().(*RRSIG)}
+func (rr *SIG) Clone() RR {
+	return &SIG{*rr.RRSIG.Clone().(*RRSIG)}
 }
-func (rr *RRSIG) DeepCopy() RR {
+
+func (rr *RRSIG) Clone() RR {
 	return &RRSIG{
 		rr.Hdr,
 		rr.TypeCovered,
@@ -276,10 +278,11 @@ func (rr *RRSIG) DeepCopy() RR {
 	}
 }
 
-func (rr *NXT) DeepCopy() RR {
-	return &NXT{*rr.NSEC.DeepCopy().(*NSEC)}
+func (rr *NXT) Clone() RR {
+	return &NXT{*rr.NSEC.Clone().(*NSEC)}
 }
-func (rr *NSEC) DeepCopy() RR {
+
+func (rr *NSEC) Clone() RR {
 	return &NSEC{
 		rr.Hdr,
 		rr.NextDomain,
@@ -287,13 +290,15 @@ func (rr *NSEC) DeepCopy() RR {
 	}
 }
 
-func (rr *DLV) DeepCopy() RR {
-	return &DLV{*rr.DS.DeepCopy().(*DS)}
+func (rr *DLV) Clone() RR {
+	return &DLV{*rr.DS.Clone().(*DS)}
 }
-func (rr *CDS) DeepCopy() RR {
-	return &CDS{*rr.DS.DeepCopy().(*DS)}
+
+func (rr *CDS) Clone() RR {
+	return &CDS{*rr.DS.Clone().(*DS)}
 }
-func (rr *DS) DeepCopy() RR {
+
+func (rr *DS) Clone() RR {
 	return &DS{
 		rr.Hdr,
 		rr.KeyTag,
@@ -303,7 +308,7 @@ func (rr *DS) DeepCopy() RR {
 	}
 }
 
-func (rr *KX) DeepCopy() RR {
+func (rr *KX) Clone() RR {
 	return &KX{
 		rr.Hdr,
 		rr.Preference,
@@ -311,7 +316,7 @@ func (rr *KX) DeepCopy() RR {
 	}
 }
 
-func (rr *TA) DeepCopy() RR {
+func (rr *TA) Clone() RR {
 	return &TA{
 		rr.Hdr,
 		rr.KeyTag,
@@ -321,7 +326,7 @@ func (rr *TA) DeepCopy() RR {
 	}
 }
 
-func (rr *TALINK) DeepCopy() RR {
+func (rr *TALINK) Clone() RR {
 	return &TALINK{
 		rr.Hdr,
 		rr.PreviousName,
@@ -329,7 +334,7 @@ func (rr *TALINK) DeepCopy() RR {
 	}
 }
 
-func (rr *SSHFP) DeepCopy() RR {
+func (rr *SSHFP) Clone() RR {
 	return &SSHFP{
 		rr.Hdr,
 		rr.Algorithm,
@@ -338,13 +343,15 @@ func (rr *SSHFP) DeepCopy() RR {
 	}
 }
 
-func (rr *KEY) DeepCopy() RR {
-	return &KEY{*rr.DNSKEY.DeepCopy().(*DNSKEY)}
+func (rr *KEY) Clone() RR {
+	return &KEY{*rr.DNSKEY.Clone().(*DNSKEY)}
 }
-func (rr *CDNSKEY) DeepCopy() RR {
-	return &CDNSKEY{*rr.DNSKEY.DeepCopy().(*DNSKEY)}
+
+func (rr *CDNSKEY) Clone() RR {
+	return &CDNSKEY{*rr.DNSKEY.Clone().(*DNSKEY)}
 }
-func (rr *DNSKEY) DeepCopy() RR {
+
+func (rr *DNSKEY) Clone() RR {
 	return &DNSKEY{
 		rr.Hdr,
 		rr.Flags,
@@ -354,7 +361,7 @@ func (rr *DNSKEY) DeepCopy() RR {
 	}
 }
 
-func (rr *RKEY) DeepCopy() RR {
+func (rr *RKEY) Clone() RR {
 	return &RKEY{
 		rr.Hdr,
 		rr.Flags,
@@ -364,14 +371,14 @@ func (rr *RKEY) DeepCopy() RR {
 	}
 }
 
-func (rr *NSAPPTR) DeepCopy() RR {
+func (rr *NSAPPTR) Clone() RR {
 	return &NSAPPTR{
 		rr.Hdr,
 		rr.Ptr,
 	}
 }
 
-func (rr *NSEC3) DeepCopy() RR {
+func (rr *NSEC3) Clone() RR {
 	return &NSEC3{
 		rr.Hdr,
 		rr.Hash,
@@ -385,7 +392,7 @@ func (rr *NSEC3) DeepCopy() RR {
 	}
 }
 
-func (rr *NSEC3PARAM) DeepCopy() RR {
+func (rr *NSEC3PARAM) Clone() RR {
 	return &NSEC3PARAM{
 		rr.Hdr,
 		rr.Hash,
@@ -396,7 +403,7 @@ func (rr *NSEC3PARAM) DeepCopy() RR {
 	}
 }
 
-func (rr *TKEY) DeepCopy() RR {
+func (rr *TKEY) Clone() RR {
 	return &TKEY{
 		rr.Hdr,
 		rr.Algorithm,
@@ -411,14 +418,14 @@ func (rr *TKEY) DeepCopy() RR {
 	}
 }
 
-func (rr *RFC3597) DeepCopy() RR {
+func (rr *RFC3597) Clone() RR {
 	return &RFC3597{
 		rr.Hdr,
 		rr.Rdata,
 	}
 }
 
-func (rr *URI) DeepCopy() RR {
+func (rr *URI) Clone() RR {
 	return &URI{
 		rr.Hdr,
 		rr.Priority,
@@ -427,14 +434,14 @@ func (rr *URI) DeepCopy() RR {
 	}
 }
 
-func (rr *DHCID) DeepCopy() RR {
+func (rr *DHCID) Clone() RR {
 	return &DHCID{
 		rr.Hdr,
 		rr.Digest,
 	}
 }
 
-func (rr *TLSA) DeepCopy() RR {
+func (rr *TLSA) Clone() RR {
 	return &TLSA{
 		rr.Hdr,
 		rr.Usage,
@@ -444,7 +451,7 @@ func (rr *TLSA) DeepCopy() RR {
 	}
 }
 
-func (rr *SMIMEA) DeepCopy() RR {
+func (rr *SMIMEA) Clone() RR {
 	return &SMIMEA{
 		rr.Hdr,
 		rr.Usage,
@@ -454,7 +461,7 @@ func (rr *SMIMEA) DeepCopy() RR {
 	}
 }
 
-func (rr *HIP) DeepCopy() RR {
+func (rr *HIP) Clone() RR {
 	return &HIP{
 		rr.Hdr,
 		rr.HitLength,
@@ -466,14 +473,14 @@ func (rr *HIP) DeepCopy() RR {
 	}
 }
 
-func (rr *NINFO) DeepCopy() RR {
+func (rr *NINFO) Clone() RR {
 	return &NINFO{
 		rr.Hdr,
 		slices.Clone(rr.ZSData),
 	}
 }
 
-func (rr *NID) DeepCopy() RR {
+func (rr *NID) Clone() RR {
 	return &NID{
 		rr.Hdr,
 		rr.Preference,
@@ -481,7 +488,7 @@ func (rr *NID) DeepCopy() RR {
 	}
 }
 
-func (rr *L32) DeepCopy() RR {
+func (rr *L32) Clone() RR {
 	return &L32{
 		rr.Hdr,
 		rr.Preference,
@@ -489,7 +496,7 @@ func (rr *L32) DeepCopy() RR {
 	}
 }
 
-func (rr *L64) DeepCopy() RR {
+func (rr *L64) Clone() RR {
 	return &L64{
 		rr.Hdr,
 		rr.Preference,
@@ -497,7 +504,7 @@ func (rr *L64) DeepCopy() RR {
 	}
 }
 
-func (rr *LP) DeepCopy() RR {
+func (rr *LP) Clone() RR {
 	return &LP{
 		rr.Hdr,
 		rr.Preference,
@@ -505,21 +512,21 @@ func (rr *LP) DeepCopy() RR {
 	}
 }
 
-func (rr *EUI48) DeepCopy() RR {
+func (rr *EUI48) Clone() RR {
 	return &EUI48{
 		rr.Hdr,
 		rr.Address,
 	}
 }
 
-func (rr *EUI64) DeepCopy() RR {
+func (rr *EUI64) Clone() RR {
 	return &EUI64{
 		rr.Hdr,
 		rr.Address,
 	}
 }
 
-func (rr *CAA) DeepCopy() RR {
+func (rr *CAA) Clone() RR {
 	return &CAA{
 		rr.Hdr,
 		rr.Flag,
@@ -528,49 +535,49 @@ func (rr *CAA) DeepCopy() RR {
 	}
 }
 
-func (rr *UID) DeepCopy() RR {
+func (rr *UID) Clone() RR {
 	return &UID{
 		rr.Hdr,
 		rr.Uid,
 	}
 }
 
-func (rr *GID) DeepCopy() RR {
+func (rr *GID) Clone() RR {
 	return &GID{
 		rr.Hdr,
 		rr.Gid,
 	}
 }
 
-func (rr *UINFO) DeepCopy() RR {
+func (rr *UINFO) Clone() RR {
 	return &UINFO{
 		rr.Hdr,
 		rr.Uinfo,
 	}
 }
 
-func (rr *EID) DeepCopy() RR {
+func (rr *EID) Clone() RR {
 	return &EID{
 		rr.Hdr,
 		rr.Endpoint,
 	}
 }
 
-func (rr *NIMLOC) DeepCopy() RR {
+func (rr *NIMLOC) Clone() RR {
 	return &NIMLOC{
 		rr.Hdr,
 		rr.Locator,
 	}
 }
 
-func (rr *OPENPGPKEY) DeepCopy() RR {
+func (rr *OPENPGPKEY) Clone() RR {
 	return &OPENPGPKEY{
 		rr.Hdr,
 		rr.PublicKey,
 	}
 }
 
-func (rr *CSYNC) DeepCopy() RR {
+func (rr *CSYNC) Clone() RR {
 	return &CSYNC{
 		rr.Hdr,
 		rr.Serial,
@@ -579,7 +586,7 @@ func (rr *CSYNC) DeepCopy() RR {
 	}
 }
 
-func (rr *ZONEMD) DeepCopy() RR {
+func (rr *ZONEMD) Clone() RR {
 	return &ZONEMD{
 		rr.Hdr,
 		rr.Serial,
@@ -589,21 +596,21 @@ func (rr *ZONEMD) DeepCopy() RR {
 	}
 }
 
-func (rr *OPT) DeepCopy() RR {
+func (rr *OPT) Clone() RR {
 	return &OPT{
 		rr.Hdr,
 		slices.Clone(rr.Options),
 	}
 }
 
-func (rr *RESINFO) DeepCopy() RR {
+func (rr *RESINFO) Clone() RR {
 	return &RESINFO{
 		rr.Hdr,
 		slices.Clone(rr.Txt),
 	}
 }
 
-func (rr *SVCB) DeepCopy() RR {
+func (rr *SVCB) Clone() RR {
 	return &SVCB{
 		rr.Hdr,
 		rr.Priority,
@@ -611,33 +618,35 @@ func (rr *SVCB) DeepCopy() RR {
 		func() []svcb.Pair {
 			pairs := make([]svcb.Pair, len(rr.Value))
 			for i, p := range rr.Value {
-				pairs[i] = p.DeepCopy()
+				pairs[i] = p.Clone()
 			}
 			return pairs
 		}(),
 	}
 }
 
-func (rr *HTTPS) DeepCopy() RR {
-	return &HTTPS{*rr.SVCB.DeepCopy().(*SVCB)}
+func (rr *HTTPS) Clone() RR {
+	return &HTTPS{*rr.SVCB.Clone().(*SVCB)}
 }
-func (rr *DELEG) DeepCopy() RR {
+
+func (rr *DELEG) Clone() RR {
 	return &DELEG{
 		rr.Hdr,
 		func() []deleg.Info {
 			infos := make([]deleg.Info, len(rr.Value))
 			for i, p := range rr.Value {
-				infos[i] = p.DeepCopy()
+				infos[i] = p.Clone()
 			}
 			return infos
 		}(),
 	}
 }
 
-func (rr *DELEGI) DeepCopy() RR {
-	return &DELEGI{*rr.DELEG.DeepCopy().(*DELEG)}
+func (rr *DELEGI) Clone() RR {
+	return &DELEGI{*rr.DELEG.Clone().(*DELEG)}
 }
-func (rr *DSYNC) DeepCopy() RR {
+
+func (rr *DSYNC) Clone() RR {
 	return &DSYNC{
 		rr.Hdr,
 		rr.Type,
@@ -647,25 +656,25 @@ func (rr *DSYNC) DeepCopy() RR {
 	}
 }
 
-func (rr *ANY) DeepCopy() RR {
+func (rr *ANY) Clone() RR {
 	return &ANY{
 		rr.Hdr,
 	}
 }
 
-func (rr *AXFR) DeepCopy() RR {
+func (rr *AXFR) Clone() RR {
 	return &AXFR{
 		rr.Hdr,
 	}
 }
 
-func (rr *IXFR) DeepCopy() RR {
+func (rr *IXFR) Clone() RR {
 	return &IXFR{
 		rr.Hdr,
 	}
 }
 
-func (rr *TSIG) DeepCopy() RR {
+func (rr *TSIG) Clone() RR {
 	return &TSIG{
 		rr.Hdr,
 		rr.Algorithm,
@@ -680,7 +689,7 @@ func (rr *TSIG) DeepCopy() RR {
 	}
 }
 
-func (rr *LLQ) DeepCopy() RR {
+func (rr *LLQ) Clone() RR {
 	return &LLQ{
 		rr.Version,
 		rr.Opcode,
@@ -690,69 +699,69 @@ func (rr *LLQ) DeepCopy() RR {
 	}
 }
 
-func (rr *REPORTING) DeepCopy() RR {
+func (rr *REPORTING) Clone() RR {
 	return &REPORTING{
 		rr.AgentDomain,
 	}
 }
 
-func (rr *COOKIE) DeepCopy() RR {
+func (rr *COOKIE) Clone() RR {
 	return &COOKIE{
 		rr.Cookie,
 	}
 }
 
-func (rr *NSID) DeepCopy() RR {
+func (rr *NSID) Clone() RR {
 	return &NSID{
 		rr.Nsid,
 	}
 }
 
-func (rr *PADDING) DeepCopy() RR {
+func (rr *PADDING) Clone() RR {
 	return &PADDING{
 		rr.Padding,
 	}
 }
 
-func (rr *EXPIRE) DeepCopy() RR {
+func (rr *EXPIRE) Clone() RR {
 	return &EXPIRE{
 		rr.Expire,
 	}
 }
 
-func (rr *DAU) DeepCopy() RR {
+func (rr *DAU) Clone() RR {
 	return &DAU{
 		slices.Clone(rr.AlgCode),
 	}
 }
 
-func (rr *DHU) DeepCopy() RR {
+func (rr *DHU) Clone() RR {
 	return &DHU{
 		slices.Clone(rr.AlgCode),
 	}
 }
 
-func (rr *N3U) DeepCopy() RR {
+func (rr *N3U) Clone() RR {
 	return &N3U{
 		slices.Clone(rr.AlgCode),
 	}
 }
 
-func (rr *TCPKEEPALIVE) DeepCopy() RR {
+func (rr *TCPKEEPALIVE) Clone() RR {
 	return &TCPKEEPALIVE{
 		rr.Timeout,
 		rr.Length,
 	}
 }
 
-func (rr *EDE) DeepCopy() RR {
+func (rr *EDE) Clone() RR {
 	return &EDE{
 		rr.InfoCode,
 		rr.ExtraText,
 	}
 }
 
-func (rr *SUBNET) DeepCopy() RR {
+func (rr *SUBNET) Clone() RR {
 	return &SUBNET{
 		rr.Family,
 		rr.SourceNetmask,
@@ -761,13 +770,13 @@ func (rr *SUBNET) DeepCopy() RR {
 	}
 }
 
-func (rr *ESU) DeepCopy() RR {
+func (rr *ESU) Clone() RR {
 	return &ESU{
 		rr.URI,
 	}
 }
 
-func (rr *ZONEVERSION) DeepCopy() RR {
+func (rr *ZONEVERSION) Clone() RR {
 	return &ZONEVERSION{
 		rr.Labels,
 		rr.Type,
@@ -775,7 +784,7 @@ func (rr *ZONEVERSION) DeepCopy() RR {
 	}
 }
 
-func (rr *KEEPALIVE) DeepCopy() RR {
+func (rr *KEEPALIVE) Clone() RR {
 	return &KEEPALIVE{
 		rr.InactivityTimeout,
 		rr.KeepAliveInterval,
