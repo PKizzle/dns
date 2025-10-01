@@ -85,10 +85,58 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
+		case "http":
+			for d.NextBlock(0) {
+				switch d.Val() {
+				case "addr":
+					addrs, err := d.RemainingAddrs()
+					if err != nil {
+						return d.PropErr(err)
+					}
+					if len(addrs) != 1 {
+						return d.PropErr(fmt.Errorf("need single address"))
+					}
+					g.HttpAddr = addrs[0]
+				case "limits":
+					for d.NextBlock(1) {
+						switch d.Val() {
+						case "run":
+							exprs := d.RemainingArgs()
+							if len(exprs) != 1 {
+								return d.PropErr(fmt.Errorf("need single expression"))
+							}
+							if strings.HasPrefix(strings.ToLower(exprs[0]), "numcpu()*") {
+								n, err := strconv.Atoi(exprs[0][len("numcpu()*"):])
+								if err != nil || n < 0 {
+									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
+								}
+								g.Servers = runtime.NumCPU() * 3
+							} else {
+								n, err := strconv.Atoi(exprs[0])
+								if err != nil || n < 0 {
+									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
+								}
+								g.HttpServers = n
+							}
+						default:
+							return d.ArgErr()
+						}
+					}
+
+				default:
+					return d.ArgErr()
+				}
+			}
 			g.OnStartup(func() error {
 				log.Info("Startup", "server", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
 				return nil
 			})
+			if g.HttpAddr != "" {
+				g.OnStartup(func() error {
+					log.Info("Startup", "http", g.HttpAddr, g.HttpServers)
+					return nil
+				})
+			}
 		case "debug":
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "metrics":

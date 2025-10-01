@@ -2,11 +2,11 @@ package atomhttp
 
 import (
 	"context"
-	"net"
 	"net/http"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
 	"codeberg.org/miekg/dns/dnshttp"
 )
 
@@ -15,8 +15,8 @@ type Server struct {
 	mux    *dns.ServeMux
 }
 
-func Serve(ch chan error, srv *Server) {
-	l, err := net.Listen("tcp", ":8080")
+func Serve(ch chan error, s *Server) {
+	l, err := reuse.ListenTCP("tcp", s.server.Addr, true, true)
 	if err != nil {
 		ch <- err
 		return
@@ -36,11 +36,11 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func New(mux *dns.ServeMux, global *global.Global) *Server {
+func New(addr string, mux *dns.ServeMux, global *global.Global) *Server {
 	s := new(Server)
 	s.mux = mux
 	s.server = new(http.Server)
-	s.server.Addr = "[::]:8053" // reuse port 'n shit
+	s.server.Addr = addr
 	return s
 }
 

@@ -116,8 +116,11 @@ func New(conf string, r io.Reader) (*Server, error) {
 		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
 
-	s.httpservers = []*atomhttp.Server{atomhttp.New(s.mux, global)}
+	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
 	s.httpstarted = make(chan error, len(s.httpservers))
+	for j := range s.httpservers {
+		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux, global)
+	}
 	return s, nil
 }
 

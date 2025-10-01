@@ -27,6 +27,12 @@ global section, see the configuration example below.
             run EXPR
         }
     }
+    http {
+        addr ADDRESS
+        limits {
+            run EXPR
+        }
+    }
 }
 ```
 
@@ -46,7 +52,7 @@ global section, see the configuration example below.
   to get its health so it can export the latency metrics.
 - With `pprof` you can publish runtime profiling data at the endpoint on
   **ADDRESS** under `/debug/pprof`. The default is localhost:6053.
-- With `server` you set server option, defined are:
+- With `server` you set DNS server options, defined are:
   - `quiet`: show banner during startup, and less messages.
   - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
   - `limits` set further limits:
@@ -56,6 +62,12 @@ global section, see the configuration example below.
       lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
       back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
       start 10 server instances.
+- With `http` you set DOH (http) server options, defined are:
+  - `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
+  - `limits` set further limits:
+    - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
+      like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
+      lowercase.
 
 ## Examples
 
