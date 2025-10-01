@@ -2,6 +2,7 @@ package atomhttp
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"codeberg.org/miekg/dns"
@@ -11,8 +12,9 @@ import (
 )
 
 type Server struct {
-	server *http.Server
-	mux    *dns.ServeMux
+	server   *http.Server
+	mux      *dns.ServeMux
+	listener net.Listener
 }
 
 func Serve(ch chan error, s *Server) {
@@ -36,17 +38,17 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func New(addr string, mux *dns.ServeMux, global *global.Global) *Server {
+func New(addr string, httpmux *http.ServeMux, mux *dns.ServeMux, global *global.Global) *Server {
 	s := new(Server)
 	s.mux = mux
-	s.server = &http.Server{Addr: addr, Handler: s}
+	s.server = &http.Server{Addr: addr, Handler: httpmux}
 	return s
 }
 
-// ServeHTTP is the handler that gets the HTTP request and converts to the dns format, calls the hanlders
+// ServeHTTP is the handler that gets the HTTP request and converts to the dns format, calls the handlers
 // converts it back and write it to the client.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	println("hallo")
+	println("hallo", r.URL.Path)
 	m, err := dnshttp.Request(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

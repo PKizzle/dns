@@ -1,0 +1,26 @@
+{
+    debug
+    server {
+        addr [::]:1053
+        limits {
+            tcp -1
+            run numcpu()*3
+        }
+    }
+    http {
+        addr [::]:10053
+        limits {
+            run numcpu()*1
+        }
+    }
+}
+
+atoom.net {
+    log
+    dbfile atoom.net
+}
+
+#example {
+#   msgcache
+#   dbsqlite db
+#}
