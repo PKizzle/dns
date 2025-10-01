@@ -96,3 +96,18 @@ func msg(r io.ReadCloser) (*dns.Msg, error) {
 	err = m.Unpack()
 	return m, err
 }
+
+// MsgAcceptFunc checks if m has a message ID of zero. It also implements the check mandated by DOQ, that
+// the Pseudo section cannot contain an TCP-KEEPALIVE option.
+// See RFC 9250 and RFC 8484.
+func MsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
+	if m.ID != 0 {
+		return dns.MsgReject
+	}
+	for _, o := range m.Pseudo {
+		if _, ok := o.(*dns.TCPKEEPALIVE); ok {
+			return dns.MsgReject
+		}
+	}
+	return dns.MsgAccept
+}

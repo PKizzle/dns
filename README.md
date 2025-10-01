@@ -159,11 +159,13 @@ _all of them_
 - 7873 - Domain Name System (DNS) Cookies
 - 8080 - EdDSA for DNSSEC
 - 8482 - Minimal Answers for ANY
+- 8484 - DOH
 - 8499 - DNS Terminology
 - 8659 - DNS Certification Authority Authorization (CAA) Resource Record
 - 8777 - DNS Reverse IP Automatic Multicast Tunneling (AMT) Discovery
 - 8914 - Extended DNS Errors
 - 8976 - Message Digest for DNS Zones (ZONEMD RR)
+- 9250 - DOQ (not implemented, waiting until Go supports QUIC)
 - 9461 - Service Binding Mapping for DNS Servers
 - 9462 - Discovery of Designated Resolvers
 - 9460 - SVCB and HTTPS Records
