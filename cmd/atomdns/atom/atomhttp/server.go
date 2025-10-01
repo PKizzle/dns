@@ -43,5 +43,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func New(mux *dns.ServeMux, global *global.Global) (*Server, error) {
 	s := new(Server)
 	s.started = make(chan error, 1)
+	s.server = new(http.Server)
+	s.server.Addr = "[::]:8053"
 	return s, nil
 }
