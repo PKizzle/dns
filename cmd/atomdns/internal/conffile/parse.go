@@ -21,16 +21,14 @@ import (
 	"strings"
 )
 
-// Parse parses the input just enough to group tokens, in
-// order, by server block. No further parsing is performed.
+// Parse parses the input just enough to group tokens, in order, by server block. No further parsing is performed.
 // Server blocks are returned in the order in which they appear.
 func Parse(filename string, input io.Reader) ([]ServerBlock, error) {
 	p := parser{Dispenser: newDispenser(filename, input)}
 	return p.parseAll()
 }
 
-// AllTokens lexes the entire input, but does not parse it.
-// It returns all the tokens from the input, unstructured
+// AllTokens lexes the entire input, but does not parse it. It returns all the tokens from the input, unstructured
 // and in order.
 func allTokens(input io.Reader) ([]Token, error) {
 	l := new(lexer)

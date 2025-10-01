@@ -4,7 +4,7 @@ _atomdns_ - DNS nameserver that runs handlers
 
 ## Synopsis
 
-_atomdns_ **[-c FILE]** **[-p PORT]** **[OPTION]**...
+_atomdns_ **[-c CONFFILE]** **[-handler|-v|-version]**...
 
 ## Description
 
@@ -13,7 +13,7 @@ transfering those to secondaries or just exporting metrics. There are many handl
 respective manual pages.
 
 The _global_ handler describes the options that are also used in starting the server, see atomdns-global(7)
-for more information. Normally you would need something like this, to listen on all interfaces on port 53:
+for more information. Normally you need a **CONFFILE** (atomdns-conffile(5)) like this, to listen on all interfaces on port 53:
 
 ```conffile
 {
@@ -26,8 +26,22 @@ for more information. Normally you would need something like this, to listen on 
 
 Available options:
 
-**-c**, **-conf** **FILE**
-: specify Corefile to load, if not given atomdns will look for a `Conffile` in the current directory.
+**-c**, **-conf** **CONFFILE**
+: specify configuration file to load, if not given atomdns will look for a `Conffile` in the current directory, if that
+is also not found, it will use a built-in (test) Conffile:
+
+```confffile
+{
+  server {
+      addr [::]1053
+  }
+}
+
+example.org {
+  log
+  whoami
+}
+```
 
 **-handler**
 : list all handlers and quit.

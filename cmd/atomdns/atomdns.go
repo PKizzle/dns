@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -25,6 +26,8 @@ func main() {
 		flagHandler bool
 		flagVersion bool
 		flagConf    string
+		confdata    []byte
+		err         error
 	)
 	flag.BoolVar(&flagHandler, "handler", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
@@ -47,15 +50,20 @@ func main() {
 		return
 	}
 
-	confdata, err := os.ReadFile(flagConf)
+	confdata, err = os.ReadFile(flagConf)
 	if err != nil {
-		slog.Error("Failed to parse configuration", slog.String("path", flagConf), slog.Any("error", err))
-		os.Exit(1)
+		if errors.Is(err, os.ErrNotExist) {
+			confdata = []byte(builtin)
+			flagConf = "<builtin>"
+		} else {
+			slog.Error("Failed to parse configuration", slog.String("path", flagConf), slog.Any("error", err))
+			os.Exit(1)
+		}
 	}
+
 	s, err := atom.New(flagConf, bytes.NewReader(confdata))
 	if err != nil {
 		slog.Error("Failed to create server", slog.Any("error", err))
-		slog.Error(err.Error())
 		os.Exit(1)
 	}
 
@@ -84,3 +92,16 @@ func banner() string {
 __________________________________\o/_______`
 	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping the formatting in the const
 }
+
+const builtin = `
+{
+	server {
+		addr [::]:1053
+	}
+}
+
+example.org {
+	log
+	whoami
+}
+`
