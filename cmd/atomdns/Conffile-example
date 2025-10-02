@@ -1,13 +1,13 @@
 {
     debug
-    server {
+    dns {
         addr [::]:1053
         limits {
             tcp -1
             run numcpu()*3
         }
     }
-    http {
+    doh {
         addr [::]:10053
         limits {
             run numcpu()*1
