@@ -99,7 +99,8 @@ If **ISSUER** is `manual`:
 
 If **ISSUER** is `lets-encrypt`:
 
-- `
+- `source`, a list of **IP**s or **IFACE** names for which the IP addresss should be retrieved, and for which
+  the TLS certificates should be requested.
 - `contact`, where **EMAIL** is the contact email use when retrieving certificates.
 - `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
   relative path name.
@@ -112,6 +113,11 @@ This runs both a DNS and DOH server, the DOH server listens on port 8053.
 {
     root /var/lib/atomdns
     metrics localhost:9153
+    tls lets-encrypt {
+        contact hello@example.org
+        source eth0
+        path certs
+    }
     dns {
         limits {
             tcp -1
