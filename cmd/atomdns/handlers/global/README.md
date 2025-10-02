@@ -87,7 +87,8 @@ Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will 
 ### `tls`
 
 With `tls` you configure the TLS certificate setup. **PROVIDER** can be `manual`, or `lets-encrypt`. The later
-will set up the certicates automatically.
+will set up the certicates automatically. If you use relative path in this configuration be sure that `root`
+is set _above_ this config, so that its value is set.
 
 Depending on **PROVIDER**, you have the following further configuration:
 

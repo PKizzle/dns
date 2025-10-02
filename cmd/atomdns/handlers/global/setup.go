@@ -32,11 +32,18 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.Root = filepath.Join(pwd, g.Root)
 			}
 		case "tls":
-			// provider get here , then the rest
+			args := d.RemainingArgs()
+			if len(args) != 1 {
+				return d.ArgErr()
+			}
+			if args[0] != "manual" && args[0] != "lets-encrypt" {
+				return d.PropErr(fmt.Errorf("expected %q or %q, got: %s", "manual", "lets-encrypt", args[0]))
+			}
 			if err := g.SetupTLS(d); err != nil {
 				return err
 			}
-		case "server":
+			g.TlsProvider = args[0]
+		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "quiet":
@@ -133,12 +140,18 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				}
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "server", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
+				log.Info("Startup", "dns", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
 				return nil
 			})
 			if g.HttpAddr != "" {
 				g.OnStartup(func() error {
-					log.Info("Startup", "http", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
+					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
+					return nil
+				})
+			}
+			if g.TlsConfig != nil {
+				g.OnStartup(func() error {
+					log.Info("Startup", "tls", g.TlsProvider)
 					return nil
 				})
 			}

@@ -2,10 +2,12 @@ package atomhttp
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
 	"codeberg.org/miekg/dns/dnshttp"
 )
@@ -28,21 +30,20 @@ type Server struct {
 	Listener net.Listener
 }
 
-func Serve(ch chan error, s *Server) {
+func Serve(ch chan error, s *Server, global *global.Global) {
 	l, err := reuse.ListenTCP("tcp", s.server.Addr, true, true)
 	if err != nil {
 		ch <- err
 		return
 	}
-
+	lt := tls.NewListener(l, global.TlsConfig)
 	go func() {
-		// TLS
-		if err := s.server.Serve(l); err != nil {
+		if err := s.server.Serve(lt); err != nil {
 			ch <- err
 			return
 		}
 	}()
-	s.Listener = l
+	s.Listener = lt
 	ch <- nil
 }
 

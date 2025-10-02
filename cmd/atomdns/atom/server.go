@@ -46,7 +46,7 @@ func (s *Server) Start() error {
 		}
 	}
 	for i := range s.httpservers {
-		go atomhttp.Serve(s.httpstarted, s.httpservers[i])
+		go atomhttp.Serve(s.httpstarted, s.httpservers[i], s.global)
 	}
 	for range s.httpservers {
 		if err, _ := <-s.httpstarted; err != nil {
@@ -54,22 +54,24 @@ func (s *Server) Start() error {
 		}
 	}
 
-	// TODO(miek): more generic than here?
 	roles := []string{"DNS"}
-	if s.global.HttpAddr != "" {
-		roles = append(roles, "DOH")
+	if s.global.TlsConfig != nil {
+		// roles = append(roles, "DOT")
+		if s.global.HttpAddr != "" {
+			roles = append(roles, "DOH")
+		}
 	}
 
-	slog.Info("Launched", "config", filepath.Base(s.global.Configuration), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
+	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }
 
 func Serve(ch chan error, srv *dns.Server, global *global.Global) {
+	// TLS, DOT and port to listen on, 3rd ttype of server, think about it
 	if err := global.Startup(); err != nil {
 		ch <- err
 		return
 	}
-
 	if err := srv.ListenAndServe(); err != nil {
 		ch <- err
 		return
@@ -137,7 +139,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
-		Configuration: conf,
+		Config:        conf,
 		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
 		Addr:          "[::]:53", // default
 		MaxTCPQueries: 128,

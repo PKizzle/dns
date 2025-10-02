@@ -14,8 +14,7 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 	for d.NextBlock(0) {
 		switch d.Val() {
 		case "cert":
-			// we don't have co.RemainingPaths there.
-			args := d.RemainingArgs()
+			args := d.RemainingArgs() // we don't have co.RemainingPaths there
 			if len(args) < 2 || len(args) > 3 {
 				return d.ArgErr()
 			}
@@ -37,14 +36,14 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 					return fmt.Errorf("could not load CA: %s", err)
 				}
 			}
-			g.tlsConfig = &tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: roots}
+			g.TlsConfig = &tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: roots}
 
 		case "contact":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
 				return d.ArgErr()
 			}
-			g.tlsContact = args[0]
+			g.TlsContact = args[0]
 
 		case "path":
 			args := d.RemainingArgs()
@@ -54,7 +53,7 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 			if !filepath.IsAbs(args[0]) {
 				args[0] = filepath.Join(g.Root, args[0])
 			}
-			g.tlsPath = args[0]
+			g.TlsPath = args[0]
 		default:
 			return d.ArgErr()
 		}
