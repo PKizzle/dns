@@ -102,8 +102,9 @@ Or use a single zone file for multiple origins:
 example.org example.net {
     dbfile example.org.signed {
         transfer {
-            to 10.240.1.1
-            source eth0
+            to 10.240.1.1 {
+                source eth0
+            }
         }
     }
 }
