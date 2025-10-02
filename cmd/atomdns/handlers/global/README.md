@@ -82,7 +82,10 @@ With `doh` you set http server options, defined are.
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
     lowercase.
 
-Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future.
+To allow the certificate challenge, all DOH web servers will also handle the TLS-ALPN-1 challenge,
+disregarding the port the run on.
+
+Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future. The
 
 ### `tls`
 
@@ -104,6 +107,9 @@ If **ISSUER** is `lets-encrypt`:
 - `contact`, where **EMAIL** is the contact email use when retrieving certificates.
 - `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
   relative path name.
+
+To complete the challenge a web server needs to be running on port 443, if DOH is enabled (see `doh`), and is
+not already running on 443 another server will be started on that port just for the challenge.
 
 ## Examples
 
