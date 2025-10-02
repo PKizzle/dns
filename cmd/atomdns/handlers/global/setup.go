@@ -133,7 +133,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 			if g.HttpAddr != "" {
 				g.OnStartup(func() error {
-					log.Info("Startup", "http", g.HttpAddr, "run", g.HttpServers)
+					log.Info("Startup", "http", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
 					return nil
 				})
 			}

@@ -6,15 +6,13 @@ import (
 	"net/http"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
 	"codeberg.org/miekg/dns/dnshttp"
 )
 
 type Server struct {
 	server   *http.Server
-	mux      *dns.ServeMux
-	listener net.Listener
+	Listener net.Listener
 }
 
 func Serve(ch chan error, s *Server) {
@@ -25,11 +23,13 @@ func Serve(ch chan error, s *Server) {
 	}
 
 	go func() {
-		if err := http.Serve(l, nil); err != nil {
+		// TLS
+		if err := s.server.Serve(l); err != nil {
 			ch <- err
 			return
 		}
 	}()
+	s.Listener = l
 	ch <- nil
 }
 
@@ -38,16 +38,26 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func New(addr string, httpmux *http.ServeMux, mux *dns.ServeMux, global *global.Global) *Server {
+func New(addr string, mux *http.ServeMux) *Server {
 	s := new(Server)
-	s.mux = mux
-	s.server = &http.Server{Addr: addr, Handler: httpmux}
+	s.server = &http.Server{Addr: addr, Handler: mux}
 	return s
 }
 
-// ServeHTTP is the handler that gets the HTTP request and converts to the dns format, calls the handlers
-// converts it back and write it to the client.
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// Handler is the HTTP handler that gets the request and converts to the DNS format, calls the handlers,
+// converts it back and writes it to the client.
+type Handler struct {
+	mux *dns.ServeMux
+}
+
+func NewMux(mux *dns.ServeMux) *http.ServeMux {
+	hmux := http.NewServeMux()
+	handler := &Handler{mux: mux}
+	hmux.Handle("/dns-query", handler)
+	return hmux
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	println("hallo", r.URL.Path)
 	m, err := dnshttp.Request(r)
 	if err != nil {
@@ -58,7 +68,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	hw := ResponseWriter{}
 
-	s.mux.ServeDNS(context.Background(), hw, m)
+	h.mux.ServeDNS(context.Background(), hw, m)
 }
 
 type ResponseWriter struct {
