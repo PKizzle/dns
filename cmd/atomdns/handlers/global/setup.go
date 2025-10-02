@@ -31,7 +31,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
 			}
-		case "server":
+		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "quiet":
@@ -85,7 +85,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-		case "http":
+		case "doh":
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
