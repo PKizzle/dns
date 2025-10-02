@@ -33,7 +33,7 @@ global section, see the configuration example below.
             run EXPR
         }
     }
-    tls PROVIDER {
+    tls ISSUER {
         cert CERT KEY [CA]
         contact EMAIL
         path PATH
@@ -86,18 +86,18 @@ Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will 
 
 ### `tls`
 
-With `tls` you configure the TLS certificate setup. **PROVIDER** can be `manual`, or `lets-encrypt`. The later
+With `tls` you configure the TLS certificate setup. **ISSUER** can be `manual`, or `lets-encrypt`. The later
 will set up the certicates automatically. If you use relative path in this configuration be sure that `root`
 is set _above_ this config, so that its value is set.
 
-Depending on **PROVIDER**, you have the following further configuration:
+Depending on **ISSUER**, you have the following further configuration:
 
-If **PROVIDER** is `manual`:
+If **ISSUER** is `manual`:
 
 - `cert`, that lists in that order **CERT** the `cert.pem` (as an example name) file, **KEY** the private key,
   `key.pem` and optionally the `ca.pem` file.
 
-If **PROVIDER** is `lets-encrypt`:
+If **ISSUER** is `lets-encrypt`:
 
 - `contact`, where **EMAIL** is the contact email use when retrieving certificates.
 - `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
