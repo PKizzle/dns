@@ -31,7 +31,7 @@ However, for one thing, the query ID will not be correct, so that line should be
 ;; QUERY, rcode: NOERROR, id: {{.ID}}, flags: qr rd ra
 ```
 
-When nothing is matched _template_ will call the next handler. See below for more details.
+When nothing is matched _template_ will call the next handler, see below for more details.
 
 ## Syntax
 

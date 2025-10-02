@@ -3,6 +3,7 @@ package atomhttp
 import (
 	"context"
 	"crypto/tls"
+	"log/slog"
 	"net"
 	"net/http"
 
@@ -18,6 +19,7 @@ import (
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m, err := dnshttp.Request(r)
 	if err != nil {
+		slog.Debug("Failed to convert http request", "server", "doh", slog.Any("error", err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -55,6 +57,8 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func New(addr string, mux *dns.ServeMux) *Server {
 	s := new(Server)
 	h := newHandler(mux)
+	// TODO(miek): new logger for every instance?
+	// TODO(miek): ErrorLog prints differently. FIX.
 	s.server = &http.Server{Addr: addr, Handler: h}
 	return s
 }

@@ -28,10 +28,9 @@ type Global struct {
 	HttpAddr    string
 	HttpServers int
 	// tls
-	TlsConfig   *tls.Config
-	TlsContact  string
-	TlsPath     string
-	TlsProvider string
+	TlsConfig  *tls.Config
+	TlsContact string
+	TlsPath    string
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once

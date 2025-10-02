@@ -36,7 +36,11 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 					return fmt.Errorf("could not load CA: %s", err)
 				}
 			}
-			g.TlsConfig = &tls.Config{Certificates: []tls.Certificate{cert}, RootCAs: roots}
+			g.TlsConfig = &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      roots,
+				NextProtos:   []string{"h2", "http/1.1"},
+			}
 
 		case "contact":
 			args := d.RemainingArgs()

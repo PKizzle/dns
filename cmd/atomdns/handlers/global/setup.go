@@ -42,7 +42,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			if err := g.SetupTLS(d); err != nil {
 				return err
 			}
-			g.TlsProvider = args[0]
+			g.OnStartup(func() error {
+				log.Info("Startup", "tls", args[0])
+				return nil
+			})
 		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
@@ -97,6 +100,11 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "dns", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
+				return nil
+			})
+
 		case "doh":
 			for d.NextBlock(0) {
 				switch d.Val() {
@@ -139,19 +147,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			g.OnStartup(func() error {
-				log.Info("Startup", "dns", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
-				return nil
-			})
 			if g.HttpAddr != "" {
 				g.OnStartup(func() error {
 					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
-					return nil
-				})
-			}
-			if g.TlsConfig != nil {
-				g.OnStartup(func() error {
-					log.Info("Startup", "tls", g.TlsProvider)
 					return nil
 				})
 			}
@@ -214,6 +212,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					w.WriteHeader(http.StatusOK)
 					io.WriteString(w, http.StatusText(http.StatusOK))
 				})
+
 				server := &http.Server{Handler: mux}
 				go func() { server.Serve(ln) }()
 				g.HealthListener = ln
