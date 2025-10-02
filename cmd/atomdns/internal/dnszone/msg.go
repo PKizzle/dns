@@ -24,22 +24,22 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart
 		qtype := dns.RRToType(r.Question[0])
 		for _, rr := range sosynthesis.RRs {
 			if dns.RRToType(rr) == qtype {
-				rr1 := rr.DeepCopy()
+				rr1 := rr.Clone()
 				rr1.Header().Name = r.Question[0].Header().Name // replace owner names with the qname
 				r.Answer = append(r.Answer, rr1)
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.DeepCopy()) // SoS' NSEC
+					r.Ns = append(r.Ns, rr.Clone()) // SoS' NSEC
 				}
 				if s, ok := rr.(*dns.RRSIG); ok {
 					if s.TypeCovered == qtype {
-						rr1 := rr.DeepCopy()
+						rr1 := rr.Clone()
 						rr1.Header().Name = r.Question[0].Header().Name
 						r.Answer = append(r.Answer, rr1)
 					}
 					if s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.DeepCopy())
+						r.Ns = append(r.Ns, rr.Clone())
 					}
 				}
 
@@ -51,12 +51,12 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart
 		// NODATA, as the type isn't there, only need SOA + RRSIG.
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
-				r.Ns = append(r.Ns, rr.DeepCopy())
+				r.Ns = append(r.Ns, rr.Clone())
 				continue
 			}
 			if r.Security {
 				if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
-					r.Ns = append(r.Ns, rr.DeepCopy())
+					r.Ns = append(r.Ns, rr.Clone())
 				}
 			}
 		}
@@ -67,15 +67,15 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart
 	if len(sosynthesis.RRs) == 0 {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
-				r.Ns = append(r.Ns, rr.DeepCopy())
+				r.Ns = append(r.Ns, rr.Clone())
 				continue
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.DeepCopy())
+					r.Ns = append(r.Ns, rr.Clone())
 				}
 				if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-					r.Ns = append(r.Ns, rr.DeepCopy())
+					r.Ns = append(r.Ns, rr.Clone())
 				}
 			}
 		}
@@ -84,11 +84,11 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart
 			if !dns.EqualName(prev.Name, z.Origin()) { // we already have the SOA records, don't repeat.
 				for _, rr := range prev.RRs {
 					if _, ok := rr.(*dns.NSEC); ok {
-						r.Ns = append(r.Ns, rr.DeepCopy())
+						r.Ns = append(r.Ns, rr.Clone())
 						continue
 					}
 					if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.DeepCopy())
+						r.Ns = append(r.Ns, rr.Clone())
 					}
 				}
 			}
@@ -111,15 +111,15 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 	if hint != hintDelegation && encloser.Name != r.Question[0].Header().Name {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
-				r.Ns = append(r.Ns, rr.DeepCopy())
+				r.Ns = append(r.Ns, rr.Clone())
 				continue
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.DeepCopy())
+					r.Ns = append(r.Ns, rr.Clone())
 				}
 				if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-					r.Ns = append(r.Ns, rr.DeepCopy())
+					r.Ns = append(r.Ns, rr.Clone())
 				}
 			}
 		}
@@ -128,11 +128,11 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 			if !dns.EqualName(prev.Name, z.Origin()) {
 				for _, rr := range prev.RRs {
 					if _, ok := rr.(*dns.NSEC); ok {
-						r.Ns = append(r.Ns, rr.DeepCopy())
+						r.Ns = append(r.Ns, rr.Clone())
 						continue
 					}
 					if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.DeepCopy())
+						r.Ns = append(r.Ns, rr.Clone())
 					}
 				}
 			}
@@ -151,13 +151,13 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 		// first answer in the change must have the original qname
 		r.Question[0].Header().Name = re.Answer[0].Header().Name
 		for _, rr := range re.Answer {
-			r.Answer = append(r.Answer, rr.DeepCopy())
+			r.Answer = append(r.Answer, rr.Clone())
 		}
 	}
 
 	for _, rr := range encloser.RRs {
 		if dns.RRToType(rr) == qtype {
-			*section = append(*section, rr.DeepCopy())
+			*section = append(*section, rr.Clone())
 		}
 		if hint == hintDelegation {
 			if n, ok := rr.(*dns.NS); ok {
@@ -166,11 +166,11 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 					if glue, ok := z.Get(n.Ns); ok {
 						for _, rr := range glue.RRs {
 							if _, ok := rr.(*dns.A); ok {
-								r.Extra = append(r.Extra, rr.DeepCopy())
+								r.Extra = append(r.Extra, rr.Clone())
 								continue
 							}
 							if _, ok := rr.(*dns.AAAA); ok {
-								r.Extra = append(r.Extra, rr.DeepCopy())
+								r.Extra = append(r.Extra, rr.Clone())
 							}
 						}
 					}
@@ -178,7 +178,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 			}
 			// cehck the target of NS a get the A/AAAA for it
 			if _, ok := rr.(*dns.DS); ok && r.Security {
-				*section = append(*section, rr.DeepCopy())
+				*section = append(*section, rr.Clone())
 			}
 		}
 	}
@@ -186,11 +186,11 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 		for _, rr := range encloser.RRs {
 			if s, ok := rr.(*dns.RRSIG); ok {
 				if s.TypeCovered == qtype {
-					*section = append(*section, rr.DeepCopy())
+					*section = append(*section, rr.Clone())
 				}
 				if hint == hintDelegation {
 					if s.TypeCovered == dns.TypeDS {
-						*section = append(*section, rr.DeepCopy())
+						*section = append(*section, rr.Clone())
 					}
 				}
 			}
@@ -204,15 +204,15 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 	// NODATA response.
 	for _, rr := range z.Apex().RRs {
 		if _, ok := rr.(*dns.SOA); ok {
-			r.Ns = append(r.Ns, rr.DeepCopy())
+			r.Ns = append(r.Ns, rr.Clone())
 			continue
 		}
 		if r.Security {
 			if _, ok := rr.(*dns.NSEC); ok {
-				r.Ns = append(r.Ns, rr.DeepCopy())
+				r.Ns = append(r.Ns, rr.Clone())
 			}
 			if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-				r.Ns = append(r.Ns, rr.DeepCopy())
+				r.Ns = append(r.Ns, rr.Clone())
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 //go:build ignore
 
-// deepcopy_generate generates zdeepcopy.go which houses all the DeepCopy methods.
+// clone_generate generates zdeepcopy.go which houses all the Clone methods.
 
 package main
 
@@ -61,7 +61,7 @@ func main() {
 			continue
 		}
 
-		fmt.Fprintf(b, "func (rr *%s) DeepCopy() RR {\n", rrname)
+		fmt.Fprintf(b, "func (rr *%s) Clone() RR {\n", rrname)
 		strct := spec.Type.(*ast.StructType)
 
 		// an embedded type, need to be copied by using that type.
@@ -71,7 +71,7 @@ func main() {
 			field := strct.Fields.List[0].Type.(*ast.Ident).String()
 			if _, ok := dns.StringToType[field]; ok {
 				// embeded
-				fmt.Fprintf(b, "return &%s{*rr.%s.DeepCopy().(*%s)}\n}\n", rrname, field, field)
+				fmt.Fprintf(b, "return &%s{*rr.%s.Clone().(*%s)}\n}\n", rrname, field, field)
 				continue
 			}
 		}
@@ -118,7 +118,7 @@ func main() {
 					fn := `func() []` + pkg + `.Pair {
 						pairs := make([]` + pkg + `.Pair, len(rr.%[1]s))
 						for i, p := range rr.%[1]s {
-							pairs[i] = p.DeepCopy()
+							pairs[i] = p.Clone()
 						}
 						return pairs
 						}()` + ",\n"
@@ -129,7 +129,7 @@ func main() {
 					fn := `func() []` + pkg + `.Info {
 						infos := make([]` + pkg + `.Info, len(rr.%[1]s))
 						for i, p := range rr.%[1]s {
-							infos[i] = p.DeepCopy()
+							infos[i] = p.Clone()
 						}
 						return infos
 						}()` + ",\n"

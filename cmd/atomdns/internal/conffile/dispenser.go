@@ -159,7 +159,9 @@ func (d *Dispenser) NextBlock(initialNestingLevel int) bool {
 		d.cursor-- // roll back if not opening brace
 		return false
 	}
-	d.Next()
+	if !d.Next() {
+		return false
+	}
 	if d.Val() == "}" {
 		// Open and then closed right away
 		return false

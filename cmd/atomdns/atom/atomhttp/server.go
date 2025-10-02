@@ -2,37 +2,51 @@ package atomhttp
 
 import (
 	"context"
+	"net"
 	"net/http"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
+	"codeberg.org/miekg/dns/dnshttp"
 )
 
-type Server struct {
-	server  *http.Server
-	started chan error
-	// timeouts 'n shit
-}
-
-func (s *Server) Start() error {
-	go serve(s.started, s.server)
-
-	for range 1 {
-		err := <-s.started
-		if err != nil {
-			return err
-		}
+// ServeHTTP implements the http.Handler and is the bridge between the HTTP and DNS worlds.
+// It the request and converts to the DNS format, calls the handlers,
+// converts it back and writes it to the client. See response.go for the ResponseWriter used for this.
+func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	m, err := dnshttp.Request(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
-	//	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered))
-	return nil
+	println(m.String())
+
+	hw := ResponseWriter{}
+
+	h.mux.ServeDNS(context.Background(), hw, m)
 }
 
-func serve(ch chan error, srv *http.Server) {
-	if err := srv.ListenAndServe(); err != nil {
+type Server struct {
+	server   *http.Server
+	Listener net.Listener
+}
+
+func Serve(ch chan error, s *Server) {
+	l, err := reuse.ListenTCP("tcp", s.server.Addr, true, true)
+	if err != nil {
 		ch <- err
 		return
 	}
-	// tls
+
+	go func() {
+		// TLS
+		if err := s.server.Serve(l); err != nil {
+			ch <- err
+			return
+		}
+	}()
+	s.Listener = l
+	ch <- nil
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
@@ -40,10 +54,24 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func New(mux *dns.ServeMux, global *global.Global) (*Server, error) {
+func New(addr string, mux *dns.ServeMux) *Server {
 	s := new(Server)
-	s.started = make(chan error, 1)
-	s.server = new(http.Server)
-	s.server.Addr = "[::]:8053"
-	return s, nil
+	h := newHandler(mux)
+	s.server = &http.Server{Addr: addr, Handler: h}
+	return s
+}
+
+type handler struct {
+	mux *dns.ServeMux
+}
+
+func newHandler(mux *dns.ServeMux) *http.ServeMux {
+	hmux := http.NewServeMux()
+	handler := &handler{mux: mux}
+	hmux.Handle("/dns-query", handler)
+	return hmux
+}
+
+type ResponseWriter struct {
+	dns.ResponseWriter
 }

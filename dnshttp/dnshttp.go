@@ -72,10 +72,20 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		}
 		m := &dns.Msg{Data: buf}
 		err = m.Unpack()
-		return m, err
+		if err != nil {
+			return m, err
+		}
+		return m, nil
+
 	case http.MethodPost:
 		defer req.Body.Close()
-		return msg(req.Body)
+		m, err := msg(req.Body)
+		if err != nil {
+			return m, err
+		}
+		// MsgAcceptFunc
+		return m, nil
+
 	}
 	return nil, fmt.Errorf("%s: %s", http.StatusText(http.StatusMethodNotAllowed), req.Method)
 }
@@ -97,10 +107,14 @@ func msg(r io.ReadCloser) (*dns.Msg, error) {
 	return m, err
 }
 
-// MsgAcceptFunc checks if m has a message ID of zero. It also implements the check mandated by DOQ, that
+// MsgAcceptAction is the function that checks if the incoming message is valid. It's a variable so it can be
+// set at the beginning.
+var MsgAcceptAction = DefaultMsgAcceptFunc
+
+// DefaultMsgAcceptFunc checks if m has a message ID of zero. It also implements the check mandated by DOQ, that
 // the Pseudo section cannot contain an TCP-KEEPALIVE option.
 // See RFC 9250 and RFC 8484.
-func MsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
+func DefaultMsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
 	if m.ID != 0 {
 		return dns.MsgReject
 	}
