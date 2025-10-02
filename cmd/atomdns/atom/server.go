@@ -46,7 +46,7 @@ func (s *Server) Start() error {
 		}
 	}
 	for i := range s.httpservers {
-		go atomhttp.Serve(s.httpstarted, s.httpservers[i])
+		go atomhttp.Serve(s.httpstarted, s.httpservers[i], s.global)
 	}
 	for range s.httpservers {
 		if err, _ := <-s.httpstarted; err != nil {
@@ -54,10 +54,12 @@ func (s *Server) Start() error {
 		}
 	}
 
-	// TODO(miek): more generic than here?
 	roles := []string{"DNS"}
-	if s.global.HttpAddr != "" {
-		roles = append(roles, "DOH")
+	if s.global.TlsConfig != nil {
+		// roles = append(roles, "DOT")
+		if s.global.HttpAddr != "" {
+			roles = append(roles, "DOH")
+		}
 	}
 
 	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
@@ -69,7 +71,6 @@ func Serve(ch chan error, srv *dns.Server, global *global.Global) {
 		ch <- err
 		return
 	}
-
 	if err := srv.ListenAndServe(); err != nil {
 		ch <- err
 		return

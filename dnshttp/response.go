@@ -35,13 +35,12 @@ func (w *ResponseWriter) Write(p []byte) (n int, err error) {
 	w.w.Header().Set("Cache-Control", "max-age=600")
 	w.w.Header().Set("Content-Length", strconv.Itoa(len(p)))
 	w.w.WriteHeader(http.StatusOK)
-	return w.w.Write(p)
+	// this is a TCP response, the first 2 bytes, are the length, skip those.
+	return w.w.Write(p[2:])
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
-func (w *ResponseWriter) LocalAddr() net.Addr {
-	return w.laddr
-}
+func (w *ResponseWriter) LocalAddr() net.Addr { return w.laddr }
 
 // RemoteAddr implements the ResponseWriter.RemoteAddr method.
 func (w *ResponseWriter) RemoteAddr() net.Addr {

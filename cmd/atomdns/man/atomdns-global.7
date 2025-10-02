@@ -23,7 +23,7 @@ global section, see the configuration example below.
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
     debug
-    server {
+    dns {
         quiet
         addr ADDRESS
         limits {
@@ -31,11 +31,16 @@ global section, see the configuration example below.
             run EXPR
         }
     }
-    http {
+    doh {
         addr ADDRESS
         limits {
             run EXPR
         }
+    }
+    tls PROVIDER {
+        cert CERT KEY [CA]
+        contact EMAIL
+        path PATH
     }
 }
 
@@ -63,21 +68,23 @@ to get its health so it can export the latency metrics.
 .IP \(bu 4
 With \fB\fCpprof\fR you can publish runtime profiling data at the endpoint on
 \fBADDRESS\fP under \fB\fC/debug/pprof\fR. The default is localhost:6053.
-.IP \(bu 4
-With \fB\fCserver\fR you set DNS server options, defined are:
 
-.RS
-.IP \(en 4
+
+.SS ""\fB\fCdns\fR
+.PP
+With \fB\fCdns\fR you set DNS (port (usually) 53, TCP and UDP) server options, defined are.
+
+.IP \(bu 4
 \fB\fCquiet\fR: show banner during startup, and less messages.
-.IP \(en 4
+.IP \(bu 4
 \fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:53\fR.
-.IP \(en 4
+.IP \(bu 4
 \fB\fClimits\fR set further limits:
 
 .RS
-.IP \(bu 4
+.IP \(en 4
 \fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 128, \-1 disables.
-.IP \(bu 4
+.IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*3\fR, this can be a bare number,
 like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in
 lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
@@ -86,25 +93,53 @@ start 10 server instances.
 
 .RE
 
-.RE
-.IP \(bu 4
-With \fB\fChttp\fR you set DOH (http) server options, defined are:
 
-.RS
-.IP \(en 4
+.SS ""\fB\fCdoh\fR
+.PP
+With \fB\fCdoh\fR you set http server options, defined are.
+
+.IP \(bu 4
 \fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:443\fR.
-.IP \(en 4
+.IP \(bu 4
 \fB\fClimits\fR set further limits:
 
 .RS
-.IP \(bu 4
+.IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*1\fR, this can be a bare number,
 like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in
 lowercase.
 
 .RE
 
-.RE
+
+.PP
+Further server options like \fB\fCdot\fR (DNS over TLS) and \fB\fCdoq\fR (DNS over QUIC) will be added in the future.
+
+.SS ""\fB\fCtls\fR
+.PP
+With \fB\fCtls\fR you configure the TLS certificate setup. \fBPROVIDER\fP can be \fB\fCmanual\fR, or \fB\fClets-encrypt\fR. The later
+will set up the certicates automatically. If you use relative path in this configuration be sure that \fB\fCroot\fR
+is set \fIabove\fP this config, so that its value is set.
+
+.PP
+Depending on \fBPROVIDER\fP, you have the following further configuration:
+
+.PP
+If \fBPROVIDER\fP is \fB\fCmanual\fR:
+
+.IP \(bu 4
+\fB\fCcert\fR, that lists in that order \fBCERT\fP the \fB\fCcert.pem\fR (as an example name) file, \fBKEY\fP the private key,
+\fB\fCkey.pem\fR and optionally the \fB\fCca.pem\fR file.
+
+
+.PP
+If \fBPROVIDER\fP is \fB\fClets-encrypt\fR:
+
+.IP \(bu 4
+\fB\fCcontact\fR, where \fBEMAIL\fP is the contact email use when retrieving certificates.
+.IP \(bu 4
+\fB\fCpath\fR has the \fBPATH\fP where the certificates are stored. The global's \fB\fCroot\fR is prepended if this a
+relative path name.
 
 
 .SH "EXAMPLES"
@@ -118,13 +153,13 @@ This runs both a DNS and DOH server, the DOH server listens on port 8053.
 {
     root /var/lib/atomdns
     metrics localhost:9153
-    server {
+    dns {
         limits {
             tcp \-1
             run NumCPU()*3
         }
     }
-    http {
+    doh {
         addr [::]:8053
     }
 }
@@ -138,7 +173,7 @@ example.org {
 .RE
 
 .PP
-Or run an health endpoint on http://localhost:8091, with a lameduck delay of 200 ms.
+Or run an health endpoint on http://localhost:8091, with a lame\-duck delay of 200 ms.
 
 .PP
 .RS

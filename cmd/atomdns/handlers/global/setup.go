@@ -31,6 +31,21 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
 			}
+		case "tls":
+			args := d.RemainingArgs()
+			if len(args) != 1 {
+				return d.ArgErr()
+			}
+			if args[0] != "manual" && args[0] != "lets-encrypt" {
+				return d.PropErr(fmt.Errorf("expected %q or %q, got: %s", "manual", "lets-encrypt", args[0]))
+			}
+			if err := g.SetupTLS(d); err != nil {
+				return err
+			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "tls", args[0])
+				return nil
+			})
 		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
@@ -85,6 +100,11 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "dns", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
+				return nil
+			})
+
 		case "doh":
 			for d.NextBlock(0) {
 				switch d.Val() {
@@ -127,13 +147,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			g.OnStartup(func() error {
-				log.Info("Startup", "server", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
-				return nil
-			})
 			if g.HttpAddr != "" {
 				g.OnStartup(func() error {
-					log.Info("Startup", "http", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
+					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
 					return nil
 				})
 			}
@@ -196,6 +212,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					w.WriteHeader(http.StatusOK)
 					io.WriteString(w, http.StatusText(http.StatusOK))
 				})
+
 				server := &http.Server{Handler: mux}
 				go func() { server.Serve(ln) }()
 				g.HealthListener = ln
@@ -259,5 +276,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			return d.PropErr()
 		}
 	}
+
 	return nil
 }
