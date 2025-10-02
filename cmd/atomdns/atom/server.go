@@ -67,7 +67,6 @@ func (s *Server) Start() error {
 }
 
 func Serve(ch chan error, srv *dns.Server, global *global.Global) {
-	// TLS, DOT and port to listen on, 3rd ttype of server, think about it
 	if err := global.Startup(); err != nil {
 		ch <- err
 		return
