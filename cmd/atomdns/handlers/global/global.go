@@ -23,6 +23,9 @@ type Global struct {
 	Addr          string
 	MaxTCPQueries int
 	Servers       int
+	// Http
+	HttpAddr    string
+	HttpServers int
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once

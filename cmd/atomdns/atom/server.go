@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/atom/atomhttp"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
@@ -27,13 +28,15 @@ type Server struct {
 	mux     *dns.ServeMux
 	started chan error
 
-	// Quiet startup
-	Quiet bool
+	httpservers []*atomhttp.Server
+	httpstarted chan error
+
+	Quiet bool // Quiet startup.
 }
 
 func (s *Server) Start() error {
 	for i := range s.servers {
-		go serve(s.started, s.servers[i], s.global)
+		go Serve(s.started, s.servers[i], s.global)
 	}
 	// drain the channel, we either get a nil for success or otherwise an error _for each server_ started
 	for range s.servers {
@@ -42,11 +45,26 @@ func (s *Server) Start() error {
 			return err
 		}
 	}
-	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered))
+	for i := range s.httpservers {
+		go atomhttp.Serve(s.httpstarted, s.httpservers[i])
+	}
+	for range s.httpservers {
+		if err, _ := <-s.httpstarted; err != nil {
+			return err
+		}
+	}
+
+	// TODO(miek): more generic than here?
+	roles := []string{"DNS"}
+	if s.global.HttpAddr != "" {
+		roles = append(roles, "DOH")
+	}
+
+	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }
 
-func serve(ch chan error, srv *dns.Server, global *global.Global) {
+func Serve(ch chan error, srv *dns.Server, global *global.Global) {
 	if err := global.Startup(); err != nil {
 		ch <- err
 		return
@@ -102,6 +120,12 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
+
+	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
+	s.httpstarted = make(chan error, len(s.httpservers))
+	for j := range s.httpservers {
+		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
+	}
 	return s, nil
 }
 
@@ -115,7 +139,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Registered:    make(map[string]struct{}),
 		Config:        conf,
 		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
-		Addr:          "[::]:53",
+		Addr:          "[::]:53", // default
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
 	}
@@ -182,6 +206,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 // When a server is started on the wildcard port, this method can be used to get the actual address and
 // listening port. Note that with a wildcard port the servers will all run on a different port. For all
 // returned address the first half are the UDP listening port, the other half is TCP.
+// See [HttpAddr] for getting the addresss of the DOH server.
 func (s *Server) Addr() []string {
 	addr := make([]string, len(s.servers))
 	for i, srv := range s.servers {
@@ -191,6 +216,15 @@ func (s *Server) Addr() []string {
 		if x := srv.PacketConn; x != nil {
 			addr[i] = x.LocalAddr().String()
 		}
+	}
+	return addr
+}
+
+// HttpAddr return the address of the DOH server. See [Addr].
+func (s *Server) HttpAddr() []string {
+	addr := make([]string, len(s.httpservers))
+	for i, srv := range s.httpservers {
+		addr[i] = srv.Listener.Addr().String()
 	}
 	return addr
 }
