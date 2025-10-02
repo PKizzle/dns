@@ -2,7 +2,6 @@ package atomhttp
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 
@@ -15,14 +14,11 @@ import (
 // It the request and converts to the DNS format, calls the handlers,
 // converts it back and writes it to the client. See response.go for the ResponseWriter used for this.
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("%v\n", r)
 	m, err := dnshttp.Request(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	println(m.String())
-
 	hw := dnshttp.NewResponseWriter(w, r, r.Context().Value(http.LocalAddrContextKey).(net.Addr))
 	h.mux.ServeDNS(context.Background(), hw, m)
 }
