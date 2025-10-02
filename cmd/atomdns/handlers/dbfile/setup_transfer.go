@@ -51,7 +51,7 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) (err error) {
 						return co.ArgErr()
 					}
 				case "source":
-					d.To.Sources, err = co.RemainingAddrs()
+					d.To.Sources, err = co.RemainingIPs()
 					if err != nil {
 						return co.PropErr(err)
 					}

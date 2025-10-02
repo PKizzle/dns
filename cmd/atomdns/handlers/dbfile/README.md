@@ -40,7 +40,7 @@ dbfile FILE {
         }
         to [IP[:PORT]]... {
             notify IP[:PORT] [IP[:PORT]]...
-            source IP [IP]...
+            source IP|IFACE [IP|IFACE]...
             key NAME ALGORITHM SECRET
         }
     }
@@ -60,9 +60,10 @@ dbfile FILE {
     If there are no **IP**s specfied the AXFR is open to the entire internet.
   - If there is no `notify` the **IP**s as specified in `to` are used for sending notifies. If you
     want to override this add a `notify` and put an (new) set of **IP**s there. With `source` you can
-    set the source(s) address when sending the notifies. The TSIG key specification is identical to that of `from`.
-    For **IP** you can use IPv6 or IPv4 addresses, these are automatically matched up, i.e. a notify with a
-    IPv4 address will use a IPv4 source and vice versa.
+    set the source(s) address when sending the notifies. You can use an interface name as **IFACE** and the
+    routable IP address from the interface are also used.
+    The TSIG key specification is identical to that of `from`. For **IP** you can use IPv6 or IPv4 addresses,
+    these are automatically matched up, i.e. a notify with a IPv4 address will use a IPv4 source and vice versa.
 
 Note that a bare `transfer` is enough to allow for outgoing transfers.
 
@@ -102,6 +103,7 @@ example.org example.net {
     dbfile example.org.signed {
         transfer {
             to 10.240.1.1
+            source eth0
         }
     }
 }

@@ -20,6 +20,8 @@ import (
 	"io"
 	"net"
 	"strings"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/iface"
 )
 
 // Dispenser is a type that dispenses tokens, similarly to a lexer,
@@ -335,7 +337,8 @@ func (d *Dispenser) isNextOnNewLine() bool {
 // port will be added (53).
 func (d *Dispenser) Addr() (string, error) { return addr(d.Val()) }
 
-// RemainingAddrs calls RemainingArgs and parses search string with like Addr()
+// RemainingAddrs calls RemainingArgs and return each actual address. If the address does not have
+// port :53 is added.
 func (d *Dispenser) RemainingAddrs() ([]string, error) {
 	args := d.RemainingArgs()
 	for i := range args {
@@ -357,4 +360,24 @@ func addr(s string) (string, error) {
 		return net.JoinHostPort(s, "53"), nil
 	}
 	return net.JoinHostPort(addr, port), nil
+}
+
+// RemainingIPs calls RemainingArgs and return all IPs. If a arg does not look like an IP, it is assume to be
+// a interface name.
+func (d *Dispenser) RemainingIPs() ([]string, error) {
+	args := d.RemainingArgs()
+	ips := []string{}
+	for i := range args {
+		x := net.ParseIP(args[i])
+		if x != nil {
+			ips = append(ips, args[i])
+			continue
+		}
+		ifips := iface.List(args[i])
+		if len(ifips) == 0 {
+			return nil, fmt.Errorf("failed to find routable IPs on %q interface", args[i])
+		}
+		ips = append(ips, ifips...)
+	}
+	return ips, nil
 }

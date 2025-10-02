@@ -99,6 +99,7 @@ If **ISSUER** is `manual`:
 
 If **ISSUER** is `lets-encrypt`:
 
+- `
 - `contact`, where **EMAIL** is the contact email use when retrieving certificates.
 - `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
   relative path name.
