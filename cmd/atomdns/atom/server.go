@@ -215,7 +215,7 @@ func (s *Server) Addr() []string {
 	return addr
 }
 
-// HttpAddr return the address of the DOH server.
+// HttpAddr return the address of the DOH server. See [Addr].
 func (s *Server) HttpAddr() []string {
 	addr := make([]string, len(s.httpservers))
 	for i, srv := range s.httpservers {
