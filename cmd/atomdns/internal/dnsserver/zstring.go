@@ -15,6 +15,7 @@ var Handlers = []string{
 	"drunk",
 	"log",
 	"metrics",
+	"msgcache",
 	"nsid",
 	"refuse",
 	"sign",
