@@ -31,7 +31,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
 			}
-		case "dns":
+		case "tls":
+			// provider get here , then the rest
+			if err := g.SetupTLS(d); err != nil {
+				return err
+			}
+		case "server":
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "quiet":
