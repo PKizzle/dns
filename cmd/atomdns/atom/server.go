@@ -60,7 +60,7 @@ func (s *Server) Start() error {
 		roles = append(roles, "DOH")
 	}
 
-	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
+	slog.Info("Launched", "config", filepath.Base(s.global.Configuration), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
-		Config:        conf,
+		Configuration: conf,
 		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
 		Addr:          "[::]:53", // default
 		MaxTCPQueries: 128,

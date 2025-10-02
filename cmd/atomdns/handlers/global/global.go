@@ -1,6 +1,7 @@
 package global
 
 import (
+	"crypto/tls"
 	"log/slog"
 	"net"
 	"sync"
@@ -18,14 +19,18 @@ type Global struct {
 	HealthListener net.Listener
 	// Pprof
 	PprofListener net.Listener
-	// Server
+	// dns
 	Quiet         bool
 	Addr          string
 	MaxTCPQueries int
 	Servers       int
-	// Http
+	// doh
 	HttpAddr    string
 	HttpServers int
+	// tls
+	tlsConfig  *tls.Config
+	tlsContact string
+	tlsPath    string
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once

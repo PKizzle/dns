@@ -19,7 +19,7 @@ global section, see the configuration example below.
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
     debug
-    server {
+    dns {
         quiet
         addr ADDRESS
         limits {
@@ -27,11 +27,16 @@ global section, see the configuration example below.
             run EXPR
         }
     }
-    http {
+    doh {
         addr ADDRESS
         limits {
             run EXPR
         }
+    }
+    tls PROVIDER {
+        cert CERT KEY [CA]
+        contact EMAIL
+        path PATH
     }
 }
 ```
@@ -52,24 +57,50 @@ global section, see the configuration example below.
   to get its health so it can export the latency metrics.
 - With `pprof` you can publish runtime profiling data at the endpoint on
   **ADDRESS** under `/debug/pprof`. The default is localhost:6053.
-- With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined are:
-  - `quiet`: show banner during startup, and less messages.
-  - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
-  - `limits` set further limits:
-    - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.
-    - `run` **EXPR**, run this many servers the default is `NumCPU*3`, this can be a bare number,
-      like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
-      lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
-      back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
-      start 10 server instances.
-- With `doh` you set http server options, defined are:
-  - `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
-  - `limits` set further limits:
-    - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
-      like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
-      lowercase.
 
-Further options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future.
+### `dns`
+
+With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined are.
+
+- `quiet`: show banner during startup, and less messages.
+- `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
+- `limits` set further limits:
+  - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.
+  - `run` **EXPR**, run this many servers the default is `NumCPU*3`, this can be a bare number,
+    like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
+    lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
+    back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
+    start 10 server instances.
+
+### `doh`
+
+With `doh` you set http server options, defined are.
+
+- `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
+- `limits` set further limits:
+  - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
+    like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
+    lowercase.
+
+Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future.
+
+### `tls`
+
+With `tls` you configure the TLS certificate setup. **PROVIDER** can be `manual`, or `lets-encrypt`. The later
+will set up the certicates automatically.
+
+Depending on **PROVIDER**, you have the following further configuration:
+
+If **PROVIDER** is `manual`:
+
+- `cert`, that lists in that order **CERT** the `cert.pem` (as an example name) file, **KEY** the private key,
+  `key.pem` and optionally the `ca.pem` file.
+
+If **PROVIDER** is `lets-encrypt`:
+
+- `contact`, where **EMAIL** is the contact email use when retrieving certificates.
+- `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
+  relative path name.
 
 ## Examples
 
@@ -79,13 +110,13 @@ This runs both a DNS and DOH server, the DOH server listens on port 8053.
 {
     root /var/lib/atomdns
     metrics localhost:9153
-    server {
+    dns {
         limits {
             tcp -1
             run NumCPU()*3
         }
     }
-    http {
+    doh {
         addr [::]:8053
     }
 }
@@ -96,7 +127,7 @@ example.org {
 }
 ```
 
-Or run an health endpoint on http://localhost:8091, with a lameduck delay of 200 ms.
+Or run an health endpoint on http://localhost:8091, with a lame-duck delay of 200 ms.
 
 ```txt
 {
