@@ -276,5 +276,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			return d.PropErr()
 		}
 	}
+
 	return nil
 }

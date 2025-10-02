@@ -38,7 +38,10 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 		ch <- err
 		return
 	}
-	lt := tls.NewListener(l, global.TlsConfig)
+	lt := l
+	if global.TlsConfig != nil {
+		lt = tls.NewListener(l, global.TlsConfig)
+	}
 	go func() {
 		if err := s.server.Serve(lt); err != nil {
 			ch <- err
@@ -57,9 +60,8 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func New(addr string, mux *dns.ServeMux) *Server {
 	s := new(Server)
 	h := newHandler(mux)
-	// TODO(miek): new logger for every instance?
-	// TODO(miek): ErrorLog prints differently. FIX.
-	s.server = &http.Server{Addr: addr, Handler: h}
+	logger := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
+	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger}
 	return s
 }
 
