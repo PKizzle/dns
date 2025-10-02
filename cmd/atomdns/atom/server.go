@@ -118,9 +118,8 @@ func New(conf string, r io.Reader) (*Server, error) {
 
 	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
 	s.httpstarted = make(chan error, len(s.httpservers))
-	httpmux := atomhttp.NewMux(s.mux)
 	for j := range s.httpservers {
-		s.httpservers[j] = atomhttp.New(global.HttpAddr, httpmux)
+		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
 	}
 	return s, nil
 }
@@ -202,6 +201,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 // When a server is started on the wildcard port, this method can be used to get the actual address and
 // listening port. Note that with a wildcard port the servers will all run on a different port. For all
 // returned address the first half are the UDP listening port, the other half is TCP.
+// See [HttpAddr] for getting the addresss of the DOH server.
 func (s *Server) Addr() []string {
 	addr := make([]string, len(s.servers))
 	for i, srv := range s.servers {
@@ -211,6 +211,15 @@ func (s *Server) Addr() []string {
 		if x := srv.PacketConn; x != nil {
 			addr[i] = x.LocalAddr().String()
 		}
+	}
+	return addr
+}
+
+// HttpAddr return the address of the DOH server.
+func (s *Server) HttpAddr() []string {
+	addr := make([]string, len(s.httpservers))
+	for i, srv := range s.httpservers {
+		addr[i] = srv.Listener.Addr().String()
 	}
 	return addr
 }

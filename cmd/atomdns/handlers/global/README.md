@@ -71,6 +71,8 @@ global section, see the configuration example below.
 
 ## Examples
 
+This runs both a DNS and DOH server, the DOH server listens on port 8053.
+
 ```txt
 {
     root /var/lib/atomdns
@@ -80,6 +82,9 @@ global section, see the configuration example below.
             tcp -1
             run NumCPU()*3
         }
+    }
+    http {
+        addr [::]:8053
     }
 }
 
