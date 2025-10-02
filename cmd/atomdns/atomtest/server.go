@@ -22,7 +22,7 @@ import (
 func New(config string) (*atom.Server, func(), error) {
 	testconfig := `
 {
-	server {
+	dns {
 		addr [::]:0
 		limits {
 			run 1
