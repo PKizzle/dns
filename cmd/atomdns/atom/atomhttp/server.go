@@ -21,8 +21,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	println(m.String())
 
-	hw := ResponseWriter{}
-
+	hw := dnshttp.NewResponseWriter(w, r, r.Context().Value(http.LocalAddrContextKey).(net.Addr))
 	h.mux.ServeDNS(context.Background(), hw, m)
 }
 
@@ -70,8 +69,4 @@ func newHandler(mux *dns.ServeMux) *http.ServeMux {
 	handler := &handler{mux: mux}
 	hmux.Handle("/dns-query", handler)
 	return hmux
-}
-
-type ResponseWriter struct {
-	dns.ResponseWriter
 }

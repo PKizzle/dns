@@ -75,6 +75,9 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		if err != nil {
 			return m, err
 		}
+		if action := MsgAcceptAction(m); action != dns.MsgAccept {
+			return nil, fmt.Errorf("dns msg unacceptable")
+		}
 		return m, nil
 
 	case http.MethodPost:
@@ -83,7 +86,9 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		if err != nil {
 			return m, err
 		}
-		// MsgAcceptFunc
+		if action := MsgAcceptAction(m); action != dns.MsgAccept {
+			return nil, fmt.Errorf("dns msg unacceptable")
+		}
 		return m, nil
 
 	}

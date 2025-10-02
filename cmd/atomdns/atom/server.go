@@ -31,8 +31,7 @@ type Server struct {
 	httpservers []*atomhttp.Server
 	httpstarted chan error
 
-	// Quiet startup
-	Quiet bool
+	Quiet bool // Quiet startup.
 }
 
 func (s *Server) Start() error {
