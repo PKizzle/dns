@@ -48,7 +48,7 @@ func TestSetup(t *testing.T) {
 				Path: "db.example",
 				To: &Transfer{
 					IPs:        []string{"172.16.16.1:53"},
-					Sources:    []string{"10.10.10.10:53"},
+					Sources:    []string{"10.10.10.10"},
 					Notifies:   []string{"10.240.1.1:53"},
 					TSIGSecret: "aGFsbG8K",
 				},

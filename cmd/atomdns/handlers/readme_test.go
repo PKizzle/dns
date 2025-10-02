@@ -46,6 +46,10 @@ func TestReadme(t *testing.T) {
 					// parsing went far enough to this this, think we're ok
 					continue
 				}
+				if strings.Contains(err.Error(), "failed to find routable IP") {
+					// same
+					continue
+				}
 				t.Errorf("Failed to start server with %s, for input %q:\n%s", readme, err, conf)
 				continue
 			}

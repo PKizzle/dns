@@ -41,14 +41,12 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 				RootCAs:      roots,
 				NextProtos:   []string{"h2", "http/1.1"},
 			}
-
 		case "contact":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
 				return d.ArgErr()
 			}
 			g.TlsContact = args[0]
-
 		case "path":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
