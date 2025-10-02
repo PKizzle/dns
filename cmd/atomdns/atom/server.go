@@ -55,7 +55,13 @@ func (s *Server) Start() error {
 		}
 	}
 
-	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered))
+	// TODO(miek): more generic than here?
+	roles := []string{"DNS"}
+	if s.global.HttpAddr != "" {
+		roles = append(roles, "DOH")
+	}
+
+	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }
 
