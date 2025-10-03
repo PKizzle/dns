@@ -20,6 +20,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/caddyserver/certmagic"
 )
@@ -156,6 +157,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		return nil, err
 	}
 
+	certmagic.Default.Logger = zlog.New(false)
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
 		Config:        conf,
