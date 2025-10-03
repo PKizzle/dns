@@ -37,11 +37,12 @@ global section, see the configuration example below.
         }
     }
     tls ISSUER {
-        cert CERT KEY [CA]
+        cert CERT KEY
+        rootca CA
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
-        ca URL [test]
+        ca URL
     }
 }
 
@@ -139,7 +140,9 @@ If \fBISSUER\fP is \fB\fCmanual\fR:
 
 .IP \(bu 4
 \fB\fCcert\fR, that lists in that order \fBCERT\fP the \fB\fCcert.pem\fR (as an example name) file, \fBKEY\fP the private key,
-\fB\fCkey.pem\fR and optionally the \fB\fCca.pem\fR file.
+\fB\fCkey.pem\fR
+.IP \(bu 4
+\fB\fCrootca\fR, the root \fB\fCca.pem\fR file. This is optional, but can aid in testing.
 
 
 .PP
@@ -162,6 +165,8 @@ The production endpoint for Let's Encrypt is https://acme\-v02.api.letsencrypt.o
 \[la]https://acme-v02.api.letsencrypt.org/directory\[ra].
 If after the URL the literal text \fB\fCtest\fR is used, atomdns will not start a seperate web server on port 443,
 this is to aid in local testing.
+.IP \(bu 4
+\fB\fCrootca\fR, can also be used here. This is optional, but can aid in testing.
 
 
 .PP
