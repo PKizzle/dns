@@ -102,13 +102,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		slog.Warn("Failed to run shutdown", slog.Any("error", err))
 	}
 	for _, srv := range s.servers {
-		srv.Shutdown(context.TODO())
+		srv.Shutdown(ctx)
 	}
 	for _, srv := range s.tlsservers {
-		srv.Shutdown(context.TODO())
+		srv.Shutdown(ctx)
 	}
 	for _, srv := range s.httpservers {
-		srv.Shutdown(context.TODO())
+		srv.Shutdown(ctx)
 	}
 	return nil
 }
