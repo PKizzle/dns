@@ -16,9 +16,12 @@ package conffile
 
 import (
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsreverse"
 )
 
 // Parse parses the input just enough to group tokens, in order, by server block. No further parsing is performed.
@@ -136,7 +139,7 @@ func (p *parser) addresses() error {
 		// Open brace definitely indicates end of addresses
 		if tkn == "{" {
 			if expectingAnother {
-				return p.Errf("expected another address but had '%s' - check for extra comma", tkn)
+				return p.Errf("expected another address but had %q - check for extra comma", tkn)
 			}
 			break
 		}
@@ -151,7 +154,14 @@ func (p *parser) addresses() error {
 				expectingAnother = false // but we may still see another one on this line
 			}
 
-			p.block.Keys = append(p.block.Keys, tkn)
+			// If tkn parses a CIDR e.g 192.168.0.0/16 is a reverse zone syntax we we want to expand that for
+			// user convience.
+			_, ipnet, err := net.ParseCIDR(tkn)
+			if err != nil {
+				p.block.Keys = append(p.block.Keys, tkn)
+			} else {
+				p.block.Keys = append(p.block.Keys, dnsreverse.Zones(ipnet)...)
+			}
 		}
 
 		// Advance token and possibly break out of loop or return error
