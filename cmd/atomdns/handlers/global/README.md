@@ -104,9 +104,15 @@ If **ISSUER** is `lets-encrypt`:
 
 - `source`, a list of **IP**s or **IFACE** names for which the IP addresss should be retrieved, and for which
   the TLS certificates should be requested.
-- `contact`, where **EMAIL** is the contact email use when retrieving certificates.
+- `contact`, where **EMAIL** is the contact email use when retrieving certificates. This can be set to (one
+  of) your SOA's Mbox (RNAME - responsible person) mail address.
 - `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
   relative path name.
+- `ca` lets you select the production or staging ACME CA endpoint, by specifying the URL here. The default for
+  the time being is Let's Encrypt staging endpoint: <https://acme-staging-v02.api.letsencrypt.org/directory>.
+  The production endpoint for Let's Encrypt is <https://acme-v02.api.letsencrypt.org/directory>.
+
+Both `source` and `contact` are mandatory.
 
 To complete the challenge a web server needs to be running on port 443, if DOH is enabled (see `doh`), and is
 not already running on 443 another server will be started on that port just for the challenge.

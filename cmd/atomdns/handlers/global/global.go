@@ -6,6 +6,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/caddyserver/certmagic"
 )
 
 type Global struct {
@@ -28,9 +30,11 @@ type Global struct {
 	HttpAddr    string
 	HttpServers int
 	// tls
-	TlsConfig  *tls.Config
-	TlsContact string
-	TlsPath    string
+	TlsConfig     *tls.Config // manual
+	TlsCertConfig *certmagic.Config
+	TlsIPs        []string // lets-encrypt, IP to get certs for
+	TlsContact    string   // lets-encrypt
+	TlsPath       string   // lets-encrypt
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once

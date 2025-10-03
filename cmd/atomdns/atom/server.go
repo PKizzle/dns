@@ -20,6 +20,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/caddyserver/certmagic"
 )
 
 type Server struct {
@@ -136,14 +137,18 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		return nil, err
 	}
 
+	// Set the defaults for atomdns.
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
 		Config:        conf,
 		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
-		Addr:          "[::]:53", // default
+		Addr:          "[::]:53",
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
+		TlsCertConfig: certmagic.NewDefault(),
 	}
+	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue

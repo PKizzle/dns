@@ -4,10 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net/mail"
+	"net/url"
 	"os"
 	"path/filepath"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"github.com/caddyserver/certmagic"
 )
 
 func (g *Global) SetupTLS(d conffile.Dispenser) error {
@@ -46,7 +49,12 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 			if len(args) != 1 {
 				return d.ArgErr()
 			}
+			if _, err := mail.ParseAddress(args[0]); err != nil {
+				return d.PropErr(err)
+			}
 			g.TlsContact = args[0]
+			certmagic.DefaultACME.Email = g.TlsContact
+			certmagic.DefaultACME.Agreed = true
 		case "path":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
@@ -56,6 +64,16 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 				args[0] = filepath.Join(g.Root, args[0])
 			}
 			g.TlsPath = args[0]
+			g.TlsCertConfig.Storage = &certmagic.FileStorage{Path: g.TlsPath}
+		case "ca":
+			args := d.RemainingArgs()
+			if len(args) != 1 {
+				return d.ArgErr()
+			}
+			if _, err := url.Parse(args[0]); err != nil {
+				return d.PropErr(err)
+			}
+			certmagic.DefaultACME.CA = args[0]
 		default:
 			return d.ArgErr()
 		}
