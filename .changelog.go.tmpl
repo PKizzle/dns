@@ -20,7 +20,7 @@ This is the generated changelog for codeberg.org/miekg/dns.
     {{$author := .Author -}}
     {{range .Logs -}}
         {{if .}}
-* [{{$hash}}] {{clean .}} ({{$author}})
+* {{$hash}} {{clean .}} ({{$author}})
         {{- end -}}
     {{end -}}
 {{end}}

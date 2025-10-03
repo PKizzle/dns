@@ -2,22 +2,26 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
+## HEAD - 2025-10-03
+
+2 commits.
+
 
 ## v0.5.5 - 2025-10-03
 
 22 commits. With the following change log.
 
-* [4f2cb96] Use Let's Encrypt for certificates for DOH. (Miek Gieben)
-* [b3e6ee4] Atomdns: add ACME TLS. (Miek Gieben)
+* 4f2cb96 Use Let's Encrypt for certificates for DOH. (Miek Gieben)
+* b3e6ee4 Atomdns: add ACME TLS. (Miek Gieben)
 
 ## v0.5.4 - 2025-10-02
 
 48 commits. With the following change log.
 
-* [ea4f116] Atom: for IP lists, allow interface names.. (Miek Gieben)
-* [a4e84a4] DeepCopy is now Clone. (Miek Gieben)
-* [2f24c1f] Add DOH helper utils in new package dnshttp. (Miek Gieben)
-* [4ddec12] Just like CoreDNS use builtin config when nothing is found. (Miek Gieben)
+* ea4f116 Atom: for IP lists, allow interface names. (Miek Gieben)
+* a4e84a4 DeepCopy is now Clone. (Miek Gieben)
+* 2f24c1f Add DOH helper utils in new package dnshttp. (Miek Gieben)
+* 4ddec12 Just like CoreDNS use builtin config when nothing is found. (Miek Gieben)
 
 ## v0.5.3 - 2025-09-30
 
