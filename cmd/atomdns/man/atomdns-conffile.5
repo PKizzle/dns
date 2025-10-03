@@ -217,6 +217,44 @@ This also works on a non octet boundary:
 .fi
 .RE
 
+.PP
+Doing Let's Encrypt certificates for your DOH servers:
+
+.PP
+.RS
+
+.nf
+{
+    root /var/lib/atomdns
+
+    dns {
+        addr [::]:1053
+        limits {
+            tcp \-1
+            run numcpu()*3
+        }
+    }
+    doh {
+        addr [::]:10053
+        limits {
+            run numcpu()*1
+        }
+    }
+    tls lets\-encrypt {
+        source eth0
+        contact miek@miek.nl
+        path lets\-encrypt
+    }
+}
+
+example.net {
+    log
+    dbfile example.net
+}
+
+.fi
+.RE
+
 .SH "AUTHORS"
 .PP
 atomdns authors.

@@ -143,6 +143,38 @@ This also works on a non octet boundary:
 }
 ```
 
+Doing Let's Encrypt certificates for your DOH servers:
+
+```conffile
+{
+    root /var/lib/atomdns
+
+    dns {
+        addr [::]:1053
+        limits {
+            tcp -1
+            run numcpu()*3
+        }
+    }
+    doh {
+        addr [::]:10053
+        limits {
+            run numcpu()*1
+        }
+    }
+    tls lets-encrypt {
+        source eth0
+        contact miek@miek.nl
+        path lets-encrypt
+    }
+}
+
+example.net {
+    log
+    dbfile example.net
+}
+```
+
 ## Authors
 
 atomdns authors.

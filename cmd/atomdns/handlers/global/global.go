@@ -34,7 +34,6 @@ type Global struct {
 	// tls
 	TlsConfig     *tls.Config // manual
 	TlsCertConfig *certmagic.Config
-	TlsTest       bool     // prevent 443 from being used
 	TlsIPs        []string // lets-encrypt, IP to get certs for
 	TlsContact    string   // lets-encrypt
 	TlsPath       string   // lets-encrypt

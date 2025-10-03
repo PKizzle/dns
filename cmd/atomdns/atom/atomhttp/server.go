@@ -43,7 +43,9 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 		lt = tls.NewListener(l, global.TlsConfig)
 	}
 	if len(global.TlsIPs) != 0 && global.TlsContact != "" {
-		lt = tls.NewListener(l, global.TlsCertConfig.TLSConfig())
+		tlsConfig := global.TlsCertConfig.TLSConfig()
+		tlsConfig.NextProtos = append(tlsConfig.NextProtos, []string{"h2", "http/1.1"}...)
+		lt = tls.NewListener(l, tlsConfig)
 	}
 	go func() {
 		if err := s.server.Serve(lt); err != nil {

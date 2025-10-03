@@ -20,6 +20,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/caddyserver/certmagic"
 )
@@ -137,7 +138,8 @@ func New(conf string, r io.Reader) (*Server, error) {
 		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
 	}
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
-	if !global.TlsTest && len(global.TlsIPs) != 0 && global.TlsContact != "" {
+	if global.TlsCertConfig != nil {
+		slog.Debug("Startup running extra server for ACME challenge", "port", "443")
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
@@ -155,6 +157,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		return nil, err
 	}
 
+	certmagic.Default.Logger = zlog.New(false)
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
 		Config:        conf,
@@ -162,7 +165,6 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Addr:          "[::]:53",
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
-		TlsCertConfig: certmagic.NewDefault(),
 	}
 
 	for _, b := range blocks {
