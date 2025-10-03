@@ -3,6 +3,7 @@ module codeberg.org/miekg/dns
 go 1.25.0
 
 require (
+	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/caddyserver/certmagic v0.25.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/infobloxopen/go-trees v0.0.0-20221216143356-66ceba885ebc
