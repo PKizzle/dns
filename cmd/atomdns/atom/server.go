@@ -22,7 +22,6 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/caddyserver/certmagic"
-	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -156,16 +155,6 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		return nil, err
 	}
 
-	// Set the defaults for atomdns.
-	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
-	certmagic.Default.Logger = func() *zap.Logger {
-		// Start with any slog implementation
-		baseLogger := getSlogLogger() // your existing slog logger
-		filtered := filter.New(baseLogger, filter.MinLevel(slog.Info))
-
-		// Create a zap logger backed by slog
-		zapLogger := slogzap.NewZapLogger(filtered)
-	}()
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
 		Config:        conf,

@@ -13,10 +13,10 @@ global section, see the configuration example below.
 ```txt
 {
     root DIRECTORY
+    debug
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
-    debug
     dns {
         quiet
         addr ADDRESS
@@ -57,6 +57,8 @@ global section, see the configuration example below.
   to get its health so it can export the latency metrics.
 - With `pprof` you can publish runtime profiling data at the endpoint on
   **ADDRESS** under `/debug/pprof`. The default is localhost:6053.
+
+This is parsed in-order and some settings depend on `root` and/or `debug`, so set those two early in the file.
 
 ## `dns`
 

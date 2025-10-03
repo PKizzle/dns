@@ -13,6 +13,8 @@ import (
 type Global struct {
 	// Root
 	Root string
+	// Debug
+	Debug bool
 	// Metrics
 	MetricsN        uint64
 	MetricsListener net.Listener

@@ -10,10 +10,14 @@ import (
 	"path/filepath"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
 	"github.com/caddyserver/certmagic"
 )
 
 func (g *Global) SetupTLS(d conffile.Dispenser) error {
+	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+	certmagic.Default.Logger = zlog.New(g.Debug)
+	g.TlsCertConfig.Logger = zlog.New(g.Debug)
 	for d.NextBlock(0) {
 		switch d.Val() {
 		case "cert":

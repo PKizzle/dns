@@ -23,6 +23,9 @@ import (
 func (g *Global) Setup(d conffile.Dispenser) error {
 	if d.Next() {
 		switch d.Val() {
+		case "debug":
+			g.Debug = true
+			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "root":
 			if !d.NextArg() {
 				d.ArgErr()
@@ -174,8 +177,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return nil
 				})
 			}
-		case "debug":
-			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "metrics":
 			g.MetricsN = 10
 			addr := "localhost:9153"
