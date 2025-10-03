@@ -52,9 +52,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return nil
 				})
 			case "lets-encrypt":
-				g.TlsCertConfig = certmagic.NewDefault()
-				ctx, cancel := context.WithCancel(context.Background())
 				if len(g.TlsIPs) != 0 && g.TlsContact != "" {
+					g.TlsCertConfig = certmagic.NewDefault()
+					ctx, cancel := context.WithCancel(context.Background())
 					g.OnStartup(func() error {
 						log.Info("Startup", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
 						err := certmagic.ManageAsync(ctx, g.TlsIPs)

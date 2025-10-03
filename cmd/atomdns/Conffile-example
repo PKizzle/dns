@@ -13,6 +13,12 @@
             run numcpu()*1
         }
     }
+    dot {
+        addr [::]:8053
+        limits {
+            run 1
+        }
+    }
     tls manual {
         cert handlers/global/testdata/test_cert.pem handlers/global/testdata/test_key.pem
     }

@@ -43,6 +43,9 @@ type Server struct {
 }
 
 func (s *Server) Start() error {
+	if err := s.global.Startup(); err != nil {
+		return err
+	}
 	for i := range s.servers {
 		go Serve(s.started, s.servers[i], s.global)
 	}
@@ -53,6 +56,17 @@ func (s *Server) Start() error {
 			return err
 		}
 	}
+
+	for i := range s.tlsservers {
+		go Serve(s.tlsstarted, s.tlsservers[i], s.global)
+	}
+	for range s.tlsservers {
+		err := <-s.tlsstarted
+		if err != nil {
+			return err
+		}
+	}
+
 	for i := range s.httpservers {
 		go atomhttp.Serve(s.httpstarted, s.httpservers[i], s.global)
 	}
@@ -63,7 +77,7 @@ func (s *Server) Start() error {
 	}
 
 	roles := []string{"DNS"}
-	if s.global.TlsConfig != nil {
+	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
 		if s.global.HttpServers > 0 {
 			roles = append(roles, "DOH")
 		}
@@ -77,10 +91,6 @@ func (s *Server) Start() error {
 }
 
 func Serve(ch chan error, srv *dns.Server, global *global.Global) {
-	if err := global.Startup(); err != nil {
-		ch <- err
-		return
-	}
 	if err := srv.ListenAndServe(); err != nil {
 		ch <- err
 		return
@@ -92,6 +102,12 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		slog.Warn("Failed to run shutdown", slog.Any("error", err))
 	}
 	for _, srv := range s.servers {
+		srv.Shutdown(context.TODO())
+	}
+	for _, srv := range s.tlsservers {
+		srv.Shutdown(context.TODO())
+	}
+	for _, srv := range s.httpservers {
 		srv.Shutdown(context.TODO())
 	}
 	return nil
@@ -140,9 +156,8 @@ func New(conf string, r io.Reader) (*Server, error) {
 		if global.TlsConfig != nil {
 			tlsConfig = global.TlsConfig
 		}
-		if len(global.TlsIPs) != 0 && global.TlsContact != "" {
+		if global.TlsCertConfig != nil {
 			tlsConfig = global.TlsCertConfig.TLSConfig()
-			tlsConfig.NextProtos = append(tlsConfig.NextProtos, []string{"h2", "http/1.1"}...)
 		}
 		s.tlsservers[j] = &dns.Server{
 			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
@@ -158,7 +173,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 			}
 			i++
 		}
-		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
+		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
 	}
 
 	// doh servers
@@ -275,7 +290,7 @@ func (s *Server) Addr() []string {
 	return addr
 }
 
-// HttpAddr return the address of the DOH server. See [Addr].
+// HttpAddr return the addresses of the DOH servers. See [Addr].
 func (s *Server) HttpAddr() []string {
 	addr := make([]string, len(s.httpservers))
 	for i, srv := range s.httpservers {
@@ -284,4 +299,11 @@ func (s *Server) HttpAddr() []string {
 	return addr
 }
 
-// TlsAddr()
+// TlsAddr returns the addreses of the DOT servers. See [Addr].
+func (s *Server) TlsAddr() []string {
+	addr := make([]string, len(s.tlsservers))
+	for i, srv := range s.tlsservers {
+		addr[i] = srv.Listener.Addr().String()
+	}
+	return addr
+}

@@ -38,7 +38,7 @@ func (g *Global) SetupLimits(d *conffile.Dispenser) (Limits, error) {
 				if err != nil || n < 0 {
 					return l, d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
 				}
-				g.Servers = runtime.NumCPU() * n
+				l.Servers = runtime.NumCPU() * n
 			} else {
 				n, err := strconv.Atoi(exprs[0])
 				if err != nil || n < 0 {
