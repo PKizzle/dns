@@ -75,6 +75,10 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
     back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
     start 10 server instances.
 
+## `dot`
+
+With `dot` you control DNS TLS server options, defined er:
+
 ## `doh`
 
 With `doh` you set http server options, defined are.

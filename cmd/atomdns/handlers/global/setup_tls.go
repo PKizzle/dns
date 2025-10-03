@@ -14,7 +14,7 @@ import (
 	"github.com/caddyserver/certmagic"
 )
 
-func (g *Global) SetupTLS(d conffile.Dispenser) error {
+func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 	certmagic.DefaultACME.Profile = "shortlived" // https://letsencrypt.org/2025/01/16/6-day-and-ip-certs
 	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
 	certmagic.DefaultACME.Logger = zlog.New(g.Debug)

@@ -2,6 +2,7 @@ package atom
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log/slog"
@@ -26,10 +27,14 @@ import (
 )
 
 type Server struct {
-	global  *global.Global
-	servers []*dns.Server
+	global *global.Global
+
 	mux     *dns.ServeMux
+	servers []*dns.Server
 	started chan error
+
+	tlsservers []*dns.Server
+	tlsstarted chan error
 
 	httpservers []*atomhttp.Server
 	httpstarted chan error
@@ -59,10 +64,11 @@ func (s *Server) Start() error {
 
 	roles := []string{"DNS"}
 	if s.global.TlsConfig != nil {
-		// roles = append(roles, "DOT")
-		// roles = append(roles, "DOQ")
-		if s.global.HttpAddr != "" {
+		if s.global.HttpServers > 0 {
 			roles = append(roles, "DOH")
+		}
+		if s.global.TlsServers > 0 {
+			roles = append(roles, "DOT")
 		}
 	}
 
@@ -110,12 +116,10 @@ func New(conf string, r io.Reader) (*Server, error) {
 			net = "udp"
 		}
 		s.servers[j] = &dns.Server{
-			Handler: s.mux, Net: net, Addr: global.Addr,
-			MaxTCPQueries: global.MaxTCPQueries,
-			ReuseAddr:     true, ReusePort: true,
+			ReuseAddr: true, ReusePort: true,
+			Handler: s.mux, Net: net, Addr: global.Addr, MaxTCPQueries: global.MaxTCPQueries,
 		}
-		i := uint64(0)
-		N := global.MetricsN
+		i, N := uint64(0), global.MetricsN
 		s.servers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
 			if N == 0 {
 				return
@@ -129,7 +133,33 @@ func New(conf string, r io.Reader) (*Server, error) {
 	}
 
 	// dot server
-	// s.tlsservers, s.tlsstarted...
+	s.tlsservers = make([]*dns.Server, global.TlsServers)
+	s.tlsstarted = make(chan error, len(s.tlsservers))
+	for j := range s.tlsservers {
+		tlsConfig := &tls.Config{}
+		if global.TlsConfig != nil {
+			tlsConfig = global.TlsConfig
+		}
+		if len(global.TlsIPs) != 0 && global.TlsContact != "" {
+			tlsConfig = global.TlsCertConfig.TLSConfig()
+			tlsConfig.NextProtos = append(tlsConfig.NextProtos, []string{"h2", "http/1.1"}...)
+		}
+		s.tlsservers[j] = &dns.Server{
+			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
+			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsMaxTCPQueries,
+		}
+		i, N := uint64(0), global.MetricsN
+		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+			if N == 0 {
+				return
+			}
+			if i%N == 0 {
+				metrics.Dropped.Inc()
+			}
+			i++
+		}
+		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
+	}
 
 	// doh servers
 	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
@@ -165,6 +195,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Addr:          "[::]:53",
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
+		TlsAddr:       "[::]:853",
 	}
 
 	for _, b := range blocks {
@@ -252,3 +283,5 @@ func (s *Server) HttpAddr() []string {
 	}
 	return addr
 }
+
+// TlsAddr()
