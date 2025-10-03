@@ -22,6 +22,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/caddyserver/certmagic"
+	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -59,6 +60,7 @@ func (s *Server) Start() error {
 	roles := []string{"DNS"}
 	if s.global.TlsConfig != nil {
 		// roles = append(roles, "DOT")
+		// roles = append(roles, "DOQ")
 		if s.global.HttpAddr != "" {
 			roles = append(roles, "DOH")
 		}
@@ -136,9 +138,9 @@ func New(conf string, r io.Reader) (*Server, error) {
 		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
 	}
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
-	if len(global.TlsIPs) != 0 && global.TlsContact != "" {
+	if !global.TlsTest && len(global.TlsIPs) != 0 && global.TlsContact != "" {
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
-		if p != "0" /* prolly test */ && p != "443" /* we need something on that port for TLS challenge */ {
+		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
 			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux))
 			s.httpstarted = make(chan error, len(s.httpservers))
@@ -155,6 +157,15 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 	}
 
 	// Set the defaults for atomdns.
+	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+	certmagic.Default.Logger = func() *zap.Logger {
+		// Start with any slog implementation
+		baseLogger := getSlogLogger() // your existing slog logger
+		filtered := filter.New(baseLogger, filter.MinLevel(slog.Info))
+
+		// Create a zap logger backed by slog
+		zapLogger := slogzap.NewZapLogger(filtered)
+	}()
 	global := &global.Global{
 		Registered:    make(map[string]struct{}),
 		Config:        conf,
@@ -164,7 +175,6 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Servers:       runtime.NumCPU() * 3,
 		TlsCertConfig: certmagic.NewDefault(),
 	}
-	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
 
 	for _, b := range blocks {
 		if b.Keys != nil {

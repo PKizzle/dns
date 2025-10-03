@@ -36,7 +36,7 @@ global section, see the configuration example below.
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
-        ca URL
+        ca URL [test]
     }
 }
 ```
@@ -113,6 +113,8 @@ If **ISSUER** is `lets-encrypt`:
 - `ca` lets you select the production or staging ACME CA endpoint, by specifying the URL here. The default for
   the time being is Let's Encrypt staging endpoint: <https://acme-staging-v02.api.letsencrypt.org/directory>.
   The production endpoint for Let's Encrypt is <https://acme-v02.api.letsencrypt.org/directory>.
+  If after the URL the literal text `test` is used, atomdns will not start a seperate web server on port 443,
+  this is to aid in local testing.
 
 Both `source` and `contact` are mandatory.
 

@@ -32,7 +32,7 @@ func main() {
 	flag.BoolVar(&flagHandler, "handler", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
-	flag.StringVar(&flagConf, "conf", "Conffile", "config to load")
+	flag.StringVar(&flagConf, "config", "Conffile", "config to load")
 	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
 
 	flag.Parse()

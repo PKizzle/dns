@@ -73,13 +73,19 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 			g.TlsIPs = args
 		case "ca":
 			args := d.RemainingArgs()
-			if len(args) != 1 {
+			if len(args) != 1 && len(args) != 2 {
 				return d.ArgErr()
 			}
 			if _, err := url.Parse(args[0]); err != nil {
 				return d.PropErr(err)
 			}
 			certmagic.DefaultACME.CA = args[0]
+			if len(args) == 2 {
+				if args[1] != "test" {
+					d.PropErr(fmt.Errorf("expected %q, got: %s", "test", args[1]))
+				}
+				g.TlsTest = true
+			}
 		default:
 			return d.ArgErr()
 		}
