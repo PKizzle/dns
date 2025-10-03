@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -20,6 +21,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
+	"github.com/caddyserver/certmagic"
 )
 
 type Server struct {
@@ -57,6 +59,7 @@ func (s *Server) Start() error {
 	roles := []string{"DNS"}
 	if s.global.TlsConfig != nil {
 		// roles = append(roles, "DOT")
+		// roles = append(roles, "DOQ")
 		if s.global.HttpAddr != "" {
 			roles = append(roles, "DOH")
 		}
@@ -96,6 +99,8 @@ func New(conf string, r io.Reader) (*Server, error) {
 		return nil, err
 	}
 	s.global = global
+
+	// dns servers
 	s.servers = make([]*dns.Server, global.Servers*2) // *2=udp/tcp
 	s.started = make(chan error, len(s.servers))
 	for j := range s.servers {
@@ -122,11 +127,25 @@ func New(conf string, r io.Reader) (*Server, error) {
 		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
 
+	// dot server
+	// s.tlsservers, s.tlsstarted...
+
+	// doh servers
 	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
 	s.httpstarted = make(chan error, len(s.httpservers))
 	for j := range s.httpservers {
 		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
 	}
+	// Check if we need something else running on 443 to do the challenge for TLS certs.
+	if !global.TlsTest && len(global.TlsIPs) != 0 && global.TlsContact != "" {
+		h, p, _ := net.SplitHostPort(global.HttpAddr)
+		if p != "0" && p != "443" {
+			addr := net.JoinHostPort(h, "443")
+			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux))
+			s.httpstarted = make(chan error, len(s.httpservers))
+		}
+	}
+
 	return s, nil
 }
 
@@ -140,10 +159,12 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Registered:    make(map[string]struct{}),
 		Config:        conf,
 		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
-		Addr:          "[::]:53", // default
+		Addr:          "[::]:53",
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
+		TlsCertConfig: certmagic.NewDefault(),
 	}
+
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue

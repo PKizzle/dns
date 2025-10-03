@@ -1,23 +1,21 @@
-# msgcache
-
-## Name
+# Name
 
 _msgcache_ - cache DNS messages
 
-## Description
+# Description
 
 With _msgcache_ messages are cached for faster retrieval. The responses code on responses will be checked as
 _msgcache_ will only cache RcodeNameError and RcodeSuccess. Items will be cached for a minimum of 600 seconds (5
 minutes), or their actual TTL with a maximum of a week (604800 seconds). After that they are evicted from the
 cache. For each cached elements a random jitter of up to 2 hours is added.
 
-## Syntax
+# Syntax
 
 ```
 msgcache
 ```
 
-## Examples
+# Examples
 
 The _dbsqlite_ handler needs round trips to the database which slows things down, to make it faster you can
 deploy the cache in front of it:
@@ -29,11 +27,11 @@ example.org {
 }
 ```
 
-## Bugs
+# Bugs
 
 This handler is not deemed ready yet.
 
-## Design
+# Design
 
 The _msgcache_ caches nodes that are build up as follows, in brackets are the Go types:
 

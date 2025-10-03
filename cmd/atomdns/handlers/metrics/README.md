@@ -1,10 +1,8 @@
-# metrics
-
-## Name
+# Name
 
 _metrics_ - enable [prometheus](https://prometheus.io/) metrics
 
-## Description
+# Description
 
 With _metrics_ metrics are exported from atomdns and any handler that adds extra ones.
 The default address for the metrics server is `localhost:9153`. The metrics path is fixed to `/metrics`.
@@ -38,7 +36,7 @@ client](https://prometheus.io/docs/guides/go-application/), the following metric
 If a server want to not partake in the metrics collection it sets `metrics disable` in the configuration. The default is
 to allow metrics gathering.
 
-## Syntax
+# Syntax
 
 ```txt
 metrics [|enable|disable]
@@ -48,7 +46,7 @@ Where:
 
 - _empty_ or `enable` will enable metrics gathering, only `disable` will disable it.
 
-## Examples
+# Examples
 
 Start a server on the default port and load the _whoami_ handler and disable metrics.
 

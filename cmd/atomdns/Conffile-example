@@ -22,8 +22,3 @@ atoom.net {
     log
     dbfile atoom.net
 }
-
-#example {
-#   msgcache
-#   dbsqlite db
-#}

@@ -1,10 +1,8 @@
-# sign
-
-## Name
+# Name
 
 _sign_ - add DNSSEC records to zone files
 
-## Description
+# Description
 
 The _sign_ "handler" is used to sign zones. In this process DNSSEC resource records are
 added. The signatures that sign the resource records sets have an expiration date, this means the
@@ -51,7 +49,7 @@ scheme, but then you need to name your keys explicitly, see the `keys` directive
 A generated zone is written out in a file named `<name>.signed` in the directory named by the
 `directory` directive or otherwise the directory where to original file is found.
 
-## Syntax
+# Syntax
 
 ```
 sign FILE {
@@ -71,7 +69,7 @@ sign FILE {
 - **DIRECTORY** specifies where to write the signed zone files. If not specified the directory where **FILE**
   is found is used. If the path is relative, the global _root_ will be prepended.
 
-## Examples
+# Examples
 
 Sign the `example.org` zone contained in the file `db.example.org` and write the result to
 `db.example.org.signed` to let the _dbfile_ handler pick it up and serve it. The keys used
@@ -102,7 +100,7 @@ Running this leads to the following log output
 Forcibly resigning a zone can be accomplished by removing the signed zone file (atomdns will keep
 on serving it from memory), and `touch`-ing **FILE**.
 
-## See Also
+# See Also
 
 The DNSSEC RFCs: RFC 4033, RFC 4034 and RFC 4035. And the best current practice (BCP) on DNSSEC, RFC 6781. And
 the _dbfile_ handler's documentation. Useful DNS(SEC) tools can be found in

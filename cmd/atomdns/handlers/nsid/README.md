@@ -1,16 +1,14 @@
-# nsid
-
-## Name
+# Name
 
 _nsid_ - adds an identifier of this server to each reply
 
-## Description
+# Description
 
 This handler implements RFC 5001 and adds an option code to replies that
 uniquely identify the server. This is useful in anycast setups to see which server was responsible for
 generating the reply and for debugging.
 
-## Syntax
+# Syntax
 
 ```txt
 nsid [DATA]
@@ -18,7 +16,7 @@ nsid [DATA]
 
 Where **DATA** is the string to use in the nsid record. If **DATA** is not given, the host's name is used.
 
-## Examples
+# Examples
 
 Enable nsid:
 
@@ -47,6 +45,6 @@ And now a client with NSID support will see an OPT record with the NSID option:
 ;whoami.example.org.		IN	A
 ```
 
-## See Also
+# See Also
 
 RFC 5001.

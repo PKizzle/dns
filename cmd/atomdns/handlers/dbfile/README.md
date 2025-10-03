@@ -1,10 +1,8 @@
-# dbfile
-
-## Name
+# Name
 
 _dbfile_ - serve zone data from an RFC 1035-style file
 
-## Description
+# Description
 
 The _dbfile_ handler is used for DNS servers that serve from a file that loaded from disk,
 containing RFC 1035 styled data. If the zone file contains signatures (i.e., is signed using DNSSEC), correct
@@ -15,7 +13,7 @@ The server will reply with minimal responses by default. The _dbfile_ handler wi
 it receives a (kernel) notify it will reload the zone after 2 seconds. Regardless of any change it will send out
 notifies if configured to do so, the actual SOA serial isn't relevant.
 
-## Syntax
+# Syntax
 
 In it simplests form _dbfile_ you can use:
 
@@ -67,7 +65,7 @@ dbfile FILE {
 
 Note that a bare `transfer` is enough to allow for outgoing transfers.
 
-## Examples
+# Examples
 
 Load the `example.org` zone from `db.example.org` and allow transfers to the internet, but send
 notifies to 10.240.1.1
@@ -110,6 +108,6 @@ example.org example.net {
 }
 ```
 
-## See Also
+# See Also
 
 See the _sign_ handler for signing your zones and see RFC 1035 for more info on how to structure zone files.

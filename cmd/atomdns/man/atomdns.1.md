@@ -26,7 +26,7 @@ for more information. Normally you need a **CONFFILE** (atomdns-conffile(5)) lik
 
 Available options:
 
-**-c**, **-conf** **CONFFILE**
+**-c**, **-config** **CONFFILE**
 : specify configuration file to load, if not given atomdns will look for a `Conffile` in the current directory, if that
 is also not found, it will use a built-in (test) Conffile:
 

@@ -16,12 +16,16 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"github.com/caddyserver/certmagic"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func (g *Global) Setup(d conffile.Dispenser) error {
 	if d.Next() {
 		switch d.Val() {
+		case "debug":
+			g.Debug = true
+			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "root":
 			if !d.NextArg() {
 				d.ArgErr()
@@ -42,10 +46,30 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			if err := g.SetupTLS(d); err != nil {
 				return err
 			}
-			g.OnStartup(func() error {
-				log.Info("Startup", "tls", args[0])
-				return nil
-			})
+			switch args[0] {
+			case "manual":
+				g.OnStartup(func() error {
+					log.Info("Startup", "tls", args[0])
+					return nil
+				})
+			case "lets-encrypt":
+				ctx, cancel := context.WithCancel(context.Background())
+				if len(g.TlsIPs) != 0 && g.TlsContact != "" {
+					g.OnStartup(func() error {
+						log.Info("Startup", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
+						err := certmagic.ManageAsync(ctx, g.TlsIPs)
+						if err != nil {
+							return err
+						}
+						return nil
+					})
+					g.OnShutdown(func() error {
+						log.Info("Shutdown", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
+						cancel()
+						return nil
+					})
+				}
+			}
 		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
@@ -153,8 +177,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return nil
 				})
 			}
-		case "debug":
-			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "metrics":
 			g.MetricsN = 10
 			addr := "localhost:9153"

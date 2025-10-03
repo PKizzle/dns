@@ -56,7 +56,8 @@ Is a valid config and is supported by `atomdns`.
 
 ## Global
 
-See Conffile can have a global section, this is a section without an origin:
+See Conffile can have a global section, this is a section without an origin and holds various server wide
+options, like how many instances, if you want DOH and DOT servers, etc. etc.
 
 ```txt
 {

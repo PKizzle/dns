@@ -1,10 +1,8 @@
-# as112
-
-## Name
+# Name
 
 _as112_ - an AS112 black hole server
 
-## Description
+# Description
 
 _as112_ is a AS112 black hole handler. It (if it is configured to receive those queries) replies to all
 queries in the following origins with a no data response:
@@ -29,13 +27,13 @@ queries in the following origins with a no data response:
 - 30.172.in-addr.arpa
 - 31.172.in-addr.arpa
 
-## Syntax
+# Syntax
 
 ```txt
 as112
 ```
 
-## Examples
+# Examples
 
 ```conffile
 . {
@@ -44,6 +42,6 @@ as112
 }
 ```
 
-## See Also
+# See Also
 
 Also see <https://www.as112.net/>.

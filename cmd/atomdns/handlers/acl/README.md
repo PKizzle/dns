@@ -1,17 +1,15 @@
-# acl
-
-## Name
+# Name
 
 _acl_ - enforces access control policies
 
-## Description
+# Description
 
 With _acl_, users are able to block or filter suspicious DNS queries by configuring IP filter rule sets, i.e.
 allowing authorized queries or blocking unauthorized queries.
 
 When evaluating the rule sets, _acl_ uses the source IP.
 
-## Syntax
+# Syntax
 
 ```
 acl {
@@ -32,7 +30,7 @@ acl {
 - **NET** is the source IP address to match for the requests to be allowed or blocked. Typical CIDR notation
   and single IP addresses are supported.
 
-## Examples
+# Examples
 
 To demonstrate the usage of _acl_, here we provide some typical examples.
 
@@ -98,7 +96,7 @@ Drop all DNS queries from 192.0.2.0/24:
 }
 ```
 
-## Metrics
+# Metrics
 
 If monitoring is enabled (via the _metrics_ handler) then the following metrics are exported:
 
@@ -109,6 +107,6 @@ If monitoring is enabled (via the _metrics_ handler) then the following metrics 
 
 The `zone`,`network` and `family` labels are explained in the _metrics_ handler documentation.
 
-## Bugs
+# Bugs
 
 _acl_ should also check TSIG and other signed messages.
