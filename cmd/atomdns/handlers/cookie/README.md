@@ -1,14 +1,12 @@
-# nsid
-
-## Name
+# Name
 
 _cookie_ - adds an DNS cookie of this server to each reply
 
-## Description
+# Description
 
 This handler implements the DNS cookie RFC.
 
-## Syntax
+# Syntax
 
 ```txt
 cookie SECRET
@@ -16,7 +14,7 @@ cookie SECRET
 
 Where **SECRET** is the secret to use in the server cookie generation record.
 
-## Examples
+# Examples
 
 Enable cookies:
 
@@ -27,6 +25,6 @@ example.org {
 }
 ```
 
-## Bugs
+# Bugs
 
 _cookie_ does not implement a cache to validate client, is just does enough to make `dig` happy.

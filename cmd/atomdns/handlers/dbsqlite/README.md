@@ -1,10 +1,8 @@
-# dbsqlite
-
-## Name
+# Name
 
 _dbsqilte_ - serve zone data from a SQLite database
 
-## Description
+# Description
 
 The _dbsqlite_ handler reads zone data from a data and serves that to clients. If the database contains
 signatures (i.e. is signed using DNSSEC), correct DNSSEC answers are returned. Only NSEC is supported. You can
@@ -25,7 +23,7 @@ query and may differ with the origins specified in the configuration.
 
 The server will reply with minimal responses by default.
 
-### Database
+## Database
 
 The schema used for the database is:
 
@@ -48,7 +46,7 @@ made not be made into fully qualified ones, and for some queries that will not b
 This one database can be safely used for all zones you have. Note that you still have to make sure the handler
 gets queries for new zones.
 
-#### Importing zone files
+### Importing zone files
 
 If you have a zone file you can use the `.import` feature of SQLite to import the file in one go using the
 excellent "ldns" utils from NLnet Labs (https://www.nlnetlabs.nl/projects/ldns/about/).
@@ -68,7 +66,7 @@ And then:
 Where the `ldns-read-zone` pipeline removes trailing white space, and the helpful comments after DNSKEY
 records, then `awk` re-arranges it into the proper format.
 
-## Syntax
+# Syntax
 
 In it simplest form _dbsqlite_ you can use:
 
@@ -97,7 +95,7 @@ dbsqlite DATABASE {
 }
 ```
 
-## Examples
+# Examples
 
 Have both `example.org` and `example.net` read from the same database.
 

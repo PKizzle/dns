@@ -1,10 +1,8 @@
-# dbhost
-
-## Name
+# Name
 
 _dbhosts_ - serve data from `/etc/hosts`
 
-## Description
+# Description
 
 The _dbhost_ handler is useful for serving data from a `/etc/hosts` file. It watches the file and reloads it
 when written to. The _dbhost_ handler can only reply to A, AAAA and PTR queries, all others are deferred to
@@ -12,7 +10,7 @@ the next handler(s).
 
 The _dbhost_ handler can be used with readily available hosts files that block access to advertising servers.
 
-## The hosts file
+# The hosts file
 
 Commonly the entries are of the form `IP_address canonical_hostname [aliases...]` as explained by
 the hosts(5) man page.
@@ -29,11 +27,11 @@ Examples:
 fdfc:a744:27b5:3b0e::1  example.com example
 ```
 
-### Reverse lookups
+## Reverse lookups
 
 PTR records for reverse lookups are generated automatically.
 
-## Syntax
+# Syntax
 
 ```txt
 dbhost [FILE] {
@@ -45,7 +43,7 @@ dbhost [FILE] {
   handler will be prepended to it. Defaults to`/etc/hosts` if omitted.
 - `ttl` change the **TTL** of the records generated (forward and reverse). The default is 3600 seconds (1 hour).
 
-## Examples
+# Examples
 
 Load `/etc/hosts` file.
 
@@ -64,7 +62,7 @@ example.org {
 }
 ```
 
-## See also
+# See also
 
 The form of the entries in the `/etc/hosts` file are based on IETF [RFC
 952](https://tools.ietf.org/html/rfc952) which was updated by IETF [RFC

@@ -1,15 +1,13 @@
-# chaos
-
-## Name
+# Name
 
 _chaos_ - respond to TXT queries in the CH class
 
-## Description
+# Description
 
 This is useful for retrieving version or author information from the server by querying a TXT record
 for a special domain name in the CH class.
 
-## Syntax
+# Syntax
 
 ```
 chaos [VERSION] {
@@ -29,7 +27,7 @@ the following origin _prefixes_: `version.`, `authors.`, `hostname.` and `id.`,
 i.e. having `version.example.org` will suffice to get queries for the
 `version.` prefix.
 
-## Examples
+# Examples
 
 Specify all the origins:
 

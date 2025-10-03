@@ -1,10 +1,8 @@
-# template
-
-## Name
+# Name
 
 _template_ - use Go templates to reply
 
-## Description
+# Description
 
 The _template_ handler allows you to dynamically respond to queries by just writing a Go template. The
 template is a file that is watched and reloaded when it changes. The template is the string version of a message
@@ -33,7 +31,7 @@ However, for one thing, the query ID will not be correct, so that line should be
 
 When nothing is matched _template_ will call the next handler, see below for more details.
 
-## Syntax
+# Syntax
 
 ```
 template REGEX [TYPE]... {
@@ -46,7 +44,7 @@ template REGEX [TYPE]... {
 - **TEMPLATE** is that template file that should be parsed and executed. If that the path is relative the
   global `root` path is prepended.
 
-## Templates
+# Templates
 
 A template must return a complete message that can be parsed back into an actual DNS message. The template
 parsing is _not_ case insensitive, i.e. `answer section:` will not be parsed but `ANSWER SECTION:` is.
@@ -62,9 +60,9 @@ Each template gets the following data (see the godoc of Data):
 - `.Msg` the complete message.
 - `.ResponseWriter` that holds all the data that can be extracted from the response writer.
 
-## Examples
+# Examples
 
-### Resolve to NXDOMAIN
+## Resolve to NXDOMAIN
 
 ```conffile
 example.org. {
@@ -86,7 +84,7 @@ Where `nxdomain.go.tmpl` contains:
 {{.Zone}}   IN SOA ns.icann.org. noc.dns.icann.org. 2025082229 7200 3600 1209600 3600
 ```
 
-## Also see
+# Also see
 
 [Go regexp](https://golang.org/pkg/regexp/) for details about the regex implementation and
 [Go template](https://golang.org/pkg/text/template/) for the template language reference.
