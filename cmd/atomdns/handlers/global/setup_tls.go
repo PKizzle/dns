@@ -15,11 +15,9 @@ import (
 )
 
 func (g *Global) SetupTLS(d conffile.Dispenser) error {
-	certmagic.Default.Logger = zlog.New(g.Debug)
 	certmagic.DefaultACME.Profile = "shortlived" // https://letsencrypt.org/2025/01/16/6-day-and-ip-certs
 	certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
 	certmagic.DefaultACME.Logger = zlog.New(g.Debug)
-	g.TlsCertConfig.Logger = zlog.New(g.Debug)
 
 	for d.NextBlock(0) {
 		switch d.Val() {
