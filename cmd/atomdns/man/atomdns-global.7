@@ -18,10 +18,10 @@ global section, see the configuration example below.
 .nf
 {
     root DIRECTORY
+    debug
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
-    debug
     dns {
         quiet
         addr ADDRESS
@@ -41,7 +41,7 @@ global section, see the configuration example below.
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
-        ca URL
+        ca URL [test]
     }
 }
 
@@ -71,7 +71,10 @@ With \fB\fCpprof\fR you can publish runtime profiling data at the endpoint on
 \fBADDRESS\fP under \fB\fC/debug/pprof\fR. The default is localhost:6053.
 
 
-.SS ""\fB\fCdns\fR
+.PP
+This is parsed in\-order and some settings depend on \fB\fCroot\fR and/or \fB\fCdebug\fR, so set those two early in the file.
+
+.SH ""\fB\fCdns\fR
 .PP
 With \fB\fCdns\fR you set DNS (port (usually) 53, TCP and UDP) server options, defined are.
 
@@ -95,7 +98,7 @@ start 10 server instances.
 .RE
 
 
-.SS ""\fB\fCdoh\fR
+.SH ""\fB\fCdoh\fR
 .PP
 With \fB\fCdoh\fR you set http server options, defined are.
 
@@ -122,7 +125,7 @@ because that is usually used in testing scenarios.
 .PP
 Further server options like \fB\fCdot\fR (DNS over TLS) and \fB\fCdoq\fR (DNS over QUIC) will be added in the future. The
 
-.SS ""\fB\fCtls\fR
+.SH ""\fB\fCtls\fR
 .PP
 With \fB\fCtls\fR you configure the TLS certificate setup. \fBISSUER\fP can be \fB\fCmanual\fR, or \fB\fClets-encrypt\fR. The later
 will set up the certicates automatically. If you use relative path in this configuration be sure that \fB\fCroot\fR
@@ -157,6 +160,8 @@ the time being is Let's Encrypt staging endpoint: https://acme\-staging\-v02.api
 \[la]https://acme-staging-v02.api.letsencrypt.org/directory\[ra].
 The production endpoint for Let's Encrypt is https://acme\-v02.api.letsencrypt.org/directory
 \[la]https://acme-v02.api.letsencrypt.org/directory\[ra].
+If after the URL the literal text \fB\fCtest\fR is used, atomdns will not start a seperate web server on port 443,
+this is to aid in local testing.
 
 
 .PP
