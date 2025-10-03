@@ -165,7 +165,6 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Addr:          "[::]:53",
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
-		TlsCertConfig: certmagic.NewDefault(),
 	}
 
 	for _, b := range blocks {
