@@ -137,7 +137,8 @@ func New(conf string, r io.Reader) (*Server, error) {
 		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
 	}
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
-	if !global.TlsTest && len(global.TlsIPs) != 0 && global.TlsContact != "" {
+	if global.TlsCertConfig != nil {
+		slog.Debug("Startup running extra server for ACME challenge", "port", "443")
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")

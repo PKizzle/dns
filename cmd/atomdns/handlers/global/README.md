@@ -32,11 +32,12 @@ global section, see the configuration example below.
         }
     }
     tls ISSUER {
-        cert CERT KEY [CA]
+        cert CERT KEY
+        rootca CA
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
-        ca URL [test]
+        ca URL
     }
 }
 ```
@@ -102,7 +103,8 @@ Depending on **ISSUER**, you have the following further configuration:
 If **ISSUER** is `manual`:
 
 - `cert`, that lists in that order **CERT** the `cert.pem` (as an example name) file, **KEY** the private key,
-  `key.pem` and optionally the `ca.pem` file.
+  `key.pem`
+- `rootca`, the root `ca.pem` file. This is optional, but can aid in testing.
 
 If **ISSUER** is `lets-encrypt`:
 
@@ -117,6 +119,7 @@ If **ISSUER** is `lets-encrypt`:
   The production endpoint for Let's Encrypt is <https://acme-v02.api.letsencrypt.org/directory>.
   If after the URL the literal text `test` is used, atomdns will not start a seperate web server on port 443,
   this is to aid in local testing.
+- `rootca`, can also be used here. This is optional, but can aid in testing.
 
 Both `source` and `contact` are mandatory.
 
