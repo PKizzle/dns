@@ -65,6 +65,12 @@ func (g *Global) SetupTLS(d conffile.Dispenser) error {
 			}
 			g.TlsPath = args[0]
 			g.TlsCertConfig.Storage = &certmagic.FileStorage{Path: g.TlsPath}
+		case "source":
+			args, err := d.RemainingIPs()
+			if err != nil {
+				return d.PropErr(err)
+			}
+			g.TlsIPs = args
 		case "ca":
 			args := d.RemainingArgs()
 			if len(args) != 1 {

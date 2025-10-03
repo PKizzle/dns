@@ -37,10 +37,12 @@ global section, see the configuration example below.
             run EXPR
         }
     }
-    tls PROVIDER {
+    tls ISSUER {
         cert CERT KEY [CA]
+        source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
+        ca URL
     }
 }
 
@@ -113,19 +115,25 @@ lowercase.
 
 
 .PP
-Further server options like \fB\fCdot\fR (DNS over TLS) and \fB\fCdoq\fR (DNS over QUIC) will be added in the future.
+To allow the certificate challenge, all DOH web servers will also handle the TLS\-ALPN\-1 challenge,
+disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
+started on that port, \fIjust\fP for the certificate challenge. N.B. This is only done if the port isn't "0",
+because that is usually used in testing scenarios.
+
+.PP
+Further server options like \fB\fCdot\fR (DNS over TLS) and \fB\fCdoq\fR (DNS over QUIC) will be added in the future. The
 
 .SS ""\fB\fCtls\fR
 .PP
-With \fB\fCtls\fR you configure the TLS certificate setup. \fBPROVIDER\fP can be \fB\fCmanual\fR, or \fB\fClets-encrypt\fR. The later
+With \fB\fCtls\fR you configure the TLS certificate setup. \fBISSUER\fP can be \fB\fCmanual\fR, or \fB\fClets-encrypt\fR. The later
 will set up the certicates automatically. If you use relative path in this configuration be sure that \fB\fCroot\fR
 is set \fIabove\fP this config, so that its value is set.
 
 .PP
-Depending on \fBPROVIDER\fP, you have the following further configuration:
+Depending on \fBISSUER\fP, you have the following further configuration:
 
 .PP
-If \fBPROVIDER\fP is \fB\fCmanual\fR:
+If \fBISSUER\fP is \fB\fCmanual\fR:
 
 .IP \(bu 4
 \fB\fCcert\fR, that lists in that order \fBCERT\fP the \fB\fCcert.pem\fR (as an example name) file, \fBKEY\fP the private key,
@@ -133,14 +141,31 @@ If \fBPROVIDER\fP is \fB\fCmanual\fR:
 
 
 .PP
-If \fBPROVIDER\fP is \fB\fClets-encrypt\fR:
+If \fBISSUER\fP is \fB\fClets-encrypt\fR:
 
 .IP \(bu 4
-\fB\fCcontact\fR, where \fBEMAIL\fP is the contact email use when retrieving certificates.
+\fB\fCsource\fR, a list of \fBIP\fPs or \fBIFACE\fP names for which the IP addresss should be retrieved, and for which
+the TLS certificates should be requested.
+.IP \(bu 4
+\fB\fCcontact\fR, where \fBEMAIL\fP is the contact email use when retrieving certificates. This can be set to (one
+of) your SOA's Mbox (RNAME \- responsible person) mail address.
 .IP \(bu 4
 \fB\fCpath\fR has the \fBPATH\fP where the certificates are stored. The global's \fB\fCroot\fR is prepended if this a
 relative path name.
+.IP \(bu 4
+\fB\fCca\fR lets you select the production or staging ACME CA endpoint, by specifying the URL here. The default for
+the time being is Let's Encrypt staging endpoint: https://acme\-staging\-v02.api.letsencrypt.org/directory
+\[la]https://acme-staging-v02.api.letsencrypt.org/directory\[ra].
+The production endpoint for Let's Encrypt is https://acme\-v02.api.letsencrypt.org/directory
+\[la]https://acme-v02.api.letsencrypt.org/directory\[ra].
 
+
+.PP
+Both \fB\fCsource\fR and \fB\fCcontact\fR are mandatory.
+
+.PP
+To complete the challenge a web server needs to be running on port 443, if DOH is enabled (see \fB\fCdoh\fR), and is
+not already running on 443 another server will be started on that port just for the challenge.
 
 .SH "EXAMPLES"
 .PP
@@ -153,6 +178,11 @@ This runs both a DNS and DOH server, the DOH server listens on port 8053.
 {
     root /var/lib/atomdns
     metrics localhost:9153
+    tls lets\-encrypt {
+        contact hello@example.org
+        source eth0
+        path certs
+    }
     dns {
         limits {
             tcp \-1

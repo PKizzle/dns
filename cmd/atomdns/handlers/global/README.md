@@ -35,8 +35,10 @@ global section, see the configuration example below.
     }
     tls ISSUER {
         cert CERT KEY [CA]
+        source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
+        ca URL
     }
 }
 ```
@@ -83,7 +85,9 @@ With `doh` you set http server options, defined are.
     lowercase.
 
 To allow the certificate challenge, all DOH web servers will also handle the TLS-ALPN-1 challenge,
-disregarding the port the run on.
+disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
+started on that port, _just_ for the certificate challenge. N.B. This is only done if the port isn't "0",
+because that is usually used in testing scenarios.
 
 Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future. The
 
