@@ -33,11 +33,11 @@ global section, see the configuration example below.
     }
     tls ISSUER {
         cert CERT KEY
-        rootca CA
+        ca URL
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
         path PATH
-        ca URL
+        rootca CA
     }
 }
 ```
@@ -88,9 +88,10 @@ With `doh` you set http server options, defined are.
 To allow the certificate challenge, all DOH web servers will also handle the TLS-ALPN-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
 started on that port, _just_ for the certificate challenge. N.B. This is only done if the port isn't "0",
-because that is usually used in testing scenarios.
+because that is usually used in testing scenarios. This requires the atomdns binary to be able to bind to that
+port.
 
-Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future. The
+Further server options like `dot` (DNS over TLS) and `doq` (DNS over QUIC) will be added in the future.
 
 ## `tls`
 
