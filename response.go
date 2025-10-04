@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"crypto/tls"
 	"io"
 	"net"
 	"sync/atomic"
@@ -61,8 +62,10 @@ func (w *response) LocalAddr() net.Addr {
 		return sock.LocalAddr()
 	case *net.TCPConn:
 		return sock.LocalAddr()
+	case *tls.Conn:
+		return sock.LocalAddr()
 	default:
-		panic("dns: internal error: no sock in response")
+		panic("dns: internal error: no sock 🧦 in response")
 	}
 }
 
@@ -76,8 +79,10 @@ func (w *response) RemoteAddr() net.Addr {
 		return w.Session().Addr
 	case *net.TCPConn:
 		return sock.RemoteAddr()
+	case *tls.Conn:
+		return sock.RemoteAddr()
 	default:
-		panic("dns: internal error: no sock in response")
+		panic("dns: internal error: no sock 🧦 in response")
 	}
 }
 
