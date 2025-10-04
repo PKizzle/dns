@@ -9,7 +9,7 @@
         }
     }
     doh {
-        addr [::]:10053
+        addr [::]:1443
         limits {
             run numcpu()*1
         }
@@ -30,7 +30,7 @@
     whoami
 }
 
-atoom.net {
+example.org {
     log
     dbfile dbfile/zone/testdata/db.example.org
 }

@@ -84,6 +84,7 @@ __________________________________\o/_______
 ```
 
 Where the last INFO line shows the config parsed, the number of origins processed and for which protocols the
-server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS).
+server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS). E.g. use `dig @localhost -p 1053 A
+-x 10.0.0.1` to test.
 
 See atomdns-conffile(7) for more information.

@@ -166,7 +166,6 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		i, N := uint64(0), global.MetricsN
 		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, err error) {
-			println("err", err.Error())
 			if N == 0 {
 				return
 			}
