@@ -61,4 +61,29 @@ Or use `Conffile-example` which has a more complete set:
 
     ./atomdns -c Conffile-example
 
+When atomdns starts you are greeted (when not using `quiet`) a bunch of log lines and a welcome banner:
+
+```txt
+2025/10/04 08:07:07 INFO 0.0.10.in-addr.arpa. handlers=unpack,log,whoami,refuse
+2025/10/04 08:07:07 INFO atoom.net. handlers=unpack,log,dbfile,refuse
+2025/10/04 08:07:07 INFO Startup functions total=7
+2025/10/04 08:07:07 INFO Startup handler=global dns=[::]:1053 tcp=-1 run=24
+2025/10/04 08:07:07 INFO Startup handler=global doh=[::]:10053 run=8 path=/dns-query
+2025/10/04 08:07:07 INFO Startup handler=global dot=[::]:8053 tcp=128 run=1
+2025/10/04 08:07:07 INFO Startup handler=global tls=manual
+2025/10/04 08:07:07 INFO Startup handler=log signal=USR1
+2025/10/04 08:07:07 INFO Startup handler=log signal=USR1
+2025/10/04 08:07:07 INFO Startup handler=dbfile reload=db.example.org
+2025/10/04 08:07:07 INFO Launched config=Conffile-example origins=2 roles=DNS,DOH,DOT
+  ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
+  ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v011
+  ╹ ╹   ╹   ┗━┛  ╹ ╹
+  High performance and flexible DNS server
+  https://atomdns.miek.nl
+__________________________________\o/_______
+```
+
+Where the last INFO line shows the config parsed, the number of origins processed and for which protocols the
+server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS).
+
 See atomdns-conffile(7) for more information.

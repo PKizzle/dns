@@ -99,6 +99,25 @@ start 10 server instances.
 .RE
 
 
+.SH ""\fB\fCdot\fR
+.PP
+With \fB\fCdot\fR you control DNS TLS server options, defined are:
+
+.IP \(bu 4
+\fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:853\fR.
+.IP \(bu 4
+\fB\fClimits\fR set further limits:
+
+.RS
+.IP \(en 4
+\fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 128, \-1 disables.
+.IP \(en 4
+\fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*1\fR, this can be a bare number,
+like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in lowercase.
+
+.RE
+
+
 .SH ""\fB\fCdoh\fR
 .PP
 With \fB\fCdoh\fR you set http server options, defined are.
@@ -111,8 +130,7 @@ With \fB\fCdoh\fR you set http server options, defined are.
 .RS
 .IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*1\fR, this can be a bare number,
-like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in
-lowercase.
+like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in lowercase.
 
 .RE
 
