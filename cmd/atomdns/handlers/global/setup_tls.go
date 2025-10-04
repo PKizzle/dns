@@ -26,13 +26,11 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 			if len(args) != 2 {
 				return d.ArgErr()
 			}
-			paths := make([]string, len(args))
-			for i, arg := range paths {
-				if filepath.IsAbs(arg) {
-					paths[i] = arg
-					continue
-				}
-				paths[i] = filepath.Join(g.Root, arg)
+			if !filepath.IsAbs(args[0]) {
+				args[0] = filepath.Join(g.Root, args[0])
+			}
+			if !filepath.IsAbs(args[1]) {
+				args[1] = filepath.Join(g.Root, args[1])
 			}
 			cert, err := tls.LoadX509KeyPair(args[0], args[1])
 			if err != nil {
@@ -52,6 +50,9 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 			args := d.RemainingArgs() // we don't have co.RemainingPaths in d
 			if len(args) != 1 {
 				return d.ArgErr()
+			}
+			if !filepath.IsAbs(args[0]) {
+				args[0] = filepath.Join(g.Root, args[0])
 			}
 			roots, err := loadCA(args[0])
 			if err != nil {
