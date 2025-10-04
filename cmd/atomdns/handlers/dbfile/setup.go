@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
@@ -96,8 +97,11 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			zones := maps.Values(d.Zones)
 			d.RUnlock()
 			for z := range zones {
-				log.Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path))
-				d.To.Notify(z.Origin())
+				log.Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path), slog.Duration("after", 10*time.Second))
+				go func() {
+					time.Sleep(10 * time.Second)
+					d.To.Notify(z.Origin())
+				}()
 			}
 			return nil
 		})
