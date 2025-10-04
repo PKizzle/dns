@@ -34,6 +34,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
 			}
+			if _, err := os.Stat(g.Root); err != nil {
+				return err
+			}
 		case "tls":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
