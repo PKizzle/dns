@@ -4,6 +4,7 @@ steps:
       event: [push, pull_request]
     image: golang:tip
     commands:
+      - apt install bind9-dnsutils
       - go get
       - go build
       - go test -v ./...
