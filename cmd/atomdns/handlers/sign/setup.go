@@ -65,6 +65,10 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 				if !filepath.IsAbs(s.Directory) {
 					s.Directory = filepath.Join(co.Global.Root, s.Directory)
 				}
+				err := os.MkdirAll(s.Directory, 0750)
+				if err != nil {
+					return err
+				}
 			default:
 				return co.ArgErr()
 			}
