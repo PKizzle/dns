@@ -322,7 +322,7 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		options.RequestMAC = t.MAC
 	}
 	for e := range env {
-		m := new(Msg)
+		m := new(Msg) // TODO(miek): Msg can be lifted out of for loop?
 		m.Authoritative = true
 
 		// dnsutil.SetReply as used here, but led to all kinds of cyclic imports, just use that very static code here.
