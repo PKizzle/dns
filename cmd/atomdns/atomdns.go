@@ -29,7 +29,7 @@ func main() {
 		confdata    []byte
 		err         error
 	)
-	flag.BoolVar(&flagHandler, "handler", false, "show sorted list of handlers")
+	flag.BoolVar(&flagHandler, "handlers", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "version", false, "show version")
 	flag.BoolVar(&flagVersion, "v", false, "show version")
 	flag.StringVar(&flagConf, "config", "Conffile", "config to load")

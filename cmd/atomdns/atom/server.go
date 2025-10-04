@@ -2,6 +2,7 @@ package atom
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log/slog"
@@ -26,10 +27,14 @@ import (
 )
 
 type Server struct {
-	global  *global.Global
-	servers []*dns.Server
+	global *global.Global
+
 	mux     *dns.ServeMux
+	servers []*dns.Server
 	started chan error
+
+	tlsservers []*dns.Server
+	tlsstarted chan error
 
 	httpservers []*atomhttp.Server
 	httpstarted chan error
@@ -38,6 +43,9 @@ type Server struct {
 }
 
 func (s *Server) Start() error {
+	if err := s.global.Startup(); err != nil {
+		return err
+	}
 	for i := range s.servers {
 		go Serve(s.started, s.servers[i], s.global)
 	}
@@ -48,6 +56,17 @@ func (s *Server) Start() error {
 			return err
 		}
 	}
+
+	for i := range s.tlsservers {
+		go Serve(s.tlsstarted, s.tlsservers[i], s.global)
+	}
+	for range s.tlsservers {
+		err := <-s.tlsstarted
+		if err != nil {
+			return err
+		}
+	}
+
 	for i := range s.httpservers {
 		go atomhttp.Serve(s.httpstarted, s.httpservers[i], s.global)
 	}
@@ -58,11 +77,12 @@ func (s *Server) Start() error {
 	}
 
 	roles := []string{"DNS"}
-	if s.global.TlsConfig != nil {
-		// roles = append(roles, "DOT")
-		// roles = append(roles, "DOQ")
-		if s.global.HttpAddr != "" {
+	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
+		if s.global.HttpServers > 0 {
 			roles = append(roles, "DOH")
+		}
+		if s.global.TlsServers > 0 {
+			roles = append(roles, "DOT")
 		}
 	}
 
@@ -71,10 +91,6 @@ func (s *Server) Start() error {
 }
 
 func Serve(ch chan error, srv *dns.Server, global *global.Global) {
-	if err := global.Startup(); err != nil {
-		ch <- err
-		return
-	}
 	if err := srv.ListenAndServe(); err != nil {
 		ch <- err
 		return
@@ -86,7 +102,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		slog.Warn("Failed to run shutdown", slog.Any("error", err))
 	}
 	for _, srv := range s.servers {
-		srv.Shutdown(context.TODO())
+		srv.Shutdown(ctx)
+	}
+	for _, srv := range s.tlsservers {
+		srv.Shutdown(ctx)
+	}
+	for _, srv := range s.httpservers {
+		srv.Shutdown(ctx)
 	}
 	return nil
 }
@@ -110,12 +132,10 @@ func New(conf string, r io.Reader) (*Server, error) {
 			net = "udp"
 		}
 		s.servers[j] = &dns.Server{
-			Handler: s.mux, Net: net, Addr: global.Addr,
-			MaxTCPQueries: global.MaxTCPQueries,
-			ReuseAddr:     true, ReusePort: true,
+			ReuseAddr: true, ReusePort: true,
+			Handler: s.mux, Net: net, Addr: global.Addr, MaxTCPQueries: global.MaxTCPQueries,
 		}
-		i := uint64(0)
-		N := global.MetricsN
+		i, N := uint64(0), global.MetricsN
 		s.servers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
 			if N == 0 {
 				return
@@ -129,7 +149,33 @@ func New(conf string, r io.Reader) (*Server, error) {
 	}
 
 	// dot server
-	// s.tlsservers, s.tlsstarted...
+	s.tlsservers = make([]*dns.Server, global.TlsServers)
+	s.tlsstarted = make(chan error, len(s.tlsservers))
+	for j := range s.tlsservers {
+		tlsConfig := &tls.Config{}
+		if global.TlsConfig != nil {
+			tlsConfig = global.TlsConfig.Clone()
+		}
+		if global.TlsCertConfig != nil {
+			tlsConfig = global.TlsCertConfig.TLSConfig().Clone()
+		}
+		tlsConfig.NextProtos = []string{"dot"}
+		s.tlsservers[j] = &dns.Server{
+			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
+			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsMaxTCPQueries,
+		}
+		i, N := uint64(0), global.MetricsN
+		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, err error) {
+			if N == 0 {
+				return
+			}
+			if i%N == 0 {
+				metrics.Dropped.Inc()
+			}
+			i++
+		}
+		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
+	}
 
 	// doh servers
 	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
@@ -165,6 +211,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		Addr:          "[::]:53",
 		MaxTCPQueries: 128,
 		Servers:       runtime.NumCPU() * 3,
+		TlsAddr:       "[::]:853",
 	}
 
 	for _, b := range blocks {
@@ -244,10 +291,19 @@ func (s *Server) Addr() []string {
 	return addr
 }
 
-// HttpAddr return the address of the DOH server. See [Addr].
+// HttpAddr return the addresses of the DOH servers. See [Addr].
 func (s *Server) HttpAddr() []string {
 	addr := make([]string, len(s.httpservers))
 	for i, srv := range s.httpservers {
+		addr[i] = srv.Listener.Addr().String()
+	}
+	return addr
+}
+
+// TlsAddr returns the addreses of the DOT servers. See [Addr].
+func (s *Server) TlsAddr() []string {
+	addr := make([]string, len(s.tlsservers))
+	for i, srv := range s.tlsservers {
 		addr[i] = srv.Listener.Addr().String()
 	}
 	return addr

@@ -10,7 +10,6 @@ import (
 	pp "net/http/pprof"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -43,7 +42,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			if args[0] != "manual" && args[0] != "lets-encrypt" {
 				return d.PropErr(fmt.Errorf("expected %q or %q, got: %s", "manual", "lets-encrypt", args[0]))
 			}
-			if err := g.SetupTLS(d); err != nil {
+			if err := g.SetupTLS(&d); err != nil {
 				return err
 			}
 			switch args[0] {
@@ -53,9 +52,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return nil
 				})
 			case "lets-encrypt":
-				g.TlsCertConfig = certmagic.NewDefault()
-				ctx, cancel := context.WithCancel(context.Background())
 				if len(g.TlsIPs) != 0 && g.TlsContact != "" {
+					g.TlsCertConfig = certmagic.NewDefault()
+					ctx, cancel := context.WithCancel(context.Background())
 					g.OnStartup(func() error {
 						log.Info("Startup", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
 						err := certmagic.ManageAsync(ctx, g.TlsIPs)
@@ -86,41 +85,14 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					}
 					g.Addr = addrs[0]
 				case "limits":
-					for d.NextBlock(1) {
-						switch d.Val() {
-						case "tcp":
-							limits := d.RemainingArgs()
-							if len(limits) != 1 {
-								return d.PropErr(fmt.Errorf("need single limit"))
-							}
-							n, err := strconv.Atoi(limits[0])
-							if err != nil || n < -1 {
-								return d.PropErr(fmt.Errorf("not a number: %q", limits[0]))
-							}
-							g.MaxTCPQueries = n
-						case "run":
-							exprs := d.RemainingArgs()
-							if len(exprs) != 1 {
-								return d.PropErr(fmt.Errorf("need single expression"))
-							}
-							if strings.HasPrefix(strings.ToLower(exprs[0]), "numcpu()*") {
-								n, err := strconv.Atoi(exprs[0][len("numcpu()*"):])
-								if err != nil || n < 0 {
-									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
-								}
-								g.Servers = runtime.NumCPU() * n
-							} else {
-								n, err := strconv.Atoi(exprs[0])
-								if err != nil || n < 0 {
-									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
-								}
-								g.Servers = n
-							}
-						default:
-							return d.ArgErr()
-						}
+					l, err := g.SetupLimits(&d)
+					if err != nil {
+						return err
 					}
-
+					g.MaxTCPQueries = l.MaxTCPQueries
+					if l.Servers != -1 {
+						g.Servers = l.Servers
+					}
 				default:
 					return d.ArgErr()
 				}
@@ -129,6 +101,38 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				log.Info("Startup", "dns", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
 				return nil
 			})
+
+		case "dot":
+			for d.NextBlock(0) {
+				switch d.Val() {
+				case "addr":
+					addrs, err := d.RemainingAddrs()
+					if err != nil {
+						return d.PropErr(err)
+					}
+					if len(addrs) != 1 {
+						return d.PropErr(fmt.Errorf("need single address"))
+					}
+					g.TlsAddr = addrs[0]
+				case "limits":
+					l, err := g.SetupLimits(&d)
+					if err != nil {
+						return err
+					}
+					g.TlsMaxTCPQueries = l.MaxTCPQueries
+					if l.Servers != -1 {
+						g.TlsServers = l.Servers
+					}
+				default:
+					return d.ArgErr()
+				}
+			}
+			if g.TlsServers > 0 {
+				g.OnStartup(func() error {
+					log.Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsMaxTCPQueries, "run", g.TlsServers)
+					return nil
+				})
+			}
 
 		case "doh":
 			for d.NextBlock(0) {
@@ -143,36 +147,18 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					}
 					g.HttpAddr = addrs[0]
 				case "limits":
-					for d.NextBlock(1) {
-						switch d.Val() {
-						case "run":
-							exprs := d.RemainingArgs()
-							if len(exprs) != 1 {
-								return d.PropErr(fmt.Errorf("need single expression"))
-							}
-							if strings.HasPrefix(strings.ToLower(exprs[0]), "numcpu()*") {
-								n, err := strconv.Atoi(exprs[0][len("numcpu()*"):])
-								if err != nil || n < 0 {
-									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
-								}
-								g.HttpServers = runtime.NumCPU() * n
-							} else {
-								n, err := strconv.Atoi(exprs[0])
-								if err != nil || n < 0 {
-									return d.PropErr(fmt.Errorf("not a (positive) number: %q", exprs[0]))
-								}
-								g.HttpServers = n
-							}
-						default:
-							return d.ArgErr()
-						}
+					l, err := g.SetupLimits(&d)
+					if err != nil {
+						return err
 					}
-
+					if l.Servers != -1 {
+						g.HttpServers = l.Servers
+					}
 				default:
 					return d.ArgErr()
 				}
 			}
-			if g.HttpAddr != "" {
+			if g.HttpServers > 0 {
 				g.OnStartup(func() error {
 					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
 					return nil

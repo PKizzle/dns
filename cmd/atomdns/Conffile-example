@@ -1,5 +1,6 @@
 {
     debug
+    root handlers
     dns {
         addr [::]:1053
         limits {
@@ -8,17 +9,28 @@
         }
     }
     doh {
-        addr [::]:10053
+        addr [::]:1443
         limits {
             run numcpu()*1
         }
     }
+    dot {
+        addr [::]:8053
+        limits {
+            run 1
+        }
+    }
     tls manual {
-        cert handlers/global/testdata/test_cert.pem handlers/global/testdata/test_key.pem
+        cert global/testdata/test_cert.pem global/testdata/test_key.pem
     }
 }
 
-atoom.net {
+10.0.0.0/24 {
     log
-    dbfile atoom.net
+    whoami
+}
+
+example.org {
+    log
+    dbfile dbfile/zone/testdata/db.example.org
 }

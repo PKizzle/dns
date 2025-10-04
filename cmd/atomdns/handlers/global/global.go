@@ -31,6 +31,10 @@ type Global struct {
 	// doh
 	HttpAddr    string
 	HttpServers int
+	// dot
+	TlsAddr          string
+	TlsServers       int
+	TlsMaxTCPQueries int
 	// tls
 	TlsConfig     *tls.Config // manual
 	TlsCertConfig *certmagic.Config

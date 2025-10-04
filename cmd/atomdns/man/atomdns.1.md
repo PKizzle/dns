@@ -43,7 +43,7 @@ example.org {
 }
 ```
 
-**-handler**
+**-handlers**
 : list all handlers and quit.
 
 **-v**, **-version**
