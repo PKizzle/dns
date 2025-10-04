@@ -14,6 +14,8 @@ metrics will not be able to be scraped, but they are still gathered.
 
 Enabling metrics means taking a (severe) performance hit (50 Kqps, seen in [limited] testing), to alleviate
 this, by default, only 1 in 10 queries will be monitored. See the _global_ handler's documentation on how to change this.
+When displaying these metrics in (e.g.) Grafana, be sure to \*10, otherwise your queries per second is lower
+then you hoped for.
 
 In addition to the default Go metrics exported by the [prometheus Go
 client](https://prometheus.io/docs/guides/go-application/), the following metrics are exported:
