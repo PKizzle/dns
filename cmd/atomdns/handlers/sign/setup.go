@@ -45,7 +45,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 				s.ttl = uint32(ttl)
 
 			case "key":
-				args := co.RemainingArgs()
+				args := co.RemainingPaths()
 				if len(args) == 0 {
 					return co.ArgErr()
 				}
@@ -61,10 +61,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 				if !co.Next() {
 					return co.ArgErr()
 				}
-				s.Directory = co.Val()
-				if !filepath.IsAbs(s.Directory) {
-					s.Directory = filepath.Join(co.Global.Root, s.Directory)
-				}
+				s.Directory = co.Path()
 				err := os.MkdirAll(s.Directory, 0750)
 				if err != nil {
 					return err
