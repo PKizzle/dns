@@ -90,6 +90,19 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			return d.Retransfer()
 		})
 	}
+	if d.To != nil && len(d.To.IPs) > 0 {
+		co.OnStartup(func() error {
+			d.RLock()
+			zones := maps.Values(d.Zones)
+			d.RUnlock()
+			for z := range zones {
+				log.Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path))
+				d.To.Notify(z.Origin())
+			}
+			return nil
+		})
+	}
+
 	co.OnShutdown(func() error {
 		log.Info("Shutdown", "reload", filepath.Base(d.Path))
 		d.cancel()
