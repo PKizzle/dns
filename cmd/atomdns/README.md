@@ -41,12 +41,24 @@ This should yield a `atomdns` binary.
 
 The configuration of atomdns is done through a file named `Conffile`. When atomdns starts, it will
 look for the `Conffile` from the current working directory. A `Conffile` for atomdns server that listens
-on port `53` and enables `whoami` handler is:
+on port `1053` and enables `whoami` handler is:
 
 ```conffile
+{
+    dns {
+        addr [::]:1053
+    }
+}
+
 . {
     whoami
 }
 ```
 
-Then start `atomdns -p 1053 -c Conffile`. See atomdns-conffile(7) for more information.
+Then start `./atomdns -c Conffile`.
+
+Or use `Conffile-example` which has a more complete set:
+
+    ./atomdns -c Conffile-example
+
+See atomdns-conffile(7) for more information.

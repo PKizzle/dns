@@ -1,5 +1,6 @@
 {
     debug
+    root handlers
     dns {
         addr [::]:1053
         limits {
@@ -20,7 +21,7 @@
         }
     }
     tls manual {
-        cert handlers/global/testdata/test_cert.pem handlers/global/testdata/test_key.pem
+        cert global/testdata/test_cert.pem global/testdata/test_key.pem
     }
 }
 
@@ -31,5 +32,5 @@
 
 atoom.net {
     log
-    dbfile atoom.net
+    dbfile dbfile/zone/testdata/db.example.org
 }
