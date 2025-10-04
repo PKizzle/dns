@@ -39,9 +39,6 @@ func (d *Dbsqlite) SetupTransfer(co *dnsserver.Controller) (err error) {
 					}
 				}
 			}
-			if len(d.To.IPs) == 0 && len(d.To.Notifies) == 0 {
-				return co.Err("both 'to' and 'notify' are empty")
-			}
 
 		default:
 			return co.SyntaxErr("expected 'from', got: " + co.Val())
