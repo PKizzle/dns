@@ -154,17 +154,19 @@ func New(conf string, r io.Reader) (*Server, error) {
 	for j := range s.tlsservers {
 		tlsConfig := &tls.Config{}
 		if global.TlsConfig != nil {
-			tlsConfig = global.TlsConfig
+			tlsConfig = global.TlsConfig.Clone()
 		}
 		if global.TlsCertConfig != nil {
-			tlsConfig = global.TlsCertConfig.TLSConfig()
+			tlsConfig = global.TlsCertConfig.TLSConfig().Clone()
 		}
+		tlsConfig.NextProtos = []string{"dot"}
 		s.tlsservers[j] = &dns.Server{
 			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
 			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsMaxTCPQueries,
 		}
 		i, N := uint64(0), global.MetricsN
-		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, err error) {
+			println("err", err.Error())
 			if N == 0 {
 				return
 			}
