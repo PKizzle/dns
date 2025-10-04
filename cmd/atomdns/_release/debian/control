@@ -1,7 +1,7 @@
 Source: atomdns
 Section: net
 Maintainer: Miek Gieben <miek@miek.nl>
-Build-Depends: debhelper (>= 9), dh-sysuser, lsb-release
+Build-Depends: debhelper (>= 9), lsb-release
 
 Package: atomdns
 Architecture: any
