@@ -73,7 +73,7 @@ func (z *Zone) Load() error {
 		return fmt.Errorf("failed to parse zone %q with origin %q: %s ", z.Path, z.origin, zp.Err())
 	}
 	if soa != 1 {
-		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA records", z.Path, z.origin)
+		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA record", z.Path, z.origin)
 	}
 	z.apex, _ = z.Tree.Get(dnszone.Node{Name: z.origin})
 	return nil

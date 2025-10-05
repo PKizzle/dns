@@ -108,7 +108,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 	}
 
 	// NXDOOMAIN response.
-	if hint != hintDelegation && encloser.Name != r.Question[0].Header().Name {
+	if hint != hintDelegation && !dns.EqualName(encloser.Name, r.Question[0].Header().Name) {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
 				r.Ns = append(r.Ns, rr.Clone())
