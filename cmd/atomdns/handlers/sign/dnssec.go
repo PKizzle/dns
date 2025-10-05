@@ -202,7 +202,7 @@ func (s Sign) Write(z *zone.Zone) error {
 	defer os.Remove(f.Name())
 
 	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
-	alog.Debug("Successful resign", slog.String("temp", f.Name()))
+	alog.Debug("Successful resign", slog.String("temp", filepath.Base(f.Name())))
 
 	z.Walk(func(n dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
@@ -213,6 +213,6 @@ func (s Sign) Write(z *zone.Zone) error {
 	})
 	f.Close()
 	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
-	alog.Info("Successful resign", slog.String("written", target))
+	alog.Info("Successful resign", slog.String("written", filepath.Base(target)))
 	return os.Rename(f.Name(), target)
 }

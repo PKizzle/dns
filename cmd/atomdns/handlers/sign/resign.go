@@ -34,11 +34,11 @@ func (s *Sign) Resign() error {
 						if z.Path == path.Clean(event.Name) {
 							zs, err := s.Sign(z.Origin())
 							if err != nil {
-								alog.Error("Failed to resign", Err( err))
+								alog.Error("Failed to resign", Err(err))
 								break
 							}
 							if err := s.Write(zs); err != nil {
-								alog.Error("Failed to resign", Err( err))
+								alog.Error("Failed to resign", Err(err))
 								break
 							}
 							alog.Info("Successful resign")
@@ -50,7 +50,7 @@ func (s *Sign) Resign() error {
 				if !ok {
 					continue
 				}
-				log.Debug("Zone watch event error", Err( err))
+				log.Debug("Zone watch event error", Err(err))
 			case <-ticker.C:
 				for _, z := range s.Zones {
 					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
@@ -61,11 +61,11 @@ func (s *Sign) Resign() error {
 					}
 					zs, err := s.Sign(z.Origin())
 					if err != nil {
-						alog.Error("Failed to resign", Err( err))
+						alog.Error("Failed to resign", Err(err))
 						continue
 					}
 					if err := s.Write(zs); err != nil {
-						alog.Error("Failed to resign", Err( err))
+						alog.Error("Failed to resign", Err(err))
 						continue
 					}
 					alog.Info("Successful resign")

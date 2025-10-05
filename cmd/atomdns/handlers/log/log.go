@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"text/template"
 
 	"codeberg.org/miekg/dns"
@@ -16,8 +15,6 @@ import (
 type Log int
 
 var logger = slog.Default()
-
-var state atomic.Bool
 
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
