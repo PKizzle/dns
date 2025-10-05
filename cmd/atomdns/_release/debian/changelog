@@ -1,3 +1,9 @@
+atomdns (014) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Miek Gieben <miek@miek.nl>  Sun, 05 Oct 2025 13:09:18 +0200
+
 atomdns (013) unstable; urgency=medium
 
   * New upstream release
