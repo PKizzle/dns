@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"maps"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"strings"
@@ -97,9 +98,10 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			zones := maps.Values(d.Zones)
 			d.RUnlock()
 			for z := range zones {
-				log.Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path), slog.Duration("after", 10*time.Second))
 				go func() {
-					time.Sleep(10 * time.Second)
+					N := time.Duration(rand.IntN(20)) + 10
+					log.Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path), slog.Duration("after", N*time.Second))
+					time.Sleep(N * time.Second)
 					d.To.Notify(z.Origin())
 				}()
 			}
