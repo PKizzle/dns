@@ -80,7 +80,6 @@ func (t *Transfer) Notify(origin string) error {
 
 func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
-	fmt.Println("c.Dial.LocalAddr", c.Dialer.LocalAddr.String())
 	for range 2 {
 		alog := log.With("upstream", ip, "zone", m.Question[0].Header().Name)
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
@@ -99,7 +98,8 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 
 // returns the correct family address or nil, or nil when nothing is needed.
 func source(ip string, sources []string) net.IP {
-	fam := net.ParseIP(ip).To4() != nil
+	h, _, _ := net.SplitHostPort(ip)
+	fam := net.ParseIP(h).To4() != nil
 	for _, s := range sources {
 		sip := net.ParseIP(s)
 		if sip.To4() != nil && fam {
