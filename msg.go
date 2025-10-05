@@ -280,8 +280,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		// Pack it here so we don't add it the m.Extra, as the options (only) should be available in pseudo.
 		// Also OPT may be anywhere in m.Extra, here it will be first.
 		if opt.Hdr.Name == "." {
-			println("OPT", opt.String())
-			println("OPT", opt.Header().Name)
 			if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 				return err
 			}
