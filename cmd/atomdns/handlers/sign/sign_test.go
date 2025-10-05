@@ -75,6 +75,21 @@ func TestSign(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"all-sig",
+			func() dnszone.Node { node, _ := sz.Get("a.miek.nl."); return node },
+			func() dnszone.Node { return dnszone.Node{} },
+			func(a, b dnszone.Node) error {
+				for _, rr := range a.RRs {
+					if s, ok := rr.(*dns.RRSIG); ok {
+						if s.Signature == "" {
+							return fmt.Errorf("RRSIG does not have a signature: %s", s)
+						}
+					}
+				}
+				return nil
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
