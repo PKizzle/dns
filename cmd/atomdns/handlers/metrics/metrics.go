@@ -66,6 +66,12 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		rw := dnstest.NewRecorder(w)
 		next.ServeDNS(ctx, rw, r)
 
+		// if being hijacked, we don't have anything here, we check for that by checking if we actually have a
+		// message written to us.
+		if rw.Msg == nil {
+			return
+		}
+
 		RequestDuration.WithLabelValues(dns.Zone(ctx), net, fam).Observe(time.Since(rw.Start).Seconds())
 		ResponseSize.WithLabelValues(dns.Zone(ctx), net, fam).Observe(float64(len(rw.Msg.Data)))
 		Responses.WithLabelValues(dns.Zone(ctx), net, fam, dnsutil.RcodeToString(rw.Msg.Rcode)).Inc()

@@ -55,7 +55,7 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) (err error) {
 					if err != nil {
 						return co.PropErr(err)
 					}
-					if len(d.To.Sources) == 0 {
+					if len(d.To.Sources) == 0 || len(d.To.Sources) > 2 {
 						return co.ArgErr()
 					}
 				}

@@ -80,7 +80,8 @@ func (t *Transfer) Notify(origin string) error {
 
 func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
-	for range 3 {
+	fmt.Println("c.Dial.LocalAddr", c.Dialer.LocalAddr.String())
+	for range 2 {
 		alog := log.With("upstream", ip, "zone", m.Question[0].Header().Name)
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
 		if err != nil {
