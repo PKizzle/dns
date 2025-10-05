@@ -231,7 +231,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 		return ErrKey
 	}
 	if options.Pooler == nil {
-		options.Pooler = newNoopPool(MinMsgSize)
+		options.Pooler = newNoopPool(DefaultMsgSize)
 	}
 
 	h0 := rrset[0].Header()
@@ -261,14 +261,14 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 
 	// Create the desired binary blob
 	signdata := options.Pooler.Get()
-	defer options.Pooler.Put(signdata)
+	defer options.Pooler.Put(signdata[:cap(signdata)])
 	n, err := sigwire.pack(signdata)
 	if err != nil {
 		return err
 	}
 	signdata = signdata[:n]
 	wire, err := rawSignatureData(rrset, rr, *options)
-	defer options.Pooler.Put(wire)
+	defer options.Pooler.Put(wire[:cap(wire)])
 	if err != nil {
 		return err
 	}
@@ -386,14 +386,14 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	sigwire.SignerName = rr.SignerName
 	// Create the desired binary blob
 	signeddata := options.Pooler.Get()
-	defer options.Pooler.Put(signeddata)
+	defer options.Pooler.Put(signeddata[:cap(signeddata)])
 	n, err := sigwire.pack(signeddata)
 	if err != nil {
 		return err
 	}
 	signeddata = signeddata[:n]
 	wire, err := rawSignatureData(rrset, rr, *options)
-	defer options.Pooler.Put(wire)
+	defer options.Pooler.Put(wire[:cap(wire)])
 	if err != nil {
 		return err
 	}

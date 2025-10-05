@@ -23,6 +23,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	if err != nil {
 		return z, err
 	}
+	alog := log.With(slog.String("zone", origin))
 
 	n := dnszone.Node{Name: origin}
 	for _, pair := range s.KeyPairs {
@@ -69,7 +70,10 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 			rrsignode := dnszone.Node{Name: n.Name, RRs: make([]dns.RR, 0, len(s.KeyPairs))}
 			for _, pair := range s.KeyPairs {
 				rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
-				rrsig.Sign(pair.Signer, rrset, options)
+				err := rrsig.Sign(pair.Signer, rrset, options)
+				if err != nil {
+					alog.Error("Failed to sign", Err(err))
+				}
 
 				rrsignode.RRs = append(rrsignode.RRs, rrsig)
 			}
