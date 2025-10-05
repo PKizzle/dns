@@ -11,7 +11,7 @@ func (n name) Len() int           { return len(n) }
 func (n name) Swap(i, j int)      { n[i], n[j] = n[j], n[i] }
 func (n name) Less(i, j int) bool { return CompareName(n[i], n[j]) == -1 }
 
-func TestCompareName(t *testing.T) {
+func TestSort(t *testing.T) {
 	testcases := []struct {
 		name     string
 		unsorted name
@@ -77,5 +77,22 @@ func TestCompare(t *testing.T) {
 				t.Fatalf("expected %t, got %t for %q == %q", tc.ok, got, tc.a, tc.b)
 			}
 		})
+	}
+}
+
+func TestEqualName(t *testing.T) {
+	testcases := []struct {
+		a   string
+		b   string
+		exp bool
+	}{
+		{"example.org.", "example.org.", true},
+		{"example.org.", "eXAMPLe.oRG.", true},
+	}
+	for i, tc := range testcases {
+		got := EqualName(tc.a, tc.b)
+		if got != tc.exp {
+			t.Errorf("test %d, expected %t, got %t for %s, %s", i, tc.exp, got, tc.a, tc.b)
+		}
 	}
 }
