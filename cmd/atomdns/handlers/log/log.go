@@ -63,7 +63,7 @@ var funcmap = template.FuncMap{
 
 var logtmpl = template.Must(template.New("logFunc").Funcs(funcmap).Parse(line))
 
-const line = `{{remote .}}:{{port .}} - {{id .}} "{{type .}} {{class .}} {{name .}} {{network .}} {{size .}} {{bufsize .}}" {{flags .}} {{opcode .}}`
+const line = `{{remote .}} :{{port .}} - {{id .}} "{{type .}} {{class .}} {{name .}} {{network .}} {{size .}} {{bufsize .}}" {{flags .}} {{opcode .}}`
 
 var bufPool = &sync.Pool{
 	New: func() any {
