@@ -7,7 +7,7 @@
 
 .SH "SYNOPSIS"
 .PP
-\fIatomdns\fP \fB[\-c CONFFILE]\fP \fB[\-handler|\-v|\-version]\fP...
+\fIatomdns\fP \fB[\-c CONFFILE]\fP \fB[\-H|\-V]\fP...
 
 .SH "DESCRIPTION"
 .PP
@@ -17,7 +17,8 @@ respective manual pages.
 
 .PP
 The \fIglobal\fP handler describes the options that are also used in starting the server, see atomdns\-global(7)
-for more information. Normally you need a \fBCONFFILE\fP (atomdns\-conffile(5)) like this, to listen on all interfaces on port 53:
+for more information. Normally you need a \fBCONFFILE\fP (atomdns\-conffile(5)) like this, to listen on all
+interfaces on port 53:
 
 .PP
 .RS
@@ -61,11 +62,11 @@ example.org {
 .RE
 
 .TP
-\fB\-handlers\fP
+\fB\-H\fP
 list all handlers and quit.
 .TP
-\fB\-v\fP, \fB\-version\fP
-show version and quit.
+\fB\-V\fP
+Show version and quit.
 
 
 .SH "AUTHORS"
