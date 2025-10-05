@@ -277,9 +277,11 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 			}
 		}
 		// Only pack opt if something has been put into it, otherwise we may have a TSIG/SIG0.
-		// Pack it here so we don't added it the m.Extra, as the options (only) should be available in pseudo.
+		// Pack it here so we don't add it the m.Extra, as the options (only) should be available in pseudo.
 		// Also OPT may be anywhere in m.Extra, here it will be first.
 		if opt.Hdr.Name == "." {
+			println("OPT", opt.String())
+			println("OPT", opt.Header().Name)
 			if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 				return err
 			}
@@ -477,7 +479,7 @@ func (m *Msg) String() string {
 	sb := strings.Builder{}
 
 	sb.WriteString(m.MsgHeader.String())
-	// if core EDNS flags are set, we print this (flags are already handled in MsgHeader
+	// if core EDNS flags are set, we print this (flags are already handled in MsgHeader)
 	if m.UDPSize > 0 || m.Security || m.CompactAnswers || m.Delegation {
 		sb.WriteString(";; EDNS, version: ")
 		sb.WriteString(strconv.Itoa(int(m.Version)))

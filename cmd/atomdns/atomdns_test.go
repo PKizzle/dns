@@ -12,6 +12,13 @@ import (
 )
 
 const Conffile = `
+{
+	dns {
+		addr [::]:8054
+	}
+
+}
+
 whoami.example.org {
 	any
     whoami
@@ -34,7 +41,7 @@ func TestAtomdns(t *testing.T) {
 				t.Skip("no atomdns binary found in .")
 			}
 
-			cmd := exec.CommandContext(ctx, "./atomdns", "--conf", conffile, "--port", "8054")
+			cmd := exec.CommandContext(ctx, "./atomdns", "-c", conffile)
 			go func(t *testing.T) {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {
@@ -51,4 +58,51 @@ func TestAtomdns(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		})
 	}
+}
+
+const ConffileServing = `
+{
+    dns {
+        addr [::]:8054
+    }
+}
+
+miek.nl {
+    log
+    dbfile testfile/miek.nl.signed
+}
+`
+
+func TestAtomdnsDig(t *testing.T) {
+	queries := []string{
+		"@localhost -p 1054 mx miek.nl",
+		"@localhost -p 1054 mx miek.nl +dnssec",
+	}
+
+	dir := t.TempDir()
+	conffile := dir + "/Conffile"
+	os.WriteFile(conffile, []byte(Conffile), 0600)
+	timeout := 5 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+
+	if _, err := os.Stat("./atomdns"); err != nil {
+		t.Skip("no atomdns binary found in .")
+	}
+
+	cmd := exec.CommandContext(ctx, "./atomdns", "-c", conffile)
+	go func(t *testing.T) {
+		if err := cmd.Run(); err != nil {
+			if _, ok := err.(*exec.ExitError); !ok {
+				t.Skip("no working atomdns binary found in .")
+			}
+		}
+	}(t)
+
+	for _, q := range queries {
+		args := strings.Fields(q)
+		dig := exec.Command("dig", args...)
+		dig = dig
+	}
+	cancel()
+	time.Sleep(1 * time.Second)
 }
