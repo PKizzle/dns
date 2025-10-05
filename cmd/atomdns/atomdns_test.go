@@ -12,6 +12,13 @@ import (
 )
 
 const Conffile = `
+{
+	dns {
+		addr [::]:8054
+	}
+
+}
+
 whoami.example.org {
 	any
     whoami
@@ -34,7 +41,7 @@ func TestAtomdns(t *testing.T) {
 				t.Skip("no atomdns binary found in .")
 			}
 
-			cmd := exec.CommandContext(ctx, "./atomdns", "--conf", conffile, "--port", "8054")
+			cmd := exec.CommandContext(ctx, "./atomdns", "-c", conffile)
 			go func(t *testing.T) {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {
