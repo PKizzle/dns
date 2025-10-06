@@ -56,11 +56,16 @@ Is a valid config and is supported by `atomdns`.
 
 ## Global
 
-See Conffile can have a global section, this is a section without an origin and holds various server wide
-options, like how many instances, if you want DOH and DOT servers, etc. etc.
+A Conffile can have a global section, this is a section without an origin and holds various server wide
+options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
+and DOH) you have a section `dns`, `dot` and `doh` where you can configure the server, most notably the
+address and port you want to listen on.
 
 ```txt
 {
+    dns {
+        addr [::]:1053
+    }
     root /var/lib/atomdns
     metrics localhost:9153
 }
@@ -185,4 +190,4 @@ Apache License 2.0
 
 ## See Also
 
-The manual page for atomdns: atomdns(1) and all the manual pages for the handlers.
+The manual page for atomdns: atomdns(1) and the manual pages for the handlers.

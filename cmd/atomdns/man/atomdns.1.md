@@ -18,7 +18,7 @@ interfaces on port 53:
 
 ```conffile
 {
-    server {
+    dns {
         addr [::]:53
     }
 }
@@ -33,7 +33,7 @@ is also not found, it will use a built-in (test) Conffile:
 
 ```confffile
 {
-  server {
+  dns {
       addr [::]1053
   }
 }

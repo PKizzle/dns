@@ -2,7 +2,7 @@
 
 atomdns is a DNS server/router, written in Go, that chains handlers. Each handler performs a (DNS) function.
 Its architecture is identical to HTTP servers with middleware. The order of the handlers in the configuration
-determines the order in which they are executed. (If you know CoreDNS; you might know that has a fixed order -
+determines the order in which they are executed. (If you know CoreDNS; you might know that it has a fixed order -
 atomdns is _different_).
 
 atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns you
@@ -57,7 +57,7 @@ on port `1053` and enables `whoami` handler is:
 
 Then start `./atomdns -c Conffile`.
 
-Or use `Conffile-example` which has a more complete set:
+Or use `Conffile-example` which has a more complete setup.
 
     ./atomdns -c Conffile-example
 
@@ -76,7 +76,7 @@ When atomdns starts you are greeted (when not using `quiet`) a bunch of log line
 2025/10/04 08:07:07 INFO Startup handler=dbfile reload=db.example.org
 2025/10/04 08:07:07 INFO Launched config=Conffile-example origins=2 roles=DNS,DOH,DOT
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
-  ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS              v011
+  ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS
   ╹ ╹   ╹   ┗━┛  ╹ ╹
   High performance and flexible DNS server
   https://atomdns.miek.nl
@@ -84,7 +84,6 @@ __________________________________\o/_______
 ```
 
 Where the last INFO line shows the config parsed, the number of origins processed and for which protocols the
-server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS). E.g. use `dig @localhost -p 1053 A
--x 10.0.0.1` to test.
+server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS).
 
 See atomdns-conffile(7) for more information.

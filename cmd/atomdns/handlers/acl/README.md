@@ -18,7 +18,7 @@ acl {
 ```
 
 - **ACTION** defines the way to deal with DNS queries matched by this rule. The default action is _allow_,
-  DNS query not matched by any rules will be allowed to recurse. The difference between _block_ and _filter_
+  DNS query not matched by any rules will be allowed to continue. The following actions are defined:
 
   - _allow_ forward the query to the next handler.
   - _block_ stop the query and return a _refused_ response with the extended error (EDE) 'blocked'.
