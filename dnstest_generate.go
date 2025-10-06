@@ -1,7 +1,6 @@
 //go:build ignore
 
 // dnsutil_generate generates zdnsutil.go which is a copy of dnsutil/shared.go and internalized.
-// Use middle dot here too?
 
 package main
 

@@ -35,7 +35,7 @@ A typical example looks like this:
 .RS
 
 .nf
-2025/09/13 07:36:41 INFO ::1:58588 \- 50123 "TXT IN bla.example.org. udp 56 1232" rd ad QUERY
+2025/10/06 07:25:52 INFO example.org. remote=::1 port=40689 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
 
 .fi
 .RE
@@ -44,19 +44,19 @@ A typical example looks like this:
 Which says:
 
 .IP \(bu 4
-Remote address and port: \fB\fC::1:58588\fR.
+Zone getting the request: \fB\fCexample.org.\fR.
 .IP \(bu 4
-Query ID \fB\fC50123\fR.
+Remote address and port: \fB\fC::1 40689\fR.
 .IP \(bu 4
-Question type, question class, question name: \fB\fCTXT IN bla.example.org.\fR.
+Query ID \fB\fC23343\fR.
+.IP \(bu 4
+Question type, question class, incoming question name: \fB\fCMX IN example.ORG.\fR.
 .IP \(bu 4
 Network: \fB\fCudp\fR.
 .IP \(bu 4
-Size in bytes: \fB\fC56\fR.
+Size in bytes: \fB\fC52\fR.
 .IP \(bu 4
 Advertised UDP buffer: \fB\fC1232\fR.
-.IP \(bu 4
-Header flags: \fB\fCrd ad\fR.
 .IP \(bu 4
 Opcode: \fB\fCQUERY\fR.
 

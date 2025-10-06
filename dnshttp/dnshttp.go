@@ -1,5 +1,7 @@
 // Package dnshttp deals with converting HTTP requests and responses to dns.Msg types. This is part of DNS
 // over HTTP (DOH).
+// The mandatory tls.Config must contain tlsConfig.NextProtos = []string{"h2", "http/1.1"}, otherwise it want
+// work with most clients.
 package dnshttp
 
 import (

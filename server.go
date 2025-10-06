@@ -88,7 +88,8 @@ type Server struct {
 	Net string
 	// TCP Listener to use, this is to aid in systemd's socket activation.
 	Listener net.Listener
-	// TLS connection configuration.
+	// TLS connection configuration. Use for DOT (DNS over TCP). Not NextProtos must have "dot", for this to
+	// work with DOT clients.
 	TLSConfig *tls.Config
 	// UDP "Listener" to use, this is to aid in systemd's socket activation.
 	PacketConn net.PacketConn
