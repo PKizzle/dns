@@ -22,18 +22,18 @@ log
 A typical example looks like this:
 
 ```txt
-2025/09/13 07:36:41 INFO ::1 :58588 - 50123 "TXT IN bla.example.org. udp 56 1232" rd ad QUERY
+2025/10/06 07:25:52 INFO example.org. remote=::1 port=40689 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
 ```
 
 Which says:
 
-- Remote address and port: `::1 :58588`.
-- Query ID `50123`.
-- Question type, question class, question name: `TXT IN bla.example.org.`.
+- Zone getting the request: `example.org.`.
+- Remote address and port: `::1 40689`.
+- Query ID `23343`.
+- Question type, question class, incoming question name: `MX IN example.ORG.`.
 - Network: `udp`.
-- Size in bytes: `56`.
+- Size in bytes: `52`.
 - Advertised UDP buffer: `1232`.
-- Header flags: `rd ad`.
 - Opcode: `QUERY`.
 
 # Also See
