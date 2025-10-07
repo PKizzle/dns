@@ -475,6 +475,7 @@ func (rr *TXT) compare(b RR) (x int) {
 			break
 		}
 		x = strings.Compare(rr.Txt[i], b.(*TXT).Txt[j])
+		j++
 	}
 	if x != 0 {
 		if x < 0 {
@@ -492,6 +493,7 @@ func (rr *SPF) compare(b RR) (x int) {
 			break
 		}
 		x = strings.Compare(rr.Txt[i], b.(*SPF).Txt[j])
+		j++
 	}
 	if x != 0 {
 		if x < 0 {
@@ -509,6 +511,7 @@ func (rr *AVC) compare(b RR) (x int) {
 			break
 		}
 		x = strings.Compare(rr.Txt[i], b.(*AVC).Txt[j])
+		j++
 	}
 	if x != 0 {
 		if x < 0 {
@@ -1250,6 +1253,7 @@ func (rr *NINFO) compare(b RR) (x int) {
 			break
 		}
 		x = strings.Compare(rr.ZSData[i], b.(*NINFO).ZSData[j])
+		j++
 	}
 	if x != 0 {
 		if x < 0 {
@@ -1464,6 +1468,7 @@ func (rr *RESINFO) compare(b RR) (x int) {
 			break
 		}
 		x = strings.Compare(rr.Txt[i], b.(*RESINFO).Txt[j])
+		j++
 	}
 	if x != 0 {
 		if x < 0 {

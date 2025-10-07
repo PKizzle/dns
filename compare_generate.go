@@ -120,6 +120,7 @@ return 1
 							break
 						}
 						x = strings.Compare(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
+						j++
 					}`)
 				case `dns:"opt"`:
 
