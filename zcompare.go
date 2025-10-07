@@ -469,14 +469,56 @@ func (rr *SOA) compare(b RR) (x int) {
 }
 
 func (rr *TXT) compare(b RR) (x int) {
+	j := 0
+	for i := range rr.Txt {
+		if i > j || x != 0 {
+			break
+		}
+		x = strings.Compare(rr.Txt[i], b.(*TXT).Txt[j])
+		j++
+	}
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *SPF) compare(b RR) (x int) {
+	j := 0
+	for i := range rr.Txt {
+		if i > j || x != 0 {
+			break
+		}
+		x = strings.Compare(rr.Txt[i], b.(*SPF).Txt[j])
+		j++
+	}
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *AVC) compare(b RR) (x int) {
+	j := 0
+	for i := range rr.Txt {
+		if i > j || x != 0 {
+			break
+		}
+		x = strings.Compare(rr.Txt[i], b.(*AVC).Txt[j])
+		j++
+	}
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1205,6 +1247,20 @@ func (rr *HIP) compare(b RR) (x int) {
 }
 
 func (rr *NINFO) compare(b RR) (x int) {
+	j := 0
+	for i := range rr.ZSData {
+		if i > j || x != 0 {
+			break
+		}
+		x = strings.Compare(rr.ZSData[i], b.(*NINFO).ZSData[j])
+		j++
+	}
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1406,6 +1462,20 @@ func (rr *OPT) compare(b RR) (x int) {
 }
 
 func (rr *RESINFO) compare(b RR) (x int) {
+	j := 0
+	for i := range rr.Txt {
+		if i > j || x != 0 {
+			break
+		}
+		x = strings.Compare(rr.Txt[i], b.(*RESINFO).Txt[j])
+		j++
+	}
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 

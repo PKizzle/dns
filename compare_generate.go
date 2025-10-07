@@ -114,16 +114,23 @@ return 1
 				switch tag {
 				case `dns:"-"`: // ignored
 				case `dns:"txt"`:
-
+					o(`j := 0
+						for i := range rr.%[1]s {
+						if i > j || x != 0 {
+							break
+						}
+						x = strings.Compare(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
+						j++
+					}`)
 				case `dns:"opt"`:
 
 				case `dns:"nsec"`:
 
 				case `dns:"pairs"`:
 
-				case `dns:"domain-name"`:
+				case `dns:"infos"`:
 
-				case `dns:"apl"`:
+				case `dns:"domain-name"`:
 
 				}
 				continue
@@ -142,8 +149,6 @@ return 1
 			case tag == `dns:"aaaa"`:
 				o("x = bytes.Compare(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"uint48"`:
-
-			case tag == `dns:"txt"`:
 
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
