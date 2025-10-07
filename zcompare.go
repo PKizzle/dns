@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bytes"
+	"strings"
 )
 
 func compare(a, b RR) int {
@@ -201,6 +202,20 @@ func (rr *CNAME) compare(b RR) (x int) {
 }
 
 func (rr *HINFO) compare(b RR) (x int) {
+	x = strings.Compare(rr.Cpu, b.(*HINFO).Cpu)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Os, b.(*HINFO).Os)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -314,10 +329,31 @@ func (rr *AFSDB) compare(b RR) (x int) {
 }
 
 func (rr *X25) compare(b RR) (x int) {
+	x = strings.Compare(rr.PSDNAddress, b.(*X25).PSDNAddress)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *ISDN) compare(b RR) (x int) {
+	x = strings.Compare(rr.Address, b.(*ISDN).Address)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.SubAddress, b.(*ISDN).SubAddress)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -491,6 +527,27 @@ func (rr *NAPTR) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Flags, b.(*NAPTR).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Service, b.(*NAPTR).Service)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Regexp, b.(*NAPTR).Regexp)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = CompareName(rr.Replacement, b.(*NAPTR).Replacement)
 	if x != 0 {
 		if x < 0 {
@@ -585,6 +642,27 @@ func (rr *PX) compare(b RR) (x int) {
 }
 
 func (rr *GPOS) compare(b RR) (x int) {
+	x = strings.Compare(rr.Longitude, b.(*GPOS).Longitude)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Latitude, b.(*GPOS).Latitude)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Altitude, b.(*GPOS).Altitude)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1225,6 +1303,13 @@ func (rr *CAA) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Tag, b.(*CAA).Tag)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1251,6 +1336,13 @@ func (rr *GID) compare(b RR) (x int) {
 }
 
 func (rr *UINFO) compare(b RR) (x int) {
+	x = strings.Compare(rr.Uinfo, b.(*UINFO).Uinfo)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
