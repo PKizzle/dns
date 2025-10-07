@@ -622,6 +622,13 @@ func (rr *CERT) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Certificate, b.(*CERT).Certificate)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -822,6 +829,13 @@ func (rr *RRSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Signature, b.(*RRSIG).Signature)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -864,6 +878,13 @@ func (rr *DS) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.DigestType) - int(b.(*DS).DigestType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Digest, b.(*DS).Digest)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -913,6 +934,13 @@ func (rr *TA) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Digest, b.(*TA).Digest)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -943,6 +971,13 @@ func (rr *SSHFP) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.Type) - int(b.(*SSHFP).Type)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.FingerPrint, b.(*SSHFP).FingerPrint)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -982,6 +1017,13 @@ func (rr *DNSKEY) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.PublicKey, b.(*DNSKEY).PublicKey)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1001,6 +1043,13 @@ func (rr *RKEY) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.Algorithm) - int(b.(*RKEY).Algorithm)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.PublicKey, b.(*RKEY).PublicKey)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1050,7 +1099,21 @@ func (rr *NSEC3) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Salt, b.(*NSEC3).Salt)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = int(rr.HashLength) - int(b.(*NSEC3).HashLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.NextDomain, b.(*NSEC3).NextDomain)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1083,6 +1146,13 @@ func (rr *NSEC3PARAM) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.SaltLength) - int(b.(*NSEC3PARAM).SaltLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Salt, b.(*NSEC3PARAM).Salt)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1135,7 +1205,21 @@ func (rr *TKEY) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Key, b.(*TKEY).Key)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = int(rr.OtherLen) - int(b.(*TKEY).OtherLen)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.OtherData, b.(*TKEY).OtherData)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1146,6 +1230,13 @@ func (rr *TKEY) compare(b RR) (x int) {
 }
 
 func (rr *RFC3597) compare(b RR) (x int) {
+	x = strings.Compare(rr.Rdata, b.(*RFC3597).Rdata)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1168,6 +1259,13 @@ func (rr *URI) compare(b RR) (x int) {
 }
 
 func (rr *DHCID) compare(b RR) (x int) {
+	x = strings.Compare(rr.Digest, b.(*DHCID).Digest)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1187,6 +1285,13 @@ func (rr *TLSA) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.MatchingType) - int(b.(*TLSA).MatchingType)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Certificate, b.(*TLSA).Certificate)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1218,6 +1323,13 @@ func (rr *SMIMEA) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = strings.Compare(rr.Certificate, b.(*SMIMEA).Certificate)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1237,6 +1349,20 @@ func (rr *HIP) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.PublicKeyLength) - int(b.(*HIP).PublicKeyLength)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Hit, b.(*HIP).Hit)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.PublicKey, b.(*HIP).PublicKey)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1337,6 +1463,13 @@ func (rr *LP) compare(b RR) (x int) {
 }
 
 func (rr *EUI48) compare(b RR) (x int) {
+	x = int(rr.Address) - int(b.(*EUI48).Address)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1403,14 +1536,35 @@ func (rr *UINFO) compare(b RR) (x int) {
 }
 
 func (rr *EID) compare(b RR) (x int) {
+	x = strings.Compare(rr.Endpoint, b.(*EID).Endpoint)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *NIMLOC) compare(b RR) (x int) {
+	x = strings.Compare(rr.Locator, b.(*NIMLOC).Locator)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
 func (rr *OPENPGPKEY) compare(b RR) (x int) {
+	x = strings.Compare(rr.PublicKey, b.(*OPENPGPKEY).PublicKey)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1448,6 +1602,13 @@ func (rr *ZONEMD) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.Hash) - int(b.(*ZONEMD).Hash)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.Digest, b.(*ZONEMD).Digest)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1561,6 +1722,13 @@ func (rr *TSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = int(rr.TimeSigned) - int(b.(*TSIG).TimeSigned)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	x = int(rr.Fudge) - int(b.(*TSIG).Fudge)
 	if x != 0 {
 		if x < 0 {
@@ -1569,6 +1737,13 @@ func (rr *TSIG) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.MACSize) - int(b.(*TSIG).MACSize)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.MAC, b.(*TSIG).MAC)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1590,6 +1765,13 @@ func (rr *TSIG) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.OtherLen) - int(b.(*TSIG).OtherLen)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = strings.Compare(rr.OtherData, b.(*TSIG).OtherData)
 	if x != 0 {
 		if x < 0 {
 			return -1

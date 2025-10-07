@@ -149,20 +149,21 @@ return 1
 			case tag == `dns:"aaaa"`:
 				o("x = bytes.Compare(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"uint48"`:
-
+				o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
 			case tag == `dns:"base32"`:
-
+				fallthrough
 			case strings.HasPrefix(tag, `dns:"size-base64`): // size-base64 can be packed just like base64
 				fallthrough
 			case tag == `dns:"base64"`:
-
+				fallthrough
 			case strings.HasPrefix(tag, `dns:"size-hex:SaltLength`):
-
+				fallthrough
 			case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
 			case tag == `dns:"hex"`:
+				o("x = strings.Compare(rr.%s, b.(*%s).%s)")
 
 			case tag == `dns:"any"`:
 
