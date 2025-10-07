@@ -1,12 +1,11 @@
 # Name
 
-_catalog_ - handle catalog zones
+_catalog_ - process catalog zones
 
 # Description
 
 Catalog zones (RFC 9432) are meta DNS zones that carry information on how to provision zones, _catalog_
-(likely) needs a `transfer` section so it knows how to get a) the catalog zone itself and b) all zones
-_mentioned_ in the catalog.
+uses zone transfers to get a) the catalog zone itself and b) all zones _mentioned_ in the catalog.
 
 # Syntax
 
@@ -16,12 +15,11 @@ In it simplests form _catalog_ you can use:
 catalog FILE
 ```
 
-- **FILE** the zone file to load. If the path is relative, the path from the global root config will be
+- **FILE** the catalog zone file to load. If the path is relative, the path from the global root config will be
   prepended to it.
 
-All zones that are mentioned in the catalog zone are transferred
-
-To allow more control the following extra options are available.
+However this is fairly minimal, and only loads the catalog zone, To allow more control the following extra
+options are available.
 
 ```
 catalog FILE {
@@ -47,8 +45,8 @@ catalog FILE {
   }
   ```
 
-  The new zone will be put as last in the handler chain with _log_ and _metrics_ before it, and with _refuse_
-  as the backstop.
+  The new zone will be put as last in the handler chain with _log_ and _metrics_ before it, then _dbfile_ with
+  the tranferered zone and then _refuse_ as the backstop. The default without `snippet` is just, _dbfile_.
 
 - With `group` you can potentially wrap the configuration in a group clause, which will apply it only for
   zones that are grouped in those **GROUP**s in the catalog zone.
