@@ -85,8 +85,6 @@ func main() {
 					o("for _, x := range rr.%s { l += len(x)+1 }\n")
 				case `dns:"txt"`:
 					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
-				case `dns:"apl"`:
-					o("for _, x := range rr.%s { l += x.len() }\n")
 				case `dns:"pairs"`:
 					o("for _, x := range rr.%s { l += x.Len() }\n")
 				case `dns:"infos"`:
@@ -120,8 +118,6 @@ func main() {
 				o("if len(rr.%s) != 0 { l += net.IPv4len }\n")
 			case tag == `dns:"aaaa"`:
 				o("if len(rr.%s) != 0 { l += net.IPv6len }\n")
-			case tag == `dns:"txt"`:
-				o("for _, t := range rr.%s { l += len(t) + 1 }\n")
 			case tag == `dns:"uint48"`:
 				o("l += 6 // %s\n")
 			case tag == "":
