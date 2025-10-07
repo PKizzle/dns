@@ -42,7 +42,7 @@ func TestZoneParser(t *testing.T) {
 		{
 			"unknown-rdata",
 			"example. 3600 tYpe44 \\# 03 75  0100",
-			[]RR{&SSHFP{Hdr: Header{Name: "example.", Class: ClassINET}, Algorithm: 117, Type: 1, FingerPrint: ""}},
+			[]RR{&SSHFP{Hdr: Header{Name: "example.", Class: ClassINET}, Algorithm: 117, Type: 1, FingerPrint: "00"}},
 			nil,
 		},
 		{
