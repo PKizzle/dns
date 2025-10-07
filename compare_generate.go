@@ -21,6 +21,7 @@ package dns
 
 import (
 	"bytes"
+	"strings"
 )
 
 `
@@ -173,6 +174,7 @@ return 1
 				case "uint64":
 					o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 				case "string":
+					o("x = strings.Compare(rr.%s, b.(*%s).%s)")
 				}
 			}
 		}
