@@ -1604,7 +1604,7 @@ type HTTPS struct{ SVCB }
 
 func (rr *HTTPS) String() string { return rr.SVCB.String() }
 
-// DELEG RR. See RFC ... (draft ...)
+// DELEG RR. See draft https://datatracker.ietf.org/doc/draft-ietf-deleg/.
 type DELEG struct {
 	Hdr   Header
 	Value []deleg.Info `dns:"infos"`

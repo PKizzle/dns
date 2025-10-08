@@ -20,7 +20,8 @@ type Handler interface {
 	ServeDNS(ctx context.Context, w ResponseWriter, r *Msg)
 }
 
-// Zone gets the zone from the context. If not found it returns the empty string.
+// Zone gets the zone from the context. When the server calls a handler it sets the matched pattern in the
+// context. If not found it returns the empty string.
 func Zone(ctx context.Context) string {
 	zone, ok := ctx.Value(contextKeyZone).(string)
 	if !ok {

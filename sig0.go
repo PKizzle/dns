@@ -8,7 +8,7 @@ import (
 	"codeberg.org/miekg/dns/internal/unpack"
 )
 
-// SOG0Sign signs a dns.Msg. It fills the signature with the appropriate data.
+// SIG0Sign signs a dns.Msg. It fills the signature with the appropriate data.
 // The SIG record should have the SignerName, KeyTag, Algorithm, Inception
 // and Expiration set.
 func SIG0Sign(m *Msg, k SIG0Signer, options *SIG0Option) error {
