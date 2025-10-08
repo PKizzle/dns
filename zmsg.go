@@ -1552,7 +1552,7 @@ func (rr *URI) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.StringOctet(rr.Target, msg, off)
+	off, err = pack.StringAny(rr.Target, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1567,7 +1567,7 @@ func (rr *URI) unpack(data, msgBuf []byte) (err error) {
 	if !s.ReadUint16(&rr.Weight) {
 		return unpack.ErrOverflow
 	}
-	rr.Target, err = unpack.StringOctet(&s)
+	rr.Target, err = unpack.StringAny(&s, len(s))
 	if err != nil {
 		return err
 	}
@@ -1909,7 +1909,7 @@ func (rr *CAA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.StringOctet(rr.Value, msg, off)
+	off, err = pack.StringAny(rr.Value, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -1925,7 +1925,7 @@ func (rr *CAA) unpack(data, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.Value, err = unpack.StringOctet(&s)
+	rr.Value, err = unpack.StringAny(&s, len(s))
 	if err != nil {
 		return err
 	}

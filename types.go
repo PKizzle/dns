@@ -1115,7 +1115,7 @@ type URI struct {
 	Hdr      Header
 	Priority uint16
 	Weight   uint16
-	Target   string `dns:"octet"` // Target is to be parsed as a sequence of character encoded octets according to RFC 3986.
+	Target   string `dns:"any"` // Target is to be parsed as a sequence of character encoded octets according to RFC 3986.
 }
 
 func (rr *URI) String() string {
@@ -1305,7 +1305,7 @@ type CAA struct {
 	Hdr   Header
 	Flag  uint8
 	Tag   string
-	Value string `dns:"octet"` // Value is the character-string encoding of the value field as specified in RFC 1035, Section 5.1.
+	Value string `dns:"any"` // Value is the character-string encoding of the value field as specified in RFC 1035, Section 5.1.
 }
 
 func (rr *CAA) String() string {
