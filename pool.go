@@ -1,6 +1,9 @@
 package dns
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 // Pooler is an interface that mimics a sync.Pool, but allows for different implementation.
 type Pooler interface {
@@ -45,3 +48,11 @@ func (n *noopPool) Get() []byte { return make([]byte, n.size) }
 func (n *noopPool) Put([]byte)  {}
 
 func newNoopPool(size int) *noopPool { return &noopPool{size: size} }
+
+// stringPooler is a pool used by the String methods.
+type stringPooler struct {
+	sync.Pool
+}
+
+func (s *stringPooler) Get() strings.Builder   { return s.Pool.Get().(strings.Builder) }
+func (s *stringPooler) Put(sb strings.Builder) { sb.Reset(); s.Pool.Put(sb) }
