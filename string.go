@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 func sprintName(s string) string {
-	var sb strings.Builder
+	sb := stringPool.Get()
+	defer stringPool.Put(sb)
 
 	for i := 0; i < len(s); {
 		if s[i] == '.' {
@@ -54,31 +56,10 @@ func sprintName(s string) string {
 	return sb.String()
 }
 
-func sprintTxtOctet(s string) string {
-	var sb strings.Builder
-	sb.Grow(2 + len(s))
-	sb.WriteByte('"')
-	for i := 0; i < len(s); {
-		if i+1 < len(s) && s[i] == '\\' && s[i+1] == '.' {
-			sb.WriteString(s[i : i+2])
-			i += 2
-			continue
-		}
-
-		b, n := ddd.Next(s, i)
-		if n == 0 {
-			i++ // dangling back slash
-		} else {
-			writeTXTStringByte(&sb, b)
-		}
-		i += n
-	}
-	sb.WriteByte('"')
-	return sb.String()
-}
-
 func sprintTxt(txt []string) string {
-	var sb strings.Builder
+	sb := stringPool.Get()
+	defer stringPool.Put(sb)
+
 	for i, s := range txt {
 		sb.Grow(3 + len(s))
 		if i > 0 {
@@ -91,7 +72,7 @@ func sprintTxt(txt []string) string {
 			if n == 0 {
 				break
 			}
-			writeTXTStringByte(&sb, b)
+			writeTxtByte(&sb, b)
 			j += n
 		}
 		sb.WriteByte('"')
@@ -99,15 +80,15 @@ func sprintTxt(txt []string) string {
 	return sb.String()
 }
 
-func writeTXTStringByte(s *strings.Builder, b byte) {
+func writeTxtByte(sb *strings.Builder, b byte) {
 	switch {
 	case b == '"' || b == '\\':
-		s.WriteByte('\\')
-		s.WriteByte(b)
+		sb.WriteByte('\\')
+		sb.WriteByte(b)
 	case b < ' ' || b > '~':
-		s.WriteString(ddd.Escape(b))
+		sb.WriteString(ddd.Escape(b))
 	default:
-		s.WriteByte(b)
+		sb.WriteByte(b)
 	}
 }
 
@@ -170,7 +151,8 @@ func euiToString(eui uint64, bits int) (hex string) {
 
 // sprintHeader creates a strings.Builder, write the header to it, plus an extra tab and returns the builder.
 func sprintHeader(rr RR) *strings.Builder {
-	sb := strings.Builder{}
+	sb := stringPool.Get()
+
 	sb.WriteString(sprintName(rr.Header().Name))
 	sb.WriteByte('\t')
 
@@ -191,7 +173,8 @@ func sprintHeader(rr RR) *strings.Builder {
 
 // must look just enough so parsing from text will also work.
 func sprintOptionHeader(rr EDNS0) *strings.Builder {
-	sb := strings.Builder{}
+	sb := stringPool.Get()
+
 	sb.WriteByte('.')
 	sb.WriteByte('\t')
 
@@ -235,3 +218,5 @@ func splitN(s string, n int) []string {
 
 	return sx
 }
+
+var stringPool = &stringPooler{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
