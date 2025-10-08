@@ -1120,7 +1120,7 @@ type URI struct {
 
 func (rr *URI) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Priority)), strconv.Itoa(int(rr.Weight)), sprintTxtOctet(rr.Target))
+	sprintData(sb, strconv.Itoa(int(rr.Priority)), strconv.Itoa(int(rr.Weight)), sprintTxt([]string{rr.Target}))
 	return sb.String()
 }
 
@@ -1310,7 +1310,7 @@ type CAA struct {
 
 func (rr *CAA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Flag)), rr.Tag, sprintTxtOctet(rr.Value))
+	sprintData(sb, strconv.Itoa(int(rr.Flag)), rr.Tag, sprintTxt([]string{rr.Value}))
 	return sb.String()
 }
 
