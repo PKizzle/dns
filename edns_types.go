@@ -48,9 +48,10 @@ type LLQ struct {
 func (o *LLQ) Len() int { return tlv + 18 }
 func (o *LLQ) String() string {
 	sb := sprintOptionHeader(o)
-	return sprintData(sb, strconv.FormatUint(uint64(o.Version), 10), strconv.FormatUint(uint64(o.Opcode), 10),
+	sprintData(sb, strconv.FormatUint(uint64(o.Version), 10), strconv.FormatUint(uint64(o.Opcode), 10),
 		strconv.FormatUint(uint64(o.Error), 10), strconv.FormatUint(o.ID, 10),
 		strconv.FormatUint(uint64(o.LeaseLife), 10))
+	return sb.String()
 }
 
 // REPORTING implements the EDNS0 Reporting Channel option (RFC 9567).
@@ -63,7 +64,8 @@ type REPORTING struct {
 func (o *REPORTING) Len() int { return tlv + len(o.AgentDomain) }
 func (o *REPORTING) String() string {
 	sb := sprintOptionHeader(o)
-	return sprintData(sb, o.AgentDomain)
+	sprintData(sb, o.AgentDomain)
+	return sb.String()
 }
 
 // The Cookie option is used to add a DNS Cookie to a message.
@@ -88,7 +90,8 @@ func (o *COOKIE) Len() int { return tlv + len(o.Cookie)/2 }
 // format.
 func (o *COOKIE) String() string {
 	sb := sprintOptionHeader(o)
-	return sprintData(sb, o.Cookie)
+	sb.WriteString(o.Cookie)
+	return sb.String()
 }
 
 // NSID option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
@@ -111,7 +114,6 @@ func (o *NSID) String() string {
 		sb.Write(x)
 		sb.WriteString("\"")
 	}
-	defer stringPool.Put(*sb)
 	return sb.String()
 }
 
@@ -137,7 +139,6 @@ type EXPIRE struct {
 func (o *EXPIRE) Len() int { return tlv + 4 }
 func (o *EXPIRE) String() (s string) {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	if o.Expire == 0 {
 		return sb.String()
 	}
@@ -155,7 +156,6 @@ type DAU struct {
 func (o *DAU) Len() int { return tlv + len(o.AlgCode) }
 func (o *DAU) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	for _, alg := range o.AlgCode {
 		sb.WriteByte(' ')
 		if a, ok := AlgorithmToString[alg]; ok {
@@ -177,7 +177,6 @@ type DHU struct {
 func (o *DHU) Len() int { return tlv + len(o.AlgCode) }
 func (o *DHU) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	for _, alg := range o.AlgCode {
 		sb.WriteByte(' ')
 		if a, ok := AlgorithmToString[alg]; ok {
@@ -199,7 +198,6 @@ type N3U struct {
 func (o *N3U) Len() int { return tlv + len(o.AlgCode) }
 func (o *N3U) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	for _, alg := range o.AlgCode {
 		sb.WriteByte(' ')
 		if a, ok := AlgorithmToString[alg]; ok {
@@ -233,7 +231,6 @@ func (o *TCPKEEPALIVE) Len() int {
 
 func (o *TCPKEEPALIVE) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	sb.WriteString("use tcp keep-alive")
 	if o.Timeout == 0 {
 		sb.WriteString(", timeout omitted")
@@ -257,7 +254,6 @@ func (o *EDE) Len() int { return tlv + 2 + len(o.ExtraText) }
 // empty. This is the presentation format.
 func (o *EDE) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	sb.WriteString(strconv.FormatUint(uint64(o.InfoCode), 10))
 	if s, ok := ExtendedErrorToString[o.InfoCode]; ok {
 		sb.WriteString(" \"")
@@ -285,7 +281,6 @@ type SUBNET struct {
 func (o *SUBNET) Len() int { return tlv + 2 + 2 + len(o.Address) }
 func (o *SUBNET) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	switch {
 	case o.Address == nil:
 		sb.WriteString("<nil>")
@@ -311,7 +306,8 @@ type ESU struct {
 func (o *ESU) Len() int { return tlv + len(o.URI) }
 func (o *ESU) String() string {
 	sb := sprintOptionHeader(o)
-	return sprintData(sb, o.URI)
+	sb.WriteString(o.URI)
+	return sb.String()
 }
 
 // The ZONEVERSION option, see RFC 9660. Only a single type (0) has been allocated, if used the SOA serial
@@ -334,7 +330,6 @@ func (o *ZONEVERSION) Len() int { return tlv + 2 + len(o.Version) }
 // Strings outputs "ZONEVERSION 4 SOA-SERIAL 1002" as the presentation format.
 func (o *ZONEVERSION) String() string {
 	sb := sprintOptionHeader(o)
-	defer stringPool.Put(*sb)
 	sb.WriteString(strconv.Itoa(int(o.Labels)))
 	sb.WriteByte(' ')
 	switch o.Type {
