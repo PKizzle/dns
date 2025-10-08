@@ -51,7 +51,9 @@ func (o *LLQ) String() string {
 	sprintData(sb, strconv.FormatUint(uint64(o.Version), 10), strconv.FormatUint(uint64(o.Opcode), 10),
 		strconv.FormatUint(uint64(o.Error), 10), strconv.FormatUint(o.ID, 10),
 		strconv.FormatUint(uint64(o.LeaseLife), 10))
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // REPORTING implements the EDNS0 Reporting Channel option (RFC 9567).
@@ -65,7 +67,9 @@ func (o *REPORTING) Len() int { return tlv + len(o.AgentDomain) }
 func (o *REPORTING) String() string {
 	sb := sprintOptionHeader(o)
 	sprintData(sb, o.AgentDomain)
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // The Cookie option is used to add a DNS Cookie to a message.
@@ -91,7 +95,9 @@ func (o *COOKIE) Len() int { return tlv + len(o.Cookie)/2 }
 func (o *COOKIE) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Cookie)
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // NSID option is used to retrieve a nameserver identifier. When sending a request Nsid must be empty.
@@ -114,7 +120,9 @@ func (o *NSID) String() string {
 		sb.Write(x)
 		sb.WriteString("\"")
 	}
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // PADDING option is used to add padding to a request/response. The default value of padding SHOULD be 0x0 but
@@ -137,13 +145,17 @@ type EXPIRE struct {
 }
 
 func (o *EXPIRE) Len() int { return tlv + 4 }
-func (o *EXPIRE) String() (s string) {
+func (o *EXPIRE) String() string {
 	sb := sprintOptionHeader(o)
 	if o.Expire == 0 {
-		return sb.String()
+		s := sb.String()
+		stringPool.Put(*sb)
+		return s
 	}
 	sb.WriteString(strconv.FormatUint(uint64(o.Expire), 10))
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // DAU implements the EDNS0 "DNSSEC Algorithm Understood" option. See RFC 6975.
@@ -164,7 +176,9 @@ func (o *DAU) String() string {
 			sb.WriteString(strconv.Itoa(int(alg)))
 		}
 	}
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // DHU implements the EDNS0 "DS Hash Understood" option. See RFC 6975.
@@ -185,7 +199,9 @@ func (o *DHU) String() string {
 			sb.WriteString(strconv.Itoa(int(alg)))
 		}
 	}
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // EDNS0_N3U implements the EDNS0 "NSEC3 Hash Understood" option. See RFC 6975.
@@ -206,7 +222,9 @@ func (o *N3U) String() string {
 			sb.WriteString(strconv.Itoa(int(alg)))
 		}
 	}
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // TCPKEEPALIVE is an EDNS0 option that instructs the server to keep the TCP connection alivo. See RFC 7828.
@@ -237,7 +255,9 @@ func (o *TCPKEEPALIVE) String() string {
 	} else {
 		sb.WriteString(fmt.Sprintf(", timeout %dms", o.Timeout*100))
 	}
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // EDE option is used to return additional information about the cause of DNS errors.
@@ -263,7 +283,9 @@ func (o *EDE) String() string {
 	sb.WriteString(": \"")
 	sb.WriteString(o.ExtraText)
 	sb.WriteByte('"')
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // SUBNET is the subnet option that is used to give the remote nameserver
@@ -295,7 +317,9 @@ func (o *SUBNET) String() string {
 	sb.WriteString(strconv.Itoa(int(o.SourceNetmask)))
 	sb.WriteByte('/')
 	sb.WriteString(strconv.Itoa(int(o.SourceScope)))
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // The ESU option for ENUM Source-URI Extension.
@@ -307,7 +331,9 @@ func (o *ESU) Len() int { return tlv + len(o.URI) }
 func (o *ESU) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.URI)
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // The ZONEVERSION option, see RFC 9660. Only a single type (0) has been allocated, if used the SOA serial
@@ -344,7 +370,9 @@ func (o *ZONEVERSION) String() string {
 		sb.WriteByte(' ')
 		sb.Write(o.Version)
 	}
-	return sb.String()
+	s := sb.String()
+	stringPool.Put(*sb)
+	return s
 }
 
 // Extended DNS Error Codes (RFC 8914).
