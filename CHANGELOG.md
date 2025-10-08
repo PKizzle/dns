@@ -2,10 +2,11 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
-## HEAD - 2025-10-06
+## HEAD - 2025-10-08
 
-9 commits. With the following change log.
+30 commits. With the following change log.
 
+* 30e21bd Dns: remove *pack.StringOctet; can also be done via StringAny. (Miek Gieben)
 * 2b36083 Use slog with fields to log the query: example.org. remote=::1 port=53806 id=61098 type=MX class=IN name=example.org. network=udp size=52 bufsize=1232 opcode=QUERY. (Miek Gieben)
 
 ## v0.5.8 - 2025-10-05
