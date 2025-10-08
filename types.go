@@ -109,8 +109,8 @@ const (
 
 	TypeTA       uint16 = 32768
 	TypeDLV      uint16 = 32769
-	TypeDELEG    uint16 = 65432 // Provisional type
-	TypeDELEGI   uint16 = 65433 // Provisional type
+	TypeDELEG    uint16 = 65432 // Provisional type.
+	TypeDELEGI   uint16 = 65433 // Provisional type.
 	TypeReserved uint16 = 65535
 
 	// valid question classes only.
@@ -161,22 +161,6 @@ const (
 
 	ZONEMDHashSHA384 = 1
 	ZONEMDHashSHA512 = 2
-)
-
-// Used in IPSEC, RFC 4025, Section 2.3.
-const (
-	IPSECGatewayNone uint8 = iota
-	IPSECGatewayIPv4
-	IPSECGatewayIPv6
-	IPSECGatewayHost
-)
-
-// Used in AMTRELAY, RFC 8777, Section 4.2.3.
-const (
-	AMTRELAYNone = IPSECGatewayNone
-	AMTRELAYIPv4 = IPSECGatewayIPv4
-	AMTRELAYIPv6 = IPSECGatewayIPv6
-	AMTRELAYHost = IPSECGatewayHost
 )
 
 // header is the wire format for the DNS packet header.
