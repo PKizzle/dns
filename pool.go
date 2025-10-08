@@ -13,8 +13,8 @@ type Pooler interface {
 	Put([]byte)
 }
 
-// Pool is the default pool used. The allocation size used is [server.UDPSize], if TCP allocation stay below
-// this value too, it is also used for that.
+// Pool is the default pool used. The allocation size used is [server.UDPSize], if TCP allocations stay below
+// this value too, it is also used for that, otherwise they escape and are garbage collected.
 type Pool struct {
 	size int
 	pool sync.Pool

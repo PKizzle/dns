@@ -208,7 +208,7 @@ type Msg struct {
 	ps uint8
 
 	// The Pseudo section is a virtual section that holds the OPT EDNS0 options, that are interpreted (and shown) as RRs.
-	// The OPT RR will never be visible in Extra, nor in the Pseudo section, this is all handled transparently.
+	// The OPT RR itself will never be visible in Extra, nor in the Pseudo section, this is all handled transparently.
 	Pseudo []RR // Holds the RR(s) of the (virtual) pseudo section.
 
 	// The Stateful section is a virtual section that holds the DSO option, that are interpreted (and shown)
