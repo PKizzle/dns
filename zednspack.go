@@ -248,11 +248,11 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 }
 
 func (o *ESU) pack(msg []byte, off int) (int, error) {
-	return pack.OctetString(o.URI, msg, off)
+	return pack.StringAny(o.URI, msg, off)
 }
 
 func (o *ESU) unpack(s *cryptobyte.String) (err error) {
-	o.URI, err = unpack.StringOctet(s)
+	o.URI, err = unpack.StringAny(s, len(*s))
 	return err
 }
 
@@ -265,7 +265,7 @@ func (o *ZONEVERSION) pack(msg []byte, off int) (int, error) {
 	if err != nil {
 		return off, err
 	}
-	return pack.StringOctet(string(o.Version), msg, off)
+	return pack.StringAny(string(o.Version), msg, off)
 }
 
 func (o *ZONEVERSION) unpack(s *cryptobyte.String) (err error) {
@@ -275,7 +275,7 @@ func (o *ZONEVERSION) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint8(&o.Type) {
 		return unpack.ErrOverflow
 	}
-	v, err := unpack.StringOctet(s)
+	v, err := unpack.StringAny(s, len(*s))
 	o.Version = []byte(v)
 	return err
 }

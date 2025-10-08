@@ -41,6 +41,7 @@ func AAAA(s *cryptobyte.String) (net.IP, error) {
 	return ip, nil
 }
 
+// See [pack.StringAny].
 func StringAny(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
 	if !s.ReadBytes(&b, len) {
@@ -212,8 +213,6 @@ func StringHex(s *cryptobyte.String, len int) (string, error) {
 	}
 	return hex.EncodeToString(b), nil
 }
-
-func StringOctet(s *cryptobyte.String) (string, error) { return StringAny(s, len(*s)) }
 
 func Names(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	var names []string

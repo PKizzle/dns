@@ -281,8 +281,6 @@ if rr.%s != "-" {
 				unpackFieldRest("unpack.StringHex")
 			case `dns:"any"`:
 				unpackFieldRest("unpack.StringAny")
-			case `dns:"octet"`:
-				unpackField("unpack.StringOctet")
 			case "":
 				switch fieldtype {
 				case "uint8":

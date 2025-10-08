@@ -379,42 +379,6 @@ func StringHex(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func OctetString(s string, msg []byte, off int) (int, error) {
-	if off >= len(msg) || len(s) > 256*4+1 {
-		return len(msg), ErrBuf
-	}
-	for i := 0; i < len(s); i++ {
-		if len(msg) <= off {
-			return len(msg), ErrBuf
-		}
-		if s[i] == '\\' {
-			i++
-			if i == len(s) {
-				break
-			}
-			// check for \DDD
-			if ddd.Is(s[i:]) {
-				msg[off] = ddd.ToByte(s[i:])
-				i += 2
-			} else {
-				msg[off] = s[i]
-			}
-		} else {
-			msg[off] = s[i]
-		}
-		off++
-	}
-	return off, nil
-}
-
-func StringOctet(s string, msg []byte, off int) (int, error) {
-	off, err := OctetString(s, msg, off)
-	if err != nil {
-		return len(msg), err
-	}
-	return off, nil
-}
-
 func Names(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
 	var err error
 	for _, name := range names {
