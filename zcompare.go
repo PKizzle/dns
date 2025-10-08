@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bytes"
+	"slices"
 	"strings"
 )
 
@@ -851,6 +852,13 @@ func (rr *NSEC) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = slices.Compare(rr.TypeBitMap, b.(*NSEC).TypeBitMap)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1120,6 +1128,13 @@ func (rr *NSEC3) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = slices.Compare(rr.TypeBitMap, b.(*NSEC3).TypeBitMap)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1369,6 +1384,20 @@ func (rr *HIP) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	j := 0
+	for i := range rr.RendezvousServers {
+		if i > j || x != 0 {
+			break
+		}
+		x = CompareName(rr.RendezvousServers[i], b.(*HIP).RendezvousServers[j])
+		j++
+	}
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1577,6 +1606,13 @@ func (rr *CSYNC) compare(b RR) (x int) {
 		return 1
 	}
 	x = int(rr.Flags) - int(b.(*CSYNC).Flags)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
+	x = slices.Compare(rr.TypeBitMap, b.(*CSYNC).TypeBitMap)
 	if x != 0 {
 		if x < 0 {
 			return -1

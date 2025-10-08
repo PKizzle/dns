@@ -17,6 +17,10 @@ func _pack(i Info, msg []byte, off int) (int, error) {
 		return x.pack(msg, off)
 	case *SERVERIPV6:
 		return x.pack(msg, off)
+	case *SERVERNAME:
+		return x.pack(msg, off)
+	case *INCLUDEDELEGI:
+		return x.pack(msg, off)
 	}
 	return 0, fmt.Errorf("dns: no deleg pack defined")
 }
@@ -27,6 +31,10 @@ func _unpack(i Info, data *cryptobyte.String) error {
 	case *SERVERIPV4:
 		return x.unpack(data)
 	case *SERVERIPV6:
+		return x.unpack(data)
+	case *SERVERNAME:
+		return x.unpack(data)
+	case *INCLUDEDELEGI:
 		return x.unpack(data)
 	}
 	return fmt.Errorf("dns: no deleg unpack defined")

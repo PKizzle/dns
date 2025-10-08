@@ -22,6 +22,7 @@ package dns
 import (
 	"bytes"
 	"strings"
+	"slices"
 )
 
 `
@@ -123,14 +124,24 @@ return 1
 						j++
 					}`)
 				case `dns:"opt"`:
+				// never signed, but compare would be nice...
 
 				case `dns:"nsec"`:
+					o(`x = slices.Compare(rr.%s, b.(*%s).%s)`)
 
 				case `dns:"pairs"`:
 
 				case `dns:"infos"`:
 
 				case `dns:"domain-name"`:
+					o(`j := 0
+						for i := range rr.%[1]s {
+						if i > j || x != 0 {
+							break
+						}
+						x = CompareName(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
+						j++
+					}`)
 
 				}
 				continue
@@ -163,11 +174,9 @@ return 1
 			case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
 			case tag == `dns:"hex"`:
-				o("x = strings.Compare(rr.%s, b.(*%s).%s)")
-
+				fallthrough
 			case tag == `dns:"any"`:
-
-			case tag == `dns:"octet"`:
+				o("x = strings.Compare(rr.%s, b.(*%s).%s)")
 
 			case tag == "":
 				switch fieldtype {
