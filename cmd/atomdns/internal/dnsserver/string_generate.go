@@ -25,7 +25,7 @@ var funcmap = template.FuncMap{
 }
 
 var Strings = template.Must(template.New("strings").Funcs(funcmap).Parse(`
-// Handlers is a slices of hanlder names.
+// Handlers is a slices of handler names.
 var Handlers = []string{
 {{range .}} "{{tolower .}}",
 {{end}}
