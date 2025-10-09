@@ -2,6 +2,10 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
+## HEAD - 2025-10-09
+
+13 commits.
+
 
 ## v0.5.9 - 2025-10-08
 
