@@ -137,6 +137,9 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 				}
 			}
 		}
+		if re != nil {
+			r.Question[0].Header().Name = re.Name
+		}
 		r.Rcode = dns.RcodeNameError
 		return r
 	}
@@ -148,8 +151,9 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 		}
 	}
 	if re != nil {
-		// first answer in the change must have the original qname
-		r.Question[0].Header().Name = re.Answer[0].Header().Name
+		// First answer in the chain must have the original qname.
+		// But this is only true if we have a full chain. Use the saved re.Name
+		r.Question[0].Header().Name = re.Name
 		for _, rr := range re.Answer {
 			r.Answer = append(r.Answer, rr.Clone())
 		}
@@ -223,7 +227,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser Node, hint Hint, re *Restart) *d
 // Canonical follows the cname chain.
 func Canonical(z Interface, r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 	if re == nil {
-		re = new(Restart)
+		re = &Restart{Name: r.Question[0].Header().Name}
 	}
 
 	for _, rr := range encloser.RRs {
@@ -238,6 +242,7 @@ func Canonical(z Interface, r *dns.Msg, encloser Node, re *Restart) *dns.Msg {
 	}
 	re.I++
 	if re.I > 7 {
+		r.Question[0].Header().Name = re.Name
 		return r
 	}
 	return Retrieve(z, r, re)

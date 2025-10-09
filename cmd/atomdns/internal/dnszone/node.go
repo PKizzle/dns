@@ -9,6 +9,7 @@ import (
 // Restart is used in the (recursive) calling of Retrieve to complete a CNAME chain. The i index is used to avoid loops
 // in the recursion and we break at 8.
 type Restart struct {
+	Name   string   // original qname that started this sequence
 	Answer []dns.RR // current set of RRs that need to go in the final response
 	I      int      // break recursion at I > 7
 }

@@ -416,7 +416,7 @@ func TestZoneEdgeCases(t *testing.T) {
 				m := dns.NewMsg("mmark.miek.nl.", dns.TypeA)
 				m.Rcode = dns.RcodeNameError
 				m.Ns = []dns.RR{
-					dnstest.New("miek.nl. IN SOA     miek.miek.nl. miek.miek.nl. 1 1 1 1 1"),
+					dnstest.New("miek.nl. IN SOA     miek.miek.nl. miek.miek.nl. 3 1 1 1 1"),
 				}
 				return m
 			},
