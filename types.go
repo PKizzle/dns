@@ -181,7 +181,7 @@ const (
 	_AD = 1 << 5  // authenticated data
 	_CD = 1 << 4  // checking disabled
 
-	// EDNS0 OPT "Header.Bits", these are placed directoy in a *Msg in this impl.
+	// EDNS0 OPT "Header.Bits", these are placed directory in a *Msg in this impl.
 	_DO = 1 << 15 // DNSSEC OK
 	_CO = 1 << 14 // Compact Answers OK
 	_DE = 1 << 13 // DELEG OK

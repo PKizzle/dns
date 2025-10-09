@@ -19,8 +19,6 @@ func Parse(i Info, b, o string) error {
 	return fmt.Errorf("dns: no deleg parse defined")
 }
 
-// should all be generated, allthough the difference are huge...
-
 func (s *SERVERIPV4) parse(b string) error {
 	if len(b) == 0 {
 		return errors.New("dns: delegserveripv4: empty ips")

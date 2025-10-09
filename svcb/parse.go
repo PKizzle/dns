@@ -37,8 +37,6 @@ func Parse(p Pair, b, o string) error {
 	return fmt.Errorf("dns: no svcb parse defined")
 }
 
-// should all be generated, allthough the difference are huge...
-
 func (s *MANDATORY) parse(b string) error {
 	keys := make([]uint16, 0, strings.Count(b, ",")+1)
 	for len(b) > 0 {

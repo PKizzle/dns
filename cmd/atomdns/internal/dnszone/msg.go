@@ -6,7 +6,7 @@ import (
 )
 
 // Hints give a hint to the functions here on what type of answer we got. This could be (mostly?) be done in
-// retreive, but requires redoing work already done, easier to just notify what we have.
+// retrieve, but requires redoing work already done, easier to just notify what we have.
 type Hint int
 
 const (
@@ -17,7 +17,7 @@ const (
 
 // Synthesize handles all wildcard responses, we are only called when we hit a wildcard and didn't find any
 // more specific. I.e. original qname did not exist. Now we need to assemble the answer plus adding the NSECs
-// that validte the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
+// that validate the answer. If sosynthesis.Name != encloser.Name, those two NSECs need to be added.
 func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser Node, re *Restart) *dns.Msg {
 	// Synthesis, can still lead to no data if the qtype doesn't match.
 	if len(sosynthesis.RRs) > 0 {

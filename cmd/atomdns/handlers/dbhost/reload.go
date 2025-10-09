@@ -39,7 +39,7 @@ func (d *Dbhost) Reload() error {
 					if d.Path == path.Clean(event.Name) {
 						alog := log.With(slog.String("path", filepath.Base(event.Name)))
 						if err := d.Load(); err != nil {
-							alog.Error("Failed to reload", Err( err))
+							alog.Error("Failed to reload", Err(err))
 							continue
 						}
 						alog.Info("Successful reload")
@@ -51,7 +51,7 @@ func (d *Dbhost) Reload() error {
 				if !ok {
 					continue
 				}
-				log.Debug("Zone watch event error", Err( err))
+				log.Debug("Zone watch event error", Err(err))
 			case <-d.ctx.Done():
 				watcher.Close()
 				return

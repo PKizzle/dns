@@ -30,7 +30,7 @@ func StringToMsg(s string) (*dns.Msg, error) {
 	state := stateNone
 
 	// We have an RR or
-	// ;; stuff, stuff2: more,  (comma seperated)
+	// ;; stuff, stuff2: more,  (comma separated)
 	// ;; <NAME> SECTION:
 	// It's line by line, so that simplifies things
 	scanner := bufio.NewScanner(strings.NewReader(s)) // Maybe not use a scanner?

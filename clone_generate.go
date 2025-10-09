@@ -70,7 +70,6 @@ func main() {
 		if generate.IsEmbedded(strct) && i < lspecs {
 			field := strct.Fields.List[0].Type.(*ast.Ident).String()
 			if _, ok := dns.StringToType[field]; ok {
-				// embeded
 				fmt.Fprintf(b, "return &%s{*rr.%s.Clone().(*%s)}\n}\n", rrname, field, field)
 				continue
 			}

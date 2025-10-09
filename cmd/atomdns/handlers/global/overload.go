@@ -21,7 +21,7 @@ func overload(ctx context.Context, addr string) {
 			if err != nil {
 				HealthDuration.Observe(time.Since(start).Seconds())
 				HealthFailures.Inc()
-				log.Error("Failed health", Err( err))
+				log.Error("Failed health", Err(err))
 				continue
 			}
 			resp.Body.Close()

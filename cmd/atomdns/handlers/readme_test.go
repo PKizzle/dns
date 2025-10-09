@@ -10,7 +10,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
 )
 
-// TestReadme parses all README.mds of the hanlder and checks if every example Conffile.
+// TestReadme parses all README.mds of the handler and checks if every example Conffile.
 // actually works. Each conffile snippet is only used if the language is set to 'conffile':
 //
 // ~~~ conffile

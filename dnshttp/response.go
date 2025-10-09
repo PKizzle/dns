@@ -14,7 +14,7 @@ type ResponseWriter struct {
 	Req *http.Request
 	// w is the http responseWriter we are wrapping.
 	w http.ResponseWriter
-	// laddr is the local address, it's partially tracked in the net/http pacakge.
+	// laddr is the local address, it's partially tracked in the net/http package.
 	laddr net.Addr
 }
 

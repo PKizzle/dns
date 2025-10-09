@@ -62,7 +62,7 @@ func Uint64(i uint64, msg []byte, off int) (off1 int, err error) {
 	return off, nil
 }
 
-// StringAny packs a string as-is, no decoding or lenght bytes are written.
+// StringAny packs a string as-is, no decoding or length bytes are written.
 func StringAny(s string, msg []byte, off int) (int, error) {
 	if off+len(s) > len(msg) {
 		return len(msg), &Error{"overflow string anything"}

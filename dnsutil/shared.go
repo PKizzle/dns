@@ -10,7 +10,7 @@ import (
 // This is copied to zdnsutil.go in the main package to also have access to these functions and not have an
 // import cycle. See dnsutil_generate.go.
 //
-// This file SHOULD NOT import dns things, as that leads to the impossibilty to use it from svcb/ and/or
+// This file SHOULD NOT import dns things, as that leads to the impossibility to use it from svcb/ and/or
 // deleg/.
 
 // Labels returns the number of labels in the name s.
