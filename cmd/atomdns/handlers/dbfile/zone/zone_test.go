@@ -398,3 +398,53 @@ func TestZoneWildcard(t *testing.T) {
 		})
 	}
 }
+
+func TestZoneEdgeCases(t *testing.T) {
+	z := New("miek.nl.", "testdata/db.miek.nl")
+	if err := z.Load(); err != nil {
+		t.Fatal(err)
+	}
+	testcases := []struct {
+		name string
+		in   func() *dns.Msg
+		exp  func() *dns.Msg
+	}{
+		{
+			"cname",
+			func() *dns.Msg { m := dns.NewMsg("mmark.miek.nl.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("mmark.miek.nl.", dns.TypeA)
+				m.Rcode = dns.RcodeNameError
+				m.Ns = []dns.RR{
+					dnstest.New("miek.nl. IN SOA     miek.miek.nl. miek.miek.nl. 1 1 1 1 1"),
+				}
+				return m
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			expmsg := tc.exp()
+			exprrs := []dns.RR{}
+			for rr := range expmsg.All() {
+				exprrs = append(exprrs, rr)
+			}
+
+			rmsg := dnszone.Retrieve(z, tc.in(), nil)
+			gotrrs := []dns.RR{}
+			for rr := range rmsg.All() {
+				gotrrs = append(gotrrs, rr)
+			}
+			if len(exprrs) != len(gotrrs) {
+				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
+				t.Logf("%s", rmsg)
+			}
+			for i := range gotrrs {
+				if !dns.Equal(gotrrs[i], exprrs[i]) {
+					t.Logf("%s", rmsg)
+					t.Fatalf("expected %s and\n\t%s to be equal", gotrrs[i], exprrs[i])
+				}
+			}
+		})
+	}
+}
