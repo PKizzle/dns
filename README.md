@@ -50,7 +50,6 @@ wins.
 - Fast.
   - The cmd/reflect server does 400K/380K UDP/TCP respectively on the right hardware.
     (As stated, unsure why other machines qps numbers are lower).
-- Improved naming by embracing sub-packages.
 
 # Users
 
@@ -58,7 +57,6 @@ A not-so-up-to-date-list-that-may-be-actually-current:
 
 - atomdns - included in cmd/atomdns - a high performance DNS server, based on the principles of CoreDNS, but
   faster and simpler.
-- sndns - my (Miek) private fork of CoreDNS.
 
 Send pull request if you want to be listed here.
 
@@ -74,9 +72,9 @@ Send pull request if you want to be listed here.
 - EDNS0, NSID, Cookies, etc, as pseudo RRs in the (fake) pseudo section.
 - AXFR/IXFR.
 - TSIG, SIG(0).
-- Dynamic updates.
 - DNS over TLS (DOT): encrypted connection between client and server over TCP.
 - DNS over HTTP (DOH), see the _dnshttp_ package.
+- Improved naming by embracing sub-packages.
 - Examples included the cmd/ directory.
 
 Have fun!
