@@ -76,13 +76,13 @@ func (s *Server) Start() error {
 		}
 	}
 
-	roles := []string{"DNS"}
+	roles := []string{"DNS:" + s.Addr()[0]}
 	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
 		if s.global.HttpServers > 0 {
-			roles = append(roles, "DOH")
+			roles = append(roles, "DOH:"+s.HttpAddr()[0])
 		}
 		if s.global.TlsServers > 0 {
-			roles = append(roles, "DOT")
+			roles = append(roles, "DOT:"+s.TlsAddr()[0])
 		}
 	}
 
