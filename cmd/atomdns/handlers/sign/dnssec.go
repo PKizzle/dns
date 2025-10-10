@@ -178,13 +178,14 @@ func (s *Sign) Expired(origin string) (bool, error) {
 				return true, nil
 			}
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
+			Expire.WithLabelValues(origin).Set(float64(expire.Unix()))
 			left := expire.Sub(now) - expireDays
 			expired := fmt.Sprintf("%d", expireDays/(24*time.Hour))
 			if expire.Sub(now) < expireDays {
-				alog.Warn("Less than "+expired+" days left before expiration", slog.Duration("left", left))
+				alog.Warn("Less than "+expired+" days left before expiration", "left", left)
 				return true, nil
 			} else {
-				alog.Info("More than "+expired+" days left before expiration", slog.Duration("left", left))
+				alog.Info("More than "+expired+" days left before expiration", "left", left)
 				return false, nil
 			}
 		}
@@ -204,8 +205,8 @@ func (s Sign) Write(z *zone.Zone) error {
 	}
 	defer os.Remove(f.Name())
 
+	now := time.Now()
 	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
-	alog.Debug("Successful resign", slog.String("temp", filepath.Base(f.Name())))
 
 	z.Walk(func(n dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
@@ -217,5 +218,6 @@ func (s Sign) Write(z *zone.Zone) error {
 	f.Close()
 	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
 	alog.Info("Successful resign", slog.String("written", filepath.Base(target)))
+	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return os.Rename(f.Name(), target)
 }
