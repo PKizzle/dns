@@ -28,11 +28,13 @@ func (s *Sign) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 // Various duration constants for signing of the zones.
 const (
-	expireDays = 9 * 24 * time.Hour // max time allowed before expiration
+	expireDays = 9 * Day // max time allowed before expiration
 
-	signatureExpire    = 32 * 24 * time.Hour // sign for 32 days
-	signatureInception = -3 * time.Hour      // -(2+1) hours, be sure to catch daylight saving time and such, jitter is subtracted
+	signatureExpire    = 32 * Day       // sign for 32 days
+	signatureInception = -3 * time.Hour // -(2+1) hours, be sure to catch daylight saving time and such, jitter is subtracted
 
 	inceptionJitter  = -18 * time.Hour // default max jitter for the inception
 	expirationJitter = 100 * time.Hour // default max jitter for the expiration
 )
+
+const Day = 24 * time.Hour

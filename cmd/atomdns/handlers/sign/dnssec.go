@@ -219,5 +219,3 @@ func (s Sign) Write(z *zone.Zone) error {
 	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return os.Rename(f.Name(), target)
 }
-
-const Day = 24 * time.Hour

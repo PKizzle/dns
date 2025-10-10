@@ -10,8 +10,7 @@ import (
 )
 
 // Interval is the resign wake up interval.
-// const Interval = 5 * time.Hour
-const Interval = time.Minute
+const Interval = 5 * time.Hour
 
 // Resign launches a resign routine that listens for _write_ events to the origin zone files and resigns them.
 func (s *Sign) Resign() error {
