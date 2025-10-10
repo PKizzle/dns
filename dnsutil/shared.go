@@ -233,11 +233,11 @@ func compareLabel(a, b string) int {
 // TimeToString translates the RRSIG's incep. and expir. times to the
 // string representation used when printing the record. It takes serial arithmetic (RFC 1982) into account.
 func TimeToString(t uint32) string {
-	mod := (int64(t)-time.Now().Unix())/MaxSerialIncrement - 1
+	mod := (int64(t)-time.Now().Unix())/maxSerialIncrement - 1
 	if mod < 0 {
 		mod = 0
 	}
-	ti := time.Unix(int64(t)-mod*MaxSerialIncrement, 0).UTC()
+	ti := time.Unix(int64(t)-mod*maxSerialIncrement, 0).UTC()
 	return ti.Format("20060102150405")
 }
 
@@ -248,11 +248,11 @@ func StringToTime(s string) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	mod := t.Unix()/MaxSerialIncrement - 1
+	mod := t.Unix()/maxSerialIncrement - 1
 	if mod < 0 {
 		mod = 0
 	}
-	return uint32(t.Unix() - mod*MaxSerialIncrement), nil
+	return uint32(t.Unix() - mod*maxSerialIncrement), nil
 }
 
 // Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
@@ -284,5 +284,5 @@ func Absolute(name, origin string) string {
 	return name + "." + origin
 }
 
-// MaxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
-const MaxSerialIncrement = 2147483647
+// maxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
+const maxSerialIncrement = 2147483647
