@@ -24,6 +24,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		return z, err
 	}
 	alog := log.With(slog.String("zone", origin))
+	now := time.Now()
 
 	n := dnszone.Node{Name: origin}
 	for _, pair := range s.KeyPairs {
@@ -84,6 +85,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	for i := range rrsigs {
 		z.Set(rrsigs[i])
 	}
+	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return z, nil
 }
 
@@ -205,8 +207,6 @@ func (s Sign) Write(z *zone.Zone) error {
 	}
 	defer os.Remove(f.Name())
 
-	now := time.Now()
-
 	z.Walk(func(n dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
 			return true
@@ -216,6 +216,5 @@ func (s Sign) Write(z *zone.Zone) error {
 	})
 	f.Close()
 	target := filepath.Join(s.Directory, filepath.Base(z.Path)+Signed)
-	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return os.Rename(f.Name(), target)
 }

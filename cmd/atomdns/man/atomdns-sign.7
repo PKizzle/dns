@@ -141,6 +141,16 @@ Running this leads to the following log output
 Forcibly resigning a zone can be accomplished by removing the signed zone file (atomdns will keep
 on serving it from memory), and \fB\fCtouch\fR\-ing \fBFILE\fP.
 
+.SH "METRICS"
+.PP
+If monitoring is enabled the following metrics are exported:
+
+.IP \(bu 4
+\fB\fCatomdns_sign_duration_seconds{zone}\fR \- tracks how long each signing operation takes.
+.IP \(bu 4
+\fB\fCatomdns_sign_rrsig_expire_timestamp{zone}\fR \- shows when the signatures are about to expire.
+
+
 .SH "SEE ALSO"
 .PP
 The DNSSEC RFCs: RFC 4033, RFC 4034 and RFC 4035. And the best current practice (BCP) on DNSSEC, RFC 6781. And
