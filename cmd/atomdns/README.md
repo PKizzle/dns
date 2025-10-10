@@ -5,6 +5,9 @@ Its architecture is identical to HTTP servers with middleware. The order of the 
 determines the order in which they are executed. (If you know CoreDNS; you might know that it has a fixed order -
 atomdns is _different_).
 
+atomdns is a rock-solid replacement for CoreDNS, BIND9, Knot, NSD, etc. This is not a toy example on how to
+use the dns library.
+
 atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns you
 are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
 provided out of the box, you can add it by writing a handler.
