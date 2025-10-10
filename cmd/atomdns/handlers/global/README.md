@@ -6,7 +6,7 @@ _global_ - hold global server properties
 
 _global_ holds global server properties, like the prometheus metrics port and root directory.
 It's not a handler and you can not use it as such: you can't use _global_ in the configuration, other than in the
-global section, see the configuration example below.
+global section, see the configuration examples below.
 
 # Syntax
 

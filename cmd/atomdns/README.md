@@ -17,12 +17,12 @@ Currently atomdns is able to:
 - Provide query logging (_log_).
 - Access control for queryes (_acl_).
 - Provide metrics (by using Prometheus) (_metrics_).
-- Serve from a SQLite file (_dbsqlite_).
+- Serve from a SQLite database (_dbsqlite_).
 - ... and more.
 - Serve as a router to router queries to some other (recursive) nameserver (_route_). [TODO]
 
 Each of these handlers has its own manual page, i.e. see atomdns-dbfile(7) for more information on the
-_dbfile_ handler.
+_dbfile_ handler for instance.
 
 ## Compilation from Source
 
@@ -74,7 +74,7 @@ When atomdns starts you are greeted (when not using `quiet`) a bunch of log line
 2025/10/04 08:07:07 INFO Startup handler=log signal=USR1
 2025/10/04 08:07:07 INFO Startup handler=log signal=USR1
 2025/10/04 08:07:07 INFO Startup handler=dbfile reload=db.example.org
-2025/10/04 08:07:07 INFO Launched config=Conffile-example origins=2 roles=DNS,DOH,DOT
+2025/10/04 08:07:07 INFO Launched config=Conffile-example origins=2 roles=DNS:[::]:1053,DOH:[::]:1443,DOT:[::]:8053
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
   ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS
   ╹ ╹   ╹   ┗━┛  ╹ ╹

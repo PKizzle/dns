@@ -19,6 +19,8 @@ import (
 	"golang.org/x/crypto/ed25519"
 )
 
+const Signed = ".signed"
+
 func (s *Sign) Setup(co *dnsserver.Controller) error {
 	s.ttl = 3600
 	s.pool = dns.NewPool(dns.MinMsgSize)
@@ -80,7 +82,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log.Info("Startup", "signing", filepath.Base(s.Path))
 		for _, z := range s.Zones {
-			alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
+			alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)+Signed))
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				alog.Error("Zone does not exist")

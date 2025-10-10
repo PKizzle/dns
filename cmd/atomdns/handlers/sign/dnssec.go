@@ -24,6 +24,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		return z, err
 	}
 	alog := log.With(slog.String("zone", origin))
+	now := time.Now()
 
 	n := dnszone.Node{Name: origin}
 	for _, pair := range s.KeyPairs {
@@ -84,6 +85,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	for i := range rrsigs {
 		z.Set(rrsigs[i])
 	}
+	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return z, nil
 }
 
@@ -159,7 +161,7 @@ func lifetime(now time.Time) (uint32, uint32) {
 
 // Expired returns true when 'a' signature on the SOA record has only 9 days left.
 func (s *Sign) Expired(origin string) (bool, error) {
-	f, err := os.Open(s.Zones[origin].Path + ".signed")
+	f, err := os.Open(s.Zones[origin].Path + Signed)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return true, nil
@@ -178,13 +180,14 @@ func (s *Sign) Expired(origin string) (bool, error) {
 				return true, nil
 			}
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
+			Expire.WithLabelValues(origin).Set(float64(expire.Unix()))
 			left := expire.Sub(now) - expireDays
-			expired := fmt.Sprintf("%d", expireDays/(24*time.Hour))
+			expired := fmt.Sprintf("%d", expireDays/Day)
 			if expire.Sub(now) < expireDays {
-				alog.Warn("Less than "+expired+" days left before expiration", slog.Duration("left", left))
+				alog.Warn("Less than "+expired+" days left before expiration", "days", int(left/Day))
 				return true, nil
 			} else {
-				alog.Info("More than "+expired+" days left before expiration", slog.Duration("left", left))
+				alog.Info("More than "+expired+" days left before expiration", "days", int(left/Day))
 				return false, nil
 			}
 		}
@@ -204,9 +207,6 @@ func (s Sign) Write(z *zone.Zone) error {
 	}
 	defer os.Remove(f.Name())
 
-	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
-	alog.Debug("Successful resign", slog.String("temp", filepath.Base(f.Name())))
-
 	z.Walk(func(n dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
 			return true
@@ -215,7 +215,6 @@ func (s Sign) Write(z *zone.Zone) error {
 		return true
 	})
 	f.Close()
-	target := filepath.Join(s.Directory, filepath.Base(z.Path)+".signed")
-	alog.Info("Successful resign", slog.String("written", filepath.Base(target)))
+	target := filepath.Join(s.Directory, filepath.Base(z.Path)+Signed)
 	return os.Rename(f.Name(), target)
 }

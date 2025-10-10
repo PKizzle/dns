@@ -1,7 +1,7 @@
 $TTL 30M
 $ORIGIN miek.nl.
 @                        IN   SOA        linode.atoom.net. miek (
-                                            1282630069   ; serial  Fri, 28 Feb 1287 16:06:00 UTC
+                                            1282630072   ; serial  Fri, 28 Feb 1287 16:48:00 UTC
                                             4H           ; refresh
                                             1H           ; retry
                                             1W           ; expire
@@ -10,10 +10,6 @@ $ORIGIN miek.nl.
                          IN   NS         linode.atoom.net.
                          IN   MX         1 aspmx.l.google.com.
                          IN   AAAA       2a01:7e00::f03c:91ff:fe79:234c
-                         IN   DNSKEY     257 3 13 (
-                                            sfzRg5nDVxbeUc51su4MzjgwpOpUwnuu81SlRHqJuXe3SOYOeypR69t
-                                            Z52XLmE56TAmPHsiB8Rgk+NTpf0o1Cw==
-                                            )
 
 a                        IN   AAAA       2a01:7e00::f03c:91ff:fe79:234c
 

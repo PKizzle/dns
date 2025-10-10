@@ -1,5 +1,7 @@
 {
     debug
+    health
+    metrics
     root handlers
     dns {
         addr [::]:1053

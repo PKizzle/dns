@@ -9,16 +9,19 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// Interval is the resign wake up interval.
+const Interval = 5 * time.Hour
+
 // Resign launches a resign routine that listens for _write_ events to the origin zone files and resigns them.
 func (s *Sign) Resign() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
-	ticker := time.NewTicker(5 * time.Hour)
-	defer ticker.Stop()
 
 	go func() {
+		ticker := time.NewTicker(Interval)
+		defer ticker.Stop()
 		for {
 			select {
 			case event, ok := <-watcher.Events:
@@ -56,7 +59,6 @@ func (s *Sign) Resign() error {
 					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
 					expired, err := s.Expired(z.Origin())
 					if !expired {
-						alog.Info("Zone has valid signatures")
 						continue
 					}
 					zs, err := s.Sign(z.Origin())
