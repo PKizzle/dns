@@ -723,7 +723,7 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-// WriteTo writes the message to w. W must be a [ResponseWriter], when w contains a *net.TCPConn, the write is
+// WriteTo writes the message to w. W must be a [ResponseWriter], when w is _not_ a *net.UDPConn, the write is
 // prefixed with an uint16 with the length of the buffer, otherwise the m.Data is written as-is. If w is a
 // [ResponseController] a write timeout is applied.
 //
