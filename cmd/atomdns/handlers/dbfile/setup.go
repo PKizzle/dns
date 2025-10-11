@@ -72,10 +72,12 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 
 				apex := z.Apex()
 				serial := uint32(0)
-				for _, rr := range apex.RRs {
-					if s, ok := rr.(*dns.SOA); ok {
-						serial = s.Serial
-						break
+				if apex != nil {
+					for _, rr := range apex.RRs {
+						if s, ok := rr.(*dns.SOA); ok {
+							serial = s.Serial
+							break
+						}
 					}
 				}
 				if !d.From.AvailableFrom(z.Origin(), serial) {
