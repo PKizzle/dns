@@ -8,22 +8,22 @@ type Interface interface {
 	// Load loads a zone.
 	Load() error
 	// Get returns the node under key. The boolean is true when something is found.
-	Get(string) (Node, bool)
+	Get(string) (*Node, bool)
 	// Previous returns the previous node for string. If the node under key exists that one is returned.
-	Previous(string) Node
+	Previous(string) *Node
 	// Set sets a node in the zone. It must take care to also fill out any empty non-terminals that are
 	// needed.
-	Set(Node) string
+	Set(*Node) string
 	// Apex returns the apex of the zone.
-	Apex() Node
+	Apex() *Node
 	// Origin returns the origin of the zone as string.
 	Origin() string
 	// Labels returns the number of labels from the origin. This is method to allow the implementation some
 	// head room for optimizations.
 	Labels() int
 	// Walk walks the entire walk starting at the apex.
-	Walk(func(Node) bool)
+	Walk(func(*Node) bool)
 	// AuthoritativeWalk walks the entire zone starting at the apex, but skips non-authoritative records:
 	// delegated (or should have been delegated) and glue recors.
-	AuthoritativeWalk(func(Node, bool) bool)
+	AuthoritativeWalk(func(*Node, bool) bool)
 }

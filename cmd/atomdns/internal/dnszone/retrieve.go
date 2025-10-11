@@ -26,7 +26,7 @@ func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 	dnsutil.SetReply(r, m)
 
 	labels := z.Labels()
-	sosynthesis, encloser := Node{}, Node{} // source of synthesis and closes encloser RRset + names.
+	sosynthesis, encloser := &Node{}, &Node{} // source of synthesis and closes encloser RRset + names.
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
 	// record set from the zone. The second loop (in z.Msg) then creates a message with the correct RRs in the sections.

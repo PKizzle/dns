@@ -52,7 +52,7 @@ func (o *LLQ) String() string {
 		strconv.FormatUint(uint64(o.Error), 10), strconv.FormatUint(o.ID, 10),
 		strconv.FormatUint(uint64(o.LeaseLife), 10))
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -68,7 +68,7 @@ func (o *REPORTING) String() string {
 	sb := sprintOptionHeader(o)
 	sprintData(sb, o.AgentDomain)
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -96,7 +96,7 @@ func (o *COOKIE) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.Cookie)
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -121,7 +121,7 @@ func (o *NSID) String() string {
 		sb.WriteString("\"")
 	}
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -149,12 +149,12 @@ func (o *EXPIRE) String() string {
 	sb := sprintOptionHeader(o)
 	if o.Expire == 0 {
 		s := sb.String()
-		stringPool.Put(*sb)
+		builderPool.Put(*sb)
 		return s
 	}
 	sb.WriteString(strconv.FormatUint(uint64(o.Expire), 10))
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -177,7 +177,7 @@ func (o *DAU) String() string {
 		}
 	}
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -200,7 +200,7 @@ func (o *DHU) String() string {
 		}
 	}
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -223,7 +223,7 @@ func (o *N3U) String() string {
 		}
 	}
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -256,7 +256,7 @@ func (o *TCPKEEPALIVE) String() string {
 		sb.WriteString(fmt.Sprintf(", timeout %dms", o.Timeout*100))
 	}
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -284,7 +284,7 @@ func (o *EDE) String() string {
 	sb.WriteString(o.ExtraText)
 	sb.WriteByte('"')
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -318,7 +318,7 @@ func (o *SUBNET) String() string {
 	sb.WriteByte('/')
 	sb.WriteString(strconv.Itoa(int(o.SourceScope)))
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -332,7 +332,7 @@ func (o *ESU) String() string {
 	sb := sprintOptionHeader(o)
 	sb.WriteString(o.URI)
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -371,7 +371,7 @@ func (o *ZONEVERSION) String() string {
 		sb.Write(o.Version)
 	}
 	s := sb.String()
-	stringPool.Put(*sb)
+	builderPool.Put(*sb)
 	return s
 }
 

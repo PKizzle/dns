@@ -49,10 +49,10 @@ func (n *noopPool) Put([]byte)  {}
 
 func newNoopPool(size int) *noopPool { return &noopPool{size: size} }
 
-// stringPooler is a pool used by the String methods.
-type stringPooler struct {
+// builderPooler is a pool used by the String methods.
+type builderPooler struct {
 	sync.Pool
 }
 
-func (s *stringPooler) Get() strings.Builder   { return s.Pool.Get().(strings.Builder) }
-func (s *stringPooler) Put(sb strings.Builder) { sb.Reset(); s.Pool.Put(sb) }
+func (s *builderPooler) Get() strings.Builder   { return s.Pool.Get().(strings.Builder) }
+func (s *builderPooler) Put(sb strings.Builder) { sb.Reset(); s.Pool.Put(sb) }

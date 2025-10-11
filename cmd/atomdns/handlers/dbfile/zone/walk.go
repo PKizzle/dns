@@ -8,14 +8,14 @@ import (
 
 // Walk walks the zone and calls fn on each element found, as long as f returns true the walk is continued.
 // The order of the walk is ascending order: from apex to longest child.
-func (z *Zone) Walk(fn func(dnszone.Node) bool) { z.Tree.Scan(fn) }
+func (z *Zone) Walk(fn func(*dnszone.Node) bool) { z.Tree.Scan(fn) }
 
 // AuthoritativeWalk walks the the zone, but keeps track of authoritative names and call fn auth a boolean
 // indicating is the name is considered that.
-func (z *Zone) AuthoritativeWalk(fn func(dnszone.Node, bool) bool) {
+func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 	delegated := map[string]struct{}{}
 
-	z.Walk(func(n dnszone.Node) bool {
+	z.Walk(func(n *dnszone.Node) bool {
 		if len(n.Name) > len(z.Origin()) { // apex also has NSes, if we add those the entire zone would be delegated
 			for _, rr := range n.RRs {
 				if _, ok := rr.(*dns.NS); ok {
