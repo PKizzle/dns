@@ -22,7 +22,7 @@ func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.
 	})
 
 	apex := z.Apex()
-	z.Walk(func(n Node) bool {
+	z.Walk(func(n *Node) bool {
 		env <- &dns.Envelope{Answer: n.RRs}
 		i++
 		return true

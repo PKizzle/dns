@@ -33,15 +33,15 @@ func TestSign(t *testing.T) {
 
 	testcases := []struct {
 		name string
-		a    func() dnszone.Node
-		b    func() dnszone.Node
-		ok   func(a, b dnszone.Node) error
+		a    func() *dnszone.Node
+		b    func() *dnszone.Node
+		ok   func(a, b *dnszone.Node) error
 	}{
 		{
 			"nsec-chain",
-			func() dnszone.Node { apex, _ := sz.Get(testzone); return apex },
-			func() dnszone.Node { next, _ := sz.Get("www." + testzone); return next },
-			func(a, b dnszone.Node) error {
+			func() *dnszone.Node { apex, _ := sz.Get(testzone); return apex },
+			func() *dnszone.Node { next, _ := sz.Get("www." + testzone); return next },
+			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
 					if n, ok := rr.(*dns.NSEC); ok {
 						if n.NextDomain != "a."+testzone {
@@ -61,9 +61,9 @@ func TestSign(t *testing.T) {
 		},
 		{
 			"nsec-bitmap",
-			func() dnszone.Node { apex, _ := sz.Get(testzone); return apex },
-			func() dnszone.Node { return dnszone.Node{} },
-			func(a, b dnszone.Node) error {
+			func() *dnszone.Node { apex, _ := sz.Get(testzone); return apex },
+			func() *dnszone.Node { return &dnszone.Node{} },
+			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
 					exp := []uint16{dns.TypeNS, dns.TypeSOA, dns.TypeMX, dns.TypeAAAA, dns.TypeRRSIG, dns.TypeNSEC, dns.TypeDNSKEY, dns.TypeCDS, dns.TypeCDNSKEY}
 					if n, ok := rr.(*dns.NSEC); ok {
@@ -77,9 +77,9 @@ func TestSign(t *testing.T) {
 		},
 		{
 			"all-sig",
-			func() dnszone.Node { node, _ := sz.Get("a.miek.nl."); return node },
-			func() dnszone.Node { return dnszone.Node{} },
-			func(a, b dnszone.Node) error {
+			func() *dnszone.Node { node, _ := sz.Get("a.miek.nl."); return node },
+			func() *dnszone.Node { return &dnszone.Node{} },
+			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
 					if s, ok := rr.(*dns.RRSIG); ok {
 						if s.Signature == "" {

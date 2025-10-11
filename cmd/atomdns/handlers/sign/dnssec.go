@@ -26,7 +26,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	alog := log.With(slog.String("zone", origin))
 	now := time.Now()
 
-	n := dnszone.Node{Name: origin}
+	n := &dnszone.Node{Name: origin}
 	for _, pair := range s.KeyPairs {
 		n.RRs = append(n.RRs, pair.DNSKEY)
 		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA1).ToCDS())
@@ -45,11 +45,10 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 
 	// Now walk again to sign the rest.
 	rrset := []dns.RR{}
-	rrsigs := []dnszone.Node{}
 	incep, expir := lifetime(time.Now().UTC())
 
 	options := &dns.SignOption{Pooler: s.pool}
-	z.AuthoritativeWalk(func(n dnszone.Node, auth bool) bool {
+	z.AuthoritativeWalk(func(n *dnszone.Node, auth bool) bool {
 		if !auth || len(n.RRs) == 0 {
 			return true
 		}
@@ -68,23 +67,17 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 				}
 			}
 
-			rrsignode := dnszone.Node{Name: n.Name, RRs: make([]dns.RR, 0, len(s.KeyPairs))}
 			for _, pair := range s.KeyPairs {
 				rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
 				err := rrsig.Sign(pair.Signer, rrset, options)
 				if err != nil {
 					alog.Error("Failed to sign", Err(err))
 				}
-
-				rrsignode.RRs = append(rrsignode.RRs, rrsig)
+				n.RRs = append(n.RRs, rrsig)
 			}
-			rrsigs = append(rrsigs, rrsignode)
 		}
 		return true
 	})
-	for i := range rrsigs {
-		z.Set(rrsigs[i])
-	}
 	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return z, nil
 }
@@ -98,10 +91,10 @@ type nsecfn struct {
 	bitmap []uint16
 	ttl    uint32
 
-	nsecs []dnszone.Node
+	nsecs []*dnszone.Node
 }
 
-func types(n dnszone.Node, ttl uint32) []uint16 {
+func types(n *dnszone.Node, ttl uint32) []uint16 {
 	// while looking at them anyway we set the ttl.
 	types := []uint16{} // pool for this too?
 	for _, rr := range n.RRs {
@@ -116,7 +109,7 @@ func types(n dnszone.Node, ttl uint32) []uint16 {
 
 // Walk is used when signing a zone. It generates all the NSECs that a zone needs.
 // We can't insert while walking, so we need save the nsec+rssig and insert them post walk.
-func (nf *nsecfn) Walk(n dnszone.Node, auth bool) bool {
+func (nf *nsecfn) Walk(n *dnszone.Node, auth bool) bool {
 	if !auth || len(n.RRs) == 0 { // empty non-terminal
 		return true
 	}
@@ -130,16 +123,16 @@ func (nf *nsecfn) Walk(n dnszone.Node, auth bool) bool {
 }
 
 // Last creates the last NSEC, that loops back to the origin. Walk misses this.
-func (nf *nsecfn) Last(origin string) dnszone.Node { return nf.nsec(origin) }
+func (nf *nsecfn) Last(origin string) *dnszone.Node { return nf.nsec(origin) }
 
 // nsec creates an NSEC + RRSIG(s) node from nf.
-func (nf *nsecfn) nsec(name string) dnszone.Node {
+func (nf *nsecfn) nsec(name string) *dnszone.Node {
 	nsec := &dns.NSEC{
 		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
 		NextDomain: name,
 		TypeBitMap: nf.bitmap,
 	}
-	nsecnode := dnszone.Node{Name: nf.last}
+	nsecnode := &dnszone.Node{Name: nf.last}
 	nsecnode.RRs = append(nsecnode.RRs, nsec)
 
 	for _, pair := range nf.keypairs {
@@ -207,7 +200,7 @@ func (s Sign) Write(z *zone.Zone) error {
 	}
 	defer os.Remove(f.Name())
 
-	z.Walk(func(n dnszone.Node) bool {
+	z.Walk(func(n *dnszone.Node) bool {
 		if len(n.RRs) == 0 { // skip empty non-terminals
 			return true
 		}

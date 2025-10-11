@@ -10,8 +10,8 @@ import (
 )
 
 func sprintName(s string) string {
-	sb := stringPool.Get()
-	defer stringPool.Put(sb)
+	sb := builderPool.Get()
+	defer builderPool.Put(sb)
 
 	for i := 0; i < len(s); {
 		if s[i] == '.' {
@@ -57,8 +57,8 @@ func sprintName(s string) string {
 }
 
 func sprintTxt(txt []string) string {
-	sb := stringPool.Get()
-	defer stringPool.Put(sb)
+	sb := builderPool.Get()
+	defer builderPool.Put(sb)
 
 	for i, s := range txt {
 		sb.Grow(3 + len(s))
@@ -151,7 +151,7 @@ func euiToString(eui uint64, bits int) (hex string) {
 
 // sprintHeader creates a strings.Builder, write the header to it, plus an extra tab and returns the builder.
 func sprintHeader(rr RR) *strings.Builder {
-	sb := stringPool.Get()
+	sb := builderPool.Get()
 
 	sb.WriteString(sprintName(rr.Header().Name))
 	sb.WriteByte('\t')
@@ -173,7 +173,7 @@ func sprintHeader(rr RR) *strings.Builder {
 
 // must look just enough so parsing from text will also work.
 func sprintOptionHeader(rr EDNS0) *strings.Builder {
-	sb := stringPool.Get()
+	sb := builderPool.Get()
 
 	sb.WriteByte('.')
 	sb.WriteByte('\t')
@@ -219,4 +219,4 @@ func splitN(s string, n int) []string {
 	return sx
 }
 
-var stringPool = &stringPooler{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
+var builderPool = &builderPooler{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}

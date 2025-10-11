@@ -30,9 +30,9 @@ type Zone struct {
 	origin string
 	labels int
 	Path   string
-	Tree   *btree.BTreeG[dnszone.Node]
+	Tree   *btree.BTreeG[*dnszone.Node]
 
-	apex dnszone.Node // apex node, filled after a Load.
+	apex *dnszone.Node // apex node, filled after a Load.
 }
 
 var _ dnszone.Interface = &Zone{}
@@ -66,8 +66,7 @@ func (z *Zone) Load() error {
 		if _, ok := rr.(*dns.SOA); ok {
 			soa++
 		}
-		node := dnszone.Node{Name: rr.Header().Name, RRs: []dns.RR{rr}}
-		z.Set(node)
+		z.Set(&dnszone.Node{Name: rr.Header().Name, RRs: []dns.RR{rr}})
 	}
 	if zp.Err() != nil {
 		return fmt.Errorf("failed to parse zone %q with origin %q: %s ", z.Path, z.origin, zp.Err())
@@ -75,16 +74,16 @@ func (z *Zone) Load() error {
 	if soa != 1 {
 		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA record", z.Path, z.origin)
 	}
-	z.apex, _ = z.Tree.Get(dnszone.Node{Name: z.origin})
+	z.apex, _ = z.Tree.Get(&dnszone.Node{Name: z.origin})
 	return nil
 }
 
-func (z *Zone) Apex() dnszone.Node { return z.apex }
+func (z *Zone) Apex() *dnszone.Node { return z.apex }
 
 // Set sets the RRs in the zone. It needs to create any empty non-terminals it has. Meaning for each label
 // a lookup is done if there already is an empty non-terminal, if not an empty set is inserted.
 // We should never be called to insert ENT (or names without RRs attached to them.
-func (z *Zone) Set(node dnszone.Node) string {
+func (z *Zone) Set(node *dnszone.Node) string {
 	// If the name already exist, we can just add our stuff to the node and we are done.
 	n, ok := z.Tree.Get(node)
 	if ok {
@@ -108,7 +107,7 @@ func (z *Zone) Set(node dnszone.Node) string {
 	for i := 1; i < labels-z.Labels(); i++ {
 		off, _ = dnsutil.Next(name, off)
 
-		node := dnszone.Node{Name: name[off:]}
+		node := &dnszone.Node{Name: name[off:]}
 		if _, ok := z.Tree.Get(node); ok {
 			continue // already exist, nothing to add
 		}
@@ -118,18 +117,18 @@ func (z *Zone) Set(node dnszone.Node) string {
 }
 
 // Get gets the node under name from z.
-func (z *Zone) Get(name string) (dnszone.Node, bool) {
-	n, ok := z.Tree.Get(dnszone.Node{Name: name})
+func (z *Zone) Get(name string) (*dnszone.Node, bool) {
+	n, ok := z.Tree.Get(&dnszone.Node{Name: name})
 	if ok {
 		return n, true
 	}
-	return dnszone.Node{}, false
+	return nil, false
 }
 
 // Previous returns the logical previous name from name.
-func (z *Zone) Previous(name string) dnszone.Node {
-	node := dnszone.Node{}
-	z.Tree.Descend(dnszone.Node{Name: name}, func(n dnszone.Node) bool {
+func (z *Zone) Previous(name string) *dnszone.Node {
+	node := &dnszone.Node{}
+	z.Tree.Descend(&dnszone.Node{Name: name}, func(n *dnszone.Node) bool {
 		node = n
 		return false
 	})

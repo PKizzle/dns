@@ -20,7 +20,7 @@ type Node struct {
 	RRs  []dns.RR // all the rrs with owner name 'name'.
 }
 
-func (n Node) String() string {
+func (n *Node) String() string {
 	// TODO(miek): builderPool for all of these?
 	sb := strings.Builder{}
 	for i := range n.RRs {
@@ -31,7 +31,7 @@ func (n Node) String() string {
 }
 
 // Less compares nodes a, b by Name and returns true if a is less than b.
-func Less(a, b Node) bool {
+func Less(a, b *Node) bool {
 	x := dns.CompareName(a.Name, b.Name)
 	return x == -1
 }
