@@ -15,9 +15,7 @@
   - See `cmd/reflect` and do a `go build; go test -v`. Requires `dnsperf` to be installed.
 - More convenience functions included in _dns_ or otherwise in _dnsutils_.
 - Test helper function included _dnstest_.
-- Example programs included _and_ benchmarked in `cmd/`.
-
-See [open issues](https://codeberg.org/miekg/dns/issues) on the remaining work.
+- Example programs included _and_ benchmarked in `cmd/`, `cmd/atomdns` runs as a nameserver for my domains.
 
 (Previous version is https://github.com/miekg/dns)
 
