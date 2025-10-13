@@ -151,7 +151,10 @@ func (z *Zone) Get(name string) (*dnszone.Node, bool) {
 
 func (z *Zone) Apex() *dnszone.Node {
 	node, _ := z.Get(z.Origin())
-	return node
+	if node != nil {
+		return node
+	}
+	return &dnszone.Node{}
 }
 
 func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {

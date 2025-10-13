@@ -28,12 +28,6 @@ type Dbfile struct {
 
 func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		z := d.Zone(dns.Zone(ctx))
-		if z == nil { // reload could have failed and we end up with no zone, call next to refuse
-			next.ServeDNS(ctx, w, r)
-			return
-		}
-
 		if r.Opcode == dns.OpcodeNotify {
 			d.HandlerFuncNotify(ctx, w, r)
 			return
@@ -43,6 +37,7 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 
+		z := d.Zone(dns.Zone(ctx))
 		m := dnszone.Retrieve(z, r, nil)
 
 		m = dnsmsg.Funcs(ctx, m)
