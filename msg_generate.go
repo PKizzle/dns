@@ -49,89 +49,93 @@ func main() {
 		// We know which RRs rdata can be compressed. No need to put in the API.
 
 		fmt.Fprintf(b, "func (rr *%s) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {\n", rrname)
-
 		strct := spec.Type.(*ast.StructType)
-		for _, field := range strct.Fields.List {
-			if len(field.Names) == 0 {
-				continue
-			}
-			fieldname := field.Names[0].String()
-			if fieldname == "Hdr" {
-				continue
-			}
 
-			o := func(s string) {
-				fmt.Fprintf(b, s, fieldname)
-				fmt.Fprint(b, `if err != nil {
+		if generate.IsEmbedded(strct) {
+			fmt.Fprintf(b, "return rr.%s.pack(msg, off, compression)\n}\n", strct.Fields.List[0].Type)
+		} else {
+
+			for _, field := range strct.Fields.List {
+				if len(field.Names) == 0 {
+					continue
+				}
+				fieldname := field.Names[0].String()
+				if fieldname == "Hdr" {
+					continue
+				}
+
+				o := func(s string) {
+					fmt.Fprintf(b, s, fieldname)
+					fmt.Fprint(b, `if err != nil {
 		return off, err
 		}
 		`)
-			}
-			// fieldtype is either slice or the actual singular type name.
-			fieldtype := ""
-			if id, ok := field.Type.(*ast.Ident); ok {
-				fieldtype = id.Name
-			}
-			if _, ok := field.Type.(*ast.ArrayType); ok {
-				fieldtype = "slice"
-			}
-
-			tag := ""
-			if field.Tag != nil {
-				tag = strings.Trim(field.Tag.Value, "`")
-			}
-
-			if fieldtype == "slice" {
-				switch tag {
-				case `dns:"-"`: // ignored
-				case `dns:"txt"`:
-					o("off, err = pack.StringTxt(rr.%s, msg, off)\n")
-				case `dns:"opt"`:
-					o("off, err = packOPT(rr.%s, msg, off)\n")
-				case `dns:"nsec"`:
-					o("off, err = packNSEC(rr.%s, msg, off)\n")
-				case `dns:"pairs"`:
-					o("off, err = svcb.Pack(rr.%s, msg, off)\n")
-				case `dns:"infos"`:
-					o("off, err = deleg.Pack(rr.%s, msg, off)\n")
-				case `dns:"domain-name"`:
-					o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
-				default:
-					log.Fatalln(rrname, fieldname, tag)
 				}
-				continue
-			}
+				// fieldtype is either slice or the actual singular type name.
+				fieldtype := ""
+				if id, ok := field.Type.(*ast.Ident); ok {
+					fieldtype = id.Name
+				}
+				if _, ok := field.Type.(*ast.ArrayType); ok {
+					fieldtype = "slice"
+				}
 
-			// non-slice fields
+				tag := ""
+				if field.Tag != nil {
+					tag = strings.Trim(field.Tag.Value, "`")
+				}
 
-			switch {
-			case tag == `dns:"-"`: // ignored
-			case tag == `dns:"cdomain-name"`:
-				o("off, err = pack.Name(rr.%s, msg, off, compression, true)\n")
-			case tag == `dns:"domain-name"`:
-				o("off, err = pack.Name(rr.%s, msg, off, compression, false)\n")
-			case tag == `dns:"a"`:
-				o("off, err = pack.A(rr.%s, msg, off)\n")
-			case tag == `dns:"aaaa"`:
-				o("off, err = pack.AAAA(rr.%s, msg, off)\n")
-			case tag == `dns:"uint48"`:
-				o("off, err = pack.Uint48(rr.%s, msg, off)\n")
-			case tag == `dns:"txt"`:
-				o("off, err = pack.String(rr.%s, msg, off)\n")
+				if fieldtype == "slice" {
+					switch tag {
+					case `dns:"-"`: // ignored
+					case `dns:"txt"`:
+						o("off, err = pack.StringTxt(rr.%s, msg, off)\n")
+					case `dns:"opt"`:
+						o("off, err = packOPT(rr.%s, msg, off)\n")
+					case `dns:"nsec"`:
+						o("off, err = packNSEC(rr.%s, msg, off)\n")
+					case `dns:"pairs"`:
+						o("off, err = svcb.Pack(rr.%s, msg, off)\n")
+					case `dns:"infos"`:
+						o("off, err = deleg.Pack(rr.%s, msg, off)\n")
+					case `dns:"domain-name"`:
+						o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
+					default:
+						log.Fatalln(rrname, fieldname, tag)
+					}
+					continue
+				}
 
-			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
-				fallthrough
-			case tag == `dns:"base32"`:
-				o("off, err = pack.StringBase32(rr.%s, msg, off)\n")
+				// non-slice fields
 
-			case strings.HasPrefix(tag, `dns:"size-base64`): // size-base64 can be packed just like base64
-				fallthrough
-			case tag == `dns:"base64"`:
-				o("off, err = pack.StringBase64(rr.%s, msg, off)\n")
+				switch {
+				case tag == `dns:"-"`: // ignored
+				case tag == `dns:"cdomain-name"`:
+					o("off, err = pack.Name(rr.%s, msg, off, compression, true)\n")
+				case tag == `dns:"domain-name"`:
+					o("off, err = pack.Name(rr.%s, msg, off, compression, false)\n")
+				case tag == `dns:"a"`:
+					o("off, err = pack.A(rr.%s, msg, off)\n")
+				case tag == `dns:"aaaa"`:
+					o("off, err = pack.AAAA(rr.%s, msg, off)\n")
+				case tag == `dns:"uint48"`:
+					o("off, err = pack.Uint48(rr.%s, msg, off)\n")
+				case tag == `dns:"txt"`:
+					o("off, err = pack.String(rr.%s, msg, off)\n")
 
-			case strings.HasPrefix(tag, `dns:"size-hex:SaltLength`):
-				// directly write instead of using o() so we get the error check in the correct place
-				fmt.Fprintf(b, `// Only pack salt if value is not "-", i.e. empty
+				case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
+					fallthrough
+				case tag == `dns:"base32"`:
+					o("off, err = pack.StringBase32(rr.%s, msg, off)\n")
+
+				case strings.HasPrefix(tag, `dns:"size-base64`): // size-base64 can be packed just like base64
+					fallthrough
+				case tag == `dns:"base64"`:
+					o("off, err = pack.StringBase64(rr.%s, msg, off)\n")
+
+				case strings.HasPrefix(tag, `dns:"size-hex:SaltLength`):
+					// directly write instead of using o() so we get the error check in the correct place
+					fmt.Fprintf(b, `// Only pack salt if value is not "-", i.e. empty
 if rr.%s != "-" {
   off, err = pack.StringHex(rr.%s, msg, off)
   if err != nil {
@@ -139,169 +143,176 @@ if rr.%s != "-" {
   }
 }
 `, fieldname, fieldname)
-				continue
-			case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
-				fallthrough
-			case tag == `dns:"hex"`:
-				o("off, err = pack.StringHex(rr.%s, msg, off)\n")
-			case tag == `dns:"any"`:
-				o("off, err = pack.StringAny(rr.%s, msg, off)\n")
-			case tag == `dns:"octet"`:
-				o("off, err = pack.StringOctet(rr.%s, msg, off)\n")
-			case tag == "":
-				switch fieldtype {
-				case "uint8":
-					o("off, err = pack.Uint8(rr.%s, msg, off)\n")
-				case "uint16":
-					o("off, err = pack.Uint16(rr.%s, msg, off)\n")
-				case "uint32":
-					o("off, err = pack.Uint32(rr.%s, msg, off)\n")
-				case "uint64":
-					o("off, err = pack.Uint64(rr.%s, msg, off)\n")
-				case "string":
-					o("off, err = pack.String(rr.%s, msg, off)\n")
+					continue
+				case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
+					fallthrough
+				case tag == `dns:"hex"`:
+					o("off, err = pack.StringHex(rr.%s, msg, off)\n")
+				case tag == `dns:"any"`:
+					o("off, err = pack.StringAny(rr.%s, msg, off)\n")
+				case tag == `dns:"octet"`:
+					o("off, err = pack.StringOctet(rr.%s, msg, off)\n")
+				case tag == "":
+					switch fieldtype {
+					case "uint8":
+						o("off, err = pack.Uint8(rr.%s, msg, off)\n")
+					case "uint16":
+						o("off, err = pack.Uint16(rr.%s, msg, off)\n")
+					case "uint32":
+						o("off, err = pack.Uint32(rr.%s, msg, off)\n")
+					case "uint64":
+						o("off, err = pack.Uint64(rr.%s, msg, off)\n")
+					case "string":
+						o("off, err = pack.String(rr.%s, msg, off)\n")
+					default:
+						log.Fatalln("No tag or basic type", rrname, fieldname, tag)
+					}
 				default:
-					log.Fatalln("No tag or basic type", rrname, fieldname, tag)
+					log.Fatalln(rrname, fieldname, tag)
 				}
-			default:
-				log.Fatalln(rrname, fieldname, tag)
 			}
+			fmt.Fprint(b, "return off, nil }\n\n")
+
 		}
-		fmt.Fprint(b, "return off, nil }\n\n")
 
 		//
 		// Unpack functions
 		//
 
 		fmt.Fprintf(b, "func (rr *%s) unpack(data, msgBuf []byte) (err error) {\n", rrname)
-		fmt.Fprintln(b, "s := cryptobyte.String(data)")
 
-		for _, field := range strct.Fields.List {
-			if len(field.Names) == 0 {
-				continue
-			}
+		if generate.IsEmbedded(strct) {
+			fmt.Fprintf(b, "return rr.%s.unpack(data, msgBuf)\n}\n", strct.Fields.List[0].Type)
+		} else {
 
-			fieldname := field.Names[0].String()
-			if fieldname == "Hdr" {
-				continue
-			}
-
-			// fieldtype is either slice or the actual singular type name.
-			fieldtype := ""
-			if id, ok := field.Type.(*ast.Ident); ok {
-				fieldtype = id.Name
-			}
-			if _, ok := field.Type.(*ast.ArrayType); ok {
-				fieldtype = "slice"
-			}
-
-			tag := ""
-			if field.Tag != nil {
-				tag = strings.Trim(field.Tag.Value, "`")
-			}
-
-			errCheck := func() {
-				fmt.Fprintln(b, "if err != nil { return err }")
-			}
-			unpackField := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(&s)\n", fieldname, unpacker)
-				errCheck()
-			}
-			unpackFieldBuf := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(&s, msgBuf)\n", fieldname, unpacker)
-				errCheck()
-			}
-			unpackFieldRest := func(unpacker string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
-				errCheck()
-			}
-			unpackFieldLength := func(unpacker, len string) {
-				fmt.Fprintf(b, "rr.%s, err = %s(&s, int(rr.%s))\n", fieldname, unpacker, len)
-				errCheck()
-			}
-			readInt := func(type_ string) {
-				fmt.Fprintf(b, "if !s.Read%s(&rr.%s) { return unpack.ErrOverflow }\n", type_, fieldname)
-			}
-
-			// size-* are special, because they reference a struct member we should use for the length.
-			if strings.HasPrefix(tag, `dns:"size-`) {
-				structMember := structMember(tag)
-				structTag := structTag(tag)
-				switch structTag {
-				case "hex":
-					unpackFieldLength("unpack.StringHex", structMember)
-				case "base32":
-					unpackFieldLength("unpack.StringBase32", structMember)
-				case "base64":
-					unpackFieldLength("unpack.StringBase64", structMember)
-				default:
-					log.Fatalln(rrname, fieldname, tag)
+			fmt.Fprintln(b, "s := cryptobyte.String(data)")
+			for _, field := range strct.Fields.List {
+				if len(field.Names) == 0 {
+					continue
 				}
-				continue
-			}
 
-			if fieldtype == "slice" {
+				fieldname := field.Names[0].String()
+				if fieldname == "Hdr" {
+					continue
+				}
+
+				// fieldtype is either slice or the actual singular type name.
+				fieldtype := ""
+				if id, ok := field.Type.(*ast.Ident); ok {
+					fieldtype = id.Name
+				}
+				if _, ok := field.Type.(*ast.ArrayType); ok {
+					fieldtype = "slice"
+				}
+
+				tag := ""
+				if field.Tag != nil {
+					tag = strings.Trim(field.Tag.Value, "`")
+				}
+
+				errCheck := func() {
+					fmt.Fprintln(b, "if err != nil { return err }")
+				}
+				unpackField := func(unpacker string) {
+					fmt.Fprintf(b, "rr.%s, err = %s(&s)\n", fieldname, unpacker)
+					errCheck()
+				}
+				unpackFieldBuf := func(unpacker string) {
+					fmt.Fprintf(b, "rr.%s, err = %s(&s, msgBuf)\n", fieldname, unpacker)
+					errCheck()
+				}
+				unpackFieldRest := func(unpacker string) {
+					fmt.Fprintf(b, "rr.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
+					errCheck()
+				}
+				unpackFieldLength := func(unpacker, len string) {
+					fmt.Fprintf(b, "rr.%s, err = %s(&s, int(rr.%s))\n", fieldname, unpacker, len)
+					errCheck()
+				}
+				readInt := func(type_ string) {
+					fmt.Fprintf(b, "if !s.Read%s(&rr.%s) { return unpack.ErrOverflow }\n", type_, fieldname)
+				}
+
+				// size-* are special, because they reference a struct member we should use for the length.
+				if strings.HasPrefix(tag, `dns:"size-`) {
+					structMember := structMember(tag)
+					structTag := structTag(tag)
+					switch structTag {
+					case "hex":
+						unpackFieldLength("unpack.StringHex", structMember)
+					case "base32":
+						unpackFieldLength("unpack.StringBase32", structMember)
+					case "base64":
+						unpackFieldLength("unpack.StringBase64", structMember)
+					default:
+						log.Fatalln(rrname, fieldname, tag)
+					}
+					continue
+				}
+
+				if fieldtype == "slice" {
+					switch tag {
+					case `dns:"-"`: // ignored
+					case `dns:"txt"`:
+						unpackField("unpack.StringTxt")
+					case `dns:"opt"`:
+						unpackField("unpackOPT")
+					case `dns:"nsec"`:
+						unpackField("unpackNSEC")
+					case `dns:"pairs"`:
+						unpackField("svcb.Unpack")
+					case `dns:"infos"`:
+						unpackField("deleg.Unpack")
+					case `dns:"domain-name"`:
+						unpackFieldBuf("unpack.Names")
+					default:
+						log.Fatalln(rrname, fieldname, tag)
+					}
+					continue
+				}
+
 				switch tag {
 				case `dns:"-"`: // ignored
+				case `dns:"cdomain-name"`, `dns:"domain-name"`:
+					unpackFieldBuf("unpack.Name")
+				case `dns:"a"`:
+					unpackField("unpack.A")
+				case `dns:"aaaa"`:
+					unpackField("unpack.AAAA")
+				case `dns:"uint48"`:
+					readInt("Uint48")
 				case `dns:"txt"`:
-					unpackField("unpack.StringTxt")
-				case `dns:"opt"`:
-					unpackField("unpackOPT")
-				case `dns:"nsec"`:
-					unpackField("unpackNSEC")
-				case `dns:"pairs"`:
-					unpackField("svcb.Unpack")
-				case `dns:"infos"`:
-					unpackField("deleg.Unpack")
-				case `dns:"domain-name"`:
-					unpackFieldBuf("unpack.Names")
+					unpackField("unpack.String")
+				case `dns:"base32"`:
+					unpackFieldRest("unpack.StringBase32")
+				case `dns:"base64"`:
+					unpackFieldRest("unpack.StringBase64")
+				case `dns:"hex"`:
+					unpackFieldRest("unpack.StringHex")
+				case `dns:"any"`:
+					unpackFieldRest("unpack.StringAny")
+				case "":
+					switch fieldtype {
+					case "uint8":
+						readInt("Uint8")
+					case "uint16":
+						readInt("Uint16")
+					case "uint32":
+						readInt("Uint32")
+					case "uint64":
+						readInt("Uint64")
+					case "string":
+						unpackField("unpack.String")
+					default:
+						log.Fatalln("No tag or basic type", rrname, fieldname, tag)
+					}
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
-				continue
 			}
-
-			switch tag {
-			case `dns:"-"`: // ignored
-			case `dns:"cdomain-name"`, `dns:"domain-name"`:
-				unpackFieldBuf("unpack.Name")
-			case `dns:"a"`:
-				unpackField("unpack.A")
-			case `dns:"aaaa"`:
-				unpackField("unpack.AAAA")
-			case `dns:"uint48"`:
-				readInt("Uint48")
-			case `dns:"txt"`:
-				unpackField("unpack.String")
-			case `dns:"base32"`:
-				unpackFieldRest("unpack.StringBase32")
-			case `dns:"base64"`:
-				unpackFieldRest("unpack.StringBase64")
-			case `dns:"hex"`:
-				unpackFieldRest("unpack.StringHex")
-			case `dns:"any"`:
-				unpackFieldRest("unpack.StringAny")
-			case "":
-				switch fieldtype {
-				case "uint8":
-					readInt("Uint8")
-				case "uint16":
-					readInt("Uint16")
-				case "uint32":
-					readInt("Uint32")
-				case "uint64":
-					readInt("Uint64")
-				case "string":
-					unpackField("unpack.String")
-				default:
-					log.Fatalln("No tag or basic type", rrname, fieldname, tag)
-				}
-			default:
-				log.Fatalln(rrname, fieldname, tag)
-			}
+			fmt.Fprintf(b, `if !s.Empty() { return unpack.Errorf("trailing record data: %%s", "%s")}`+"\n", rrname)
+			fmt.Fprint(b, "return nil }\n\n")
 		}
-		fmt.Fprintf(b, `if !s.Empty() { return unpack.Errorf("trailing record data: %%s", "%s")}`+"\n", rrname)
-		fmt.Fprint(b, "return nil }\n\n")
 	}
 
 	generate.Write(b, out)

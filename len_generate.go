@@ -46,9 +46,13 @@ func main() {
 		}
 
 		fmt.Fprintf(b, "func (rr *%s) Len() int {\n", rrname)
-		fmt.Fprintf(b, "l := rr.Hdr.Len()\n")
-
 		strct := spec.Type.(*ast.StructType)
+		if generate.IsEmbedded(strct) {
+			fmt.Fprintf(b, "return rr.%s.Len()\n}\n", strct.Fields.List[0].Type)
+			continue
+		}
+
+		fmt.Fprintf(b, "l := rr.Hdr.Len()\n")
 		for _, field := range strct.Fields.List {
 			if len(field.Names) == 0 {
 				continue

@@ -237,10 +237,8 @@ func (rr *LOC) Len() int {
 }
 
 func (rr *SIG) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.RRSIG.Len()
 }
-
 func (rr *RRSIG) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // TypeCovered
@@ -256,20 +254,14 @@ func (rr *RRSIG) Len() int {
 }
 
 func (rr *NXT) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.NSEC.Len()
 }
-
 func (rr *DLV) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.DS.Len()
 }
-
 func (rr *CDS) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.DS.Len()
 }
-
 func (rr *DS) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // KeyTag
@@ -311,15 +303,11 @@ func (rr *SSHFP) Len() int {
 }
 
 func (rr *KEY) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.DNSKEY.Len()
 }
-
 func (rr *CDNSKEY) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.DNSKEY.Len()
 }
-
 func (rr *DNSKEY) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Flags
@@ -541,10 +529,8 @@ func (rr *SVCB) Len() int {
 }
 
 func (rr *HTTPS) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.SVCB.Len()
 }
-
 func (rr *DELEG) Len() int {
 	l := rr.Hdr.Len()
 	for _, x := range rr.Value {
@@ -554,10 +540,8 @@ func (rr *DELEG) Len() int {
 }
 
 func (rr *DELEGI) Len() int {
-	l := rr.Hdr.Len()
-	return l
+	return rr.DELEG.Len()
 }
-
 func (rr *DSYNC) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Type
