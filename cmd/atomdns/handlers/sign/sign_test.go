@@ -65,10 +65,10 @@ func TestSign(t *testing.T) {
 			func() *dnszone.Node { return &dnszone.Node{} },
 			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
-					exp := []uint16{dns.TypeNS, dns.TypeSOA, dns.TypeMX, dns.TypeAAAA, dns.TypeRRSIG, dns.TypeNSEC, dns.TypeDNSKEY, dns.TypeCDS, dns.TypeCDNSKEY}
+					exp := []uint16{dns.TypeNS, dns.TypeSOA, dns.TypeMX, dns.TypeAAAA, dns.TypeRRSIG, dns.TypeNSEC, dns.TypeDNSKEY, dns.TypeNINFO, dns.TypeCDS, dns.TypeCDNSKEY}
 					if n, ok := rr.(*dns.NSEC); ok {
 						if slices.Compare(n.TypeBitMap, exp) != 0 {
-							return fmt.Errorf("type bitmap is not: %v", exp)
+							return fmt.Errorf("type bitmap is not: %v != %v", exp, n.TypeBitMap)
 						}
 					}
 				}
