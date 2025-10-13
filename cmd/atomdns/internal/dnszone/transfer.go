@@ -23,6 +23,9 @@ func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.
 
 	apex := z.Apex()
 	z.Walk(func(n *Node) bool {
+		if len(n.RRs) == 0 { // skip empty non-terminals
+			return true
+		}
 		env <- &dns.Envelope{Answer: n.RRs}
 		i++
 		return true
