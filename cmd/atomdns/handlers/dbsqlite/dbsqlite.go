@@ -30,7 +30,6 @@ func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		z := d.Zones[dns.Zone(ctx)]
-
 		m := dnszone.Retrieve(z, r, nil)
 		m.Data = r.Data
 

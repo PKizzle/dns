@@ -38,7 +38,6 @@ func (d *Dbfile) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		z := d.Zone(dns.Zone(ctx))
-
 		m := dnszone.Retrieve(z, r, nil)
 
 		m = dnsmsg.Funcs(ctx, m)

@@ -871,17 +871,11 @@ func (rr *LOC) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SIG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.RRSIG.pack(msg, off, compression)
 }
-
 func (rr *SIG) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "SIG")
-	}
-	return nil
+	return rr.RRSIG.unpack(data, msgBuf)
 }
-
 func (rr *RRSIG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.TypeCovered, msg, off)
 	if err != nil {
@@ -960,17 +954,11 @@ func (rr *RRSIG) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *NXT) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.NSEC.pack(msg, off, compression)
 }
-
 func (rr *NXT) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "NXT")
-	}
-	return nil
+	return rr.NSEC.unpack(data, msgBuf)
 }
-
 func (rr *NSEC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Name(rr.NextDomain, msg, off, compression, false)
 	if err != nil {
@@ -1000,29 +988,17 @@ func (rr *NSEC) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DLV) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.DS.pack(msg, off, compression)
 }
-
 func (rr *DLV) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "DLV")
-	}
-	return nil
+	return rr.DS.unpack(data, msgBuf)
 }
-
 func (rr *CDS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.DS.pack(msg, off, compression)
 }
-
 func (rr *CDS) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "CDS")
-	}
-	return nil
+	return rr.DS.unpack(data, msgBuf)
 }
-
 func (rr *DS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.KeyTag, msg, off)
 	if err != nil {
@@ -1195,29 +1171,17 @@ func (rr *SSHFP) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *KEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.DNSKEY.pack(msg, off, compression)
 }
-
 func (rr *KEY) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "KEY")
-	}
-	return nil
+	return rr.DNSKEY.unpack(data, msgBuf)
 }
-
 func (rr *CDNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.DNSKEY.pack(msg, off, compression)
 }
-
 func (rr *CDNSKEY) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "CDNSKEY")
-	}
-	return nil
+	return rr.DNSKEY.unpack(data, msgBuf)
 }
-
 func (rr *DNSKEY) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.Flags, msg, off)
 	if err != nil {
@@ -2204,17 +2168,11 @@ func (rr *SVCB) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *HTTPS) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.SVCB.pack(msg, off, compression)
 }
-
 func (rr *HTTPS) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "HTTPS")
-	}
-	return nil
+	return rr.SVCB.unpack(data, msgBuf)
 }
-
 func (rr *DELEG) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = deleg.Pack(rr.Value, msg, off)
 	if err != nil {
@@ -2236,17 +2194,11 @@ func (rr *DELEG) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *DELEGI) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	return off, nil
+	return rr.DELEG.pack(msg, off, compression)
 }
-
 func (rr *DELEGI) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "DELEGI")
-	}
-	return nil
+	return rr.DELEG.unpack(data, msgBuf)
 }
-
 func (rr *DSYNC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.Type, msg, off)
 	if err != nil {

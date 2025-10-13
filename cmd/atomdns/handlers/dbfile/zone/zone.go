@@ -78,7 +78,13 @@ func (z *Zone) Load() error {
 	return nil
 }
 
-func (z *Zone) Apex() *dnszone.Node { return z.apex }
+func (z *Zone) Apex() *dnszone.Node {
+	a := z.apex
+	if a != nil {
+		return a
+	}
+	return &dnszone.Node{}
+}
 
 // Set sets the RRs in the zone. It needs to create any empty non-terminals it has. Meaning for each label
 // a lookup is done if there already is an empty non-terminal, if not an empty set is inserted.

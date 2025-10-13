@@ -14,7 +14,8 @@ type Interface interface {
 	// Set sets a node in the zone. It must take care to also fill out any empty non-terminals that are
 	// needed.
 	Set(*Node) string
-	// Apex returns the apex of the zone.
+	// Apex returns the apex of the zone. If the apex/zone is not there yet, this method must return an empty
+	// node, not nil.
 	Apex() *Node
 	// Origin returns the origin of the zone as string.
 	Origin() string
