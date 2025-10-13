@@ -24,12 +24,15 @@ type Dbsqlite struct {
 
 func (d *Dbsqlite) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		z := d.Zones[dns.Zone(ctx)]
+		if z == nil {
+			next.ServeDNS(ctx, w, r)
+			return
+		}
 		if _, qtype := dnsutil.Question(r); qtype == dns.TypeAXFR || qtype == dns.TypeIXFR {
 			d.HandlerFuncTransfer(ctx, w, r)
 			return
 		}
-
-		z := d.Zones[dns.Zone(ctx)]
 
 		m := dnszone.Retrieve(z, r, nil)
 		m.Data = r.Data
