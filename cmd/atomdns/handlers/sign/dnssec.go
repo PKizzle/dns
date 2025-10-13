@@ -32,6 +32,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA1).ToCDS())
 		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA256).ToCDS())
 		n.RRs = append(n.RRs, pair.DNSKEY.ToCDNSKEY())
+		n.RRs = append(n.RRs, &dns.NINFO{Hdr: dns.Header{Name: origin, TTL: s.ttl, Class: dns.ClassINET}, ZSData: []string{SignedBy}})
 	}
 	z.Set(n)
 

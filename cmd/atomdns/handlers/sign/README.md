@@ -27,10 +27,15 @@ _sign_ will:
 
 When signing it will:
 
+- Add the DNSKEYs to the apex of the zone.
+
 - Create RRSIGs that have an inception of -3 hours (minus a jitter between 0 and 18 hours)
   and a expiration of +32 (plus a jitter beteen 0 and 100 hours) days for every given DNSKEY.
 
 - Add NSEC records for all authoritative names in the zone.
+
+- Add an NINFO record that details which signer as used, which holds the text: "Signed by atomdns,
+  https://atomdns.miek.nl"
 
 - Add or replace _all_ apex CDS/CDNSKEY records with the ones derived from the given keys. For
   each key two CDS are created one with SHA1 and another with SHA256.
