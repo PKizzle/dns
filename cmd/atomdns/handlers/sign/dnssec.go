@@ -164,7 +164,6 @@ func (s *Sign) Expired(origin string) (bool, error) {
 	}
 	now := time.Now().UTC()
 	zp := dns.NewZoneParser(f, origin, f.Name())
-	zp.SetIncludeAllowed(true)
 	i := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {

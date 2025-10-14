@@ -57,7 +57,6 @@ func (z *Zone) Load() error {
 		return err
 	}
 	zp := dns.NewZoneParser(f, z.origin, z.Path)
-	zp.SetIncludeAllowed(true)
 	soa := 0
 	// TODO(miek): various optimizations: gather names until we have a different one, then insert.
 	// Downside: RR's are pointers so we need to empty out the structure and then refill it next time.
