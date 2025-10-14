@@ -2,9 +2,32 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
-## HEAD - 2025-10-09
+## HEAD - 2025-10-14
 
-13 commits.
+2 commits. With the following change log.
+
+* 6704b6e IncludeAllowFunc now tells the zone parser if includes are allowed. (Miek Gieben)
+
+## v0.5.13 - 2025-10-13
+
+3 commits.
+
+
+## v0.5.12 - 2025-10-13
+
+16 commits. With the following change log.
+
+* b9fcf50 Use *dnszone.Node in zones, makes inplace updates possible. (Miek Gieben)
+
+## v0.5.11 - 2025-10-10
+
+11 commits. With the following change log.
+
+* 06ff288 Atomdns: fix resign wakeup. (Miek Gieben)
+
+## v0.5.10 - 2025-10-09
+
+14 commits.
 
 
 ## v0.5.9 - 2025-10-08
