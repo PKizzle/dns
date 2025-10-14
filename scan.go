@@ -140,7 +140,6 @@ func Read(r io.Reader) (RR, error) { return readRR(r, "") }
 func readRR(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTTL)
-	zp.SetIncludeAllowed(true)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
 }
@@ -181,10 +180,14 @@ func readRR(r io.Reader, file string) (RR, error) {
 type ZoneParser struct {
 	c *zlexer
 
+	// IncludeAllowFunc tells if and how includes are allowed.
+	IncludeAllowFunc
+
 	parseErr *ParseError
 
 	origin string
 	file   string
+	path   string // full path of file
 
 	defttl *ttlState
 
@@ -199,16 +202,15 @@ type ZoneParser struct {
 
 	includeDepth uint8
 
-	includeAllowed     bool
 	generateDisallowed bool
 }
 
-// NewZoneParser returns an RFC 1035 style zone file parser that reads
-// from r.
+// NewZoneParser returns an RFC 1035 style zone file parser that reads from r.
 //
 // The string file is used in error reporting and to resolve relative
 // $INCLUDE directives. The string origin is used as the initial
 // origin, as if the file would start with an $ORIGIN directive.
+// IncludeAllowFunc is set to DefaultIncludeAllowFunc.
 func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	var pe *ParseError
 	if origin != "" {
@@ -219,12 +221,12 @@ func NewZoneParser(r io.Reader, origin, file string) *ZoneParser {
 	}
 
 	return &ZoneParser{
-		c: newZLexer(r),
-
-		parseErr: pe,
-
-		origin: origin,
-		file:   file,
+		c:                newZLexer(r),
+		IncludeAllowFunc: DefaultIncludeAllowFunc,
+		parseErr:         pe,
+		origin:           origin,
+		file:             file,
+		path:             func() string { p, _ := filepath.Abs(file); return p }(),
 	}
 }
 
@@ -233,22 +235,8 @@ func (zp *ZoneParser) SetDefaultTTL(ttl uint32) {
 	zp.defttl = &ttlState{ttl, false}
 }
 
-// SetIncludeAllowed controls whether $INCLUDE directives are
-// allowed. $INCLUDE directives are not supported by default.
-//
-// The $INCLUDE directive will open and read from a user controlled
-// file on the system. Even if the file is not a valid zone file, the
-// contents of the file may be revealed in error messages, such as:
-//
-//	/etc/passwd: dns: not a TTL: "root:x:0:0:root:/root:/bin/bash" at line: 1:31
-//	/etc/shadow: dns: not a TTL: "root:$6$<redacted>::0:99999:7:::" at line: 1:125
-func (zp *ZoneParser) SetIncludeAllowed(v bool) {
-	zp.includeAllowed = v
-}
-
 // SetIncludeFS provides an [fs.FS] to use when looking for the target of
-// $INCLUDE directives.  ($INCLUDE must still be enabled separately by calling
-// [ZoneParser.SetIncludeAllowed].)  If fsys is nil, [os.Open] will be used.
+// $INCLUDE directives.  If fsys is nil, [os.Open] will be used.
 //
 // When fsys is an on-disk FS, the ability of $INCLUDE to reach files from
 // outside its root directory depends upon the FS implementation.  For
@@ -264,8 +252,7 @@ func (zp *ZoneParser) SetIncludeFS(fsys fs.FS) {
 	zp.fsys = fsys
 }
 
-// Err returns the first non-EOF error that was encountered by the
-// ZoneParser.
+// Err returns the first non-EOF error that was encountered by the ZoneParser.
 func (zp *ZoneParser) Err() error {
 	if zp.parseErr != nil {
 		return zp.parseErr
@@ -285,8 +272,7 @@ func (zp *ZoneParser) setParseError(err string, l lex) (RR, bool) {
 	return nil, false
 }
 
-// Comment returns an optional text comment that occurred alongside
-// the RR.
+// Comment returns an optional text comment that occurred alongside the RR.
 func (zp *ZoneParser) Comment() string {
 	if zp.parseErr != nil {
 		return ""
@@ -439,7 +425,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("garbage after $INCLUDE", l)
 			}
 
-			if !zp.includeAllowed {
+			if !zp.IncludeAllowFunc(zp.path, l.token) {
 				return zp.setParseError("$INCLUDE directive not allowed", l)
 			}
 			if zp.includeDepth >= maxIncludeDepth {
@@ -484,7 +470,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			zp.sub = NewZoneParser(r1, neworigin, includePath)
 			zp.sub.defttl, zp.sub.includeDepth, zp.sub.r = zp.defttl, zp.includeDepth+1, r1
-			zp.sub.SetIncludeAllowed(true)
+			zp.sub.IncludeAllowFunc = zp.IncludeAllowFunc
 			zp.sub.SetIncludeFS(zp.fsys)
 			return zp.subNext()
 		case zExpectDirTTLBl:
@@ -1385,8 +1371,7 @@ func slurpRemainder(c *zlexer) *ParseError {
 	return nil
 }
 
-// Parse a 64 bit-like ipv6 address: "0014:4fff:ff20:ee64"
-// Used for NID and L64 record.
+// Parse a 64 bit-like ipv6 address: "0014:4fff:ff20:ee64" Used for NID and L64 record.
 func stringToNodeID(l lex) (uint64, *ParseError) {
 	if len(l.token) < 19 {
 		return 0, &ParseError{file: l.token, err: "bad NID/L64 NodeID/Locator64", lex: l}
@@ -1401,4 +1386,23 @@ func stringToNodeID(l lex) (uint64, *ParseError) {
 		return 0, &ParseError{file: l.token, err: "bad NID/L64 NodeID/Locator64", lex: l}
 	}
 	return u, nil
+}
+
+// IncludeAllowFunc is a function that gets the full path of the original parsed file name and the included
+// file path and returns true if the include is allowed.
+type IncludeAllowFunc func(file, include string) bool
+
+// DefaultIncludeAllowFunc returns true if the included file is on the same level or in a directory below.
+var DefaultIncludeAllowFunc IncludeAllowFunc = defaultIncludeAllowFunc
+
+func defaultIncludeAllowFunc(file, include string) bool {
+	up := ".." + string(os.PathSeparator)
+	rel, err := filepath.Rel(file, include)
+	if err != nil {
+		return false
+	}
+	if !strings.HasPrefix(rel, up) && rel != ".." {
+		return true
+	}
+	return false
 }

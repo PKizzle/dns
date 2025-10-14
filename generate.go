@@ -83,7 +83,7 @@ func (zp *ZoneParser) generate(l lex) (RR, bool) {
 		lex:  &l,
 	}
 	zp.sub = NewZoneParser(r, zp.origin, zp.file)
-	zp.sub.includeDepth, zp.sub.includeAllowed = zp.includeDepth, zp.includeAllowed
+	zp.sub.includeDepth, zp.sub.IncludeAllowFunc = zp.includeDepth, zp.IncludeAllowFunc
 	zp.sub.generateDisallowed = true
 	zp.sub.SetDefaultTTL(defaultTTL)
 	return zp.subNext()
@@ -119,9 +119,7 @@ func (r *generateReader) parseError(msg string, end int) *ParseError {
 }
 
 func (r *generateReader) Read(p []byte) (int, error) {
-	// NewZLexer, through NewZoneParser, should use ReadByte and
-	// not end up here.
-
+	// NewZLexer, through NewZoneParser, should use ReadByte and not end up here.
 	panic("dns: not implemented")
 }
 

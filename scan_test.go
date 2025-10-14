@@ -98,7 +98,7 @@ func TestZoneParserInclude(t *testing.T) {
 
 	var got int
 	z := NewZoneParser(strings.NewReader(zone), "", "")
-	z.SetIncludeAllowed(true)
+	z.IncludeAllowFunc = func(string, string) bool { return true }
 	for rr, ok := z.Next(); ok; _, ok = z.Next() {
 		switch rr.Header().Name {
 		case "foo.example.org.", "bar.example.org.":
@@ -118,7 +118,7 @@ func TestZoneParserInclude(t *testing.T) {
 	os.Remove(tmpfile.Name())
 
 	z = NewZoneParser(strings.NewReader(zone), "", "")
-	z.SetIncludeAllowed(true)
+	z.IncludeAllowFunc = func(string, string) bool { return true }
 	z.Next()
 	if err := z.Err(); err == nil ||
 		!strings.Contains(err.Error(), "failed to open") ||
@@ -139,7 +139,7 @@ func TestZoneParserIncludeFS(t *testing.T) {
 
 	var got int
 	z := NewZoneParser(strings.NewReader(zone), "", "")
-	z.SetIncludeAllowed(true)
+	z.IncludeAllowFunc = func(string, string) bool { return true }
 	z.SetIncludeFS(fsys)
 	for rr, ok := z.Next(); ok; _, ok = z.Next() {
 		switch rr.Header().Name {
@@ -160,7 +160,7 @@ func TestZoneParserIncludeFS(t *testing.T) {
 	fsys = fstest.MapFS{}
 
 	z = NewZoneParser(strings.NewReader(zone), "", "")
-	z.SetIncludeAllowed(true)
+	z.IncludeAllowFunc = func(string, string) bool { return true }
 	z.SetIncludeFS(fsys)
 	z.Next()
 	if err := z.Err(); !errors.Is(err, fs.ErrNotExist) {
@@ -182,7 +182,7 @@ func TestZoneParserIncludeFSPaths(t *testing.T) {
 		zone := "$ORIGIN example.org.\n$INCLUDE " + p + "\nbar\tIN\tA\t127.0.0.2"
 		var got int
 		z := NewZoneParser(strings.NewReader(zone), "", "baz/quux/db.bar")
-		z.SetIncludeAllowed(true)
+		z.IncludeAllowFunc = func(string, string) bool { return true }
 		z.SetIncludeFS(fsys)
 		for rr, ok := z.Next(); ok; _, ok = z.Next() {
 			switch rr.Header().Name {
