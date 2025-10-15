@@ -54,7 +54,7 @@ func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string
 	return c.TransferInWithConn(ctx, m, conn)
 }
 
-// TransferInWithConnn behaves like [client.TransferIn], but with a supplied connection.
+// TransferInWithConn behaves like [client.TransferIn], but with a supplied connection.
 func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) (<-chan *Envelope, error) {
 	_, axfr := m.Question[0].(*AXFR)
 	_, ixfr := m.Question[0].(*IXFR)

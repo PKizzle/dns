@@ -424,7 +424,7 @@ func (rr *SOA) parse(c *zlexer, o string) *ParseError {
 		v  uint32
 		ok bool
 	)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		l, _ = c.Next()
 		if l.err {
 			return &ParseError{err: "bad SOA zone parameter", lex: l}

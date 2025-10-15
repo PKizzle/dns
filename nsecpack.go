@@ -33,7 +33,7 @@ func unpackNSEC(s *cryptobyte.String) ([]uint16, error) {
 
 		// Walk the bytes in the window and extract the type bits
 		for i, b := range bits {
-			for n := uint(0); n < 8; n++ {
+			for n := range uint(8) {
 				if b&(1<<(7-n)) != 0 {
 					nsec = append(nsec, uint16(int(window)*256+i*8+int(n)))
 				}

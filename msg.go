@@ -410,11 +410,9 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 			m.Delegation = opt.Delegation()
 			m.Rcode += opt.Rcode() // See TestMsgExtendedRcode.
 			m.Version = opt.Version()
-			m.UDPSize = opt.UDPSize()
-			// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
-			if m.UDPSize < MinMsgSize {
-				m.UDPSize = MinMsgSize
-			}
+			m.UDPSize = max(
+				// RFC 6891 mandates that the payload size in an OPT record less than 512 (MinMsgSize) bytes must be treated as equal to 512 bytes.
+				opt.UDPSize(), MinMsgSize)
 
 			m.Pseudo = make([]RR, len(opt.Options))
 			for i, o := range opt.Options {
@@ -821,7 +819,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	return int64(n), err
 }
 
-// All() allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
+// All allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
 // sections.
 func (m *Msg) All() iter.Seq[RR] {
 	return func(yield func(RR) bool) {

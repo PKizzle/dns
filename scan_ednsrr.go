@@ -61,9 +61,9 @@ func (o *EDE) parse(c *zlexer, _ string) *ParseError {
 	l, _ = c.Next()     // zString
 	if l.token == `"` { // no extra text
 		return slurpRemainder(c)
-	} else {
-		o.ExtraText = l.token
 	}
+	o.ExtraText = l.token
+
 	l, _ = c.Next() // Zstring, quote
 	if l.token != `"` {
 		return &ParseError{err: "bad EDE ExtraText", lex: l}
