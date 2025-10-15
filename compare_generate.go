@@ -33,9 +33,7 @@ func compare(a, b RR) int {
 {{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
 	return x.compare(b)
 {{end}}{{end}} }
-	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := a.(Comparer); ok {
-		// panic if !ok?
 		return x.Compare(b)
 	}
 	return 0
