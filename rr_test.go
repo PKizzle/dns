@@ -54,5 +54,4 @@ func TestExternalRR(t *testing.T) {
 	if rry.String() != y.String() {
 		t.Fatal("YO string presentations should be identical")
 	}
-	fmt.Println(rry.String())
 }
