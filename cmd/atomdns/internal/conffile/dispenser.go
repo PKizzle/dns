@@ -286,7 +286,7 @@ func (d *Dispenser) Err(msg string) error {
 }
 
 // Errf is like Err, but for formatted error messages
-func (d *Dispenser) Errf(format string, args ...interface{}) error {
+func (d *Dispenser) Errf(format string, args ...any) error {
 	return d.Err(fmt.Sprintf(format, args...))
 }
 
