@@ -5,7 +5,7 @@ import "codeberg.org/miekg/dns/internal/reverse"
 // StringToType is the reverse of [TypeToString].
 var StringToType = reverse.Int16(TypeToString)
 
-// StringtoCode is the reverse of [CodeToString].
+// StringToCode is the reverse of [CodeToString].
 var StringToCode = reverse.Int16(CodeToString)
 
 // StringToClass is the reverse of [ClassToString].

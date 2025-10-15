@@ -48,7 +48,7 @@ type RR interface {
 	Cloner
 }
 
-// If an RR implements the Typer interface it will be used to return the type of RR in the RRToType function.
+// The Typer interface it will be used to return the type of RR in the RRToType function.
 // This is only needed for RRs that are defined outside of this package.
 type Typer interface {
 	Type() uint16

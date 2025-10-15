@@ -478,7 +478,7 @@ func (rr *RRSIG) sigBuf() []byte {
 	return sigbuf
 }
 
-// Signption are options that are given to the signer and verifier.
+// SignOption are options that are given to the signer and verifier.
 type SignOption struct {
 	Pooler // If Pooler is set is will be used for all memory allocations.
 }

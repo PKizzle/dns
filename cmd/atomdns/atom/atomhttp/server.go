@@ -14,8 +14,7 @@ import (
 )
 
 // ServeHTTP implements the http.Handler and is the bridge between the HTTP and DNS worlds.
-// It the request and converts to the DNS format, calls the handlers,
-// converts it back and writes it to the client. See response.go for the ResponseWriter used for this.
+// It the request and converts to the DNS format, calls the handlers, converts it back and writes it to the client.
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m, err := dnshttp.Request(r)
 	if err != nil {
