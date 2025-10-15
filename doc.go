@@ -110,6 +110,13 @@ Basic use pattern for a server to check if (and which) options are set, which is
 		}
 	}
 
+# Private Resource Records
+
+Any struct can be used as a private resource record. To make it work you need to implement the following interfaces.
+
+- [RR]
+- [Typer], to give your RR a code point.
+
 # Further Reading
 
 All functionality and types are documented in their respective types and functions.
