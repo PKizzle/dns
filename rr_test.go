@@ -28,7 +28,7 @@ func (rr *YO) String() string      { return dnsfmt.Header(rr) + fmt.Sprintf("\t%
 func (rr *YO) Clone() dns.RR       { return &YO{rr.Hdr, rr.Priority, rr.Yo} }
 
 // Parser interface.
-func (rr *YO) Parse(o string, tokens []string) error {
+func (rr *YO) Parse(tokens []string, _ string) error {
 	if len(tokens) < 2 { // no rdata
 		return nil
 	}
