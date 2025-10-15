@@ -65,20 +65,11 @@ type Packer interface {
 	Unpack(data []byte) error
 }
 
-/*
-// Parser is used for custom RR types that are parced from their text presentation.
-type Scanner interface{
-	//Scan returns a channel on which the tokens until the end of the RR are send.
-	Scan() <-chan Token
+// Parser is used for custom RR types that are parsed from their text presentation.
+type Parser interface {
+	// Scan gets the current origin and a slice of all non-blank tokens left on the current line.
+	Parse(origin string, tokens []string) error
 }
-
-type Token {
-	// TokenType
-	// Value
-}
-
-type: TokenBlank, TokenString, TokenQuote, not TokenEOF or TokenNewline
-*/
 
 // The Cloner interface defines a clone function that returns a deep copy of the RR.
 // All RRs defined in this package implement this interface.

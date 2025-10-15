@@ -1406,3 +1406,19 @@ func defaultIncludeAllowFunc(file, include string) bool {
 	}
 	return false
 }
+
+// tokens is used to gather up the remaining tokens and hand them to a custom Scan method for external RRs.
+func tokens(c *zlexer) []string {
+	tokens := []string{}
+	l, _ := c.Next()
+	for {
+		switch l.value {
+		case zBlank:
+		case zNewline, zEOF:
+			return tokens
+		default:
+			tokens = append(tokens, l.token)
+		}
+		l, _ = c.Next()
+	}
+}
