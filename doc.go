@@ -119,6 +119,7 @@ Any struct can be used as a private resource record. To make it work you need to
     adds a Pseudo() bool method.
   - [Parser], so it can be parsed to and from strings.
   - [Packer], if you need to use your new RR on the wire.
+  - [Comparer], if your RR will be signed with DNSSEC.
 
 Then register your new type, see below the EDNS0:
 

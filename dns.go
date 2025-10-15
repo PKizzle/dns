@@ -54,6 +54,12 @@ type Typer interface {
 	Type() uint16
 }
 
+// Comparer interface defines a compare function that returns -1, 0, or +1. Only externally defined RRs must
+// implement this interface.
+type Comparer interface {
+	Compare(b RR) int
+}
+
 // The Packer interface defines the Pack and Unpack methods that are used to convert RRs to and from wire format.
 type Packer interface {
 	// Pack packs the RR into msg at offset off. This method only needs to deals with the RR's rdata, as the
@@ -68,18 +74,12 @@ type Packer interface {
 // Parser is used for custom RR types that are parsed from their text presentation.
 type Parser interface {
 	// Scan gets the current origin and a slice of all non-blank tokens left on the current line.
-	Parse(origin string, tokens []string) error
+	Parse(tokens []string, origin string) error
 }
 
 // The Cloner interface defines a clone function that returns a deep copy of the RR.
-// All RRs defined in this package implement this interface.
 type Cloner interface {
 	Clone() RR
-}
-
-// Comparer interface defines a compare function that returns -1, 0, or +1.
-type Comparer interface {
-	Compare(b RR) int
 }
 
 // RRset is a just list of RRs. There is no guarantee that this is an official RRset as defined in

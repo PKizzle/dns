@@ -181,7 +181,7 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	}
 	// if here, we don't have the RR in our pkg, check if it does Parser.
 	if x, ok := rr.(Parser); ok {
-		err := x.Parse(o, tokens(c))
+		err := x.Parse(tokens(c), o)
 		if err != nil {
 			return &ParseError{err: err.Error()}
 		}
