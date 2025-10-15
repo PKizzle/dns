@@ -37,3 +37,11 @@ func OpcodeToString(o uint8) string {
 	}
 	return "OPCODE" + strconv.Itoa(int(o))
 }
+
+// CodeToString converts the ENDS0 code to the text presentation, or to "CODE"+value if the code is unknown.
+func CodeToString(c uint16) string {
+	if c1, ok := dns.CodeToString[c]; ok {
+		return c1
+	}
+	return "CODE" + strconv.Itoa(int(c))
+}

@@ -48,13 +48,11 @@ type RR interface {
 	Cloner
 }
 
-// The Typer interface it will be used to return the type of RR in the RRToType function.
-// This is only needed for RRs that are defined outside of this package.
+// The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option
+// code when the "RR" is an EDNS0 option. This is only needed for RRs that are defined outside of this package.
 type Typer interface {
 	Type() uint16
 }
-
-// Type Coder Code() for option RR???
 
 // The Packer interface defines the Pack and Unpack methods that are used to convert RRs to and from wire format.
 type Packer interface {

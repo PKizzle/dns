@@ -29,13 +29,12 @@ var TypeToRR = map[uint16]func() RR{
 `))
 
 var RRToType = template.Must(template.New("RRToType").Parse(`
-// RRToType is the reverse of TypeToRR, implemented as a function.
+// RRToType is the reverse of TypeToRR.
 func RRToType(rr RR) uint16 {
     switch rr.(type) {
 {{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
 	return Type{{.}}
 {{end}}{{end}} }
-	// if here, we don't have the RR in our pkg, check if it does Typer.
 	if x, ok := rr.(Typer); ok {
 		return x.Type()
 	}

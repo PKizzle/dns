@@ -114,8 +114,16 @@ Basic use pattern for a server to check if (and which) options are set, which is
 
 Any struct can be used as a private resource record. To make it work you need to implement the following interfaces.
 
-- [RR]
 - [Typer], to give your RR a code point.
+- [RR].
+- [Cloner].
+
+Then register your new type (or EDNS0 code):
+
+	TypeToString[typ] = mnemonic
+	TypeToRR[typ] = func() RR { return new(...) }
+
+Use CodeTo... for EDNS0.
 
 # Further Reading
 

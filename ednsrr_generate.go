@@ -33,6 +33,9 @@ func RRToCode(o EDNS0) uint16 {
 {{range .}}  case *{{.}}:
 	return Code{{.}}
 {{end}} }
+	if x, ok := o.(Typer); ok {
+		return x.Type()
+	}
     return CodeNone
 }
 
