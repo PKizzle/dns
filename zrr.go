@@ -172,7 +172,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeTSIG:       func() RR { return new(TSIG) },
 }
 
-// RRToType is the reverse of TypeToRR, implemented as a function.
+// RRToType is the reverse of TypeToRR.
 func RRToType(rr RR) uint16 {
 	switch rr.(type) {
 	case *NULL:
@@ -340,7 +340,6 @@ func RRToType(rr RR) uint16 {
 	case *TSIG:
 		return TypeTSIG
 	}
-	// if here, we don't have the RR in our pkg, check if it does Typer.
 	if x, ok := rr.(Typer); ok {
 		return x.Type()
 	}

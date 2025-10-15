@@ -81,6 +81,9 @@ func RRToCode(o EDNS0) uint16 {
 	case *ZONEVERSION:
 		return CodeZONEVERSION
 	}
+	if x, ok := o.(Typer); ok {
+		return x.Type()
+	}
 	return CodeNone
 }
 

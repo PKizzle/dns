@@ -179,10 +179,13 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 	case *NSID:
 		return x.parse(c, o)
 	}
-	// If here we need to setup the channel and send the elements.
-	// if here, we don't have the RR in our pkg, check if it does Packer.
-	//	if x, ok := rr.(Packer); ok {
-	//		return x.Pack(msg, off)
-	//	}
+	// if here, we don't have the RR in our pkg, check if it does Parser.
+	if x, ok := rr.(Parser); ok {
+		err := x.Parse(tokens(c), o)
+		if err != nil {
+			return &ParseError{err: err.Error()}
+		}
+		return nil
+	}
 	return &ParseError{err: fmt.Sprintf("no parse defined: %T", rr)}
 }

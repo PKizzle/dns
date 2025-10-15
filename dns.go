@@ -48,13 +48,17 @@ type RR interface {
 	Cloner
 }
 
-// The Typer interface it will be used to return the type of RR in the RRToType function.
-// This is only needed for RRs that are defined outside of this package.
+// The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option
+// code when the "RR" is an EDNS0 option. This is only needed for RRs that are defined outside of this package.
 type Typer interface {
 	Type() uint16
 }
 
-// Type Coder Code() for option RR???
+// Comparer interface defines a compare function that returns -1, 0, or +1. Only externally defined RRs must
+// implement this interface.
+type Comparer interface {
+	Compare(b RR) int
+}
 
 // The Packer interface defines the Pack and Unpack methods that are used to convert RRs to and from wire format.
 type Packer interface {
@@ -67,30 +71,15 @@ type Packer interface {
 	Unpack(data []byte) error
 }
 
-/*
-// Parser is used for custom RR types that are parced from their text presentation.
-type Scanner interface{
-	//Scan returns a channel on which the tokens until the end of the RR are send.
-	Scan() <-chan Token
+// Parser is used for custom RR types that are parsed from their text presentation.
+type Parser interface {
+	// Scan gets the current origin and a slice of all non-blank tokens left on the current line.
+	Parse(tokens []string, origin string) error
 }
-
-type Token {
-	// TokenType
-	// Value
-}
-
-type: TokenBlank, TokenString, TokenQuote, not TokenEOF or TokenNewline
-*/
 
 // The Cloner interface defines a clone function that returns a deep copy of the RR.
-// All RRs defined in this package implement this interface.
 type Cloner interface {
 	Clone() RR
-}
-
-// Comparer interface defines a compare function that returns -1, 0, or +1.
-type Comparer interface {
-	Compare(b RR) int
 }
 
 // RRset is a just list of RRs. There is no guarantee that this is an official RRset as defined in

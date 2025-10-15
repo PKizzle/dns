@@ -175,9 +175,7 @@ func compare(a, b RR) int {
 	case *TSIG:
 		return x.compare(b)
 	}
-	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := a.(Comparer); ok {
-		// panic if !ok?
 		return x.Compare(b)
 	}
 	return 0

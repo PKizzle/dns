@@ -110,6 +110,29 @@ Basic use pattern for a server to check if (and which) options are set, which is
 		}
 	}
 
+# Private Resource Records
+
+Any struct can be used as a private resource record. To make it work you need to implement the following interfaces.
+
+  - [Typer], to give your RR a code point.
+  - [RR], all RRs implement this, if you want to have a private EDNS0 option, implement [EDNS0] interface, this
+    adds a Pseudo() bool method.
+  - [Parser], so it can be parsed to and from strings.
+  - [Packer], if you need to use your new RR on the wire.
+  - [Comparer], if your RR will be signed with DNSSEC.
+
+Then register your new type, see below the EDNS0:
+
+	dns.TypeToRR[codepoint] = func() dns.RR { return new(...) }
+	dns.TypeToString[codepoint] = "mnemonic"
+	dns.StringToType["mnemonic"] = codepoint
+
+For EDNS0:
+
+	dns.CodeToRR[codepoint] = func() dns.RR { return new(...) }
+	dns.CodeToString[codepoint] = "mnemonic"
+	dns.StringToCode["mnemonic"] = codepoint
+
 # Further Reading
 
 All functionality and types are documented in their respective types and functions.
