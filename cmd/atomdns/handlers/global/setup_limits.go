@@ -46,6 +46,9 @@ func (g *Global) SetupLimits(d *conffile.Dispenser) (Limits, error) {
 				}
 				l.Servers = n
 			}
+			if l.Servers > runtime.NumCPU()*1024 {
+				return l, d.PropErr(fmt.Errorf("should be smaller than %d: %d", runtime.NumCPU()*1024, l.Servers))
+			}
 		default:
 			return l, d.ArgErr()
 		}

@@ -73,7 +73,7 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
     lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
     back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
-    start 10 server instances.
+    start 10 server instances. The maximum value is the number of CPU \* 1024.
 
 ## `dot`
 
