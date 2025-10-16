@@ -106,7 +106,8 @@ func (h *Header) Clone() RR       { return &Header{h.Name, h.Class, h.TTL, h.t} 
 
 // String returns the string representation of h.
 // Note that as the RR type is derived from the RR containing this header, getting the text
-// representation of just the header will show TYPE0 instead of the actual type.
+// representation of just the header will show TYPE0 instead of the actual type. For correctly printing the
+// header you need the RR type to correctly print it. See [dnsutil.TypeToString] omong others.
 func (h *Header) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(sprintName(h.Name))

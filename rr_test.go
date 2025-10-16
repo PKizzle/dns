@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/dnsfmt"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 // YO is a private RR.
@@ -24,8 +24,12 @@ func (rr *YO) Type() uint16 { return codepoint }
 // RR interface.
 func (rr *YO) Header() *dns.Header { return &rr.Hdr }
 func (rr *YO) Len() int            { return rr.Hdr.Len() + 2 + len(rr.Yo) + 1 }
-func (rr *YO) String() string      { return dnsfmt.Header(rr) + fmt.Sprintf("\t%d %s", rr.Priority, rr.Yo) }
 func (rr *YO) Clone() dns.RR       { return &YO{rr.Hdr, rr.Priority, rr.Yo} }
+func (rr *YO) String() string {
+	return rr.Header().Name + "\t" +
+		strconv.FormatInt(int64(rr.Header().TTL), 10) + "\t" +
+		dnsutil.ClassToString(rr.Header().Class) + "\tYO\t"
+}
 
 // Parser interface.
 func (rr *YO) Parse(tokens []string, _ string) error {

@@ -46,9 +46,12 @@
 OLD                                           | NEW
                                               |
 m := new(dns.Msg)                             | m := dns.NewMsg("miek.nl.", dns.TypeDNSKEY)
-m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | m.UDPSize = 4096
-                                              | m.Security = true
+m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | m.UDPSize, m.Security = 4096, true
 m.SetEdns0(4096, true)                        |
+                                              | OR
+                                              | m := new(dns.Msg)
+                                              | dnsutil.SetQuestion("miek.nl.", dns.TypeDNSKEY")
+                                              | m.UDPSize, m.Security = 4096, true
 ```
 
 Setting the UDP buffer size:
@@ -78,6 +81,14 @@ for i := len(m.Extra) - 1; i >= 0; i-- {                 |     // ...
 for i, options := range opt.Options {                    |
     // ...                                               |
 }                                                        |
+```
+
+Checking if there _is_ an EDNS0 option added
+
+```
+OLD                                                      | NEW
+                                                         |
+x := m.IsEdns0()                                         | x := len(m.Pseudo) > 0
 ```
 
 Adding an EDNS0 option is just as easy, assign to the pseudo section:
