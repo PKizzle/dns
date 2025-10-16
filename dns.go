@@ -50,6 +50,13 @@ type RR interface {
 
 // The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option
 // code when the "RR" is an EDNS0 option. This is only needed for RRs that are defined outside of this package.
+// Once this method is defined the following extra registration needs to happen:
+//
+//	dns.TypeToRR[codepoint] = func() dns.RR { return new(T) }
+//	dns.TypeToString[codepoint] = "TYPE"
+//	dns.StringToType["TYPE"] = codepoint
+//
+// For EDNS0 registration use, [CodeToRR], [CodeToString] and [StringToType].
 type Typer interface {
 	Type() uint16
 }
@@ -64,8 +71,7 @@ type Comparer interface {
 type Packer interface {
 	// Pack packs the RR into msg at offset off. This method only needs to deals with the RR's rdata, as the
 	// header is taken care off. For examples of such code look in zmsg.go. The returned int is the new offset in
-	// msg when this RR is packed. New RRs do not have to deal with compression, as compressed rdata is not
-	// allowed anymore.
+	// msg after this RR is packed.
 	Pack(msg []byte, off int) (int, error)
 	// Unpack unpacks the RR. Data is the byte slice that should contain the all the data for the RR.
 	Unpack(data []byte) error
