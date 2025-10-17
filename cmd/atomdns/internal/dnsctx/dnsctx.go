@@ -2,24 +2,29 @@ package dnsctx
 
 import (
 	"context"
+	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
-// Func is a function that can be set in the context woth [WithFuncValue] and operates on a [dns.Msg].
+// Func is a function that can be set in the context and operates on a [dns.Msg].
 type Func func(*dns.Msg) *dns.Msg
 
-// WithFuncValue set the Func f in the context under the key <name>/msgfunc.
-func WithFuncValue(ctx context.Context, handler, f Func) context.Context {
-	return context.WithValue(ctx, handler, f)
+// WithFuncValue set the Func f in the context under the key <handler>/msgfunc.
+func WithFuncValue(ctx context.Context, handler string, f Func) context.Context {
+	return context.WithValue(ctx, funckey(handler), f)
 }
+
+// funckey returns the string value for the Func in the context.
+func funckey(s string) string { return s + "/msgfunc" }
 
 // Funcs iterates over all handlers and run the functions that are set in the context over the message. The possibly
 // modified message is returned.
 func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 	for _, h := range dnsserver.Handlers {
-		v := ctx.Value(h)
+		key := funckey(h)
+		v := ctx.Value(key)
 		if v == nil {
 			continue
 		}
@@ -28,4 +33,25 @@ func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 		}
 	}
 	return m
+}
+
+// WithDataValue stores D under the string value key, key must contain a slash and be formatted like
+// "<handler>/xxx". If key does not contain a slash, this function is noop.
+func WithDataValue(ctx context.Context, key, value string) context.Context {
+	if !strings.Contains(key, "/") {
+		return ctx
+	}
+	return context.WithValue(ctx, key, value)
+}
+
+// DataValue returns the data under key. If key does not contain a slash the empty string is returned.
+func DataValue(ctx context.Context, key string) string {
+	if !strings.Contains(key, "/") {
+		return ""
+	}
+	v := ctx.Value(key)
+	if v == nil {
+		return ""
+	}
+	return v.(string)
 }
