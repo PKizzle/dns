@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"sync"
@@ -32,12 +33,16 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-
 		if !t.Regexp.MatchString(r.Question[0].Header().Name) {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-		tmpl, err := template.ParseFiles(t.Path)
+		funcs := template.FuncMap{
+			"value": func(key string) any { return dnsctx.Value(ctx, key) },
+		}
+		var err error
+		tmpl := template.New(t.Path).Funcs(funcs)
+		tmpl, err = tmpl.Parse(filepath.Base(t.Path))
 		if err != nil {
 			log.Warn("Failed to find or parse", "path", t.Path)
 			next.ServeDNS(ctx, w, r) // call next so we hit the refused at some point

@@ -13,6 +13,7 @@ var Handlers = []string{
 	"dbhost",
 	"dbsqlite",
 	"drunk",
+	"geoip",
 	"log",
 	"metrics",
 	"msgcache",

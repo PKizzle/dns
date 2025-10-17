@@ -35,23 +35,23 @@ func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 	return m
 }
 
-// WithDataValue stores D under the string value key, key must contain a slash and be formatted like
+// WithValue stores value under the string value key, key must contain a slash and be formatted like
 // "<handler>/xxx". If key does not contain a slash, this function is noop.
-func WithDataValue(ctx context.Context, key, value string) context.Context {
+func WithValue(ctx context.Context, key string, value any) context.Context {
 	if !strings.Contains(key, "/") {
 		return ctx
 	}
 	return context.WithValue(ctx, key, value)
 }
 
-// DataValue returns the data under key. If key does not contain a slash the empty string is returned.
-func DataValue(ctx context.Context, key string) string {
+// Value returns the data under key. If key does not contain a slash nil is returned.
+func Value(ctx context.Context, key string) any {
 	if !strings.Contains(key, "/") {
 		return ""
 	}
 	v := ctx.Value(key)
 	if v == nil {
-		return ""
+		return nil
 	}
-	return v.(string)
+	return v
 }

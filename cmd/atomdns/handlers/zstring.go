@@ -12,6 +12,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbhost"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbsqlite"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/geoip"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/msgcache"
@@ -34,6 +35,7 @@ var StringToHandler = map[string]func() Handler{
 	"dbhost":   func() Handler { return new(dbhost.Dbhost) },
 	"dbsqlite": func() Handler { return new(dbsqlite.Dbsqlite) },
 	"drunk":    func() Handler { return new(drunk.Drunk) },
+	"geoip":    func() Handler { return new(geoip.Geoip) },
 	"log":      func() Handler { return new(log.Log) },
 	"metrics":  func() Handler { return new(metrics.Metrics) },
 	"msgcache": func() Handler { return new(msgcache.Msgcache) },
