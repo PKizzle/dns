@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -56,7 +56,7 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{c.Version}}}
 		}
 
-		m = dnsmsg.Funcs(ctx, m)
+		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}

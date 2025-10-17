@@ -7,7 +7,7 @@ import (
 	"net"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -44,7 +44,7 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 			m.Rcode = dns.RcodeRefused
 		}
 
-		m = dnsmsg.Funcs(ctx, m)
+		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}

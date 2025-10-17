@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -35,7 +35,7 @@ func (c *Cookie) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				io.WriteString(f, cc.Cookie[:16])
 				io.WriteString(f, c.Secret)
 
-				ctx = dnsmsg.WithValue(ctx, c.Key(),
+				ctx = dnsctx.WithFuncValue(ctx, c.Key(),
 					func(m *dns.Msg) *dns.Msg {
 						cookie := &dns.COOKIE{Cookie: cc.Cookie[:16] + hex.EncodeToString(f.Sum(nil))}
 						m.Pseudo = append(m.Pseudo, cookie)

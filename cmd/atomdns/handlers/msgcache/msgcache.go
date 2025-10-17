@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnstest"
 	"github.com/tidwall/btree"
 )
@@ -18,7 +18,7 @@ func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		if x := m.Retrieve(r); x != nil {
 			x.Data = r.Data
-			x = dnsmsg.Funcs(ctx, x)
+			x = dnsctx.Funcs(ctx, x)
 			if err := x.Pack(); err != nil {
 				log.Debug("Pack failure", Err(err))
 			}
@@ -30,7 +30,7 @@ func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		next.ServeDNS(ctx, rw, r)
 
-		rw.Msg = dnsmsg.Funcs(ctx, rw.Msg)
+		rw.Msg = dnsctx.Funcs(ctx, rw.Msg)
 		if err := rw.Msg.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}
