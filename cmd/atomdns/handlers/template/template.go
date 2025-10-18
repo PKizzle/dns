@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"path/filepath"
+	"os"
 	"regexp"
 	"slices"
 	"sync"
@@ -42,12 +42,13 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		var err error
 		tmpl := template.New(t.Path).Funcs(funcs)
-		tmpl, err = tmpl.Parse(filepath.Base(t.Path))
+		text, err := os.ReadFile(t.Path)
 		if err != nil {
 			log.Warn("Failed to find or parse", "path", t.Path)
 			next.ServeDNS(ctx, w, r) // call next so we hit the refused at some point
 			return
 		}
+		tmpl, err = tmpl.Parse(string(text))
 
 		data := new(Data)
 		data.Zone = dns.Zone(ctx)
