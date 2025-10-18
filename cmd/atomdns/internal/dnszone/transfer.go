@@ -15,10 +15,11 @@ func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.
 	var wg sync.WaitGroup
 
 	i := 0
-	var err error
+	ch := make(chan error)
 	wg.Go(func() {
-		err = c.TransferOut(w, r, env)
+		err := c.TransferOut(w, r, env)
 		w.Close()
+		ch <- err
 	})
 
 	apex := z.Apex()
@@ -41,5 +42,6 @@ func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.
 		return fmt.Errorf("no RRs transferred")
 	}
 
+	err := <-ch
 	return err
 }
