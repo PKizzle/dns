@@ -9,6 +9,8 @@ on Debian systems with `apt-get install geoip-database`, or see https://mailfud.
 
 There is no automatic reloading of the databases under the assumption they will not change _that_ often.
 
+If an IP address does not have associated geographical location data, nothing is added to the context.
+
 # Syntax
 
 ```
