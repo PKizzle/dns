@@ -12,7 +12,7 @@ import (
 	"io"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -76,7 +76,7 @@ func (a *As112) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Authoritative = true
 				m.Ns = []dns.RR{rr}
 
-				m = dnsmsg.Funcs(ctx, m)
+				m = dnsctx.Funcs(ctx, m)
 				if err := m.Pack(); err != nil {
 					log.Debug("Pack failure", Err(err))
 				}

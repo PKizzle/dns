@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"regexp"
 	"slices"
 	"sync"
 	"text/template"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmsg"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -32,17 +33,22 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-
 		if !t.Regexp.MatchString(r.Question[0].Header().Name) {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-		tmpl, err := template.ParseFiles(t.Path)
+		funcs := template.FuncMap{
+			"Value": func(key string) any { return dnsctx.Value(ctx, key) },
+		}
+		var err error
+		tmpl := template.New(t.Path).Funcs(funcs)
+		text, err := os.ReadFile(t.Path)
 		if err != nil {
 			log.Warn("Failed to find or parse", "path", t.Path)
 			next.ServeDNS(ctx, w, r) // call next so we hit the refused at some point
 			return
 		}
+		tmpl, err = tmpl.Parse(string(text))
 
 		data := new(Data)
 		data.Zone = dns.Zone(ctx)
@@ -79,7 +85,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		m.Data = r.Data
 
-		m = dnsmsg.Funcs(ctx, m)
+		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
 			log.Debug("Pack failure", Err(err))
 		}

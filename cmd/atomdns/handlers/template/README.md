@@ -49,9 +49,9 @@ template REGEX [TYPE]... {
 A template must return a complete message that can be parsed back into an actual DNS message. The template
 parsing is _not_ case insensitive, i.e. `answer section:` will not be parsed but `ANSWER SECTION:` is.
 
-Each template gets the following data (see the godoc of Data):
+Each template gets the following variables (see the godoc of Data):
 
-- `.Zone` the matched zone string (e.g. `example.org.`).
+- `.Zone` the matched zone string (e.g. `example.org.`), from the context.
 - `.ID` the query ID.
 - `.Name` the query name.
 - `.Class` the query class.
@@ -59,6 +59,11 @@ Each template gets the following data (see the godoc of Data):
 - `.Question` the matched question RR.
 - `.Msg` the complete message.
 - `.ResponseWriter` that holds all the data that can be extracted from the response writer.
+
+And the following functions (all functions start with a capitol letter):
+
+- `Value(key string)` return the value for the key from the current context. This allows extracting any data
+  other handlers have added to the context, such as the _geoip_ handler.
 
 # Examples
 
@@ -82,9 +87,17 @@ Where `nxdomain.go.tmpl` contains:
 
 ;; AUTHORITY SECTION:
 {{.Zone}}   IN SOA ns.icann.org. noc.dns.icann.org. 2025082229 7200 3600 1209600 3600
+{{if value "geoip/asn"}}
+{{.Zone}}   IN TXT "{{dnsctx.Value "geoip/asn"}}"
+{{end}}
 ```
 
 # Also see
 
 [Go regexp](https://golang.org/pkg/regexp/) for details about the regex implementation and
-[Go template](https://golang.org/pkg/text/template/) for the template language reference.
+[Go template](https://golang.org/pkg/text/template/) for the template language reference. And atomdns-geoip(7)
+for documentation on what elements are added to the context.
+
+# Bugs
+
+The template is parsed on every query, which is a bit excessive. See <https://codeberg.org/miekg/dns/issues/319>.

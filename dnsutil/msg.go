@@ -72,7 +72,7 @@ func StringToMsg(s string) (*dns.Msg, error) {
 		case stateNone:
 			// parse ;; QUERY, rcode: NOERROR, id, flags: ....
 			if len(line) < 39 {
-				return nil, fmt.Errorf("bad opcode")
+				return nil, fmt.Errorf("bad opcode: %q", line)
 			}
 			// we need 3 ", " in this line.
 			opcode := strings.Index(line, ", ")
@@ -81,13 +81,13 @@ func StringToMsg(s string) (*dns.Msg, error) {
 			}
 			rcode := strings.Index(line[opcode+1:], ", ")
 			if rcode == -1 || rcode == len(line[opcode+1:])-1 {
-				return nil, fmt.Errorf("bad rcode")
+				return nil, fmt.Errorf("bad rcode: %q", line[opcode+1:])
 			}
 
 			rcode += opcode + 3
 			id := strings.Index(line[rcode:], ", ")
 			if id == -1 || id == len(line[rcode:])-1 {
-				return nil, fmt.Errorf("bad id")
+				return nil, fmt.Errorf("bad id: %q", line[rcode:])
 			}
 			id += rcode
 			switch line[:opcode] {
