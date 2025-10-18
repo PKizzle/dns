@@ -37,11 +37,11 @@ func TransferOut(z Interface, ctx context.Context, w dns.ResponseWriter, r *dns.
 			env <- &dns.Envelope{Answer: []dns.RR{s}}
 		}
 	}
+
 	close(env)
+	err := <-ch
 	if i == 0 {
 		return fmt.Errorf("no RRs transferred")
 	}
-
-	err := <-ch
 	return err
 }
