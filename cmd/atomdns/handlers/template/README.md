@@ -49,7 +49,7 @@ template REGEX [TYPE]... {
 A template must return a complete message that can be parsed back into an actual DNS message. The template
 parsing is _not_ case insensitive, i.e. `answer section:` will not be parsed but `ANSWER SECTION:` is.
 
-Each template gets the following data (see the godoc of Data):
+Each template gets the following variables (see the godoc of Data):
 
 - `.Zone` the matched zone string (e.g. `example.org.`), from the context.
 - `.ID` the query ID.
