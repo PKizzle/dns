@@ -25,7 +25,7 @@ geoip [subnet] {
   lookups. If the path is relative the path from `root` will be prepended. At least one database must be
   loaded.
 
-## Context Keys
+# Context Keys
 
 The following values will be stored in the context of a request and can be used by other handlers.
 
@@ -36,10 +36,26 @@ South America.
 | :----------------------- | :-------- | :------------ | :--------------------------------- |
 | `geoip/city`             | `string`  | Cambridge     | The city name in English language. |
 | `geoip/country`          | `string`  | GB            | Country ISO 3166-1                 |
-| `geoip/country/eu`       | `bool`    | false         | Either `true` or `false`.          |
+| `geoip/country/eu`       | `bool`    | false         | Country is EU member.              |
 | `geoip/continent`        | `string`  | EU            | Continent code.                    |
 | `geoip/latitude`         | `float64` | 52.2242       | Base 10, max available precision.  |
 | `geoip/longitude`        | `float64` | 0.1315        | Base 10, max available precision.  |
-| `geoip/timezone`         | `string`  | Europe/London | The timezone.                      |
+| `geoip/timezone`         | `string`  | Europe/London | The time zone.                     |
 | `geoip/asn`              | `int`     | 37            | The AS number.                     |
 | `geoip/asn/organization` | `string`  | Example Org   | The AS organization.               |
+
+# Example
+
+Here we add location data to the request's context, so that _template_ can use it in the template creation.
+
+```conffile
+example.org. {
+    geoip {
+        city testdata/GeoIPCity.dat
+    }
+
+    template .* {
+        mytemplate.go.tmpl
+    }
+}
+```

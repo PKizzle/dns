@@ -62,7 +62,7 @@ Each template gets the following data (see the godoc of Data):
 
 And the following functions:
 
-- `value(key string)` return the value for the key from the current context. This allows extracting any data
+- `dnsctx.Value(key string)` return the value for the key from the current context. This allows extracting any data
   other handlers have added to the context, such as the _geoip_ handler.
 
 # Examples
@@ -88,14 +88,15 @@ Where `nxdomain.go.tmpl` contains:
 ;; AUTHORITY SECTION:
 {{.Zone}}   IN SOA ns.icann.org. noc.dns.icann.org. 2025082229 7200 3600 1209600 3600
 {{if value "geoip/asn"}}
-{{.Zone}}   IN TXT "{{value "geoip/asn"}}
+{{.Zone}}   IN TXT "{{dnsctx.Value "geoip/asn"}}"
 {{end}}
 ```
 
 # Also see
 
 [Go regexp](https://golang.org/pkg/regexp/) for details about the regex implementation and
-[Go template](https://golang.org/pkg/text/template/) for the template language reference.
+[Go template](https://golang.org/pkg/text/template/) for the template language reference. And atomdns-geoip(7)
+for documentation on what elements are added to the context.
 
 # Bugs
 
