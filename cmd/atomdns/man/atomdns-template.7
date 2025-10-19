@@ -73,7 +73,7 @@ A template must return a complete message that can be parsed back into an actual
 parsing is \fInot\fP case insensitive, i.e. \fB\fCanswer section:\fR will not be parsed but \fB\fCANSWER SECTION:\fR is.
 
 .PP
-Each template gets the following data (see the godoc of Data):
+Each template gets the following variables (see the godoc of Data):
 
 .IP \(bu 4
 \fB\fC.Zone\fR the matched zone string (e.g. \fB\fCexample.org.\fR), from the context.
@@ -94,10 +94,10 @@ Each template gets the following data (see the godoc of Data):
 
 
 .PP
-And the following functions:
+And the following functions (all functions start with a capitol letter):
 
 .IP \(bu 4
-\fB\fCdnsctx.Value(key string)\fR return the value for the key from the current context. This allows extracting any data
+\fB\fCValue(key string)\fR return the value for the key from the current context. This allows extracting any data
 other handlers have added to the context, such as the \fIgeoip\fP handler.
 
 
