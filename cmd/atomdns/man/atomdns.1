@@ -7,13 +7,13 @@
 
 .SH "SYNOPSIS"
 .PP
-\fIatomdns\fP \fB[\-c CONFFILE]\fP \fB[\-H|\-V]\fP...
+\fIatomdns\fP \fB[\-c CONFFILE]\fP \fB[\-C|\-H|\-V]\fP...
 
 .SH "DESCRIPTION"
 .PP
 atomdns is a DNS server that chains handlers. Each handler handles a DNS feature, like serve zone files,
 transfering those to secondaries or just exporting metrics. There are many handlers, each described in their
-respective manual pages.
+respective manual page.
 
 .PP
 The \fIglobal\fP handler describes the options that are also used in starting the server, see atomdns\-global(7)
@@ -61,6 +61,10 @@ example.org {
 .fi
 .RE
 
+.TP
+\fB\-C\fP
+check the configuration, report any erors and exit with status 1 or if everything is OK exit with status
+code 0.
 .TP
 \fB\-H\fP
 list all handlers and quit.
