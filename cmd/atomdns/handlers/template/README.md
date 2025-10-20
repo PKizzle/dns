@@ -60,7 +60,7 @@ Each template gets the following variables (see the godoc of Data):
 - `.Msg` the complete message.
 - `.ResponseWriter` that holds all the data that can be extracted from the response writer.
 
-And the following functions (all functions start with a capitol letter):
+And the following functions (all functions start with a capital letter):
 
 - `Value(key string)` return the value for the key from the current context. This allows extracting any data
   other handlers have added to the context, such as the _geoip_ handler.

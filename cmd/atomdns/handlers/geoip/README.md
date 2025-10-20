@@ -31,13 +31,13 @@ geoip [subnet] {
 
 The following values will be stored in the context of a request and can be used by other handlers.
 
-The continent codes are: AF: Africa, AN: Antarctica, AS: Asia, EU: Europe, NA: North America, OC: Oceania, SA:
-South America.
+The continent codes are: `AF`: Africa, `AN`: Antarctica, `AS`: Asia, `EU`: Europe, `NA`: North America,
+`OC`: Oceania, `SA`: South America.
 
 | Key                      | Type      | Example       | Description                        |
 | :----------------------- | :-------- | :------------ | :--------------------------------- |
 | `geoip/city`             | `string`  | Cambridge     | The city name in English language. |
-| `geoip/country`          | `string`  | GB            | Country ISO 3166-1                 |
+| `geoip/country`          | `string`  | GB            | Country ISO 3166-1 code.           |
 | `geoip/country/eu`       | `bool`    | false         | Country is EU member.              |
 | `geoip/continent`        | `string`  | EU            | Continent code.                    |
 | `geoip/latitude`         | `float64` | 52.2242       | Base 10, max available precision.  |
