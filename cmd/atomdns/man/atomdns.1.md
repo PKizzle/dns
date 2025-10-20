@@ -4,13 +4,13 @@ _atomdns_ - DNS nameserver that runs handlers
 
 ## Synopsis
 
-_atomdns_ **[-c CONFFILE]** **[-H|-V]**...
+_atomdns_ **[-c CONFFILE]** **[-C|-H|-V]**...
 
 ## Description
 
 atomdns is a DNS server that chains handlers. Each handler handles a DNS feature, like serve zone files,
 transfering those to secondaries or just exporting metrics. There are many handlers, each described in their
-respective manual pages.
+respective manual page.
 
 The _global_ handler describes the options that are also used in starting the server, see atomdns-global(7)
 for more information. Normally you need a **CONFFILE** (atomdns-conffile(5)) like this, to listen on all
@@ -43,6 +43,10 @@ example.org {
   whoami
 }
 ```
+
+**-C**
+: check the configuration, report any erors and exit with status 1 or if everything is OK exit with status
+code 0.
 
 **-H**
 : list all handlers and quit.

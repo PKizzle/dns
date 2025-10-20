@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -25,14 +24,16 @@ func main() {
 	var (
 		flagHandler bool
 		flagVersion bool
+		flagCheck   bool
 		flagConf    string
 		confdata    []byte
 		err         error
 	)
 	flag.BoolVar(&flagHandler, "H", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "V", false, "show version")
-	flag.StringVar(&flagConf, "config", "Conffile", "config to load")
-	flag.StringVar(&flagConf, "c", "Conffile", "config to load")
+	flag.BoolVar(&flagCheck, "C", false, "check the configuration")
+	flag.StringVar(&flagConf, "config", "", "config to load")
+	flag.StringVar(&flagConf, "c", "", "config to load")
 
 	flag.Parse()
 	if flagVersion {
@@ -49,12 +50,12 @@ func main() {
 		return
 	}
 
-	confdata, err = os.ReadFile(flagConf)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			confdata = []byte(builtin)
-			flagConf = "<builtin>"
-		} else {
+	if flagConf == "" {
+		confdata = []byte(builtin)
+		flagConf = "<builtin>"
+	} else {
+		confdata, err = os.ReadFile(flagConf)
+		if err != nil {
 			slog.Error("Failed to parse configuration", slog.String("path", flagConf), slog.Any("error", err))
 			os.Exit(1)
 		}
@@ -64,6 +65,9 @@ func main() {
 	if err != nil {
 		slog.Error("Failed to create server", slog.Any("error", err))
 		os.Exit(1)
+	}
+	if flagCheck {
+		os.Exit(0)
 	}
 
 	if err := s.Start(); err != nil {
@@ -94,7 +98,7 @@ __________________________________\o/_______`
 
 const builtin = `
 {
-	server {
+	dns {
 		addr [::]:1053
 	}
 }
