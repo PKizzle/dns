@@ -231,6 +231,11 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 		}
 		break
 	}
+	// reset for reload, s.mux is lock guarded, global.Registered is used in a non-concurrent way
+	for k := range global.Registered {
+		s.mux.HandleRemove(k)
+	}
+	global.Registered = map[string]struct{}{}
 
 	for _, b := range blocks {
 		if b.Keys == nil {
@@ -259,11 +264,6 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 			hs = append(hs, handler)
 		}
 		hs = append(hs, new(refuse.Refuse)) // add refuse guard
-		// reset for reload, s.mux is lock guarded, global.Registered is in a non-concurrent way
-		for k := range global.Registered {
-			s.mux.HandleRemove(k)
-		}
-		global.Registered = map[string]struct{}{}
 
 		for _, k := range b.Keys {
 			k = dnsutil.Canonical(k)
