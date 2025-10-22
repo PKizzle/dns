@@ -73,6 +73,7 @@ func (g *Global) Startup() error {
 			return e
 		}
 	}
+	g.onceStartup = sync.Once{} // reset for reload
 
 	return nil
 }
@@ -96,6 +97,7 @@ func (g *Global) Shutdown() error {
 			return e
 		}
 	}
+	g.onceShutdown = sync.Once{} // reset for reload
 
 	return nil
 }
