@@ -13,6 +13,7 @@ NoNewPrivileges=true
 User=atomdns
 WorkingDirectory=~
 ExecStart=/usr/bin/atomdns -c=/etc/atomdns/Conffile
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 
 [Install]

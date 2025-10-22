@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
@@ -25,6 +26,8 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		case "debug":
 			g.Debug = true
 			slog.SetLogLoggerLevel(slog.LevelDebug)
+		case "quiet":
+			g.Quiet = true
 		case "root":
 			if !d.NextArg() {
 				d.ArgErr()
@@ -76,8 +79,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
-				case "quiet":
-					g.Quiet = true
 				case "addr":
 					addrs, err := d.RemainingAddrs()
 					if err != nil {
@@ -288,6 +289,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			return d.PropErr()
 		}
 	}
+	g.OnReset(func() {
+		g.onceStartup = sync.Once{}
+		g.onStartup = []func() error{}
+
+		g.onceShutdown = sync.Once{}
+		g.onShutdown = []func() error{}
+	})
 
 	return nil
 }

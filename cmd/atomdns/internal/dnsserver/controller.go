@@ -16,9 +16,11 @@ type Controller struct {
 }
 
 // OnStartup and OnShutdown can be used by handlers to register startup and shutdown functions. Each function
-// is execute once during starting and shutting of the server.
+// is execute once during starting and shutting of the server. OnReset is called after OnShutdown to clear
+// anything out that can prevent a clean reload, think [sync.Once] mutexes.
 func (c *Controller) OnStartup(fn func() error)  { c.Global.OnStartup(fn) }
 func (c *Controller) OnShutdown(fn func() error) { c.Global.OnShutdown(fn) }
+func (c *Controller) OnReset(fn func())          { c.Global.OnReset(fn) }
 
 // NewTestController create a controller useful for tests.
 func NewTestController(input string) *Controller {

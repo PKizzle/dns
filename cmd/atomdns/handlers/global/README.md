@@ -14,11 +14,11 @@ global section, see the configuration examples below.
 {
     root DIRECTORY
     debug
+    quiet
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
     dns {
-        quiet
         addr ADDRESS
         limits {
             tcp LIMIT
@@ -46,6 +46,7 @@ global section, see the configuration examples below.
   get this directory prefixed. If **DIRECTORY** itself is also relative the current working directory (cwd) of the atomdns
   process will be prefixed.
 - with `debug` the global log level is to debug.
+- Wirth `quiet` the banner is not shown in less message in general, query logging is not affected.
 - The `metrics` property allows setting the listening **ADDRESS** for the promtheus metrics. This defaults to `localhost:9153`.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global section.
@@ -65,7 +66,6 @@ This is parsed in-order and some settings depend on `root` and/or `debug`, so se
 
 With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined are.
 
-- `quiet`: show banner during startup, and less messages.
 - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.

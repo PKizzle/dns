@@ -16,6 +16,11 @@ transfering those to secondaries or just exporting metrics. There are many handl
 respective manual page.
 
 .PP
+The server atomdns can be reloaded by sending it the HUP signal, this reloads all handlers, but does \fInot\fP
+restart any of the servers, so changes to server addresses and limits (see atomdns\-global(7)) will not be
+applied through reloads. For those kind of changes the server needs to be restarted.
+
+.PP
 The \fIglobal\fP handler describes the options that are also used in starting the server, see atomdns\-global(7)
 for more information. Normally you need a \fBCONFFILE\fP (atomdns\-conffile(5)) like this, to listen on all
 interfaces on port 53:

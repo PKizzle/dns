@@ -214,6 +214,10 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 		TlsAddr:       "[::]:853",
 	}
 
+	return global, s.Setup(conf, global, blocks)
+}
+
+func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.ServerBlock) error {
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
@@ -222,7 +226,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 			d := conffile.NewDispenser(conf, nil, b.Tokens[dir])
 			err := global.Setup(d)
 			if err != nil {
-				return global, fmt.Errorf("could not parse global config: %s", err)
+				return fmt.Errorf("could not parse global config: %s", err)
 			}
 		}
 		break
@@ -239,7 +243,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
 			if !ok {
-				return global, fmt.Errorf("unknown handler: %s", name)
+				return fmt.Errorf("unknown handler: %s", name)
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
@@ -249,19 +253,23 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 				}
 				err := s.Setup(co)
 				if err != nil {
-					return global, handler.Err(err)
+					return handler.Err(err)
 				}
 			}
 			hs = append(hs, handler)
 		}
-		// append refuse as a guard
-		hs = append(hs, new(refuse.Refuse))
-		// for all keys (=zones) add this chain
+		hs = append(hs, new(refuse.Refuse)) // add refuse guard
+		// reset for reload, s.mux is lock guarded, global.Registered is in a non-concurrent way
+		for k := range global.Registered {
+			s.mux.HandleRemove(k)
+		}
+		global.Registered = map[string]struct{}{}
+
 		for _, k := range b.Keys {
 			k = dnsutil.Canonical(k)
 
 			if _, ok := global.Registered[k]; ok {
-				return global, fmt.Errorf("origin already registered: %s", k)
+				return fmt.Errorf("origin already registered: %s", k)
 			}
 
 			if !s.Quiet {
@@ -271,7 +279,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 			global.Registered[k] = struct{}{}
 		}
 	}
-	return global, nil
+	return nil
 }
 
 // When a server is started on the wildcard port, this method can be used to get the actual address and
