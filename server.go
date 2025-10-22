@@ -322,9 +322,9 @@ Read:
 }
 
 func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
-	wg.Add(1)
-	srv.serveDNS(w, r)
-	wg.Done()
+	wg.Go(func() {
+		srv.serveDNS(w, r)
+	})
 }
 
 // Serve a new TCP connection.
@@ -362,8 +362,6 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		// The first read uses the read timeout, the rest use the idle timeout.
 		readtimeout = srv.IdleTimeout
 	}
-
-	wg.Wait() // wait for anyone still processing
 
 	if !hijacked {
 		w.Close()
