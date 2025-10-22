@@ -21,8 +21,8 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 	state.Store(true)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	startonce.Do(func() {
-		co.OnStartup(func() error {
+	co.OnStartup(func() error {
+		startonce.Do(func() {
 			_log.Info("Startup", "signal", "USR1")
 			sigchan := make(chan os.Signal, 1)
 			go func() {
@@ -43,16 +43,21 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 					}
 				}
 			}()
-			return nil
 		})
+		return nil
 	})
 
-	shutonce.Do(func() {
-		co.OnShutdown(func() error {
+	co.OnShutdown(func() error {
+		shutonce.Do(func() {
 			_log.Info("Shutdown", "signal", "USR1")
 			cancel()
-			return nil
 		})
+		return nil
+	})
+
+	co.OnReset(func() {
+		startonce = sync.Once{}
+		shutonce = sync.Once{}
 	})
 
 	return nil

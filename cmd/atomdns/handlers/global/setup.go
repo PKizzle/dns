@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
@@ -288,6 +289,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			return d.PropErr()
 		}
 	}
+	g.OnReset(func() {
+		g.onceStartup = sync.Once{}
+		g.onStartup = []func() error{}
+
+		g.onceShutdown = sync.Once{}
+		g.onShutdown = []func() error{}
+	})
 
 	return nil
 }

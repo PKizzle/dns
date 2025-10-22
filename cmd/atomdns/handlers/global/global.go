@@ -44,8 +44,10 @@ type Global struct {
 
 	onceStartup  sync.Once
 	onceShutdown sync.Once
+	onceReset    sync.Once
 	onStartup    []func() error // Functions to execute on startup
 	onShutdown   []func() error // Function to execute on shutdown
+	onReset      []func()       // Function to execute after shutdown has been called
 
 	Config     string              // path to config file
 	Registered map[string]struct{} // registered zones
@@ -53,6 +55,7 @@ type Global struct {
 
 func (g *Global) OnStartup(fn func() error)  { g.onStartup = append(g.onStartup, fn) }
 func (g *Global) OnShutdown(fn func() error) { g.onShutdown = append(g.onShutdown, fn) }
+func (g *Global) OnReset(fn func())          { g.onReset = append(g.onReset, fn) }
 
 func (g *Global) Startup() error {
 	errs := []error{}
@@ -73,7 +76,6 @@ func (g *Global) Startup() error {
 			return e
 		}
 	}
-	g.onceStartup = sync.Once{} // reset for reload
 
 	return nil
 }
@@ -97,7 +99,11 @@ func (g *Global) Shutdown() error {
 			return e
 		}
 	}
-	g.onceShutdown = sync.Once{} // reset for reload
-
+	g.onceReset.Do(func() {
+		for _, fn := range g.onReset {
+			fn()
+		}
+	})
+	g.onceReset = sync.Once{}
 	return nil
 }

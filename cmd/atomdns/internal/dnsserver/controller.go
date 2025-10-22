@@ -19,6 +19,7 @@ type Controller struct {
 // is execute once during starting and shutting of the server.
 func (c *Controller) OnStartup(fn func() error)  { c.Global.OnStartup(fn) }
 func (c *Controller) OnShutdown(fn func() error) { c.Global.OnShutdown(fn) }
+func (c *Controller) OnReset(fn func())          { c.Global.OnReset(fn) }
 
 // NewTestController create a controller useful for tests.
 func NewTestController(input string) *Controller {
