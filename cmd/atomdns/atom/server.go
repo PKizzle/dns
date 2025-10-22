@@ -259,8 +259,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 			hs = append(hs, handler)
 		}
 		hs = append(hs, new(refuse.Refuse)) // add refuse guard
-		// reset for reload
-		// locking?!
+		// reset for reload, s.mux is lock guarded, global.Registered is in a non-concurrent way
 		for k := range global.Registered {
 			s.mux.HandleRemove(k)
 		}

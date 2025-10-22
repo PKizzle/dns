@@ -20,7 +20,7 @@ func (s *Server) Reload() error {
 		return err
 	}
 
-	s.global.Shutdown() // ignore errors
+	s.global.Shutdown()
 	if err := s.Setup(s.global.Config, s.global, blocks); err != nil {
 		return err
 	}
