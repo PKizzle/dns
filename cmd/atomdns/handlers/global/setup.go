@@ -26,6 +26,8 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		case "debug":
 			g.Debug = true
 			slog.SetLogLoggerLevel(slog.LevelDebug)
+		case "quiet":
+			g.Quiet = true
 		case "root":
 			if !d.NextArg() {
 				d.ArgErr()
@@ -77,8 +79,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 		case "dns":
 			for d.NextBlock(0) {
 				switch d.Val() {
-				case "quiet":
-					g.Quiet = true
 				case "addr":
 					addrs, err := d.RemainingAddrs()
 					if err != nil {
