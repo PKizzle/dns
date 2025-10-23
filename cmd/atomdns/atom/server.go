@@ -1,6 +1,7 @@
 package atom
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -28,6 +29,7 @@ import (
 
 type Server struct {
 	global *global.Global
+	config []byte // whole config when builtin is true
 
 	mux     *dns.ServeMux
 	servers []*dns.Server
@@ -117,14 +119,18 @@ func (s *Server) Shutdown(ctx context.Context) error {
 // considered "not a file" and the contents of r is also stored in s.config.
 func New(conf string, r io.Reader) (*Server, error) {
 	s := &Server{mux: dns.NewServeMux()}
+	w := &bytes.Buffer{}
 
 	if builtin(conf) {
-
+		r = io.TeeReader(r, w)
 	}
 
 	global, err := s.parse(conf, r)
 	if err != nil {
 		return nil, err
+	}
+	if builtin(conf) {
+		s.config = w.Bytes()
 	}
 	s.global = global
 

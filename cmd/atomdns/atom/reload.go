@@ -7,13 +7,14 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 )
 
-func (s *Server) Reload() error {
-	if s.global.Config == "<builtin>" {
-		return nil
-	}
-	confdata, err := os.ReadFile(s.global.Config)
-	if err != nil {
-		return err
+func (s *Server) Reload() (err error) {
+	confdata := []byte{}
+	if builtin(s.global.Config) {
+		confdata = s.config
+	} else {
+		if confdata, err = os.ReadFile(s.global.Config); err != nil {
+			return err
+		}
 	}
 	blocks, err := conffile.Parse(s.global.Config, bytes.NewReader(confdata))
 	if err != nil {
