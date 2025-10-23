@@ -12,7 +12,7 @@ import (
 // The config will be prefixed with:
 //
 //	{
-//		server {
+//		dns {
 //			addr [::]:0
 //			limits {
 //				run 1
@@ -31,7 +31,7 @@ func New(config string) (*atom.Server, func(), error) {
 }
 `
 	config = testconfig + config
-	s, err := atom.New("test", strings.NewReader(config))
+	s, err := atom.New("<test>", strings.NewReader(config))
 	if err != nil {
 		return nil, nil, err
 	}

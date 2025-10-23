@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
@@ -32,7 +33,8 @@ type Zone struct {
 	Path   string
 	Tree   *btree.BTreeG[*dnszone.Node]
 
-	apex *dnszone.Node // apex node, filled after a Load.
+	sync.RWMutex               // protects apex
+	apex         *dnszone.Node // apex node, filled after a Load.
 }
 
 var _ dnszone.Interface = &Zone{}
@@ -73,11 +75,15 @@ func (z *Zone) Load() error {
 	if soa != 1 {
 		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA record", z.Path, z.origin)
 	}
+	z.Lock()
 	z.apex, _ = z.Tree.Get(&dnszone.Node{Name: z.origin})
+	z.Unlock()
 	return nil
 }
 
 func (z *Zone) Apex() *dnszone.Node {
+	z.RLock()
+	defer z.RUnlock()
 	a := z.apex
 	if a != nil {
 		return a
