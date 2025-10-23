@@ -240,6 +240,10 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 				return fmt.Errorf("could not parse global config: %s", err)
 			}
 		}
+		global.OnStartup(func() error {
+			slog.With("handler", "global").Info("Startup", "signal", "HUP")
+			return nil
+		})
 		break
 	}
 	// reset for reload, s.mux is lock guarded, global.Registered is used in a non-concurrent way
