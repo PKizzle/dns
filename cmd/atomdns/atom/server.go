@@ -113,9 +113,14 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// New returns a new server that has parsed the config in and r.
+// New returns a new server that has parsed the config in and r. If conf start with < and ends with > it's
+// considered "not a file" and the contents of r is also stored in s.config.
 func New(conf string, r io.Reader) (*Server, error) {
 	s := &Server{mux: dns.NewServeMux()}
+
+	if builtin(conf) {
+
+	}
 
 	global, err := s.parse(conf, r)
 	if err != nil {
@@ -316,3 +321,5 @@ func (s *Server) TlsAddr() []string {
 	}
 	return addr
 }
+
+func builtin(conf string) bool { return strings.HasPrefix(conf, "<") && strings.HasSuffix(conf, ">") }

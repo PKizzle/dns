@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
 	"codeberg.org/miekg/dns/internal/dnsperf"
 )
 
@@ -25,8 +27,7 @@ whoami.example.org {
 }
 `
 
-// TestAtomdns tests atomdns' performance. It's only run when an atomdns executable is found.
-func TestAtomdns(t *testing.T) {
+func TestAtomdnsPerf(t *testing.T) {
 	const count = 8
 	dir := t.TempDir()
 	conffile := dir + "/Conffile"
@@ -56,6 +57,64 @@ func TestAtomdns(t *testing.T) {
 			}
 			cancel()
 			time.Sleep(1 * time.Second)
+		})
+	}
+}
+
+func TestAtomdns(t *testing.T) {
+	testcases := []struct {
+		qname     string
+		qtype     uint16
+		answerlen int
+	}{
+		{"www.example.org.", dns.TypeA, 2},
+	}
+	s, cancel, err := atomtest.New(`
+10.0.0.0/24 {
+    log
+    whoami
+}
+
+example.org {
+    log
+    dbfile handlers/dbfile/zone/testdata/db.example.org {
+        transfer
+    }
+}
+`)
+	defer cancel()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := new(dns.Client)
+
+	for _, tc := range testcases {
+		t.Run(tc.qname+"/"+dns.TypeToString[tc.qtype], func(t *testing.T) {
+			m := dns.NewMsg(tc.qname, dns.TypeA)
+			r, _, err := c.Exchange(context.TODO(), m, "udp", s.Addr()[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(r.Answer) != tc.answerlen {
+				t.Fatalf("expected %d answers, got %d", tc.answerlen, len(r.Answer))
+			}
+		})
+	}
+
+	if err := s.Reload(); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range testcases {
+		t.Run("reload/"+tc.qname+"/"+dns.TypeToString[tc.qtype], func(t *testing.T) {
+			m := dns.NewMsg(tc.qname, dns.TypeA)
+			r, _, err := c.Exchange(context.TODO(), m, "udp", s.Addr()[0])
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(r.Answer) != tc.answerlen {
+				t.Fatalf("expected %d answers, got %d", tc.answerlen, len(r.Answer))
+			}
 		})
 	}
 }
