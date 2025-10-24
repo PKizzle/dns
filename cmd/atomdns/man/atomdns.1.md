@@ -30,6 +30,17 @@ interfaces on port 53:
 
 ```
 
+When atomdns starts it emits a bunch of logs telling what zones are loaded and routines are started, when all
+succesful you are greeted with a banner (unless `quiet` is true see atomdns-global(7)).
+~~~
+  ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
+  ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
+  ╹ ╹   ╹   ┗━┛  ╹ ╹ v024 (0.5.15)
+  High performance and flexible DNS server
+  https://atomdns.miek.nl
+__________________________________\o/_______
+~~~
+
 Available options:
 
 **-c**, **-config** **CONFFILE**

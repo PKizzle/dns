@@ -12,13 +12,14 @@ import (
 	"strings"
 	"syscall"
 
+	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/atom"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
 )
 
 //go:generate go run man_generate.go
 
-const Version = "023"
+const Version = "024"
 
 func main() {
 	var (
@@ -108,11 +109,11 @@ func banner() string {
 	const banner = `
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
   ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
-  ╹ ╹   ╹   ┗━┛  ╹ ╹ v%s
+  ╹ ╹   ╹   ┗━┛  ╹ ╹ v%s (%s)
   High performance and flexible DNS server
   https://atomdns.miek.nl
 __________________________________\o/_______`
-	return fmt.Sprintf(banner[1:], Version) // [1:] remove first \n, while keeping the formatting in the const
+	return fmt.Sprintf(banner[1:], Version, dns.Version) // [1:] remove first \n, while keeping the formatting in the const
 }
 
 const builtin = `

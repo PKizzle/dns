@@ -41,6 +41,24 @@ interfaces on port 53:
 .RE
 
 .PP
+When atomdns starts it emits a bunch of logs telling what zones are loaded and routines are started, when all
+succesful you are greeted with a banner (unless \fB\fCquiet\fR is true see atomdns\-global(7)).
+
+.PP
+.RS
+
+.nf
+  ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
+  ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
+  ╹ ╹   ╹   ┗━┛  ╹ ╹ v024 (0.5.15)
+  High performance and flexible DNS server
+  https://atomdns.miek.nl
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\\o/\_\_\_\_\_\_\_
+
+.fi
+.RE
+
+.PP
 Available options:
 
 .TP

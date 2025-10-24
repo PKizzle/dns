@@ -1,8 +1,6 @@
 # Makefile for releasing.
 #
-# The release is controlled from version.go. The version found there is
-# used to tag the git repo, we're not building any artifacts so there is nothing
-# to upload to github.
+# The release is controlled from version.go. The version found there is used to tag the git repo
 #
 # * Up the version in version.go
 # * Run: make -f Makefile.release release
