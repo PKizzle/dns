@@ -7,6 +7,10 @@ old.txt: reflect
 new.txt: reflect
 	go test -v -count=1 | tee new.txt
 
-.PHONY:
+.PHONY: stat
 stat: old.txt new.txt
 	benchstat old.txt new.txt
+
+.PHONY: clean
+clean:
+	rm new.txt
