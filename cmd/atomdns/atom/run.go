@@ -16,12 +16,8 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
 )
 
-//go:generate go run man_generate.go
-
-const Version = "024"
-
-// Run start as a new atomdns server.
-func Run() {
+// Run starts a new atomdns server.
+func Run(version string) {
 	var (
 		flagHandler bool
 		flagVersion bool
@@ -38,7 +34,7 @@ func Run() {
 
 	flag.Parse()
 	if flagVersion {
-		fmt.Println(Version)
+		fmt.Println(version)
 		return
 	}
 	if flagHandler {
@@ -89,7 +85,7 @@ func Run() {
 				}
 				signal.Notify(sigchan, syscall.SIGHUP)
 				if !s.Quiet {
-					fmt.Println(banner())
+					fmt.Println(banner(version))
 				}
 			}
 		}
@@ -98,14 +94,14 @@ func Run() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 	if !s.Quiet {
-		fmt.Println(banner())
+		fmt.Println(banner(version))
 	}
 	sig := <-sigchan
 	s.Shutdown(context.TODO())
 	slog.Info("Received signal, stopping", "signal", sig)
 }
 
-func banner() string {
+func banner(version string) string {
 	const banner = `
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
   ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
@@ -113,7 +109,7 @@ func banner() string {
   High performance and flexible DNS server
   https://atomdns.miek.nl
 __________________________________\o/_______`
-	return fmt.Sprintf(banner[1:], Version, dns.Version) // [1:] remove first \n, while keeping the formatting in the const
+	return fmt.Sprintf(banner[1:], version, dns.Version) // [1:] remove first \n, while keeping the formatting in the const
 }
 
 const confbuiltin = `
