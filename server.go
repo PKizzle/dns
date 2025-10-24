@@ -311,7 +311,7 @@ Read:
 			for _, msg := range msgs[:n] {
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}}
-				go srv.serveUDP(&wg, w, r)
+				srv.serveUDP(&wg, w, r)
 			}
 			// return if we over-allocated
 			for j := n + 1; j < BatchSize; j++ {
