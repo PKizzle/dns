@@ -6,17 +6,15 @@ determines the order in which they are executed. (If you know CoreDNS; you might
 atomdns is _different_).
 
 atomdns is a rock-solid replacement for CoreDNS, BIND9, Knot, NSD, etc. This is not a toy example on how to
-use the dns library.
+use the dns library. atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns you
+are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
+provided out of the box, you can add it by writing a handler.
 
 But why another server? Personally I felt that CoreDNS went all "the cloud way", without properly laying the
 basis for a DNS server that I want to run at home, there was also a lot of code duplication that was solved by
 writing miekg/dnsv2. And I needed a server to develop miekg/dnsv2 in tandem with the library.
 
-atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns you
-are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
-provided out of the box, you can add it by writing a handler.
-
-Currently atomdns is able to:
+atomdns can:
 
 - Serve zone data from a file; with DNSSEC support (_dbfile_), plus:
   - Zone transfers and notifies.
@@ -71,20 +69,23 @@ Or use `Conffile-example` which has a more complete setup.
 When atomdns starts you are greeted (when not using `quiet`) a bunch of log lines and a welcome banner:
 
 ```txt
-2025/10/04 08:07:07 INFO 0.0.10.in-addr.arpa. handlers=unpack,log,whoami,refuse
-2025/10/04 08:07:07 INFO atoom.net. handlers=unpack,log,dbfile,refuse
-2025/10/04 08:07:07 INFO Startup functions total=7
-2025/10/04 08:07:07 INFO Startup handler=global dns=[::]:1053 tcp=-1 run=24
-2025/10/04 08:07:07 INFO Startup handler=global doh=[::]:10053 run=8 path=/dns-query
-2025/10/04 08:07:07 INFO Startup handler=global dot=[::]:8053 tcp=128 run=1
-2025/10/04 08:07:07 INFO Startup handler=global tls=manual
-2025/10/04 08:07:07 INFO Startup handler=log signal=USR1
-2025/10/04 08:07:07 INFO Startup handler=log signal=USR1
-2025/10/04 08:07:07 INFO Startup handler=dbfile reload=db.example.org
-2025/10/04 08:07:07 INFO Launched config=Conffile-example origins=2 roles=DNS:[::]:1053,DOH:[::]:1443,DOT:[::]:8053
+2025/10/25 11:09:31 INFO 0.0.10.in-addr.arpa. handlers=unpack,log,whoami,refuse
+2025/10/25 11:09:31 INFO example.org. handlers=unpack,log,dbfile,refuse
+2025/10/25 11:09:31 INFO Startup functions total=11
+2025/10/25 11:09:31 INFO Startup handler=global /health=:8080
+2025/10/25 11:09:31 INFO Startup handler=global health="overload check"
+2025/10/25 11:09:31 INFO Startup handler=global /metrics=localhost:9153
+2025/10/25 11:09:31 INFO Startup handler=global dns=[::]:1053 tcp=-1 run=24
+2025/10/25 11:09:31 INFO Startup handler=global doh=[::]:1443 run=8 path=/dns-query
+2025/10/25 11:09:31 INFO Startup handler=global dot=[::]:8053 tcp=128 run=1
+2025/10/25 11:09:31 INFO Startup handler=global tls=manual
+2025/10/25 11:09:31 INFO Startup handler=global signal=HUP
+2025/10/25 11:09:31 INFO Startup handler=log signal=USR1
+2025/10/25 11:09:31 INFO Startup handler=dbfile reload=db.example.org
+2025/10/25 11:09:31 INFO Launched config=Conffile-example version=v024 dns=0.5.15 origins=2 roles=DNS:[::]:1053,DOH:[::]:1443,DOT:[::]:8053
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
-  ┣━┫   ┃   ┃ ┃  ┃┃┃ DNS
-  ╹ ╹   ╹   ┗━┛  ╹ ╹
+  ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
+  ╹ ╹   ╹   ┗━┛  ╹ ╹ v024 (0.5.15)
   High performance and flexible DNS server
   https://atomdns.miek.nl
 __________________________________\o/_______
