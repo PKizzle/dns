@@ -89,6 +89,9 @@ func (s *Server) Start() error {
 		}
 	}
 
+	if bi := builtinfo(); len(bi) == 4 {
+		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
+	}
 	slog.Info("Launched", "config", filepath.Base(s.global.Config), "version", "v"+s.version, "dns", dns.Version, "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }

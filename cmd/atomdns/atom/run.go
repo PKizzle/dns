@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"syscall"
@@ -103,6 +104,7 @@ func Run(version string) {
 }
 
 func banner(version string) string {
+
 	const banner = `
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
   ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
@@ -125,3 +127,29 @@ example.org {
 	whoami
 }
 `
+
+func builtinfo() []slog.Attr {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return nil
+	}
+	goos, goarch, revision := "", "", ""
+	if ok {
+		for _, s := range bi.Settings {
+			switch s.Key {
+			case "GOOS":
+				goos = s.Value
+			case "GOARCH":
+				goarch = s.Value
+			case "vcs.revision":
+				revision = s.Value
+			}
+		}
+	}
+	return []slog.Attr{
+		slog.String("GOOS", goos),
+		slog.String("GOARCH", goarch),
+		slog.String("GO", bi.GoVersion),
+		slog.String("revision", revision),
+	}
+}
