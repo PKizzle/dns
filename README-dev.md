@@ -33,6 +33,9 @@ If you have a bunch of values that certain types can take the are named: `ValueT
 `ValueToString`/`StringToValue` map or function. `Thing` may or may not be capitalized. E.g. we have
 `RcodeScucces` and `ClassINET`.
 
+Naming constants for RRs needs to have the RR's mnemonic prefixed and in upper case letters, i.e.
+ZONEMDSchemeSimple, for a constants used in the ZONEMD RR.
+
 ### Tests
 
 For tests name them after the sub-system and the something more specific. This makes it easy to just run the
