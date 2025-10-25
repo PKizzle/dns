@@ -12,7 +12,7 @@ import (
 )
 
 // Default maximum number of TCP queries before we close the socket.
-const maxTCPQueries = 128
+const maxTCPQueries = 1024
 
 // ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
 func ListenAndServe(addr string, network string, handler Handler) error {
