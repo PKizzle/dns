@@ -28,8 +28,9 @@ import (
 )
 
 type Server struct {
-	global *global.Global
-	config []byte // whole config when builtin is true
+	global  *global.Global
+	config  []byte // whole config when builtin is true
+	version string // atomdns version
 
 	mux     *dns.ServeMux
 	servers []*dns.Server
@@ -88,7 +89,7 @@ func (s *Server) Start() error {
 		}
 	}
 
-	slog.Info("Launched", "config", filepath.Base(s.global.Config), "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
+	slog.Info("Launched", "config", filepath.Base(s.global.Config), "version", "v"+s.version, "dns", dns.Version, "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }
 

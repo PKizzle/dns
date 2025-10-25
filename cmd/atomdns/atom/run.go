@@ -66,6 +66,7 @@ func Run(version string) {
 	if flagCheck {
 		os.Exit(0)
 	}
+	s.version = version
 
 	if err := s.Start(); err != nil {
 		slog.Error("Failed to start server", slog.Any("error", err))
@@ -85,7 +86,7 @@ func Run(version string) {
 				}
 				signal.Notify(sigchan, syscall.SIGHUP)
 				if !s.Quiet {
-					fmt.Println(banner(version))
+					fmt.Println(banner(s.version))
 				}
 			}
 		}
