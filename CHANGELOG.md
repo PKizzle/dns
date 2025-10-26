@@ -2,9 +2,20 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
-## HEAD - 2025-10-14
+## HEAD - 2025-10-25
 
-2 commits. With the following change log.
+11 commits.
+
+
+## v0.5.15 - 2025-10-24
+
+49 commits. With the following change log.
+
+* f47aa35 Atomdns: the HUP signal reloads the process. (Miek Gieben)
+
+## v0.5.14 - 2025-10-16
+
+25 commits. With the following change log.
 
 * 6704b6e IncludeAllowFunc now tells the zone parser if includes are allowed. (Miek Gieben)
 
