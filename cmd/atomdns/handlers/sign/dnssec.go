@@ -175,7 +175,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			Expire.WithLabelValues(origin).Set(float64(expire.Unix()))
 			left := expire.Sub(now) - expireDays
-			if (expireDays / Day) < left/Day {
+			if (left / Day) < (expireDays / Day) {
 				alog.Warn(fmt.Sprintf("Less than %d days left before expiration", expireDays/Day), "days", int(left/Day))
 				return true, nil
 			} else {
