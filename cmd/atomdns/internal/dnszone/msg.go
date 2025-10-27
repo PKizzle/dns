@@ -103,6 +103,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 	section := &r.Answer
 	qtype := dns.RRToType(r.Question[0])
 	if hint == hintDelegation {
+		r.Authoritative = false
 		section = &r.Ns
 		qtype = dns.TypeNS
 	}

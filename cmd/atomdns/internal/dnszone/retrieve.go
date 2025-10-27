@@ -24,6 +24,7 @@ func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 	// so we should be able to Prev to the first label that should fall in this zone.
 	r := m.Copy()
 	dnsutil.SetReply(r, m)
+	r.Authoritative = true
 
 	labels := z.Labels()
 	sosynthesis, encloser := &Node{}, &Node{} // source of synthesis and closes encloser RRset + names.
