@@ -28,7 +28,7 @@ func (d *Dbfile) HandlerFuncTransfer(ctx context.Context, w dns.ResponseWriter, 
 		log.Debug("Failure to transfer out", Err(err))
 		return
 	}
-	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)), slog.String("upstream", w.RemoteAddr()).String())
+	alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)), slog.Any("upstream", w.RemoteAddr()))
 	alog.Info("Successful transfer out")
 }
 
