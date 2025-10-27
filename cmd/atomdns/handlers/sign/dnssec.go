@@ -175,12 +175,11 @@ func (s *Sign) Expired(origin string) (bool, error) {
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			Expire.WithLabelValues(origin).Set(float64(expire.Unix()))
 			left := expire.Sub(now) - expireDays
-			expired := fmt.Sprintf("%d", expireDays/Day)
-			if expire.Sub(now) < expireDays {
-				alog.Warn("Less than "+expired+" days left before expiration", "days", int(left/Day))
+			if (expireDays / Day) < left/Day {
+				alog.Warn(fmt.Sprintf("Less than %d days left before expiration", expireDays/Day), "days", int(left/Day))
 				return true, nil
 			} else {
-				alog.Info("More than "+expired+" days left before expiration", "days", int(left/Day))
+				alog.Info(fmt.Sprintf("More than %d days left before expiration", expireDays/Day), "days", int(left/Day))
 				return false, nil
 			}
 		}
