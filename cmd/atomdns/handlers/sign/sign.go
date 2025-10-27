@@ -8,10 +8,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
-
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"github.com/fsnotify/fsnotify"
 )
 
 type Sign struct {
@@ -28,9 +27,7 @@ type Sign struct {
 }
 
 func (s *Sign) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
-	return dns.HandlerFunc(
-		func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { next.ServeDNS(ctx, w, r) },
-	)
+	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) { next.ServeDNS(ctx, w, r) })
 }
 
 // Various duration constants for signing of the zones.
