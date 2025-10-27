@@ -1,6 +1,7 @@
 package zone
 
 import (
+	"strings"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -228,6 +229,9 @@ func TestZone(t *testing.T) {
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.All() {
 				gotrrs = append(gotrrs, rr)
+			}
+			if !rmsg.Authoritative && !strings.Contains(tc.name, "delegation") {
+				t.Fatal("expected AA data")
 			}
 			if len(exprrs) != len(gotrrs) {
 				t.Errorf("expected %d RRs, got %d", len(exprrs), len(gotrrs))
