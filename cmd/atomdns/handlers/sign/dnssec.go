@@ -174,14 +174,9 @@ func (s *Sign) Expired(origin string) (bool, error) {
 			}
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			Expire.WithLabelValues(origin).Set(float64(expire.Unix()))
-			left := expire.Sub(now) - expireDays
-			if (left / Day) < (expireDays / Day) {
-				alog.Warn(fmt.Sprintf("Less than %d days left before expiration", expireDays/Day), "days", int(left/Day))
-				return true, nil
-			} else {
-				alog.Info(fmt.Sprintf("More than %d days left before expiration", expireDays/Day), "days", int(left/Day))
-				return false, nil
-			}
+			days := Expired(now, expire)
+			alog.Warn("Days left before expiration", slog.Int("days", days))
+			return days < expireDays, nil
 		}
 
 		i++
@@ -190,6 +185,12 @@ func (s *Sign) Expired(origin string) (bool, error) {
 		}
 	}
 	return true, fmt.Errorf("no SOA RRSIG found in first 50 records")
+}
+
+// Expired returns an integer saying how many days expire is still valid taking now as a starting point.
+func Expired(now, expire time.Time) int {
+	left := expire.Sub(now)
+	return int(left / Day)
 }
 
 func (s Sign) Write(z *zone.Zone) error {
