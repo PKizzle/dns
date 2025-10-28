@@ -1,12 +1,10 @@
 # Difference with github.com/miekg/dns
 
-- Many functions (and new ones) are moved into dns/dnsutil, and dns/dnstest. This copied some stuff from
-  CoreDNS.
-- `RR` lost the `Type` and `Rdlength` fields, type is derived from the Go type, `Rdlength` served no function
-  at all.
-- `context.Context` is used in the correct places.
-- `ServeDNS` now has a context.Context, with `Zone(ctx)` you retrieve the pattern zone that lead to
-  invocation of this Handler.
+- Many functions (and new ones) are moved into dns/dnsutil, and dns/dnstest. This copied some stuff from CoreDNS.
+- dns/dnshttp was added for help with DOH - DNS over HTTPs.
+- `RR` lost the `Type` and `Rdlength` fields, type is derived from the Go type, `Rdlength` served no function at all.
+- `context.Context` is used in the correct places. `ServeDNS` now has a context.Context, with `Zone(ctx)` you
+  retrieve the pattern zone that lead to invocation of this Handler.
 - `internal/*` packages that hold code that used to be private, but was cluttering the top level directory; also allowed for better
   naming.
   - builtin perf testing with internal/dnsperf
@@ -17,13 +15,13 @@
 - `Msg` includes all the ENDS0 OPT RR bits, as this almost was a real message header; in this package it now is.
 - `Msg` has a pseudo section that holds all EDNS0 Options as (faked) resource records.
 - Everything is a resource record:
-
   - question section: holds `[]RR`
   - pseudo section: holds `[]RR`
+  - stateful section: holds `[]RR`
 
   Pseudo section RR (EDNS0 OPT) can also be parsed from their (also unique to this library) presentation format.
 
-  There is also a `Stateful` section in the message that holds DNS Stateful Operation (DSO) records, these
+  The `Stateful` section in the message that holds DNS Stateful Operation (DSO) records, these
   records are also _RRs_.
 
 - `New` will return an RR, `NewRR` will be gone.
@@ -31,13 +29,14 @@
 - More:
   - msg is a io.Writer.
   - msg.Data can be re-used between request and reply in Exchange.
-  - msg.Data can be returned to a server buffer pool, for reuse in new messages.
+  - msg.Data can be returned to a server buffer pool, for reuse in new messages, this is done automatically,
+    see msg.Hijack() for hijacking the buffer.
   - private RRs are easier.
-  - private EDNS0 are implementable.
+  - private EDNS0 are implementable and hopefully easier.
 - SVCB record got its own package _dns/svcb_ where all the key-values (called `svcb.Pair`) now reside.
 - DELEG record also got its own package _dns/deleg/_, where its key-values (called `deleg.Info`) live.
 - IsDuplicate is gone in favor of Compare and a full support for the `sort.Interface`, so you can just
-  sort RRs in an RRset.
+  sort RRs in an RRset. This also simplified the DNSSEC signing and make wireformat even less important.
 - Copied, sanitized and removed tests that accumulated over 16 years of development.
 
 ## Setting EDNS0
