@@ -10,6 +10,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -80,7 +81,7 @@ func (s *Sign) Resign() error {
 								alog.Error("Failed to resign", Err(err))
 								break
 							}
-							alog.Info("Successful resign")
+							alog.With(slog.Uint64("serial", uint64(dnszone.Serial(zs)))).Info("Successful resign")
 						}
 					}
 				default:
