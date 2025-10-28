@@ -1,5 +1,7 @@
 package dnszone
 
+import "codeberg.org/miekg/dns"
+
 // Interface defines the methods for each db* implementation. This is currently unused, and if used
 // this needs to live in the pkg/db or something, not tucked away here.
 //
@@ -27,4 +29,15 @@ type Interface interface {
 	// AuthoritativeWalk walks the entire zone starting at the apex, but skips non-authoritative records:
 	// delegated (or should have been delegated) and glue recors.
 	AuthoritativeWalk(func(*Node, bool) bool)
+}
+
+// Serial returns the SOA serial number of z, 0 is returned if there is none.
+func Serial(z Interface) uint32 {
+	apex := z.Apex()
+	for _, rr := range apex.RRs {
+		if s, ok := rr.(*dns.SOA); ok {
+			return s.Serial
+		}
+	}
+	return 0
 }
