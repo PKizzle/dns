@@ -91,6 +91,56 @@ func TestSign(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"delegation-sig",
+			func() *dnszone.Node { node, _ := zs.Get("bla.miek.nl."); return node },
+			func() *dnszone.Node { return &dnszone.Node{} },
+			func(a, b *dnszone.Node) error {
+				// if we have the sigs, we have the records: check rrsig ns, and rrsig nsec
+				i := 0
+				for _, rr := range a.RRs {
+					if s, ok := rr.(*dns.RRSIG); ok {
+						if s.TypeCovered == dns.TypeNS {
+							i++
+						}
+						if s.TypeCovered == dns.TypeNSEC {
+							i++
+						}
+
+					}
+				}
+				if i != 2 {
+					return fmt.Errorf("expected RRSIG(NS,NSEC), but saw %d RRs", i)
+				}
+				return nil
+			},
+		},
+		{
+			"delegation-ds-sig",
+			func() *dnszone.Node { node, _ := zs.Get("secure.miek.nl."); return node },
+			func() *dnszone.Node { return &dnszone.Node{} },
+			func(a, b *dnszone.Node) error {
+				// if we have the sigs, we have the records: check rrsig ns, rrsig ds, and rrsig nsec
+				i := 0
+				for _, rr := range a.RRs {
+					if s, ok := rr.(*dns.RRSIG); ok {
+						if s.TypeCovered == dns.TypeNS {
+							i++
+						}
+						if s.TypeCovered == dns.TypeNSEC {
+							i++
+						}
+						if s.TypeCovered == dns.TypeDS {
+							i++
+						}
+					}
+				}
+				if i != 3 {
+					return fmt.Errorf("expected RRSIG(NS,NSEC,DS), but saw %d RRs", i)
+				}
+				return nil
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
