@@ -79,18 +79,23 @@ Have fun!
 
 Miek Gieben - 2025- - <miek@miek.nl>
 
-# Building
+# Building/developing
 
-This library uses Go modules and uses semantic versioning. Building is done with the `go` tool, so
-the following should work:
+This library uses Go modules and uses semantic versioning. Getting the code and working with the library is
+done via:
 
-    go get codeberg.org/miekg/dns
-    go build codeberg.org/miekg/dns
+    git clone git@codeberg.org:miekg/dns  # use https is you don't have a codeberg account
+    cd dns
+    # $EDTIOR *.go
+
+If you want to use codeberg/miekg/dns in your own project, just do a `go get codeberg.org/miekg/dns@latest`
+and import codeberg.org/miekg/dns in your Go files.
 
 ## Examples
 
 A short "how to use the API" is at the beginning of doc.go (this also will show when you call `godoc codeberg.org/miekg/dns`).
-The cmd/ directory contains a few example programs.
+The cmd/ directory contains a reflect example program that is used for benchmarking, and further has atomdns
+which is full fledged DNS server that is developed in tandem with the library.
 
 ## Supported RFCs
 
