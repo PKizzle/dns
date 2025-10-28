@@ -2,6 +2,7 @@ package sign
 
 import (
 	"fmt"
+	"os/exec"
 	"slices"
 	"testing"
 
@@ -26,7 +27,7 @@ func TestSign(t *testing.T) {
 	// because of NewTestController's way of working we miss sign.Zones map, because we don't have keys to add.
 	s.Zones = map[string]*zone.Zone{testzone: zone.New(testzone, s.Path)}
 
-	sz, err := s.Sign(testzone)
+	zs, err := s.Sign(testzone)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,8 +40,8 @@ func TestSign(t *testing.T) {
 	}{
 		{
 			"nsec-chain",
-			func() *dnszone.Node { apex, _ := sz.Get(testzone); return apex },
-			func() *dnszone.Node { next, _ := sz.Get("www." + testzone); return next },
+			func() *dnszone.Node { apex, _ := zs.Get(testzone); return apex },
+			func() *dnszone.Node { next, _ := zs.Get("www." + testzone); return next },
 			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
 					if n, ok := rr.(*dns.NSEC); ok {
@@ -61,11 +62,11 @@ func TestSign(t *testing.T) {
 		},
 		{
 			"nsec-bitmap",
-			func() *dnszone.Node { apex, _ := sz.Get(testzone); return apex },
+			func() *dnszone.Node { apex, _ := zs.Get(testzone); return apex },
 			func() *dnszone.Node { return &dnszone.Node{} },
 			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
-					exp := []uint16{dns.TypeNS, dns.TypeSOA, dns.TypeMX, dns.TypeAAAA, dns.TypeRRSIG, dns.TypeNSEC, dns.TypeDNSKEY, dns.TypeNINFO, dns.TypeCDS, dns.TypeCDNSKEY}
+					exp := []uint16{dns.TypeNS, dns.TypeSOA, dns.TypeMX, dns.TypeAAAA, dns.TypeRRSIG, dns.TypeNSEC, dns.TypeDNSKEY, dns.TypeCDS, dns.TypeCDNSKEY}
 					if n, ok := rr.(*dns.NSEC); ok {
 						if slices.Compare(n.TypeBitMap, exp) != 0 {
 							return fmt.Errorf("type bitmap is not: %v != %v", exp, n.TypeBitMap)
@@ -77,7 +78,7 @@ func TestSign(t *testing.T) {
 		},
 		{
 			"all-sig",
-			func() *dnszone.Node { node, _ := sz.Get("a.miek.nl."); return node },
+			func() *dnszone.Node { node, _ := zs.Get("a.miek.nl."); return node },
 			func() *dnszone.Node { return &dnszone.Node{} },
 			func(a, b *dnszone.Node) error {
 				for _, rr := range a.RRs {
@@ -98,5 +99,39 @@ func TestSign(t *testing.T) {
 				t.Fatalf("expected no error, but got: %s", err)
 			}
 		})
+	}
+}
+
+func TestSignVerify(t *testing.T) {
+	_, err := exec.LookPath("ldns-verify-zone")
+	if err != nil {
+		t.Skip("ldns-verify-zone not found")
+	}
+	ldnsverify := exec.Command("ldns-verify-zone", "testdata/db.miek.nl.signed")
+
+	testzone := "miek.nl."
+	config := `sign testdata/db.miek.nl {
+        		key testdata/Kmiek.nl.+013+59725
+	    	}`
+
+	s := new(Sign)
+	co := dnsserver.NewTestController(config)
+	if err = s.Setup(co); err != nil {
+		t.Fatal(err)
+	}
+	// because of NewTestController's way of working we miss sign.Zones map, because we don't have keys to add.
+	s.Zones = map[string]*zone.Zone{testzone: zone.New(testzone, s.Path)}
+
+	zs, err := s.Sign(testzone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Write(zs); err != nil {
+		t.Fatal(err)
+	}
+	out, err := ldnsverify.CombinedOutput()
+	t.Logf("%s", out)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

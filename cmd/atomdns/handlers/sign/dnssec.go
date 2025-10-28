@@ -32,7 +32,6 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA1).ToCDS())
 		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA256).ToCDS())
 		n.RRs = append(n.RRs, pair.DNSKEY.ToCDNSKEY())
-		n.RRs = append(n.RRs, &dns.NINFO{Hdr: dns.Header{Name: origin, TTL: s.ttl, Class: dns.ClassINET}, ZSData: []string{SignedBy}})
 	}
 	z.Set(n)
 
@@ -50,12 +49,12 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 
 	options := &dns.SignOption{Pooler: s.pool}
 	z.AuthoritativeWalk(func(n *dnszone.Node, auth bool) bool {
-		if !auth || len(n.RRs) == 0 {
+		if len(n.RRs) == 0 || !auth {
 			return true
 		}
 		types := types(n, s.ttl)
 		for _, t := range types {
-			if t == dns.TypeRRSIG || t == dns.TypeNSEC {
+			if t == dns.TypeRRSIG {
 				continue
 			}
 			rrset = []dns.RR{}
@@ -111,9 +110,10 @@ func types(n *dnszone.Node, ttl uint32) []uint16 {
 // Walk is used when signing a zone. It generates all the NSECs that a zone needs.
 // We can't insert while walking, so we need save the nsec+rssig and insert them post walk.
 func (nf *nsecfn) Walk(n *dnszone.Node, auth bool) bool {
-	if !auth || len(n.RRs) == 0 { // empty non-terminal
+	if len(n.RRs) == 0 || !auth { // empty non-terminal
 		return true
 	}
+
 	if nf.last != "" {
 		nsecnode := nf.nsec(n.Name)
 		nf.nsecs = append(nf.nsecs, nsecnode)
@@ -135,14 +135,6 @@ func (nf *nsecfn) nsec(name string) *dnszone.Node {
 	}
 	nsecnode := &dnszone.Node{Name: nf.last}
 	nsecnode.RRs = append(nsecnode.RRs, nsec)
-
-	for _, pair := range nf.keypairs {
-		incep, expir := lifetime(nf.now)
-		rrsig := dns.NewRRSIG(nf.origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
-		rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
-
-		nsecnode.RRs = append(nsecnode.RRs, rrsig)
-	}
 	return nsecnode
 }
 
