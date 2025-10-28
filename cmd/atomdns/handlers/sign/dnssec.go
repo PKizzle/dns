@@ -49,7 +49,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 
 	options := &dns.SignOption{Pooler: s.pool}
 	z.AuthoritativeWalk(func(n *dnszone.Node, auth bool) bool {
-		if !auth || len(n.RRs) == 0 {
+		if len(n.RRs) == 0 || !auth {
 			return true
 		}
 		types := types(n, s.ttl)
@@ -110,9 +110,10 @@ func types(n *dnszone.Node, ttl uint32) []uint16 {
 // Walk is used when signing a zone. It generates all the NSECs that a zone needs.
 // We can't insert while walking, so we need save the nsec+rssig and insert them post walk.
 func (nf *nsecfn) Walk(n *dnszone.Node, auth bool) bool {
-	if !auth || len(n.RRs) == 0 { // empty non-terminal
+	if len(n.RRs) == 0 || !auth { // empty non-terminal
 		return true
 	}
+
 	if nf.last != "" {
 		nsecnode := nf.nsec(n.Name)
 		nf.nsecs = append(nf.nsecs, nsecnode)

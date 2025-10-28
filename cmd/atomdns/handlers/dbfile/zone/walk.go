@@ -31,7 +31,12 @@ func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 				break
 			}
 			if _, ok := delegated[n.Name[j:]]; ok {
+				// If we have zone cut records, which is NS and DS and soon DELEG, this is authoritative data.
 				auth = false
+				if zonecut(n) {
+					auth = true
+				}
+
 				break
 			}
 			i++
@@ -39,4 +44,22 @@ func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 
 		return fn(n, auth)
 	})
+}
+
+// zonecut returns true if all RR in n are needed for a zone cut.
+func zonecut(n *dnszone.Node) bool {
+	i := 0
+	for _, rr := range n.RRs {
+		switch t := dns.RRToType(rr); t {
+		case dns.TypeNS:
+			i++
+		case dns.TypeDS:
+			i++
+		case dns.TypeDELEG:
+			i++
+		case dns.TypeNSEC, dns.TypeNSEC3:
+			i++
+		}
+	}
+	return i == len(n.RRs)
 }
