@@ -184,7 +184,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 			break
 		}
 	}
-	return true, fmt.Errorf("no SOA RRSIG found in first 50 records")
+	return true, fmt.Errorf("no SOA signature found in first 50 records")
 }
 
 // Expired returns an integer saying how many days expire is still valid taking now as a starting point.

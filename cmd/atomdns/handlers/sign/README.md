@@ -21,8 +21,7 @@ By default every record will get a TTL of 3600 seconds, but see the `ttl` option
 _sign_ will:
 
 - (Re)-sign the zone with the CSK(s) when:
-
-  - The signature on the SOA only has 9 days left before expiring.
+  - The first signature found on the SOA only has 9 days left before expiring.
   - The source zone file has been written to.
 
 When signing it will:
