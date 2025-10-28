@@ -870,8 +870,8 @@ func NewRRSIG(origin string, algorithm uint8, keytag uint16, incepexp ...uint32)
 		s.Expiration = uint32(now + (14 * 86400))
 		s.Inception = uint32(now - 300)
 	} else {
-		s.Expiration = incepexp[1]
 		s.Inception = incepexp[0]
+		s.Expiration = incepexp[1]
 	}
 	return s
 }

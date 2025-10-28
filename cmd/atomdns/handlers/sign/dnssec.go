@@ -54,7 +54,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		}
 		types := types(n, s.ttl)
 		for _, t := range types {
-			if t == dns.TypeRRSIG || t == dns.TypeNSEC {
+			if t == dns.TypeRRSIG {
 				continue
 			}
 			rrset = []dns.RR{}
@@ -134,14 +134,6 @@ func (nf *nsecfn) nsec(name string) *dnszone.Node {
 	}
 	nsecnode := &dnszone.Node{Name: nf.last}
 	nsecnode.RRs = append(nsecnode.RRs, nsec)
-
-	for _, pair := range nf.keypairs {
-		incep, expir := lifetime(nf.now)
-		rrsig := dns.NewRRSIG(nf.origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
-		rrsig.Sign(pair.Signer, []dns.RR{nsec}, &dns.SignOption{})
-
-		nsecnode.RRs = append(nsecnode.RRs, rrsig)
-	}
 	return nsecnode
 }
 
