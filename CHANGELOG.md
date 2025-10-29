@@ -2,9 +2,10 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
-## HEAD - 2025-10-29
 
-50 commits. With the following change log.
+## v0.5.16 - 2025-10-29
+
+53 commits. With the following change log.
 
 * bdd8cba Massively drop mem usage for creating/verifying DNSSEC signatures. (Miek Gieben)
 * 86f8e37 Atomdns when authoritative, set the AA bit, for non delegation answers. (Miek Gieben)
