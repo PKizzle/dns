@@ -137,10 +137,9 @@ return 1
 						if i > j || x != 0 {
 							break
 						}
-						x = CompareName(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
+						x = strings.Compare(rr.%[1]s[i], b.(*%[2]s).%[3]s[j])
 						j++
 					}`)
-
 				}
 				continue
 			}
@@ -152,7 +151,7 @@ return 1
 			case tag == `dns:"cdomain-name"`:
 				fallthrough
 			case tag == `dns:"domain-name"`:
-				o("x = CompareName(rr.%s, b.(*%s).%s)")
+				o("x = strings.Compare(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"a"`:
 				o("x = bytes.Compare(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"aaaa"`:
