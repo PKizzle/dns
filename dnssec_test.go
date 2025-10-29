@@ -37,8 +37,8 @@ func TestDNSSECSignVerify(t *testing.T) {
 			"rrsorting", RSASHA256, 1024,
 			[]RR{
 				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
-				&NS{Hdr: Header{Name: "miek.nl. ", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
-				&NS{Hdr: Header{Name: "miek.nl. ", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
 			},
 		},
 	}
