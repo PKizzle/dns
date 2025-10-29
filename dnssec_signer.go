@@ -246,8 +246,7 @@ func (k *DNSKEY) publicKeyED25519() ed25519.PublicKey {
 }
 
 // Return the raw signature data.
-func rawSignatureData(rrset []RR, s *RRSIG, options SignOption) (buf []byte, err error) {
-	// it is assume this less then DefaultMsgSize
+func rawSignatureData(buf []byte, rrset []RR, s *RRSIG, options SignOption) int {
 	off := 0
 	for _, rr := range rrset {
 		rr.Header().TTL = s.OrigTTL
@@ -268,10 +267,9 @@ func rawSignatureData(rrset []RR, s *RRSIG, options SignOption) (buf []byte, err
 
 	sort.Sort(RRset(rrset))
 
-	rrbuf := options.Pooler.Get()
 	off = 0
 	for _, rr := range rrset {
-		_, off, _ = packRR(rr, rrbuf, off, nil)
+		_, off, _ = packRR(rr, buf, off, nil)
 	}
-	return rrbuf[:off], nil
+	return off
 }

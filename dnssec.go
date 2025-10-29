@@ -262,16 +262,10 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	// Create the desired binary blob
 	signdata := options.Pooler.Get()
 	defer options.Pooler.Put(signdata[:cap(signdata)])
-	n, err := sigwire.pack(signdata)
-	if err != nil {
-		return err
-	}
-	signdata = signdata[:n]
-	wire, err := rawSignatureData(rrset, rr, *options)
-	defer options.Pooler.Put(wire[:cap(wire)])
-	if err != nil {
-		return err
-	}
+
+	n, _ := sigwire.pack(signdata)
+	m := rawSignatureData(signdata[n:], rrset, rr, *options)
+	signdata = signdata[:m+n]
 
 	var h hash.Hash
 	hash, ok := AlgorithmToHash[rr.Algorithm]
@@ -285,7 +279,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 		return ErrAlg
 
 	case ED25519:
-		signature, err := sign(k, append(signdata, wire...), hash, rr.Algorithm)
+		signature, err := sign(k, signdata, hash, rr.Algorithm)
 		if err != nil {
 			return err
 		}
@@ -296,7 +290,6 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	default:
 		h = hash.New()
 		h.Write(signdata)
-		h.Write(wire)
 
 		signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
 		if err != nil {
@@ -387,16 +380,10 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	// Create the desired binary blob
 	signeddata := options.Pooler.Get()
 	defer options.Pooler.Put(signeddata[:cap(signeddata)])
-	n, err := sigwire.pack(signeddata)
-	if err != nil {
-		return err
-	}
-	signeddata = signeddata[:n]
-	wire, err := rawSignatureData(rrset, rr, *options)
-	defer options.Pooler.Put(wire[:cap(wire)])
-	if err != nil {
-		return err
-	}
+
+	n, _ := sigwire.pack(signeddata)
+	m := rawSignatureData(signeddata[n:], rrset, rr, *options)
+	signeddata = signeddata[:m+n]
 
 	sigbuf := rr.sigBuf()
 
@@ -415,7 +402,6 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 
 		h = hash.New()
 		h.Write(signeddata)
-		h.Write(wire)
 		return rsa.VerifyPKCS1v15(pubkey, hash, h.Sum(nil), sigbuf)
 
 	case ECDSAP256SHA256, ECDSAP384SHA384:
@@ -430,7 +416,6 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 
 		h = hash.New()
 		h.Write(signeddata)
-		h.Write(wire)
 		if ecdsa.Verify(pubkey, h.Sum(nil), r, s) {
 			return nil
 		}
@@ -442,7 +427,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 			return ErrKey
 		}
 
-		if ed25519.Verify(pubkey, append(signeddata, wire...), sigbuf) {
+		if ed25519.Verify(pubkey, signeddata, sigbuf) {
 			return nil
 		}
 		return ErrSig
