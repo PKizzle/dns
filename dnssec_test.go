@@ -33,6 +33,14 @@ func TestDNSSECSignVerify(t *testing.T) {
 				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
 			},
 		},
+		{
+			"rsasha256-sorting", RSASHA256, 1024,
+			[]RR{
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
+			},
+		},
 	}
 
 	options := &SignOption{}
