@@ -7,7 +7,9 @@ $ORIGIN miek.nl.
                                             1W           ; expire
                                             4H           ; minimum
                                             )
+                         IN   NS         omval.tednet.nl.
                          IN   NS         linode.atoom.net.
+                         IN   NS         ns-ext.nlnetlabs.nl.
                          IN   MX         1 aspmx.l.google.com.
                          IN   AAAA       2a01:7e00::f03c:91ff:fe79:234c
 
