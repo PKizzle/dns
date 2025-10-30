@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"slices"
 	"strings"
@@ -46,7 +47,7 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 		}
 	}
 	if !d.From.AvailableFrom(z.Origin(), serial) {
-		log.Warn("Notify seen, but no newer zone available", "zone", z.Origin())
+		log.With(slog.Uint64("serial", uint64(serial))).Warn("Notify seen, but no newer zone available", "zone", z.Origin())
 		return
 	}
 
