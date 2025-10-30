@@ -50,7 +50,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		zones := maps.Values(d.Zones)
 		d.RUnlock()
 		for z := range zones {
-			alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
+			alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				alog.Warn("Waiting for zone to appear")
@@ -68,7 +68,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			zones := maps.Values(d.Zones)
 			d.RUnlock()
 			for z := range zones {
-				log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(d.Path))
+				log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(z.Path))
 
 				apex := z.Apex()
 				serial := uint32(0)
@@ -86,7 +86,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 
 				err := d.TransferIn(z.Origin())
 				if err != nil {
-					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(d.Path)))
+					alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
 					alog.Error("Failed to transfer", Err(err))
 				}
 				break

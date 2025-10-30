@@ -37,7 +37,7 @@ func (d *Dbfile) Retransfer() error {
 
 				err := d.TransferIn(z1.Origin())
 				if err != nil {
-					alog := log.With(slog.String("zone", z1.Origin()), slog.String("path", filepath.Base(d.Path)))
+					alog := log.With(slog.String("zone", z1.Origin()), slog.String("file", filepath.Base(z1.Path)))
 					alog.Error("Failed to transfer", Err(err))
 					continue
 				}
