@@ -30,7 +30,7 @@ func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 	case ZONEMDHashSHA512:
 		hash = crypto.SHA512
 	default:
-		return fmt.Errorf("bad hash")
+		return fmt.Errorf("bad ZONEMD Hash")
 	}
 
 	rrdata := options.Pooler.Get()
