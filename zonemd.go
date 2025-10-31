@@ -11,13 +11,13 @@ type ZONEMDOption struct {
 	Pooler // If Pooler is set is will be used for all memory allocations.
 }
 
-// Sign "signs" an zone. When done succesfully the rr's digest will be updated. ZONEMD must be a skeleton
-// (placeholder) RR, where scheme and hash are fill out. See [NewZONEMD] on how to create such a record. The zone's RR must be
-// in canonical order, but this isn't enforced by Sign, see [Sort]. As RFC 8976 specifies that for the simple scheme
-// (the only supported scheme) some records are excluced from the digest calculation.
+// Sign "signs" an zone. When done successfully the rr's digest will be updated. ZONEMD must be a skeleton
+// (placeholder) RR, where scheme and hash are filled out. See [NewZONEMD] on how to create such a record.
+// The zone's RR must be in canonical order, but this isn't enforced by Sign, see [Sort]. As RFC 8976 specifies
+// that for the simple scheme (the only supported scheme) some records are excluded from the digest calculation.
 func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 	if rr.Scheme != ZONEMDSchemeSimple {
-		return fmt.Errorf("bad scheme")
+		return fmt.Errorf("bad ZONEMD Scheme")
 	}
 	if options.Pooler == nil {
 		options.Pooler = newNoopPool(DefaultMsgSize)
@@ -55,6 +55,17 @@ func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 	}
 	rr.Digest = hex.EncodeToString(s.Sum(nil))
 	return nil
+}
+
+// Verify verifies the digest in rr with the one derived from zone. This simply calls [ZONEMD.Sign] and
+// compares the digests, on succes nil is returned.
+func (rr *ZONEMD) Verify(zone []RR, options *ZONEMDOption) error {
+	rr1 := NewZONEMD(rr.Header().Name, rr.Scheme, rr.Hash)
+	rr1.Sign(zone, options)
+	if rr1.Digest == rr.Digest {
+		return nil
+	}
+	return fmt.Errorf("bad ZONEMD Digest")
 }
 
 // NewZONEMD returns a ZONEMD record that can be used as a placeholder in a zone.

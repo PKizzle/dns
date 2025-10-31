@@ -427,16 +427,16 @@ func (rr *SOA) parse(c *zlexer, o string) *ParseError {
 	for i := range 5 {
 		l, _ = c.Next()
 		if l.err {
-			return &ParseError{err: "bad SOA zone parameter", lex: l}
+			return &ParseError{err: "bad SOA field", lex: l}
 		}
 		if j, err := strconv.ParseUint(l.token, 10, 32); err != nil {
 			if i == 0 {
 				// Serial must be a number
-				return &ParseError{err: "bad SOA zone parameter", lex: l}
+				return &ParseError{err: "bad SOA Serial", lex: l}
 			}
 			// We allow other fields to be unitful duration strings
 			if v, ok = stringToTTL(l.token); !ok {
-				return &ParseError{err: "bad SOA zone parameter", lex: l}
+				return &ParseError{err: "bad SOA field", lex: l}
 			}
 		} else {
 			v = uint32(j)
@@ -1718,7 +1718,7 @@ func (rr *TKEY) parse(c *zlexer, o string) *ParseError {
 
 	// Algorithm
 	if l.value != zString {
-		return &ParseError{err: "bad TKEY algorithm", lex: l}
+		return &ParseError{err: "bad TKEY Algorithm", lex: l}
 	}
 	rr.Algorithm = l.token
 	c.Next() // zBlank
@@ -1727,13 +1727,13 @@ func (rr *TKEY) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 8)
 	if e != nil || l.err {
-		return &ParseError{err: "bad TKEY key length", lex: l}
+		return &ParseError{err: "bad TKEY KeySize", lex: l}
 	}
 	rr.KeySize = uint16(i)
 	c.Next() // zBlank
 	l, _ = c.Next()
 	if l.value != zString {
-		return &ParseError{err: "bad TKEY key", lex: l}
+		return &ParseError{err: "bad TKEY Key", lex: l}
 	}
 	rr.Key = l.token
 	c.Next() // zBlank
@@ -1742,13 +1742,13 @@ func (rr *TKEY) parse(c *zlexer, o string) *ParseError {
 	l, _ = c.Next()
 	i, e1 := strconv.ParseUint(l.token, 10, 8)
 	if e1 != nil || l.err {
-		return &ParseError{err: "bad TKEY otherdata length", lex: l}
+		return &ParseError{err: "bad TKEY OtherLen", lex: l}
 	}
 	rr.OtherLen = uint16(i)
 	c.Next() // zBlank
 	l, _ = c.Next()
 	if l.value != zString {
-		return &ParseError{err: "bad TKEY otherday", lex: l}
+		return &ParseError{err: "bad TKEY OtherData", lex: l}
 	}
 	rr.OtherData = l.token
 	return nil
@@ -1758,7 +1758,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)
 	if e != nil || l.err {
-		return &ParseError{file: l.token, err: "bad SVCB priority", lex: l}
+		return &ParseError{file: l.token, err: "bad SVCB Priority", lex: l}
 	}
 	rr.Priority = uint16(i)
 
@@ -1797,7 +1797,7 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 				// Key with no value and no equality sign
 				key = l.token
 			} else if idx == 0 {
-				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
+				return &ParseError{file: l.token, err: "bad SVCB Key", lex: l}
 			} else {
 				key, value = l.token[:idx], l.token[idx+1:]
 
@@ -1822,14 +1822,14 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 						case zQuote:
 							// There's nothing in double quotes.
 						default:
-							return &ParseError{file: l.token, err: "bad SVCB value", lex: l}
+							return &ParseError{file: l.token, err: "bad SVCB Pair", lex: l}
 						}
 					}
 				}
 			}
 			pairFn := svcb.KeyToPair(svcb.StringToKey(key))
 			if pairFn == nil {
-				return &ParseError{file: l.token, err: "bad SVCB key", lex: l}
+				return &ParseError{file: l.token, err: "bad SVCB Key", lex: l}
 			}
 			pair := pairFn()
 			if err := svcb.Parse(pair, value, o); err != nil {
@@ -1837,11 +1837,11 @@ func (rr *SVCB) parse(c *zlexer, o string) *ParseError {
 			}
 			xs = append(xs, pair)
 		case zQuote:
-			return &ParseError{file: l.token, err: "SVCB key can't contain double quotes", lex: l}
+			return &ParseError{file: l.token, err: "SVCB Key can't contain double quotes", lex: l}
 		case zBlank:
 			canHaveNextKey = true
 		default:
-			return &ParseError{file: l.token, err: "bad SVCB values", lex: l}
+			return &ParseError{file: l.token, err: "bad SVCB Pairs", lex: l}
 		}
 		l, _ = c.Next()
 	}
@@ -1885,7 +1885,7 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 				// Key with no value and no equality sign
 				key = l.token
 			} else if idx == 0 {
-				return &ParseError{file: l.token, err: "bad DELEG key", lex: l}
+				return &ParseError{file: l.token, err: "bad DELEG Key", lex: l}
 			} else {
 				key, value = l.token[:idx], l.token[idx+1:]
 
@@ -1910,14 +1910,14 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 						case zQuote:
 							// There's nothing in double quotes.
 						default:
-							return &ParseError{file: l.token, err: "bad DELEG value", lex: l}
+							return &ParseError{file: l.token, err: "bad DELEG Info", lex: l}
 						}
 					}
 				}
 			}
 			infoFn := deleg.KeyToInfo(deleg.StringToKey(key))
 			if infoFn == nil {
-				return &ParseError{file: l.token, err: "bad DELEG key", lex: l}
+				return &ParseError{file: l.token, err: "bad DELEG Key", lex: l}
 			}
 			info := infoFn()
 			if err := deleg.Parse(info, value, o); err != nil {
@@ -1925,21 +1925,14 @@ func (rr *DELEG) parse(c *zlexer, o string) *ParseError {
 			}
 			xs = append(xs, info)
 		case zQuote:
-			return &ParseError{file: l.token, err: "DELEG key can't contain double quotes", lex: l}
+			return &ParseError{file: l.token, err: "DELEG Key can't contain double quotes", lex: l}
 		case zBlank:
 			canHaveNextKey = true
 		default:
-			return &ParseError{file: l.token, err: "bad DELEG values", lex: l}
+			return &ParseError{file: l.token, err: "bad DELEG Infos", lex: l}
 		}
 		l, _ = c.Next()
 	}
-
-	// "In AliasMode, records SHOULD NOT include any SvcParams, and recipients MUST
-	// ignore any SvcParams that are present."
-	// However, we don't check rr.Priority == 0 && len(xs) > 0 here
-	// It is the responsibility of the user of the library to check this.
-	// This is to encourage the fixing of the source of this error.
-
 	rr.Value = xs
 	return nil
 }
