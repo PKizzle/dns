@@ -311,8 +311,8 @@ Read:
 			for _, msg := range msgs[:n] {
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}}
+				wg.Add(1)
 				go func() {
-					wg.Add(1)
 					srv.serveDNS(w, r)
 					wg.Done()
 				}()
@@ -349,8 +349,8 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			srv.serveDNS(w, r)
 			wg.Done()
 		}()
