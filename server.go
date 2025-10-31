@@ -349,9 +349,11 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
-		wg.Go(func() {
+		go func() {
+			wg.Add(1)
 			srv.serveDNS(w, r)
-		})
+			wg.Done()
+		}()
 
 		hijacked = hijacked || w.hijacked.Load()
 		if hijacked {
