@@ -1,0 +1,63 @@
+package dns
+
+import (
+	"crypto"
+	"encoding/hex"
+	"fmt"
+)
+
+// ZONEMDption are options that are given to the signer and verifier.
+type ZONEMDOption struct {
+	Pooler // If Pooler is set is will be used for all memory allocations.
+}
+
+// Sign "signs" an zone. When done succesfully the rr's digest will be updated. ZONEMD must be a skeleton
+// (placeholder) RR, where scheme and hash are fill out. See [NewZONEMD] on how to create such a record. The zone's RR must be
+// in canonical order, but this isn't enforced by Sign, see [Sort]. As RFC 8976 specifies that for the simple scheme
+// (the only supported scheme) some records are excluced from the digest calculation.
+func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
+	if rr.Scheme != ZONEMDSchemeSimple {
+		return fmt.Errorf("bad scheme")
+	}
+	if options.Pooler == nil {
+		options.Pooler = newNoopPool(DefaultMsgSize)
+	}
+
+	var hash crypto.Hash
+	switch rr.Hash {
+	case ZONEMDHashSHA384:
+		hash = crypto.SHA384
+	case ZONEMDHashSHA512:
+		hash = crypto.SHA512
+	default:
+		return fmt.Errorf("bad hash")
+	}
+
+	rrdata := options.Pooler.Get()
+	defer options.Pooler.Put(rrdata[:cap(rrdata)])
+	s := hash.New()
+	for _, rr1 := range zone {
+		if _, ok := rr1.(*ZONEMD); ok {
+			continue
+		}
+		if s, ok := rr1.(*RRSIG); ok && s.TypeCovered == TypeZONEMD {
+			continue
+		}
+		if s, ok := rr1.(*SOA); ok {
+			rr.Serial = s.Serial
+		}
+		canonicalize(rr1)
+		_, off, err := packRR(rr1, rrdata, 0, nil)
+		if err != nil {
+			return err
+		}
+		s.Write(rrdata[:off])
+	}
+	rr.Digest = hex.EncodeToString(s.Sum(nil))
+	return nil
+}
+
+// NewZONEMD returns a ZONEMD record that can be used as a placeholder in a zone.
+func NewZONEMD(origin string, scheme, hash uint8) *ZONEMD {
+	return &ZONEMD{Hdr: Header{Name: origin, Class: ClassINET}, Scheme: scheme, Hash: hash}
+}
