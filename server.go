@@ -311,7 +311,11 @@ Read:
 			for _, msg := range msgs[:n] {
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}}
-				srv.serveUDP(&wg, w, r)
+				wg.Add(1)
+				go func() {
+					srv.serveDNS(w, r)
+					wg.Done()
+				}()
 			}
 			// return if we over-allocated
 			for j := n + 1; j < BatchSize; j++ {
@@ -319,12 +323,6 @@ Read:
 			}
 		}
 	}
-}
-
-func (srv *Server) serveUDP(wg *sync.WaitGroup, w *response, r *Msg) {
-	wg.Go(func() {
-		srv.serveDNS(w, r)
-	})
 }
 
 // Serve a new TCP connection.
@@ -351,9 +349,11 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 			continue
 		}
 
-		wg.Go(func() {
+		wg.Add(1)
+		go func() {
 			srv.serveDNS(w, r)
-		})
+			wg.Done()
+		}()
 
 		hijacked = hijacked || w.hijacked.Load()
 		if hijacked {
