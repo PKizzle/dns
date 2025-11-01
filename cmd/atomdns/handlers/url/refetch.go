@@ -1,8 +1,8 @@
 package url
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -34,19 +34,26 @@ func (u *Url) Refetch() error {
 
 func (u *Url) Fetch() error {
 	c := http.Client{Timeout: 10 * time.Second}
-	buf := &bytes.Buffer{}
-	resp, err := c.Post(u.URL, "*/*", buf)
+	resp, err := c.Get(u.URL)
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("status code was not %d: %d", http.StatusOK, resp.StatusCode)
 	}
+	buf, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if len(buf) == 0 {
+		return fmt.Errorf("zero buffer read")
+	}
+	resp.Body.Close()
 	f, err := os.CreateTemp(filepath.Dir(u.Path), "xxxxx.transferred")
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(f.Name(), buf.Bytes(), 0600); err != nil {
+	if err := os.WriteFile(f.Name(), buf, 0600); err != nil {
 		return err
 	}
 	defer f.Close()
