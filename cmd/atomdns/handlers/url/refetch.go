@@ -11,9 +11,9 @@ import (
 )
 
 func (u *Url) Refetch() error {
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
 	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ticker.C:

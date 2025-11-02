@@ -57,11 +57,13 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log.Info("Startup", "url", u.URL, "file", filepath.Base(u.Path))
 
-		err := u.Fetch()
-		if err != nil {
-			alog := log.With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
-			alog.Error("Failed to fetch", Err(err))
-		}
+		go func() {
+			err := u.Fetch()
+			if err != nil {
+				alog := log.With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
+				alog.Error("Failed to fetch", Err(err))
+			}
+		}()
 		return u.Refetch()
 	})
 
