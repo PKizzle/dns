@@ -22,5 +22,6 @@ var Handlers = []string{
 	"sign",
 	"template",
 	"unpack",
+	"url",
 	"whoami",
 }
