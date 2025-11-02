@@ -12,8 +12,6 @@ it receives a (kernel) notify it will reload the zone after 2 seconds.
 
 # Syntax
 
-In it simplests form _url_ you can use:
-
 ```
 url URL FILE
 ```
