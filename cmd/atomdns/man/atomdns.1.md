@@ -1,12 +1,12 @@
-## atomdns
+# Name
 
 _atomdns_ - DNS nameserver that runs handlers
 
-## Synopsis
+# Synopsis
 
 _atomdns_ **[-c CONFFILE]** **[-C|-H|-V]**...
 
-## Description
+# Description
 
 atomdns is a DNS server that chains handlers. Each handler handles a DNS feature, like serve zone files,
 transfering those to secondaries or just exporting metrics. There are many handlers, each described in their
@@ -27,19 +27,19 @@ interfaces on port 53:
         addr [::]:53
     }
 }
-
 ```
 
 When atomdns starts it emits a bunch of logs telling what zones are loaded and routines are started, when all
 succesful you are greeted with a banner (unless `quiet` is true see atomdns-global(7)).
-~~~
+
+```
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
   ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
   ╹ ╹   ╹   ┗━┛  ╹ ╹ v024 (0.5.15)
   High performance and flexible DNS server
   https://atomdns.miek.nl
 __________________________________\o/_______
-~~~
+```
 
 Available options:
 
@@ -70,14 +70,39 @@ code 0.
 **-V**
 : Show version and quit.
 
-## Authors
+# Handlers
+
+The following handlers are available:
+
+- _acl_ - enforces access control policies. See atomdns-acl.7.
+- _any_ - give a minimal response to ANY queries. See atomdns-any.7.
+- _as112_ - an AS112 black hole server. See atomdns-as112.7.
+- _chaos_ - respond to TXT queries in the CH class. See atomdns-chaos.7.
+- _cookie_ - adds an DNS cookie of this server to each reply. See atomdns-cookie.7.
+- _dbfile_ - serve zone data from an RFC 1035-style file. See atomdns-dbfile.7.
+- _dbhosts_ - serve data from `/etc/hosts`. See atomdns-dbhost.7.
+- _dbsqilte_ - serve zone data from a SQLite database. See atomdns-dbsqlite.7.
+- _drunk_ - test client behavior. See atomdns-drunk.7.
+- _geoip_ - add geographical location data. See atomdns-geoip.7.
+- _global_ - hold global server properties. See atomdns-global.7.
+- _import_ - includes files or references snippets from a Conffile. See atomdns-import.7.
+- _log_ - log queries. See atomdns-log.7.
+- _metrics_ - enable [prometheus](https://prometheus.io/) metrics. See atomdns-metrics.7.
+- _nsid_ - adds an identifier of this server to each reply. See atomdns-nsid.7.
+- _reload_ - reload after SIGHUP. See atomdns-reload.7.
+- _sign_ - add DNSSEC records to zone files. See atomdns-sign.7.
+- _template_ - use Go templates to reply. See atomdns-template.7.
+- _url_ - serve zone data from an URL. See atomdns-url.7.
+- _whoami_ - return your resolver's local IP address, port and transport. See atomdns-whoami.7.
+
+# Authors
 
 atomdns authors.
 
-## Copyright
+# Copyright
 
 Apache License 2.0
 
-## See Also
+# See Also
 
 See atomdns-conffile(5), and atomdns-global(7).

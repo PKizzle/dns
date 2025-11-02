@@ -1,8 +1,8 @@
-## Name
+# Name
 
 _conffile_ - configuration file for atomdns
 
-## Description
+# Description
 
 A _conffile_ specifies the internal servers atomdns should run and what handlers each of these
 should chain. The syntax is as follows:
@@ -54,7 +54,7 @@ whoami
 
 Is a valid config and is supported by `atomdns`.
 
-## Global
+# Global
 
 A Conffile can have a global section, this is a section without an origin and holds various server wide
 options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
@@ -73,12 +73,12 @@ address and port you want to listen on.
 
 See atomdns-global(7) for more information.
 
-## Import
+# Import
 
 You can use the _import_ "handler" to include parts of other files, or snippets that are defined in the config
 file see atomdns-import(7). To prevent infinite recursion a maximum of a 1000 imports are allowed.
 
-## Snippets
+# Snippets
 
 If you want to reuse a snippet you can define one with and then use it with _import_.
 
@@ -93,7 +93,7 @@ example.org {
 }
 ```
 
-## Examples
+# Examples
 
 The **ZONE** is root zone `.`, the **handler** is _chaos_. The _chaos_ handler takes an (optional) argument:
 `atomdns-001`. This text is returned on a CH class query: `dig CH TXT version.bind @localhost`.
@@ -180,14 +180,14 @@ example.net {
 }
 ```
 
-## Authors
+# Authors
 
 atomdns authors.
 
-## Copyright
+# Copyright
 
 Apache License 2.0
 
-## See Also
+# See Also
 
 The manual page for atomdns: atomdns(1) and the manual pages for the handlers.
