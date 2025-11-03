@@ -17,8 +17,8 @@ url URL FILE
 ```
 
 - **URL** the URL to fetch the zone from, if the scheme is omitted `https://` is assumed.
-- **FILE** the zone file to load. If the path is relative, the path from the global root config will be
-  prepended to it.
+- **FILE** the zone file to save the data to and to serve from. If the path is relative, the path from the
+  global root config will be prepended to it.
 
 If the origins specification contains multiple origins, they all will use the _same_ **FILE**. And you must make
 sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names.
