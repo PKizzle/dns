@@ -61,7 +61,9 @@ func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 // compares the digests, on succes nil is returned.
 func (rr *ZONEMD) Verify(zone []RR, options *ZONEMDOption) error {
 	rr1 := NewZONEMD(rr.Header().Name, rr.Scheme, rr.Hash)
-	rr1.Sign(zone, options)
+	if err := rr1.Sign(zone, options); err != nil {
+		return err
+	}
 	if rr1.Digest == rr.Digest {
 		return nil
 	}
