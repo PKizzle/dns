@@ -36,6 +36,9 @@ If you have a bunch of values that certain types can take the are named: `ValueT
 Naming constants for RRs needs to have the RR's mnemonic prefixed and in upper case letters, i.e.
 ZONEMDSchemeSimple, for a constants used in the ZONEMD RR.
 
+Methods on RR types have `rr` as the receiver's name. For EDNS0 "RRs", the receiver is named `o`. For DSO `d`
+is used. Methods on `Msg` use `m`. (There are a few historical exceptions).
+
 ### Tests
 
 For tests name them after the sub-system and the something more specific. This makes it easy to just run the

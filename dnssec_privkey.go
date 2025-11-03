@@ -19,9 +19,9 @@ var bigIntOne = big.NewInt(1)
 // format as the private-key-file of BIND9 (Private-key-format: v1.3).
 // It needs some info from the key (the algorithm), so its a method of the DNSKEY.
 // It supports *rsa.PrivateKey, *ecdsa.PrivateKey and ed25519.PrivateKey.
-func (r *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
-	algorithm := strconv.Itoa(int(r.Algorithm))
-	algorithm += " (" + AlgorithmToString[r.Algorithm] + ")"
+func (k *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
+	algorithm := strconv.Itoa(int(k.Algorithm))
+	algorithm += " (" + AlgorithmToString[k.Algorithm] + ")"
 
 	switch p := p.(type) {
 	case *rsa.PrivateKey:
@@ -56,7 +56,7 @@ func (r *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
 
 	case *ecdsa.PrivateKey:
 		var intlen int
-		switch r.Algorithm {
+		switch k.Algorithm {
 		case ECDSAP256SHA256:
 			intlen = 32
 		case ECDSAP384SHA384:
