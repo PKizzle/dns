@@ -19,7 +19,7 @@ import (
 //			}
 //		}
 //	}
-func New(config string) (*atom.Server, func(), error) {
+func New(config string) (server *atom.Server, cancel func(), err error) {
 	testconfig := `
 {
 	dns {

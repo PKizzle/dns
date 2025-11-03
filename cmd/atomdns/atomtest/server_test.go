@@ -16,6 +16,7 @@ func TestServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer cancel()
 
 	c := new(dns.Client)
 	m := dns.NewMsg("whoami.example.org.", dns.TypeA)
@@ -24,7 +25,6 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	i := 0
-	defer cancel()
 	for rr := range r.All() {
 		if rr.Header().Name != "whoami.example.org." {
 			t.Errorf("expected %q, got %q", "whoami.example.org.", rr.Header().Name)
