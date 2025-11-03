@@ -849,6 +849,7 @@ func (m *Msg) All() iter.Seq[RR] {
 					return
 				}
 			}
+			break
 		}
 	}
 }
