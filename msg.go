@@ -175,10 +175,6 @@ func (m *Msg) Pack() error {
 }
 
 func (m *Msg) pack(compression map[string]uint16) (err error) {
-	if m.Rcode < 0 || m.Rcode > 0xFFF {
-		return ErrRcode
-	}
-
 	// Convert convenient Msg into wire-like Header.
 	var dh header
 	dh.ID = m.ID
@@ -240,7 +236,6 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 			return err
 		}
 	}
-
 	for _, r := range m.Extra {
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
@@ -763,7 +758,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		return int64(n), err
 	}
 
-	l := make([]byte, 2, 2)
+	l := make([]byte, 2)
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
 	n, err := r.Write(l)
@@ -854,7 +849,6 @@ func (m *Msg) All() iter.Seq[RR] {
 					return
 				}
 			}
-			return
 		}
 	}
 }
