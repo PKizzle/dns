@@ -12,7 +12,7 @@ func TestServer(t *testing.T) {
 	whoami
 }`
 
-	s, _, err := New(input)
+	s, cancel, err := New(input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	i := 0
-	t.Log(r.String())
+	defer cancel()
 	for rr := range r.All() {
 		if rr.Header().Name != "whoami.example.org." {
 			t.Errorf("expected %q, got %q", "whoami.example.org.", rr.Header().Name)
