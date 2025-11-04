@@ -33,9 +33,6 @@ When signing it will:
 
 - Add NSEC records for all authoritative names in the zone.
 
-- Add an NINFO record that details which signer as used, which holds the text: "Signed by atomdns,
-  https://atomdns.miek.nl"
-
 - Add or replace _all_ apex CDS/CDNSKEY records with the ones derived from the given keys. For
   each key two CDS are created one with SHA1 and another with SHA256.
 
@@ -60,6 +57,7 @@ sign FILE {
     ttl TTL
     key KEYFILE [KEYFILE]...
     directory DIRECTORY
+    zonemd
 }
 ```
 
@@ -72,6 +70,8 @@ sign FILE {
   keys files the same rules apply as for **FILE**.
 - **DIRECTORY** specifies where to write the signed zone files. If not specified the directory where **FILE**
   is found is used. If the path is relative, the global _root_ will be prepended.
+- if `zonemd` is specified the zone will be signed and a ZONEMD record will be added afterwards. This requires
+  the entire zone to be sorted and be converted into wire-format.
 
 # Examples
 

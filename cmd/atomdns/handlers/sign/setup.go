@@ -68,6 +68,8 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 				if err != nil {
 					return err
 				}
+			case "zonemd":
+				s.Zonemd = true
 			default:
 				return co.ArgErr()
 			}

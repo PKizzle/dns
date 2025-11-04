@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"time"
 
 	"codeberg.org/miekg/dns"
@@ -36,7 +37,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	z.Set(n)
 
 	// Add nsecs + rrsig in the first pass.
-	nf := &nsecfn{keypairs: s.KeyPairs, ttl: s.ttl, origin: origin}
+	nf := &nsecfn{keypairs: s.KeyPairs, ttl: s.ttl, origin: origin, zonemd: s.Zonemd}
 	z.AuthoritativeWalk(nf.Walk)
 	for i := range nf.nsecs {
 		z.Set(nf.nsecs[i])
@@ -69,21 +70,46 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 
 			for _, pair := range s.KeyPairs {
 				rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
-				err := rrsig.Sign(pair.Signer, rrset, options)
-				if err != nil {
+				if err := rrsig.Sign(pair.Signer, rrset, options); err != nil {
 					alog.Error("Failed to sign", Err(err))
+					return false
 				}
 				n.RRs = append(n.RRs, rrsig)
 			}
 		}
 		return true
 	})
+	if !s.Zonemd {
+		Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
+		return z, nil
+	}
+
+	zonemd := &dns.ZONEMD{Hdr: dns.Header{Name: origin, Class: dns.ClassINET, TTL: s.ttl}, Scheme: dns.ZONEMDSchemeSimple, Hash: dns.ZONEMDHashSHA384}
+	zone := []dns.RR{}
+	z.Walk(func(n *dnszone.Node) bool {
+		zone = append(zone, n.RRs...)
+		return true
+	})
+
+	sort.Sort(dns.RRset(zone))
+	zonemd.Sign(zone, &dns.ZONEMDOption{})
+
+	apex := z.Apex()
+	apex.RRs = append(apex.RRs, zonemd)
+
+	for _, pair := range s.KeyPairs {
+		rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+		rrsig.Sign(pair.Signer, []dns.RR{zonemd}, options)
+		apex.RRs = append(apex.RRs, rrsig)
+	}
+
 	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
 	return z, nil
 }
 
 type nsecfn struct {
 	origin   string
+	zonemd   bool
 	keypairs []KeyPair
 	now      time.Time
 
@@ -96,7 +122,7 @@ type nsecfn struct {
 
 func types(n *dnszone.Node, ttl uint32) []uint16 {
 	// while looking at them anyway we set the ttl.
-	types := []uint16{} // pool for this too?
+	types := []uint16{}
 	for _, rr := range n.RRs {
 		types = append(types, dns.RRToType(rr))
 		rr.Header().TTL = ttl
@@ -120,13 +146,17 @@ func (nf *nsecfn) Walk(n *dnszone.Node, auth bool) bool {
 	}
 	nf.last = n.Name
 	nf.bitmap = types(n, nf.ttl)
+	if nf.zonemd && dns.EqualName(nf.origin, n.Name) {
+		nf.bitmap = append(nf.bitmap, dns.TypeZONEMD)
+		slices.Sort(nf.bitmap)
+	}
 	return true
 }
 
 // Last creates the last NSEC, that loops back to the origin. Walk misses this.
 func (nf *nsecfn) Last(origin string) *dnszone.Node { return nf.nsec(origin) }
 
-// nsec creates an NSEC + RRSIG(s) node from nf.
+// nsec creates an NSEC node from nf.
 func (nf *nsecfn) nsec(name string) *dnszone.Node {
 	nsec := &dns.NSEC{
 		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},

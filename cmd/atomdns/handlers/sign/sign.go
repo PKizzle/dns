@@ -18,6 +18,7 @@ type Sign struct {
 	Path      string
 	Directory string
 	KeyPairs  []KeyPair
+	Zonemd    bool
 	pool      *dns.Pool
 
 	Zones map[string]*zone.Zone
@@ -44,10 +45,7 @@ const (
 
 const Day = 24 * time.Hour
 
-const SignedBy = "Signed by atomdns, https://atomdns.miek.nl"
-
-// Interval is the resign wake up interval.
-const Interval = 5 * time.Hour
+const Interval = 5 * time.Hour // Interval is the resign wake up interval.
 
 // Resign launches a resign routine that listens for _write_ events to the origin zone files and resigns them.
 func (s *Sign) Resign() error {
@@ -67,7 +65,6 @@ func (s *Sign) Resign() error {
 				}
 				switch {
 				case event.Has(fsnotify.Write):
-					// see dbfile/reload.go for why we wait
 					time.Sleep(2 * time.Second)
 					for _, z := range s.Zones {
 						alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
@@ -86,11 +83,10 @@ func (s *Sign) Resign() error {
 					}
 				default:
 				}
-			case err, ok := <-watcher.Errors:
+			case _, ok := <-watcher.Errors:
 				if !ok {
 					continue
 				}
-				log.Debug("Zone watch event error", Err(err))
 			case <-ticker.C:
 				for _, z := range s.Zones {
 					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
