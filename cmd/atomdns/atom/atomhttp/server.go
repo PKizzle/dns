@@ -9,7 +9,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
+	reuse "codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
 	"codeberg.org/miekg/dns/dnshttp"
 )
 

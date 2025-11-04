@@ -6,7 +6,6 @@ import (
 	"os/signal"
 	"sync"
 	"sync/atomic"
-	"syscall"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
@@ -26,11 +25,11 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 			_log.Info("Startup", "signal", "USR1")
 			sigchan := make(chan os.Signal, 1)
 			go func() {
-				signal.Notify(sigchan, syscall.SIGUSR1)
+				signal.Notify(sigchan, USR_SIGNAL)
 				for {
 					select {
 					case <-sigchan:
-						signal.Notify(sigchan, syscall.SIGUSR1)
+						signal.Notify(sigchan, USR_SIGNAL)
 						if state.Load() {
 							_log.Info("Received signal, disabling query logging")
 							state.Store(false)
