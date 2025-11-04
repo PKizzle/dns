@@ -700,14 +700,7 @@ func (rr *CERT) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Certificate) - len(b.(*CERT).Certificate)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Certificate, b.(*CERT).Certificate)
+	x = comparebase64(rr.Certificate, b.(*CERT).Certificate)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -935,14 +928,7 @@ func (rr *RRSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Signature) - len(b.(*RRSIG).Signature)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Signature, b.(*RRSIG).Signature)
+	x = comparebase64(rr.Signature, b.(*RRSIG).Signature)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1004,14 +990,7 @@ func (rr *DS) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Digest) - len(b.(*DS).Digest)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Digest, b.(*DS).Digest)
+	x = comparehex(rr.Digest, b.(*DS).Digest)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1061,14 +1040,7 @@ func (rr *TA) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Digest) - len(b.(*TA).Digest)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Digest, b.(*TA).Digest)
+	x = comparehex(rr.Digest, b.(*TA).Digest)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1111,14 +1083,7 @@ func (rr *SSHFP) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.FingerPrint) - len(b.(*SSHFP).FingerPrint)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.FingerPrint, b.(*SSHFP).FingerPrint)
+	x = comparehex(rr.FingerPrint, b.(*SSHFP).FingerPrint)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1158,14 +1123,7 @@ func (rr *DNSKEY) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.PublicKey) - len(b.(*DNSKEY).PublicKey)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.PublicKey, b.(*DNSKEY).PublicKey)
+	x = comparebase64(rr.PublicKey, b.(*DNSKEY).PublicKey)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1197,14 +1155,7 @@ func (rr *RKEY) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.PublicKey) - len(b.(*RKEY).PublicKey)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.PublicKey, b.(*RKEY).PublicKey)
+	x = comparebase64(rr.PublicKey, b.(*RKEY).PublicKey)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1254,14 +1205,7 @@ func (rr *NSEC3) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Salt) - len(b.(*NSEC3).Salt)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Salt, b.(*NSEC3).Salt)
+	x = comparehex(rr.Salt, b.(*NSEC3).Salt)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1275,14 +1219,7 @@ func (rr *NSEC3) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.NextDomain) - len(b.(*NSEC3).NextDomain)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.NextDomain, b.(*NSEC3).NextDomain)
+	x = comparebase32(rr.NextDomain, b.(*NSEC3).NextDomain)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1328,14 +1265,7 @@ func (rr *NSEC3PARAM) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Salt) - len(b.(*NSEC3PARAM).Salt)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Salt, b.(*NSEC3PARAM).Salt)
+	x = comparehex(rr.Salt, b.(*NSEC3PARAM).Salt)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1388,14 +1318,7 @@ func (rr *TKEY) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Key) - len(b.(*TKEY).Key)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Key, b.(*TKEY).Key)
+	x = comparehex(rr.Key, b.(*TKEY).Key)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1409,14 +1332,7 @@ func (rr *TKEY) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.OtherData) - len(b.(*TKEY).OtherData)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.OtherData, b.(*TKEY).OtherData)
+	x = comparehex(rr.OtherData, b.(*TKEY).OtherData)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1427,14 +1343,7 @@ func (rr *TKEY) compare(b RR) (x int) {
 }
 
 func (rr *RFC3597) compare(b RR) (x int) {
-	x = len(rr.Rdata) - len(b.(*RFC3597).Rdata)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Rdata, b.(*RFC3597).Rdata)
+	x = comparehex(rr.Rdata, b.(*RFC3597).Rdata)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1477,14 +1386,7 @@ func (rr *URI) compare(b RR) (x int) {
 }
 
 func (rr *DHCID) compare(b RR) (x int) {
-	x = len(rr.Digest) - len(b.(*DHCID).Digest)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Digest, b.(*DHCID).Digest)
+	x = comparebase64(rr.Digest, b.(*DHCID).Digest)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1516,14 +1418,7 @@ func (rr *TLSA) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Certificate) - len(b.(*TLSA).Certificate)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Certificate, b.(*TLSA).Certificate)
+	x = comparehex(rr.Certificate, b.(*TLSA).Certificate)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1555,14 +1450,7 @@ func (rr *SMIMEA) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Certificate) - len(b.(*SMIMEA).Certificate)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Certificate, b.(*SMIMEA).Certificate)
+	x = comparehex(rr.Certificate, b.(*SMIMEA).Certificate)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1594,28 +1482,14 @@ func (rr *HIP) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Hit) - len(b.(*HIP).Hit)
+	x = comparehex(rr.Hit, b.(*HIP).Hit)
 	if x != 0 {
 		if x < 0 {
 			return -1
 		}
 		return 1
 	}
-	x = strings.Compare(rr.Hit, b.(*HIP).Hit)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = len(rr.PublicKey) - len(b.(*HIP).PublicKey)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.PublicKey, b.(*HIP).PublicKey)
+	x = comparebase64(rr.PublicKey, b.(*HIP).PublicKey)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1834,14 +1708,7 @@ func (rr *UINFO) compare(b RR) (x int) {
 }
 
 func (rr *EID) compare(b RR) (x int) {
-	x = len(rr.Endpoint) - len(b.(*EID).Endpoint)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Endpoint, b.(*EID).Endpoint)
+	x = comparehex(rr.Endpoint, b.(*EID).Endpoint)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1852,14 +1719,7 @@ func (rr *EID) compare(b RR) (x int) {
 }
 
 func (rr *NIMLOC) compare(b RR) (x int) {
-	x = len(rr.Locator) - len(b.(*NIMLOC).Locator)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Locator, b.(*NIMLOC).Locator)
+	x = comparehex(rr.Locator, b.(*NIMLOC).Locator)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1870,14 +1730,7 @@ func (rr *NIMLOC) compare(b RR) (x int) {
 }
 
 func (rr *OPENPGPKEY) compare(b RR) (x int) {
-	x = len(rr.PublicKey) - len(b.(*OPENPGPKEY).PublicKey)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.PublicKey, b.(*OPENPGPKEY).PublicKey)
+	x = comparebase64(rr.PublicKey, b.(*OPENPGPKEY).PublicKey)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1934,14 +1787,7 @@ func (rr *ZONEMD) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Digest) - len(b.(*ZONEMD).Digest)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Digest, b.(*ZONEMD).Digest)
+	x = comparehex(rr.Digest, b.(*ZONEMD).Digest)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -2079,14 +1925,7 @@ func (rr *TSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.MAC) - len(b.(*TSIG).MAC)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.MAC, b.(*TSIG).MAC)
+	x = comparehex(rr.MAC, b.(*TSIG).MAC)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -2114,14 +1953,7 @@ func (rr *TSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.OtherData) - len(b.(*TSIG).OtherData)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.OtherData, b.(*TSIG).OtherData)
+	x = comparehex(rr.OtherData, b.(*TSIG).OtherData)
 	if x != 0 {
 		if x < 0 {
 			return -1

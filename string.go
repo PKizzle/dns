@@ -1,14 +1,12 @@
 package dns
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
 	"codeberg.org/miekg/dns/internal/ddd"
-	"codeberg.org/miekg/dns/internal/pack"
 )
 
 func sprintName(s string) string {
@@ -220,35 +218,5 @@ func splitN(s string, n int) []string {
 
 	return sx
 }
-
-// comparename compares owernames in rdata, which is a difference compare that canonical because the
-// actual wire data needs to be looked up, so we pack the names and compare them both.
-func comparename(a, b string) int {
-	// optimize: before getting to the wiredata compare first label length, if not equal we already
-	// have a sorting. We only care about equal.
-	// TODO(miek): we might get away with no allocations and no wire data here...?
-	an, _ := dnsutilNext(a, 0)
-	bn, _ := dnsutilNext(b, 0)
-	if an < bn {
-		return -1
-	}
-	if an > bn {
-		return +1
-	}
-
-	abuf := comparePool.Get()
-	bbuf := comparePool.Get()
-	aoff, _ := pack.Name(a, abuf, 0, nil, false)
-	boff, _ := pack.Name(b, bbuf, 0, nil, false)
-
-	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
-
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
-
-	return x
-}
-
-var comparePool = NewPool(256)
 
 var builderPool = &builderPooler{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
