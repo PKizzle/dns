@@ -3,7 +3,7 @@ package dns
 import "fmt"
 
 // Version is current version of this library.
-var Version = v{0, 5, 20}
+var Version = v{0, 5, 21}
 
 type v struct {
 	Major, Minor, Patch int
