@@ -164,18 +164,22 @@ return 1
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
 			case tag == `dns:"base32"`:
-				fallthrough
+				o(`x = comparebase32(rr.%s, b.(*%s).%s)`)
+
 			case strings.HasPrefix(tag, `dns:"size-base64`): // size-base64 can be packed just like base64
 				fallthrough
 			case tag == `dns:"base64"`:
-				fallthrough
+				o(`x = comparebase64(rr.%s, b.(*%s).%s)`)
+
 			case strings.HasPrefix(tag, `dns:"size-hex:SaltLength`):
 				fallthrough
 			case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
 			case tag == `dns:"hex"`:
-				fallthrough
+				o(`x = comparehex(rr.%s, b.(*%s).%s)`)
+
 			case tag == `dns:"any"`:
+				// can we do strings.Compare here? TODO(miek)
 				o("x = len(rr.%s) - len(b.(*%s).%s)")
 				o("x = strings.Compare(rr.%s, b.(*%s).%s)")
 

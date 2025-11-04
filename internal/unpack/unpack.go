@@ -201,9 +201,9 @@ func StringBase64(s *cryptobyte.String, len int) (string, error) {
 	return Base64(b), nil
 }
 
-var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
-
-func Base32(b []byte) string { return base32HexNoPadEncoding.EncodeToString(b) }
+func Base32(b []byte) string {
+	return base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(b)
+}
 func Base64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
 func StringHex(s *cryptobyte.String, len int) (string, error) {
