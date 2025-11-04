@@ -1,5 +1,4 @@
-//go:build windows
-// +build windows
+//go:build !aix && !darwin && !dragonfly && !freebsd && !linux && !netbsd && !openbsd
 
 package reuse
 
