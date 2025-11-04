@@ -204,14 +204,7 @@ func (rr *NXNAME) compare(b RR) (x int) {
 }
 
 func (rr *CNAME) compare(b RR) (x int) {
-	x = len(rr.Target) - len(b.(*CNAME).Target)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Target, b.(*CNAME).Target)
+	x = comparename(rr.Target, b.(*CNAME).Target)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -254,14 +247,7 @@ func (rr *HINFO) compare(b RR) (x int) {
 }
 
 func (rr *MB) compare(b RR) (x int) {
-	x = len(rr.Mb) - len(b.(*MB).Mb)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mb, b.(*MB).Mb)
+	x = comparename(rr.Mb, b.(*MB).Mb)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -272,14 +258,7 @@ func (rr *MB) compare(b RR) (x int) {
 }
 
 func (rr *MG) compare(b RR) (x int) {
-	x = len(rr.Mg) - len(b.(*MG).Mg)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mg, b.(*MG).Mg)
+	x = comparename(rr.Mg, b.(*MG).Mg)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -290,28 +269,14 @@ func (rr *MG) compare(b RR) (x int) {
 }
 
 func (rr *MINFO) compare(b RR) (x int) {
-	x = len(rr.Rmail) - len(b.(*MINFO).Rmail)
+	x = comparename(rr.Rmail, b.(*MINFO).Rmail)
 	if x != 0 {
 		if x < 0 {
 			return -1
 		}
 		return 1
 	}
-	x = strings.Compare(rr.Rmail, b.(*MINFO).Rmail)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = len(rr.Email) - len(b.(*MINFO).Email)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Email, b.(*MINFO).Email)
+	x = comparename(rr.Email, b.(*MINFO).Email)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -322,14 +287,7 @@ func (rr *MINFO) compare(b RR) (x int) {
 }
 
 func (rr *MR) compare(b RR) (x int) {
-	x = len(rr.Mr) - len(b.(*MR).Mr)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mr, b.(*MR).Mr)
+	x = comparename(rr.Mr, b.(*MR).Mr)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -340,14 +298,7 @@ func (rr *MR) compare(b RR) (x int) {
 }
 
 func (rr *MF) compare(b RR) (x int) {
-	x = len(rr.Mf) - len(b.(*MF).Mf)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mf, b.(*MF).Mf)
+	x = comparename(rr.Mf, b.(*MF).Mf)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -358,14 +309,7 @@ func (rr *MF) compare(b RR) (x int) {
 }
 
 func (rr *MD) compare(b RR) (x int) {
-	x = len(rr.Md) - len(b.(*MD).Md)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Md, b.(*MD).Md)
+	x = comparename(rr.Md, b.(*MD).Md)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -383,14 +327,7 @@ func (rr *MX) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Mx) - len(b.(*MX).Mx)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mx, b.(*MX).Mx)
+	x = comparename(rr.Mx, b.(*MX).Mx)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -408,14 +345,7 @@ func (rr *AFSDB) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Hostname) - len(b.(*AFSDB).Hostname)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Hostname, b.(*AFSDB).Hostname)
+	x = comparename(rr.Hostname, b.(*AFSDB).Hostname)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -483,14 +413,7 @@ func (rr *RT) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Host) - len(b.(*RT).Host)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Host, b.(*RT).Host)
+	x = comparename(rr.Host, b.(*RT).Host)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -501,14 +424,7 @@ func (rr *RT) compare(b RR) (x int) {
 }
 
 func (rr *NS) compare(b RR) (x int) {
-	x = len(rr.Ns) - len(b.(*NS).Ns)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Ns, b.(*NS).Ns)
+	x = comparename(rr.Ns, b.(*NS).Ns)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -519,14 +435,7 @@ func (rr *NS) compare(b RR) (x int) {
 }
 
 func (rr *PTR) compare(b RR) (x int) {
-	x = len(rr.Ptr) - len(b.(*PTR).Ptr)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Ptr, b.(*PTR).Ptr)
+	x = comparename(rr.Ptr, b.(*PTR).Ptr)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -537,28 +446,14 @@ func (rr *PTR) compare(b RR) (x int) {
 }
 
 func (rr *RP) compare(b RR) (x int) {
-	x = len(rr.Mbox) - len(b.(*RP).Mbox)
+	x = comparename(rr.Mbox, b.(*RP).Mbox)
 	if x != 0 {
 		if x < 0 {
 			return -1
 		}
 		return 1
 	}
-	x = strings.Compare(rr.Mbox, b.(*RP).Mbox)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = len(rr.Txt) - len(b.(*RP).Txt)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Txt, b.(*RP).Txt)
+	x = comparename(rr.Txt, b.(*RP).Txt)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -569,28 +464,14 @@ func (rr *RP) compare(b RR) (x int) {
 }
 
 func (rr *SOA) compare(b RR) (x int) {
-	x = len(rr.Ns) - len(b.(*SOA).Ns)
+	x = comparename(rr.Ns, b.(*SOA).Ns)
 	if x != 0 {
 		if x < 0 {
 			return -1
 		}
 		return 1
 	}
-	x = strings.Compare(rr.Ns, b.(*SOA).Ns)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = len(rr.Mbox) - len(b.(*SOA).Mbox)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mbox, b.(*SOA).Mbox)
+	x = comparename(rr.Mbox, b.(*SOA).Mbox)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -720,14 +601,7 @@ func (rr *SRV) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Target) - len(b.(*SRV).Target)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Target, b.(*SRV).Target)
+	x = comparename(rr.Target, b.(*SRV).Target)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -794,14 +668,7 @@ func (rr *NAPTR) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Replacement) - len(b.(*NAPTR).Replacement)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Replacement, b.(*NAPTR).Replacement)
+	x = comparename(rr.Replacement, b.(*NAPTR).Replacement)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -851,14 +718,7 @@ func (rr *CERT) compare(b RR) (x int) {
 }
 
 func (rr *DNAME) compare(b RR) (x int) {
-	x = len(rr.Target) - len(b.(*DNAME).Target)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Target, b.(*DNAME).Target)
+	x = comparename(rr.Target, b.(*DNAME).Target)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -898,28 +758,14 @@ func (rr *PX) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Map822) - len(b.(*PX).Map822)
+	x = comparename(rr.Map822, b.(*PX).Map822)
 	if x != 0 {
 		if x < 0 {
 			return -1
 		}
 		return 1
 	}
-	x = strings.Compare(rr.Map822, b.(*PX).Map822)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = len(rr.Mapx400) - len(b.(*PX).Mapx400)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Mapx400, b.(*PX).Mapx400)
+	x = comparename(rr.Mapx400, b.(*PX).Mapx400)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1082,14 +928,7 @@ func (rr *RRSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.SignerName) - len(b.(*RRSIG).SignerName)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.SignerName, b.(*RRSIG).SignerName)
+	x = comparename(rr.SignerName, b.(*RRSIG).SignerName)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1118,14 +957,7 @@ func (rr *NXT) compare(b RR) (x int) {
 }
 
 func (rr *NSEC) compare(b RR) (x int) {
-	x = len(rr.NextDomain) - len(b.(*NSEC).NextDomain)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.NextDomain, b.(*NSEC).NextDomain)
+	x = comparename(rr.NextDomain, b.(*NSEC).NextDomain)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1197,14 +1029,7 @@ func (rr *KX) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Exchanger) - len(b.(*KX).Exchanger)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Exchanger, b.(*KX).Exchanger)
+	x = comparename(rr.Exchanger, b.(*KX).Exchanger)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1254,28 +1079,14 @@ func (rr *TA) compare(b RR) (x int) {
 }
 
 func (rr *TALINK) compare(b RR) (x int) {
-	x = len(rr.PreviousName) - len(b.(*TALINK).PreviousName)
+	x = comparename(rr.PreviousName, b.(*TALINK).PreviousName)
 	if x != 0 {
 		if x < 0 {
 			return -1
 		}
 		return 1
 	}
-	x = strings.Compare(rr.PreviousName, b.(*TALINK).PreviousName)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = len(rr.NextName) - len(b.(*TALINK).NextName)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.NextName, b.(*TALINK).NextName)
+	x = comparename(rr.NextName, b.(*TALINK).NextName)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1404,14 +1215,7 @@ func (rr *RKEY) compare(b RR) (x int) {
 }
 
 func (rr *NSAPPTR) compare(b RR) (x int) {
-	x = len(rr.Ptr) - len(b.(*NSAPPTR).Ptr)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Ptr, b.(*NSAPPTR).Ptr)
+	x = comparename(rr.Ptr, b.(*NSAPPTR).Ptr)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1542,14 +1346,7 @@ func (rr *NSEC3PARAM) compare(b RR) (x int) {
 }
 
 func (rr *TKEY) compare(b RR) (x int) {
-	x = len(rr.Algorithm) - len(b.(*TKEY).Algorithm)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Algorithm, b.(*TKEY).Algorithm)
+	x = comparename(rr.Algorithm, b.(*TKEY).Algorithm)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1830,10 +1627,7 @@ func (rr *HIP) compare(b RR) (x int) {
 		if i > j || x != 0 {
 			break
 		}
-		x = len(rr.RendezvousServers[i]) - len(b.(*HIP).RendezvousServers[j])
-		if x == 0 {
-			x = strings.Compare(rr.RendezvousServers[i], b.(*HIP).RendezvousServers[j])
-		}
+		x = comparename(rr.RendezvousServers[i], b.(*HIP).RendezvousServers[j])
 		j++
 	}
 	if x != 0 {
@@ -1928,14 +1722,7 @@ func (rr *LP) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Fqdn) - len(b.(*LP).Fqdn)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Fqdn, b.(*LP).Fqdn)
+	x = comparename(rr.Fqdn, b.(*LP).Fqdn)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -2197,14 +1984,7 @@ func (rr *SVCB) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Target) - len(b.(*SVCB).Target)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Target, b.(*SVCB).Target)
+	x = comparename(rr.Target, b.(*SVCB).Target)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -2248,14 +2028,7 @@ func (rr *DSYNC) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = len(rr.Target) - len(b.(*DSYNC).Target)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Target, b.(*DSYNC).Target)
+	x = comparename(rr.Target, b.(*DSYNC).Target)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -2278,14 +2051,7 @@ func (rr *IXFR) compare(b RR) (x int) {
 }
 
 func (rr *TSIG) compare(b RR) (x int) {
-	x = len(rr.Algorithm) - len(b.(*TSIG).Algorithm)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	x = strings.Compare(rr.Algorithm, b.(*TSIG).Algorithm)
+	x = comparename(rr.Algorithm, b.(*TSIG).Algorithm)
 	if x != 0 {
 		if x < 0 {
 			return -1
