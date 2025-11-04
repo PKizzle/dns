@@ -94,7 +94,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func serve(net string) {
-	server := &dns.Server{Addr: "[::]:8054", Net: net, ReusePort: true, MaxTCPQueries: -1}
+	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true, MaxTCPQueries: -1}
 	if err := server.ListenAndServe(); err != nil {
 		log.Printf("Failed to setup the "+net+" server: %s", err.Error())
 	}
