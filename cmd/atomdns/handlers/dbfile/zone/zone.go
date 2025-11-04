@@ -93,7 +93,8 @@ func (z *Zone) Apex() *dnszone.Node {
 
 // Set sets the RRs in the zone. It needs to create any empty non-terminals it has. Meaning for each label
 // a lookup is done if there already is an empty non-terminal, if not an empty set is inserted.
-// We should never be called to insert ENT (or names without RRs attached to them.
+// We should never be called to insert ENT (or names without RRs attached to them). The node's name is
+// returned.
 func (z *Zone) Set(node *dnszone.Node) string {
 	// If the name already exist, we can just add our stuff to the node and we are done.
 	n, ok := z.Tree.Get(node)

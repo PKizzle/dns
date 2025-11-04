@@ -38,3 +38,13 @@ example.org {
         transfer
     }
 }
+
+miek.nl {
+    log
+    sign sign/testdata/db.miek.nl {
+        key sign/testdata/Kmiek.nl.+013+59725
+        zonemd
+    }
+    dbfile sign/testdata/db.miek.nl.signed
+    sign
+}
