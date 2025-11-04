@@ -1,8 +1,7 @@
 //go:build !windows
-// +build !windows
 
 package log
 
 import "syscall"
 
-const USR_SIGNAL = syscall.SIGUSR1
+const SIGUSR1 = syscall.SIGUSR1

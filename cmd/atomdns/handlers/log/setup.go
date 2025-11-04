@@ -25,11 +25,11 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 			_log.Info("Startup", "signal", "USR1")
 			sigchan := make(chan os.Signal, 1)
 			go func() {
-				signal.Notify(sigchan, USR_SIGNAL)
+				signal.Notify(sigchan, SIGUSR1)
 				for {
 					select {
 					case <-sigchan:
-						signal.Notify(sigchan, USR_SIGNAL)
+						signal.Notify(sigchan, SIGUSR1)
 						if state.Load() {
 							_log.Info("Received signal, disabling query logging")
 							state.Store(false)

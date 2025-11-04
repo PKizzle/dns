@@ -1,12 +1,7 @@
 //go:build windows
-// +build windows
 
 package log
 
-import (
-	"os"
-)
+import "os"
 
-var (
-	USR_SIGNAL = os.Interrupt
-)
+var SIGUSR1 = os.Interrupt
