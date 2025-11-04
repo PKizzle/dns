@@ -37,6 +37,11 @@ func TestSort(t *testing.T) {
 			name{".", "nl."},
 			name{".", "nl."},
 		},
+		{
+			"dash",
+			name{"dns-ext.nic.cr.", "dns.nic.cr."},
+			name{"dns.nic.cr.", "dns-ext.nic.cr."},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -51,7 +56,6 @@ func TestSort(t *testing.T) {
 }
 
 func TestSortRRset(t *testing.T) {
-	// TODO: add more
 	testcases := []struct {
 		name     string
 		unsorted RRset
@@ -68,6 +72,23 @@ func TestSortRRset(t *testing.T) {
 				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
 				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
 				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
+			}),
+		},
+		{
+			"zwns",
+			RRset([]RR{
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "zw-ns.anycast.pch.net."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1zim.telone.co.zw."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2zim.telone.co.zw."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1.liquidtelecom.net."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2.liquidtelecom.net."},
+			}),
+			RRset([]RR{
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1.liquidtelecom.net."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2.liquidtelecom.net."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "zw-ns.anycast.pch.net."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1zim.telone.co.zw."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2zim.telone.co.zw."},
 			}),
 		},
 	}
