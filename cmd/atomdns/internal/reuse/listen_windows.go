@@ -1,6 +1,6 @@
 //go:build !aix && !darwin && !dragonfly && !freebsd && !linux && !netbsd && !openbsd
 
-package dns
+package reuse
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ const (
 	supportsReuseAddr = false
 )
 
-func listenTCP(network, addr string, reuseport, reuseaddr bool) (net.Listener, error) {
+func ListenTCP(network, addr string, reuseport, reuseaddr bool) (net.Listener, error) {
 	if reuseport || reuseaddr {
 		// TODO(tmthrgd): return an error?
 	}
@@ -20,7 +20,7 @@ func listenTCP(network, addr string, reuseport, reuseaddr bool) (net.Listener, e
 	return net.Listen(network, addr)
 }
 
-func listenUDP(network, addr string, reuseport, reuseaddr bool) (net.PacketConn, error) {
+func ListenUDP(network, addr string, reuseport, reuseaddr bool) (net.PacketConn, error) {
 	if reuseport || reuseaddr {
 		// TODO(tmthrgd): return an error?
 	}
