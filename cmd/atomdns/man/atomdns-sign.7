@@ -50,9 +50,6 @@ and a expiration of +32 (plus a jitter beteen 0 and 100 hours) days for every gi
 .IP \(bu 4
 Add NSEC records for all authoritative names in the zone.
 .IP \(bu 4
-Add an NINFO record that details which signer as used, which holds the text: "Signed by atomdns,
-https://atomdns.miek.nl"
-.IP \(bu 4
 Add or replace \fIall\fP apex CDS/CDNSKEY records with the ones derived from the given keys. For
 each key two CDS are created one with SHA1 and another with SHA256.
 .IP \(bu 4
@@ -83,6 +80,7 @@ sign FILE {
     ttl TTL
     key KEYFILE [KEYFILE]...
     directory DIRECTORY
+    zonemd
 }
 
 .fi
@@ -101,6 +99,9 @@ keys files the same rules apply as for \fBFILE\fP.
 .IP \(bu 4
 \fBDIRECTORY\fP specifies where to write the signed zone files. If not specified the directory where \fBFILE\fP
 is found is used. If the path is relative, the global \fIroot\fP will be prepended.
+.IP \(bu 4
+if \fB\fCzonemd\fR is specified the zone will be signed and a ZONEMD record will be added afterwards. This requires
+the entire zone to be sorted and be converted into wire\-format.
 
 
 .SH "EXAMPLES"
