@@ -240,7 +240,7 @@ func TestZone(t *testing.T) {
 			for i := range gotrrs {
 				if !dns.Equal(gotrrs[i], exprrs[i]) {
 					t.Logf("%s", rmsg)
-					t.Fatalf("expected %s and\n\t%s to be equal", gotrrs[i], exprrs[i])
+					t.Fatalf("expected %q and %q to be equal", gotrrs[i], exprrs[i])
 				}
 			}
 		})

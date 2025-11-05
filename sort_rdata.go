@@ -12,6 +12,9 @@ import (
 // comparename compares owernames in rdata, which is a difference compare that canonical because the
 // actual wire data needs to be looked up, so we pack the names and compare them both.
 func comparename(a, b string) int {
+	if a == "" && b == "" {
+		return 0
+	}
 	// optimize: before getting to the wiredata compare first label length, if not equal we already
 	// have a sorting. We only care about equal.
 	// TODO(miek): we might get away with no allocations and no wire data here...?
