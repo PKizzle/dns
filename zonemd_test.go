@@ -1,6 +1,8 @@
 package dns_test
 
 import (
+	"bytes"
+	"encoding/hex"
 	"os"
 	"sort"
 	"strings"
@@ -26,7 +28,7 @@ example.      86400  IN  SOA     ns1 admin 2018031900 1800 900 604800 86400
 ns1           3600   IN  A       203.0.113.63
 ns2           3600   IN  AAAA    2001:db8::63
 `,
-			zonemd: dnstest.New(`example. 3600 IN ZONEMD 2018031900 1 1 c68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c`).(*dns.ZONEMD),
+			zonemd: dnstest.New(`example. 3600 IN ZONEMD 2018031900 1 1 C68090d90a7aed716bc459f9340e3d7c1370d4d24b7e2fc3a1ddc0b9a87153b9a9713b3c9ae5cc27777f98b8e730044c`).(*dns.ZONEMD),
 		},
 
 		{
@@ -51,7 +53,10 @@ ns2           3600   IN  AAAA    2001:db8::63
 			zonemd := dns.NewZONEMD("example.", dns.ZONEMDSchemeSimple, dns.ZONEMDHashSHA384)
 			sort.Sort(dns.RRset(zone))
 			zonemd.Sign(zone, &dns.ZONEMDOption{})
-			if zonemd.Digest != tc.zonemd.Digest {
+
+			digest, _ := hex.DecodeString(zonemd.Digest)
+			tcdigest, _ := hex.DecodeString(tc.zonemd.Digest)
+			if !bytes.Equal(digest, tcdigest) {
 				t.Fatalf("expected digest %q, got %q", tc.zonemd.Digest, zonemd.Digest)
 			}
 		})

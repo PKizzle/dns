@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"crypto"
 	"encoding/hex"
 	"fmt"
@@ -64,7 +65,15 @@ func (rr *ZONEMD) Verify(zone []RR, options *ZONEMDOption) error {
 	if err := rr1.Sign(zone, options); err != nil {
 		return err
 	}
-	if rr1.Digest == rr.Digest {
+	digest1, err := hex.DecodeString(rr1.Digest)
+	if err != nil {
+		return err
+	}
+	digest, err := hex.DecodeString(rr.Digest)
+	if err != nil {
+		return err
+	}
+	if bytes.Equal(digest1, digest) {
 		return nil
 	}
 	return fmt.Errorf("bad ZONEMD Digest")
