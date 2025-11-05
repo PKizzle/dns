@@ -23,13 +23,12 @@ import (
 //	dns.ID = func() uint16 { return 3 }
 var ID = id
 
-// id returns a 16 bits random number to be used as a
-// message id. The random provided should be good enough.
+// id returns a 16 bits random number to be used as a message id. The random provided should be good enough.
 func id() uint16 {
 	var output uint16
 	err := binary.Read(rand.Reader, binary.BigEndian, &output)
 	if err != nil {
-		panic("dns: reading random id failed: " + err.Error())
+		panic("dns: reading random ID failed: " + err.Error())
 	}
 	return output
 }
