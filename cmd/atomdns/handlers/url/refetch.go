@@ -19,7 +19,7 @@ func (u *Url) Refetch() error {
 			case <-ticker.C:
 				err := u.Fetch()
 				if err != nil {
-					alog := log.With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
+					alog := log().With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
 					alog.Error("Failed to fetch", Err(err))
 					continue
 				}

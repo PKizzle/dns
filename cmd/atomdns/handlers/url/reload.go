@@ -17,7 +17,7 @@ func (u *Url) Reload() error {
 		u.RUnlock()
 
 		for z := range zones {
-			alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(u.Path)))
+			alog := log().With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(u.Path)))
 			z1 := zone.New(z.Origin(), u.Path)
 			if err := z1.Load(); err != nil {
 				alog.Error("Failed to reload", Err(err))

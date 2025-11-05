@@ -46,7 +46,7 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", Err(err))
+			log().Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

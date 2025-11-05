@@ -17,7 +17,7 @@ func (d *Dbfile) Reload() error {
 		d.RUnlock()
 
 		for z := range zones {
-			alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(d.Path)))
+			alog := log().With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(d.Path)))
 			z1 := zone.New(z.Origin(), d.Path)
 			if err := z1.Load(); err != nil {
 				alog.Error("Failed to reload", Err(err))

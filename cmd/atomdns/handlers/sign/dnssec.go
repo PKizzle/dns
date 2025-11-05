@@ -24,7 +24,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	if err != nil {
 		return z, err
 	}
-	alog := log.With(slog.String("zone", origin))
+	alog := log().With(slog.String("zone", origin))
 	now := time.Now()
 
 	n := &dnszone.Node{Name: origin}
@@ -189,7 +189,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 	i := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
-			alog := log.With(slog.String("zone", origin), slog.String("path", filepath.Base(f.Name())))
+			alog := log().With(slog.String("zone", origin), slog.String("path", filepath.Base(f.Name())))
 			if !s.ValidPeriod(now) {
 				alog.Warn("Signature's validity period has passed")
 				return true, nil

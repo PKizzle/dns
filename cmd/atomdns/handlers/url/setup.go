@@ -37,12 +37,12 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		u.Zones[dnsutil.Canonical(z)] = zone.New(z, u.Path)
 	}
 	co.OnStartup(func() error {
-		log.Info("Startup", "reload", filepath.Base(u.Path))
+		log().Info("Startup", "reload", filepath.Base(u.Path))
 		u.RLock()
 		zones := maps.Values(u.Zones)
 		u.RUnlock()
 		for z := range zones {
-			alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
+			alog := log().With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				alog.Warn("Waiting for zone to appear")
@@ -55,12 +55,12 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		return u.Reload()
 	})
 	co.OnStartup(func() error {
-		log.Info("Startup", "url", u.URL, "file", filepath.Base(u.Path))
+		log().Info("Startup", "url", u.URL, "file", filepath.Base(u.Path))
 
 		go func() {
 			err := u.Fetch()
 			if err != nil {
-				alog := log.With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
+				alog := log().With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
 				alog.Error("Failed to fetch", Err(err))
 			}
 		}()
@@ -68,12 +68,12 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 	})
 
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "reload", filepath.Base(u.Path))
+		log().Info("Shutdown", "reload", filepath.Base(u.Path))
 		u.cancel()
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "refetch", filepath.Base(u.URL))
+		log().Info("Shutdown", "refetch", filepath.Base(u.URL))
 		u.cancel()
 		return nil
 	})

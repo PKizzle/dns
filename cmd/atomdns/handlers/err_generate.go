@@ -43,9 +43,9 @@ func (h *{{.}}) Key() string { return "{{tolower .}}" }
 
 var LogVar = template.Must(template.New("logVar").Funcs(funcmap).Parse(`
 {{if eq . "Log"}}
-	var _log = slog.Default().With("handler", "{{tolower .}}")
+	var _log = func() *slog.Logger { return slog.Default().With("handler", "{{tolower .}}") }
 {{else}}
-	var log = slog.Default().With("handler", "{{tolower .}}")
+	var log = func() *slog.Logger { return slog.Default().With("handler", "{{tolower .}}")}
 {{end}}
 `))
 

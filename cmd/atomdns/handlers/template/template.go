@@ -44,7 +44,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		tmpl := template.New(t.Path).Funcs(funcs)
 		text, err := os.ReadFile(t.Path)
 		if err != nil {
-			log.Warn("Failed to find or parse", "path", t.Path)
+			log().Warn("Failed to find or parse", "path", t.Path)
 			next.ServeDNS(ctx, w, r) // call next so we hit the refused at some point
 			return
 		}
@@ -71,7 +71,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		if err != nil {
 			buf.Reset()
 			bufPool.Put(buf)
-			log.Warn("Failed to execute template", "path", t.Path, Err(err))
+			log().Warn("Failed to execute template", "path", t.Path, Err(err))
 			next.ServeDNS(ctx, w, r)
 			return
 		}
@@ -87,7 +87,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", Err(err))
+			log().Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

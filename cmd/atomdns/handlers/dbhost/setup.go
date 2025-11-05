@@ -40,7 +40,7 @@ func (d *Dbhost) Setup(co *dnsserver.Controller) error {
 	}
 
 	co.OnStartup(func() error {
-		log.Info("Startup", "reload", filepath.Base(d.Path))
+		log().Info("Startup", "reload", filepath.Base(d.Path))
 		if err := d.Load(); err != nil {
 			return co.Err(err.Error())
 		}
@@ -48,7 +48,7 @@ func (d *Dbhost) Setup(co *dnsserver.Controller) error {
 	})
 
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "reload", filepath.Base(d.Path))
+		log().Info("Shutdown", "reload", filepath.Base(d.Path))
 		d.cancel()
 		return nil
 	})

@@ -13,4 +13,4 @@ func Err(err error) slog.Attr { return slog.Any("error", err) }
 
 func (h *Dbfile) Key() string { return "dbfile" }
 
-var log = slog.Default().With("handler", "dbfile")
+var log = func() *slog.Logger { return slog.Default().With("handler", "dbfile") }

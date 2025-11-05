@@ -13,4 +13,4 @@ func Err(err error) slog.Attr { return slog.Any("error", err) }
 
 func (h *Dbsqlite) Key() string { return "dbsqlite" }
 
-var log = slog.Default().With("handler", "dbsqlite")
+var log = func() *slog.Logger { return slog.Default().With("handler", "dbsqlite") }

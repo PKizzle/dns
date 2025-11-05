@@ -32,7 +32,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 	sqlite.RegisterCollationUtf8("canonical", func(left, right string) int { return dns.CompareName(left, right) })
 
 	co.OnStartup(func() error {
-		log.Info("Startup", "initializing", filepath.Base(d.Path))
+		log().Info("Startup", "initializing", filepath.Base(d.Path))
 		db, err := sqlx.Open("sqlite", d.Path)
 		if err != nil {
 			return err
@@ -53,11 +53,11 @@ UNIQUE (name, type, data)
 		return err
 	})
 	co.OnStartup(func() error {
-		log.Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", strings.Join(d.Origins(), ","))
+		log().Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", strings.Join(d.Origins(), ","))
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "path", filepath.Base(d.Path))
+		log().Info("Shutdown", "path", filepath.Base(d.Path))
 		d.db.Close()
 		return nil
 	})

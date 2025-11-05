@@ -13,4 +13,4 @@ func Err(err error) slog.Attr { return slog.Any("error", err) }
 
 func (h *Dbhost) Key() string { return "dbhost" }
 
-var log = slog.Default().With("handler", "dbhost")
+var log = func() *slog.Logger { return slog.Default().With("handler", "dbhost") }

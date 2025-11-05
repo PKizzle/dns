@@ -45,11 +45,11 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			m.Answer = []dns.RR{rr}
 		default:
 			if drop {
-				log.Debug("Dropping")
+				log().Debug("Dropping")
 				return
 			}
 			if delay {
-				log.Debug("Delaying", slog.Duration("delay", d.duration))
+				log().Debug("Delaying", slog.Duration("delay", d.duration))
 				time.Sleep(d.duration)
 			}
 			next.ServeDNS(ctx, w, r)
@@ -57,11 +57,11 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		if drop {
-			log.Debug("Dropping")
+			log().Debug("Dropping")
 			return
 		}
 		if delay {
-			log.Debug("Delaying", slog.Duration("delay", d.duration))
+			log().Debug("Delaying", slog.Duration("delay", d.duration))
 			time.Sleep(d.duration)
 		}
 
@@ -69,7 +69,7 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log.Debug("Pack failure", Err(err))
+			log().Debug("Pack failure", Err(err))
 		}
 		io.Copy(w, m)
 	})

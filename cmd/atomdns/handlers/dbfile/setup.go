@@ -45,12 +45,12 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 		d.Zones[dnsutil.Canonical(z)] = zone.New(z, d.Path)
 	}
 	co.OnStartup(func() error {
-		log.Info("Startup", "reload", filepath.Base(d.Path))
+		log().Info("Startup", "reload", filepath.Base(d.Path))
 		d.RLock()
 		zones := maps.Values(d.Zones)
 		d.RUnlock()
 		for z := range zones {
-			alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
+			alog := log().With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				alog.Warn("Waiting for zone to appear")
@@ -68,7 +68,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			zones := maps.Values(d.Zones)
 			d.RUnlock()
 			for z := range zones {
-				log.Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(z.Path))
+				log().Info("Startup", "retransfer", z.Origin(), "file", filepath.Base(z.Path))
 
 				apex := z.Apex()
 				serial := uint32(0)
@@ -86,7 +86,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 
 				err := d.TransferIn(z.Origin())
 				if err != nil {
-					alog := log.With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
+					alog := log().With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(z.Path)))
 					alog.Error("Failed to transfer", Err(err))
 				}
 				break
@@ -102,7 +102,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			for z := range zones {
 				go func() {
 					N := time.Duration(rand.IntN(20)) + 10
-					log.Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path), slog.Duration("after", N*time.Second))
+					log().Info("Startup", "notifying", z.Origin(), "file", filepath.Base(d.Path), slog.Duration("after", N*time.Second))
 					time.Sleep(N * time.Second)
 					d.To.Notify(z.Origin())
 				}()
@@ -112,13 +112,13 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 	}
 
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "reload", filepath.Base(d.Path))
+		log().Info("Shutdown", "reload", filepath.Base(d.Path))
 		d.cancel()
 		return nil
 	})
 	if d.From != nil && len(d.From.IPs) > 0 {
 		co.OnShutdown(func() error {
-			log.Info("Shutdown", "retransfer", filepath.Base(d.Path))
+			log().Info("Shutdown", "retransfer", filepath.Base(d.Path))
 			d.cancel()
 			return nil
 		})
