@@ -6,7 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 
+	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/svcb"
 )
 
 // comparename compares owernames in rdata, which is a difference compare that canonical because the
@@ -70,6 +72,32 @@ func comparehex(a, b string) int {
 	bbuf := comparePool.Get()
 	aoff, _ := hex.Decode(abuf, []byte(a))
 	boff, _ := hex.Decode(bbuf, []byte(b))
+
+	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
+
+	comparePool.Put(abuf[:cap(abuf)])
+	comparePool.Put(bbuf[:cap(bbuf)])
+	return x
+}
+
+func comparepair(a, b []svcb.Pair) int {
+	abuf := comparePool.Get()
+	bbuf := comparePool.Get()
+	aoff, _ := svcb.Pack(a, abuf, 0)
+	boff, _ := svcb.Pack(b, bbuf, 0)
+
+	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
+
+	comparePool.Put(abuf[:cap(abuf)])
+	comparePool.Put(bbuf[:cap(bbuf)])
+	return x
+}
+
+func compareinfo(a, b []deleg.Info) int {
+	abuf := comparePool.Get()
+	bbuf := comparePool.Get()
+	aoff, _ := deleg.Pack(a, abuf, 0)
+	boff, _ := deleg.Pack(b, bbuf, 0)
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 

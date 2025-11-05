@@ -131,8 +131,10 @@ return 1
 					o(`x = slices.Compare(rr.%s, b.(*%s).%s)`)
 
 				case `dns:"pairs"`:
+					o(`x = comparepair(rr.%s, b.(*%s).%s)`)
 
 				case `dns:"infos"`:
+					o(`x = compareinfo(rr.%s, b.(*%s).%s)`)
 
 				case `dns:"domain-name"`:
 					o(`j := 0
