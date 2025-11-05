@@ -23,7 +23,8 @@ func TestSetup(t *testing.T) {
 		co := dnsserver.NewTestController(tc.input)
 		err := yes.Setup(co)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
+			continue
 		}
 
 		if slices.Compare(tc.exp.Caa, yes.Caa) != 0 {
