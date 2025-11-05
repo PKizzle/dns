@@ -1837,6 +1837,13 @@ func (rr *SVCB) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	x = comparepair(rr.Value, b.(*SVCB).Value)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
@@ -1845,6 +1852,13 @@ func (rr *HTTPS) compare(b RR) (x int) {
 }
 
 func (rr *DELEG) compare(b RR) (x int) {
+	x = compareinfo(rr.Value, b.(*DELEG).Value)
+	if x != 0 {
+		if x < 0 {
+			return -1
+		}
+		return 1
+	}
 	return 0
 }
 
