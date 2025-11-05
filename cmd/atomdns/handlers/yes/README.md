@@ -16,6 +16,8 @@ For A and AAAA queries it returns 198.51.100.1 and 2001:db8::1 (RFC 5737, RFC 51
 it return whatever string is set in the configuration, with the Flag bit set to 1 (128 decimal) and the Tag
 set to "issuer".
 
+This handler handles A, AAAA and CAA queries, all others will call the next handler and eventually refused.
+
 # Syntax
 
 ```

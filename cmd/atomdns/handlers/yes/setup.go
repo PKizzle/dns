@@ -19,5 +19,8 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 			y.Caa = append(y.Caa, strings.TrimSpace(args[0]))
 		}
 	}
+	if len(y.Caa) == 0 {
+		return co.ArgErr()
+	}
 	return nil
 }
