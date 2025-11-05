@@ -32,13 +32,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				case "json":
 					jlog := slog.New(slog.NewJSONHandler(os.Stderr, nil))
 					slog.SetDefault(jlog)
+				case "quiet":
+					g.Quiet = true
 				default:
 					return d.ArgErr()
 				}
 			}
-		case "debug":
-		case "quiet":
-			g.Quiet = true
 		case "root":
 			if !d.NextArg() {
 				d.ArgErr()
