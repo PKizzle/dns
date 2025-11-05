@@ -23,9 +23,20 @@ import (
 func (g *Global) Setup(d conffile.Dispenser) error {
 	if d.Next() {
 		switch d.Val() {
+		case "log":
+			for d.NextBlock(0) {
+				switch d.Val() {
+				case "debug":
+					g.Debug = true
+					slog.SetLogLoggerLevel(slog.LevelDebug)
+				case "json":
+					jlog := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+					slog.SetDefault(jlog)
+				default:
+					return d.ArgErr()
+				}
+			}
 		case "debug":
-			g.Debug = true
-			slog.SetLogLoggerLevel(slog.LevelDebug)
 		case "quiet":
 			g.Quiet = true
 		case "root":

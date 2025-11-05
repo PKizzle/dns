@@ -78,17 +78,14 @@ func Run(version string) {
 		// dies with process
 		sigchan := make(chan os.Signal, 1)
 		signal.Notify(sigchan, syscall.SIGHUP)
-		for {
-			select {
-			case sig := <-sigchan:
-				slog.Info("Received signal, reloading", "signal", sig)
-				if err := s.Reload(); err != nil {
-					slog.Error("Failed to reload server", slog.Any("error", err))
-				}
-				signal.Notify(sigchan, syscall.SIGHUP)
-				if !s.Quiet {
-					fmt.Println(banner(s.version))
-				}
+		for sig := range sigchan {
+			slog.Info("Received signal, reloading", "signal", sig)
+			if err := s.Reload(); err != nil {
+				slog.Error("Failed to reload server", slog.Any("error", err))
+			}
+			signal.Notify(sigchan, syscall.SIGHUP)
+			if !s.Quiet {
+				fmt.Fprintln(os.Stderr, banner(s.version))
 			}
 		}
 	}()

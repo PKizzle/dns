@@ -1,5 +1,8 @@
 {
-    debug
+    log {
+        debug
+        json
+    }
     health
     metrics
     root handlers
