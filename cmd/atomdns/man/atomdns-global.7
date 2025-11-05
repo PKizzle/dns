@@ -18,8 +18,11 @@ global section, see the configuration examples below.
 .nf
 {
     root DIRECTORY
-    debug
-    quiet
+    log {
+        debug
+        json
+        quiet
+    }
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
@@ -54,9 +57,17 @@ with \fB\fCroot\fR \fBDIRECTORY\fP is the directory to use as the root directory
 get this directory prefixed. If \fBDIRECTORY\fP itself is also relative the current working directory (cwd) of the atomdns
 process will be prefixed.
 .IP \(bu 4
-with \fB\fCdebug\fR the global log level is to debug.
-.IP \(bu 4
-Wirth \fB\fCquiet\fR the banner is not shown in less message in general, query logging is not affected.
+\fB\fClog\fR tells atomdns on how to log:
+
+.RS
+.IP \(en 4
+\fB\fCdebug\fR sets the global log level to debug.
+.IP \(en 4
+\fB\fCjson\fR enables JSON logging.
+.IP \(en 4
+With \fB\fCquiet\fR the banner is not shown in less message in general, query logging is not affected.
+
+.RE
 .IP \(bu 4
 The \fB\fCmetrics\fR property allows setting the listening \fBADDRESS\fP for the promtheus metrics. This defaults to \fB\fClocalhost:9153\fR.
 Without \fB\fCmetrics\fR no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
