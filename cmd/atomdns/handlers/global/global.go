@@ -13,7 +13,7 @@ import (
 type Global struct {
 	// Root
 	Root string
-	// Debug
+	// Debug logging
 	Debug bool
 	// Metrics
 	MetricsN        uint64

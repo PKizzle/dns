@@ -13,8 +13,11 @@ global section, see the configuration examples below.
 ```txt
 {
     root DIRECTORY
-    debug
-    quiet
+    log {
+        debug
+        json
+        quiet
+    }
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
     pprof [ADDRESS]
@@ -45,8 +48,10 @@ global section, see the configuration examples below.
 - with `root` **DIRECTORY** is the directory to use as the root directory for the server. Any relative path names will
   get this directory prefixed. If **DIRECTORY** itself is also relative the current working directory (cwd) of the atomdns
   process will be prefixed.
-- with `debug` the global log level is to debug.
-- Wirth `quiet` the banner is not shown in less message in general, query logging is not affected.
+- `log` tells atomdns on how to log:
+  - `debug` sets the global log level to debug.
+  - `json` enables JSON logging.
+  - With `quiet` the banner is not shown in less message in general, query logging is not affected.
 - The `metrics` property allows setting the listening **ADDRESS** for the promtheus metrics. This defaults to `localhost:9153`.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global section.

@@ -10,8 +10,6 @@ import (
 
 type Log int
 
-var logger = slog.Default()
-
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		if !state.Load() {
@@ -19,7 +17,7 @@ func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 
-		logger.
+		slog.Default().
 			With("remote", dnsutil.RemoteIP(w)).
 			With("port", dnsutil.RemotePort(w)).
 			With(slog.Int("id", int(r.ID))).
