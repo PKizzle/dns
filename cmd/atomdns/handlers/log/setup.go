@@ -22,7 +22,7 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 
 	co.OnStartup(func() error {
 		startonce.Do(func() {
-			_log.Info("Startup", "signal", "USR1")
+			_log().Info("Startup", "signal", "USR1")
 			sigchan := make(chan os.Signal, 1)
 			go func() {
 				signal.Notify(sigchan, SIGUSR1)
@@ -31,10 +31,10 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 					case <-sigchan:
 						signal.Notify(sigchan, SIGUSR1)
 						if state.Load() {
-							_log.Info("Received signal, disabling query logging")
+							_log().Info("Received signal, disabling query logging")
 							state.Store(false)
 						} else {
-							_log.Info("Received signal, enabling query logging")
+							_log().Info("Received signal, enabling query logging")
 							state.Store(true)
 						}
 					case <-ctx.Done():
@@ -48,7 +48,7 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 
 	co.OnShutdown(func() error {
 		shutonce.Do(func() {
-			_log.Info("Shutdown", "signal", "USR1")
+			_log().Info("Shutdown", "signal", "USR1")
 			cancel()
 		})
 		return nil

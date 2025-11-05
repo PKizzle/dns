@@ -22,7 +22,7 @@ func (m *Msgcache) Setup(co *dnsserver.Controller) error {
 	co.Next()
 
 	co.OnStartup(func() error {
-		log.Info("Startup", "evict", wakeup)
+		log().Info("Startup", "evict", wakeup)
 		go func() {
 			ticker := time.NewTicker(wakeup)
 			tick2 := time.NewTicker(dump)
@@ -44,7 +44,7 @@ func (m *Msgcache) Setup(co *dnsserver.Controller) error {
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log.Info("Shutdown", "evict", wakeup)
+		log().Info("Shutdown", "evict", wakeup)
 		cancel()
 		return nil
 	})

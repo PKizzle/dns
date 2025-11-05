@@ -67,7 +67,7 @@ func (s *Sign) Resign() error {
 				case event.Has(fsnotify.Write):
 					time.Sleep(2 * time.Second)
 					for _, z := range s.Zones {
-						alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
+						alog := log().With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
 						if z.Path == path.Clean(event.Name) {
 							zs, err := s.Sign(z.Origin())
 							if err != nil {
@@ -89,7 +89,7 @@ func (s *Sign) Resign() error {
 				}
 			case <-ticker.C:
 				for _, z := range s.Zones {
-					alog := log.With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
+					alog := log().With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
 					expired, err := s.Expired(z.Origin())
 					if !expired {
 						continue

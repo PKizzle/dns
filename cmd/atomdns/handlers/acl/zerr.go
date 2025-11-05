@@ -13,4 +13,4 @@ func Err(err error) slog.Attr { return slog.Any("error", err) }
 
 func (h *Acl) Key() string { return "acl" }
 
-var log = slog.Default().With("handler", "acl")
+var log = func() *slog.Logger { return slog.Default().With("handler", "acl") }

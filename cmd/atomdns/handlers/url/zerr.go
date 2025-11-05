@@ -13,4 +13,4 @@ func Err(err error) slog.Attr { return slog.Any("error", err) }
 
 func (h *Url) Key() string { return "url" }
 
-var log = slog.Default().With("handler", "url")
+var log = func() *slog.Logger { return slog.Default().With("handler", "url") }

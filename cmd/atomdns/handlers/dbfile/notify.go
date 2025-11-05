@@ -47,7 +47,7 @@ func (d *Dbfile) HandlerFuncNotify(ctx context.Context, w dns.ResponseWriter, r 
 		}
 	}
 	if !d.From.AvailableFrom(z.Origin(), serial) {
-		log.With(slog.Uint64("serial", uint64(serial))).Warn("Notify seen, but no newer zone available", "zone", z.Origin())
+		log().With(slog.Uint64("serial", uint64(serial))).Warn("Notify seen, but no newer zone available", "zone", z.Origin())
 		return
 	}
 
@@ -74,7 +74,7 @@ func (t *Transfer) Notify(origin string) error {
 			lasterr = err
 		}
 	}
-	alog := log.With("upstream", strings.Join(t.IPs, ","), "zone", origin)
+	alog := log().With("upstream", strings.Join(t.IPs, ","), "zone", origin)
 	alog.Debug("Sent notifies")
 	return lasterr
 }
@@ -82,7 +82,7 @@ func (t *Transfer) Notify(origin string) error {
 func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
 	for range 2 {
-		alog := log.With("upstream", ip, "zone", m.Question[0].Header().Name)
+		alog := log().With("upstream", ip, "zone", m.Question[0].Header().Name)
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
 		if err != nil {
 			alog.Error("Failed to sent notify", Err(err))
@@ -120,7 +120,7 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 	m := dns.NewMsg(origin, dns.TypeSOA)
 
 	for _, ip := range t.IPs {
-		alog := log.With("upstream", ip, "zone", origin)
+		alog := log().With("upstream", ip, "zone", origin)
 		m, _, err := c.Exchange(context.TODO(), m, "tcp", ip)
 		if err != nil {
 			alog.Error("Upstream did not accept our query", Err(err))
