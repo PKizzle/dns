@@ -12,7 +12,7 @@ import (
 )
 
 type Url struct {
-	URL  string
+	URLs []string
 	Path string
 
 	// Zones holds all the zone this instance of Url is called for.

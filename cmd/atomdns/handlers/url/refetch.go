@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -19,7 +20,7 @@ func (u *Url) Refetch() error {
 			case <-ticker.C:
 				err := u.Fetch()
 				if err != nil {
-					alog := log().With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
+					alog := log().With(slog.String("url", strings.Join(u.URLs, ",")), slog.String("file", filepath.Base(u.Path)))
 					alog.Error("Failed to fetch", Err(err))
 					continue
 				}
@@ -34,29 +35,32 @@ func (u *Url) Refetch() error {
 
 func (u *Url) Fetch() error {
 	c := http.Client{Timeout: 10 * time.Second}
-	resp, err := c.Get(u.URL)
-	if err != nil {
-		return err
+	for _, url := range u.URLs {
+		resp, err := c.Get(url)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("status code was not %d: %d", http.StatusOK, resp.StatusCode)
+		}
+		buf, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		if len(buf) == 0 {
+			return fmt.Errorf("zero buffer read")
+		}
+		resp.Body.Close()
+		f, err := os.CreateTemp(filepath.Dir(u.Path), "xxxxx.transferred")
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(f.Name(), buf, 0600); err != nil {
+			return err
+		}
+		defer f.Close()
+		defer os.Remove(f.Name())
+		return os.Rename(f.Name(), u.Path)
 	}
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("status code was not %d: %d", http.StatusOK, resp.StatusCode)
-	}
-	buf, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	if len(buf) == 0 {
-		return fmt.Errorf("zero buffer read")
-	}
-	resp.Body.Close()
-	f, err := os.CreateTemp(filepath.Dir(u.Path), "xxxxx.transferred")
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(f.Name(), buf, 0600); err != nil {
-		return err
-	}
-	defer f.Close()
-	defer os.Remove(f.Name())
-	return os.Rename(f.Name(), u.Path)
+	return fmt.Errorf("failed to fetch from all URLs")
 }

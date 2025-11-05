@@ -3,6 +3,7 @@ package url
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"maps"
 	"os"
@@ -22,15 +23,18 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		if !co.Next() {
 			return co.ArgErr()
 		}
-		u.URL = co.Val()
-		if !co.Next() {
-			return co.ArgErr()
-		}
-		if !strings.HasPrefix(u.URL, "http://") && !strings.HasPrefix(u.URL, "https://") {
-			u.URL = "https://" + u.URL
-		}
-
 		u.Path = co.Path()
+		println(u.Path)
+
+		for co.NextBlock(0) {
+			if !strings.HasPrefix(co.Val(), "http://") && !strings.HasPrefix(co.Val(), "https://") {
+				return co.PropErr(fmt.Errorf("URL needs to start with a scheme"))
+			}
+			u.URLs = append(u.URLs, strings.TrimSpace(co.Val()))
+		}
+	}
+	if len(u.URLs) == 0 {
+		return co.ArgErr()
 	}
 
 	for _, z := range co.Keys() {
@@ -55,12 +59,12 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		return u.Reload()
 	})
 	co.OnStartup(func() error {
-		log().Info("Startup", "url", u.URL, "file", filepath.Base(u.Path))
+		log().Info("Startup", "url", strings.Join(u.URLs, ","), "file", filepath.Base(u.Path))
 
 		go func() {
 			err := u.Fetch()
 			if err != nil {
-				alog := log().With(slog.String("url", u.URL), slog.String("file", filepath.Base(u.Path)))
+				alog := log().With(slog.String("url", strings.Join(u.URLs, ",")), slog.String("file", filepath.Base(u.Path)))
 				alog.Error("Failed to fetch", Err(err))
 			}
 		}()
@@ -73,7 +77,7 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log().Info("Shutdown", "refetch", filepath.Base(u.URL))
+		log().Info("Shutdown", "refetch", strings.Join(u.URLs, ","))
 		u.cancel()
 		return nil
 	})
