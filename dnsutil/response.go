@@ -9,7 +9,7 @@ import (
 // RemoteIP returns the IP address of the client making the request.
 func RemoteIP(w dns.ResponseWriter) string { return ip(w.RemoteAddr().String()) }
 
-// LocalIP gets the (local) IP address of server handling the request.
+// LocalIP gets the IP address of server handling the request.
 func LocalIP(w dns.ResponseWriter) string { return ip(w.LocalAddr().String()) }
 
 // RemotePort gets the port of the client making the request.

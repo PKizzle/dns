@@ -29,10 +29,8 @@ func Labels(s string) (labels int) {
 	}
 }
 
-// Next returns the index of the start of the next label in the
-// string s starting at offset. A negative offset will cause a panic.
-// The bool end is true when the end of the string has been reached.
-// Also see [Prev].
+// Next returns the index of the start of the next label in the string s starting at offset. A negative offset
+// will cause a panic. The bool end is true when the end of the string has been reached. Also see [Prev].
 func Next(s string, offset int) (i int, end bool) {
 	if s == "" {
 		return 0, true
@@ -126,7 +124,7 @@ func IsFqdn(s string) bool {
 }
 
 // Canonical returns the domain name in canonical form. A name in canonical form is lowercase and fully qualified.
-// / Only US-ASCII letters are affected. See Section 6.2 in RFC 4034.
+// Only US-ASCII letters are affected. See Section 6.2 in RFC 4034.
 func Canonical(s string) string {
 	return strings.Map(func(r rune) rune {
 		if r >= 'A' && r <= 'Z' {
@@ -136,10 +134,10 @@ func Canonical(s string) string {
 	}, Fqdn(s))
 }
 
-// IsName checks if s is a valid domain name.  Note that non fully qualified domain name is considered valid
-// the number of labels. Note that this function is extremely liberal; almost any
-// string is a valid domain name as the DNS is 8 bit protocol. It checks if each
-// label fits in 63 characters and that the entire name will fit into the 255 octet wire format limit.
+// IsName checks if s is a valid domain name.  A non fully qualified domain name is considered valid.
+// Note that this function is extremely liberal; almost any string is a valid domain name as the DNS is 8 bit
+// protocol. It checks if each label fits in 63 characters and that the entire name will fit into the 255
+// octet wire-format limit.
 func IsName(s string) bool {
 	// XXX: The logic in this function was copied from pack.Name and should be kept in sync with that function.
 
@@ -258,8 +256,8 @@ func StringToTime(s string) (uint32, error) {
 
 // Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
 // format into account, i.e. "@" means the origin in name.
-// If Name is not a valid domain name, the empty string is also returned. If the origin is needed to be
-// appended, but is empty the empty string is returned.
+// If Name is not a valid domain name, the empty string is returned. If the origin is needed to be appended,
+// but is empty the empty string is returned.
 func Absolute(name, origin string) string {
 	if name == "@" {
 		if origin == "" {

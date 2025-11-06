@@ -9,11 +9,11 @@ func SetQuestion(m *dns.Msg, z string, t uint16) *dns.Msg {
 	m.ID = dns.ID()
 	m.RecursionDesired = true
 	var rr dns.RR
-	newFn, ok := dns.TypeToRR[t]
-	if !ok {
+	if newFn, ok := dns.TypeToRR[t]; !ok {
 		return nil
+	} else {
+		rr = newFn()
 	}
-	rr = newFn()
 	rr.Header().Name = z
 	rr.Header().Class = dns.ClassINET
 
@@ -29,7 +29,8 @@ func Question(m *dns.Msg) (z string, t uint16) {
 }
 
 // SetReply creates a reply message from r. It copies the ID, opcode, rcode and question, r's Data buffer is not copied.
-// In the header the RecursionDesired, CheckingDisabled and Security are copied.
+// In the header the RecursionDesired, CheckingDisabled and Security bit are copied. All other sections are
+// set to nil.
 func SetReply(m, r *dns.Msg) *dns.Msg {
 	m.ID = r.ID
 	m.Response = true
@@ -50,6 +51,7 @@ func SetReply(m, r *dns.Msg) *dns.Msg {
 
 // IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
 // This means the RRs need to have the same type, name, and class. Duplicate RRs are not detected.
+// See [dns.RRset] if you need to sort an RRset.
 func IsRRset(rrset []dns.RR) bool {
 	if len(rrset) == 0 {
 		return false
@@ -59,7 +61,7 @@ func IsRRset(rrset []dns.RR) bool {
 	for _, rr := range rrset[1:] {
 		h := rr.Header()
 		htype := dns.RRToType(rr)
-		if htype != basetype || h.Class != base.Class || h.Name != base.Name {
+		if htype != basetype || h.Class != base.Class || !dns.EqualName(h.Name, base.Name) {
 			return false
 		}
 	}

@@ -15,7 +15,7 @@ const (
 
 // IsReverse returns 0 if name is not a reverse zone. Anything > 0 indicates
 // name is in a reverse zone. The returned integer will be 1 for in-addr.arpa. (IPv4)
-// and 2 for ip6.arpa. (IPv6). A canonical name is assumed.
+// and 2 for ip6.arpa. (IPv6), see [Family]. A canonical name is assumed.
 func IsReverse(s string) int {
 	if strings.HasSuffix(s, IP4arpa) {
 		return 1
