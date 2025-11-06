@@ -11,11 +11,11 @@ import (
 // NSEC3Name returns the hashed label according to RFC 5155.
 func NSEC3Name(name, salt string, iter uint16) string {
 	hashdata := make([]byte, hex.DecodedLen(len(salt))+255)
-	n, err := pack.StringHex(salt, hashdata, 0)
+	n, err := pack.Name(name, hashdata, 0, nil, false)
 	if err != nil {
 		return ""
 	}
-	m, err := pack.Name(name, hashdata[n:], 0, nil, false)
+	m, err := pack.StringHex(salt, hashdata[n:], 0)
 	if err != nil {
 		return ""
 	}
@@ -26,10 +26,10 @@ func NSEC3Name(name, salt string, iter uint16) string {
 	s.Write(hashdata)
 	nsec3 := s.Sum(nil)
 
-	// k > 0
 	for k := uint16(0); k < iter; k++ {
 		s.Reset()
-		s.Write(hashdata)
+		s.Write(nsec3)
+		s.Write(hashdata[n:])
 		nsec3 = s.Sum(nil)
 	}
 	return base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(nsec3)
