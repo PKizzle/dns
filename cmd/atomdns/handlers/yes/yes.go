@@ -15,6 +15,8 @@ type Yes struct {
 	Caa []string
 }
 
+const ttl = 300
+
 func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		qname, qtype := dnsutil.Question(r)
@@ -22,7 +24,7 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		dnsutil.SetReply(m, r)
 		m.Authoritative = true
 
-		h := dns.Header{Name: qname, Class: dns.ClassINET, TTL: 1024}
+		h := dns.Header{Name: qname, Class: dns.ClassINET, TTL: ttl}
 
 		switch qtype {
 		case dns.TypeA:
@@ -36,16 +38,19 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				rr := &dns.CAA{Hdr: h, Flag: 128, Tag: "issuer", Value: y.Caa[i]}
 				m.Answer = append(m.Answer, rr)
 			}
+		case dns.TypeNS:
+			rr := &dns.NS{Hdr: dns.Header{Name: dnsutil.Join("ns", dns.Zone(ctx)), Class: dns.ClassINET, TTL: ttl}, Ns: dnsutil.Join("ns", dns.Zone(ctx))}
+			m.Answer = append(m.Answer, rr)
 		case dns.TypeSOA:
-			soa := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: 1024},
+			rr := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl},
 				Ns: dnsutil.Join("ns", dns.Zone(ctx)), Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
-				Serial: uint32(time.Now().Unix()), Minttl: 1024, Refresh: 3600, Retry: 3600, Expire: 3600}
-			m.Answer = append(m.Answer, soa)
+				Serial: uint32(time.Now().Unix()), Minttl: ttl, Refresh: 3600, Retry: 3600, Expire: 3600}
+			m.Answer = append(m.Answer, rr)
 		default: // nodata response
-			soa := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: 1024},
+			rr := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl},
 				Ns: dnsutil.Join("ns", dns.Zone(ctx)), Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
-				Serial: uint32(time.Now().Unix()), Minttl: 1024, Refresh: 3600, Retry: 3600, Expire: 3600}
-			m.Ns = append(m.Ns, soa)
+				Serial: uint32(time.Now().Unix()), Minttl: ttl, Refresh: 3600, Retry: 3600, Expire: 3600}
+			m.Ns = append(m.Ns, rr)
 		}
 
 		m = dnsctx.Funcs(ctx, m)
