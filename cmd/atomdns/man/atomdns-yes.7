@@ -23,7 +23,7 @@ it return whatever string is set in the configuration, with the Flag bit set to 
 set to "issuer".
 
 .PP
-This handler handles A, AAAA and CAA queries, all others will call the next handler and eventually refused.
+This handler handles A, AAAA, SOA and CAA queries, all others will return a NODATA response.
 
 .SH "SYNTAX"
 .PP
@@ -64,6 +64,10 @@ like so: \fB\fCwww.example.org. IN CAA 128 issue "letsencrypt.org"\fR.
 .PP
 This handler came into existence because some certificate authorities have ridicules requirements for TLS
 certificate creation.
+
+.SH "BUGS"
+.PP
+DNSSEC is not implemented.
 
 .SH "ALSO SEE"
 .PP

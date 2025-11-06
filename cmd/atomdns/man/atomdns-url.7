@@ -20,16 +20,19 @@ it receives a (kernel) notify it will reload the zone after 2 seconds.
 .RS
 
 .nf
-url URL FILE
+url FILE {
+    URL
+}
 
 .fi
 .RE
 
 .IP \(bu 4
-\fBURL\fP the URL to fetch the zone from, if the scheme is omitted \fB\fChttps://\fR is assumed.
-.IP \(bu 4
 \fBFILE\fP the zone file to save the data to and to serve from. If the path is relative, the path from the
 global root config will be prepended to it.
+.IP \(bu 4
+\fBURL\fP the URL to fetch the zone from, a scheme must be used. This may be used multiple times, in which
+subsequent URLs are used as backup and downloaded when the earlier URL doesn't work.
 
 
 .PP
@@ -38,14 +41,16 @@ sure that zone \fBFILE\fP is generic enough, i.e. use \fB\fC@\fR for origins ins
 
 .SH "EXAMPLES"
 .PP
-Load the root zone from and save it in \fB\fC_.transferred\fR.
+Load the root zone from and save it in \fB\fCroot.transferred\fR.
 
 .PP
 .RS
 
 .nf
 \&. {
-    url www.internic.net/domain/root.zone \_.transferred
+    url root.transferred {
+        https://www.internic.net/domain/root.zone
+    }
 }
 
 .fi
