@@ -479,9 +479,6 @@ func (m *Msg) String() string {
 	}
 
 	sections := [5]string{"QUESTION", "PSEUDO", "ANSWER", "AUTHORITY", "ADDITIONAL"}
-	if m.MsgHeader.Opcode == OpcodeUpdate {
-		sections = [5]string{"ZONE", "PSEUDO", "PREREQ", "UPDATE", "ADDITIONAL"}
-	}
 	sb.WriteString(";; ")
 	sb.WriteString(sections[0])
 	sb.WriteString(": ")
