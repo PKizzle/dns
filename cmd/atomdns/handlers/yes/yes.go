@@ -20,6 +20,7 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		qname, qtype := dnsutil.Question(r)
 		m := r.Copy()
 		dnsutil.SetReply(m, r)
+		m.Authoritative = true
 
 		h := dns.Header{Name: qname, Class: dns.ClassINET, TTL: 1024}
 
