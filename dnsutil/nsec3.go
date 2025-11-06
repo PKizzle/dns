@@ -8,7 +8,7 @@ import (
 	"codeberg.org/miekg/dns/internal/pack"
 )
 
-// NSEC3Name returns the hashed label according to RFC 5155.
+// NSEC3Name returns the hashed owner name according to RFC 5155.
 func NSEC3Name(name, salt string, iter uint16) string {
 	hashdata := make([]byte, hex.DecodedLen(len(salt))+255)
 	n, err := pack.Name(name, hashdata, 0, nil, false)
