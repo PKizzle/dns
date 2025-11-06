@@ -4,12 +4,11 @@ import (
 	"context"
 	"io"
 	"log/slog"
-	"net"
 	"sync/atomic"
 	"time"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -36,27 +35,10 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m.Authoritative = true
 		m.Truncated = trunc
 
-		switch r.Question[0].(type) {
-		case *dns.A:
-			rr := &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: net.ParseIP("192.0.2.53")}
-			m.Answer = []dns.RR{rr}
-		case *dns.AAAA:
-			rr := &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: net.ParseIP("2001:DB8::53")}
-			m.Answer = []dns.RR{rr}
-		default:
-			if drop {
-				log().Debug("Dropping")
-				return
-			}
-			if delay {
-				log().Debug("Delaying", slog.Duration("delay", d.duration))
-				time.Sleep(d.duration)
-			}
-			next.ServeDNS(ctx, w, r)
-			return
-		}
+		rw := dnstest.NewRecorder(w)
+		next.ServeDNS(ctx, rw, r)
 
-		if drop {
+		if drop || rw.Msg == nil { // drop or hijacked conn
 			log().Debug("Dropping")
 			return
 		}
@@ -64,13 +46,10 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			log().Debug("Delaying", slog.Duration("delay", d.duration))
 			time.Sleep(d.duration)
 		}
-
-		m.Data = r.Data
-
-		m = dnsctx.Funcs(ctx, m)
-		if err := m.Pack(); err != nil {
-			log().Debug("Pack failure", Err(err))
+		if trunc {
+			rw.Msg.Truncated = true
 		}
-		io.Copy(w, m)
+
+		io.Copy(w, rw.Msg)
 	})
 }

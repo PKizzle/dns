@@ -4,11 +4,7 @@ _drunk_ - test client behavior
 
 # Description
 
-_drunk_ returns a static response to all queries, but the responses can be
-delayed, dropped or truncated. The _drunk_ handler will respond to every A or
-AAAA query. For any other type it will return a SERVFAIL response. The reply
-for A will return 192.0.2.53 ([RFC 5737](https://tools.ietf.org/html/rfc5737)),
-for AAAA it returns 2001:DB8::53 ([RFC 3849](https://tools.ietf.org/html/rfc3849)).
+_drunk_ sits in between a handler that answers a query and the client, any response can be delayed, dropped or truncated.
 
 # Syntax
 
@@ -22,8 +18,7 @@ drunk {
 
 - `drop`: drop every /**N** query, the default is one in four (/4).
 - `truncate`: truncate every /**M** query, the default is /4.
-- `delay`: delay every /**L** query for **DURATION**, the default for is /22 and
-  the default for **DURATION** is 100ms.
+- `delay`: delay every /**L** query for **DURATION**, the default for is /22 and the default for **DURATION** is 100ms.
 
 # Examples
 
@@ -34,6 +29,7 @@ example.org {
     drunk {
         drop /3
     }
+    whoami
 }
 ```
 
@@ -42,6 +38,7 @@ Or even shorter if the defaults suit you. Note this only drops queries, it does 
 ```conffile
 example.org {
     drunk
+    whoami
 }
 ```
 
@@ -52,6 +49,7 @@ example.org {
     drunk {
         delay /3 50ms
     }
+    whoami
 }
 ```
 
@@ -63,5 +61,6 @@ example.org {
         delay /3 5ms
         truncate /5
     }
+    whoami
 }
 ```

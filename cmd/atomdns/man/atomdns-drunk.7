@@ -7,13 +7,7 @@
 
 .SH "DESCRIPTION"
 .PP
-\fIdrunk\fP returns a static response to all queries, but the responses can be
-delayed, dropped or truncated. The \fIdrunk\fP handler will respond to every A or
-AAAA query. For any other type it will return a SERVFAIL response. The reply
-for A will return 192.0.2.53 (RFC 5737
-\[la]https://tools.ietf.org/html/rfc5737\[ra]),
-for AAAA it returns 2001:DB8::53 (RFC 3849
-\[la]https://tools.ietf.org/html/rfc3849\[ra]).
+\fIdrunk\fP sits in between a handler that answers a query and the client, any response can be delayed, dropped or truncated.
 
 .SH "SYNTAX"
 .PP
@@ -34,8 +28,7 @@ drunk {
 .IP \(bu 4
 \fB\fCtruncate\fR: truncate every /\fBM\fP query, the default is /4.
 .IP \(bu 4
-\fB\fCdelay\fR: delay every /\fBL\fP query for \fBDURATION\fP, the default for is /22 and
-the default for \fBDURATION\fP is 100ms.
+\fB\fCdelay\fR: delay every /\fBL\fP query for \fBDURATION\fP, the default for is /22 and the default for \fBDURATION\fP is 100ms.
 
 
 .SH "EXAMPLES"
@@ -50,6 +43,7 @@ example.org {
     drunk {
         drop /3
     }
+    whoami
 }
 
 .fi
@@ -64,6 +58,7 @@ Or even shorter if the defaults suit you. Note this only drops queries, it does 
 .nf
 example.org {
     drunk
+    whoami
 }
 
 .fi
@@ -80,6 +75,7 @@ example.org {
     drunk {
         delay /3 50ms
     }
+    whoami
 }
 
 .fi
@@ -97,6 +93,7 @@ example.org {
         delay /3 5ms
         truncate /5
     }
+    whoami
 }
 
 .fi
