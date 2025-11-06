@@ -36,16 +36,19 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				rr := &dns.CAA{Hdr: h, Flag: 128, Tag: "issuer", Value: y.Caa[i]}
 				m.Answer = append(m.Answer, rr)
 			}
+		case dns.TypeNS:
+			rr := &dns.NS{Hdr: dns.Header{Name: dnsutil.Join("ns", dns.Zone(ctx)), Class: dns.ClassINET, TTL: 1024}, Ns: dnsutil.Join("ns", dns.Zone(ctx))}
+			m.Answer = append(m.Answer, rr)
 		case dns.TypeSOA:
-			soa := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: 1024},
+			rr := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: 1024},
 				Ns: dnsutil.Join("ns", dns.Zone(ctx)), Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
 				Serial: uint32(time.Now().Unix()), Minttl: 1024, Refresh: 3600, Retry: 3600, Expire: 3600}
-			m.Answer = append(m.Answer, soa)
+			m.Answer = append(m.Answer, rr)
 		default: // nodata response
-			soa := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: 1024},
+			rr := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: 1024},
 				Ns: dnsutil.Join("ns", dns.Zone(ctx)), Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
 				Serial: uint32(time.Now().Unix()), Minttl: 1024, Refresh: 3600, Retry: 3600, Expire: 3600}
-			m.Ns = append(m.Ns, soa)
+			m.Ns = append(m.Ns, rr)
 		}
 
 		m = dnsctx.Funcs(ctx, m)
