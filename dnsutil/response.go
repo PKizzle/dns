@@ -57,11 +57,12 @@ func Family(w dns.ResponseWriter) int {
 	}
 
 	if a.To4() != nil {
-		return 1
+		return IPv4Family
 	}
-	return 2
+	return IPv6Family
 }
 
+// The IP address families are defined by IANA, and can be found at https://www.iana.org/assignments/address-family-numbers/address-family-numbers.xhtml
 const (
 	IPv4Family = 1
 	IPv6Family = 2

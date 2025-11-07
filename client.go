@@ -50,7 +50,8 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // The full binary data is included in the (decoded) message as r.Data. If the Data buffer in m is empty
 // client.Exchange calls m.Pack().
 //
-// It returns an error (ErrID) if the message returned does not have the same ID as the message sent.
+// It returns an error (ErrID) if the message returned does not have the same ID as the message sent. No other
+// checks are performed, i.e. a different question name, but a correct ID will be accepted.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
 		c.Transport = NewDefaultTransport()
