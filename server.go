@@ -391,7 +391,7 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 		r.Authoritative = false
 		r.Response = true
 		r.Zero = false
-		r.Ns, r.Answer, r.Extra = nil, nil, nil // make as small as possible
+		r.Answer, r.Ns, r.Extra, r.Pseudo, r.Stateful = nil, nil, nil, nil, nil // make as small as possible
 		r.Pack()
 
 		io.Copy(w, r)
