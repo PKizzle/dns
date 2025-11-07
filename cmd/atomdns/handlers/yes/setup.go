@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
 func (y *Yes) Setup(co *dnsserver.Controller) error {
@@ -16,6 +17,14 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 					return co.PropEmptyErr("caa")
 				}
 				y.Caa = append(y.Caa, strings.TrimSpace(args[0]))
+			case "ns":
+				args := co.RemainingArgs()
+				if len(args) == 0 {
+					return co.PropEmptyErr("ns")
+				}
+				for _, arg := range args {
+					y.Ns = append(y.Ns, dnsutil.Canonical(arg))
+				}
 			case "source":
 				args, err := co.RemainingIPs()
 				if err != nil {

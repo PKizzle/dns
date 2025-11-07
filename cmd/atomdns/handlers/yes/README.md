@@ -17,12 +17,15 @@ over IPv4 and the question type is AAAA a NODATA response is generated, and vice
 
 This handler handles A, AAAA, NS, SOA and CAA queries, all others will return a NODATA response.
 
+The default nameserver for this zone is `ns.<origin>`, but see the `ns` property if you need extra.
+
 # Syntax
 
 ```
 yes {
     caa **VALUE**
     source IP|IFACE [IP|IFACE]
+    ns *NAMESERVER*
 }
 ```
 
@@ -31,6 +34,7 @@ yes {
   AAAA queries coming in over IPv6 and IPv4 respectively. You can use an interface name as **IFACE** and the
   routable IP address from the interface are also used. If this yields multiple addresses per family only the
   first are used.
+- The optional `ns` can be used to add extra nameservers that are returned for NS queries.
 
 # Examples
 
@@ -57,4 +61,4 @@ DNSSEC is not implemented.
 
 # Also See
 
-yes(1)
+yes(1).
