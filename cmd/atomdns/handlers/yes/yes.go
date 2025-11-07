@@ -13,10 +13,11 @@ import (
 
 type Yes struct {
 	Caa     []string
+	Ns      []string
 	Sources []string
 }
 
-const ttl = 300
+const ttl = 254
 
 func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
@@ -53,8 +54,12 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Answer = append(m.Answer, rr)
 			}
 		case dns.TypeNS:
-			rr := &dns.NS{Hdr: dns.Header{Name: dnsutil.Join("ns", dns.Zone(ctx)), Class: dns.ClassINET, TTL: ttl}, Ns: dnsutil.Join("ns", dns.Zone(ctx))}
+			rr := &dns.NS{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl}, Ns: dnsutil.Join("ns", dns.Zone(ctx))}
 			m.Answer = append(m.Answer, rr)
+			for i := range y.Ns {
+				rr := &dns.NS{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl}, Ns: y.Ns[i]}
+				m.Answer = append(m.Answer, rr)
+			}
 		case dns.TypeSOA:
 			m.Answer = append(m.Answer, soa)
 		case dns.TypeTXT:
