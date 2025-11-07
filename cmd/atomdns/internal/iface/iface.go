@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-// List returns a list of IP addresses from an interface.
+// List returns a list of routable IP addresses from an interface.
 func List(name string) []string {
 	ifis, err := net.Interfaces()
 	if err != nil {

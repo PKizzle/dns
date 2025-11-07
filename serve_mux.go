@@ -66,6 +66,7 @@ var DefaultServeMux = NewServeMux()
 func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 	mux.RLock()
 	if mux.z == nil {
+		mux.RUnlock()
 		return nil, ""
 	}
 

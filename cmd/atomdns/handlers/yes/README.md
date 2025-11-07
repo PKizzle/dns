@@ -12,21 +12,25 @@ a DNS lookup. Note this is _different_ than the
 [DNS-01](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) challenge that wants to resolve a
 TXT record with a specific value in it.
 
-For A and AAAA queries it returns 198.51.100.1 and 2001:db8::1 (RFC 5737, RFC 5156) addresses for CAA queries
-it return whatever string is set in the configuration, with the Flag bit set to 1 (128 decimal) and the Tag
-set to "issuer".
+For A and AAAA queries it returns the destination address from the request, this means if a requests comes in
+over IPv4 and the question type is AAAA a NODATA response is generated, and vice versa.
 
-This handler handles A, AAAA, SOA and CAA queries, all others will return a NODATA response.
+This handler handles A, AAAA, NS, SOA and CAA queries, all others will return a NODATA response.
 
 # Syntax
 
 ```
 yes {
     caa **VALUE**
+    source IP|IFACE [IP|IFACE]
 }
 ```
 
 - `caa` hold CAA's record **VALUE**. This may be repeated and will result in multiple CAA records to be returned.
+- With `source` you must specify the server's local addresses, this is to return correct responses for A and
+  AAAA queries coming in over IPv6 and IPv4 respectively. You can use an interface name as **IFACE** and the
+  routable IP address from the interface are also used. If this yields multiple addresses per family only the
+  first are used.
 
 # Examples
 

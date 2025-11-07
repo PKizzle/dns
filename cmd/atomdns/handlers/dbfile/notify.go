@@ -103,8 +103,8 @@ func source(ip string, sources []string) net.IP {
 	fam := net.ParseIP(h).To4() != nil
 	for _, s := range sources {
 		sip := net.ParseIP(s)
-		if sip.To4() != nil && fam {
-			return sip
+		if x := sip.To4(); x != nil && fam {
+			return x
 		}
 		if sip.To4() == nil && !fam {
 			return sip
