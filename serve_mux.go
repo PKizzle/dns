@@ -117,7 +117,7 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(context.Context, Re
 
 // HandleRemove deregisters the handler specific for pattern from the ServeMux.
 func (mux *ServeMux) HandleRemove(pattern string) {
-	if pattern == "" {
+	if dnsutilCanonical(pattern) != pattern || pattern == "" {
 		panic("dns: pattern should be in canonical form: " + pattern)
 	}
 	mux.Lock()
