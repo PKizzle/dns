@@ -17,7 +17,10 @@ func (g *Geoip) Setup(co *dnsserver.Controller) (err error) {
 		for co.NextBlock(0) {
 			val := co.Val()
 			paths := co.RemainingPaths()
-			if len(paths) == 0 || len(paths) > 2 {
+			if len(paths) == 0 {
+				return co.PropEmptyErr("dbfile")
+			}
+			if len(paths) > 2 {
 				return co.ArgErr()
 			}
 			switch val {

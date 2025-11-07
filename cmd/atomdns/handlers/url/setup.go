@@ -34,7 +34,7 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		}
 	}
 	if len(u.URLs) == 0 {
-		return co.ArgErr()
+		return co.PropEmptyErr("url")
 	}
 
 	for _, z := range co.Keys() {

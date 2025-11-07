@@ -13,7 +13,7 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 			case "caa":
 				args := co.RemainingArgs()
 				if len(args) == 0 {
-					return co.ArgErr()
+					return co.PropEmptyErr("caa")
 				}
 				y.Caa = append(y.Caa, strings.TrimSpace(args[0]))
 			case "source":
@@ -22,7 +22,7 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 					return co.PropErr(err)
 				}
 				if len(args) == 0 {
-					return co.ArgErr()
+					return co.PropEmptyErr("source")
 				}
 				y.Sources = append(y.Sources, args...)
 			default:
@@ -31,10 +31,10 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 		}
 	}
 	if len(y.Caa) == 0 {
-		return co.ArgErr()
+		return co.PropEmptyErr("caa")
 	}
 	if len(y.Sources) == 0 {
-		return co.ArgErr()
+		return co.PropEmptyErr("source")
 	}
 	return nil
 }

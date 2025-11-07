@@ -25,7 +25,7 @@ func (d *Dbhost) Setup(co *dnsserver.Controller) error {
 			case "ttl":
 				args := co.RemainingArgs()
 				if len(args) == 0 {
-					return co.ArgErr()
+					return co.PropEmptyErr("ttl")
 				}
 				ttl, err := strconv.ParseUint(args[0], 10, 32)
 				if err != nil {

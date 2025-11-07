@@ -263,13 +263,19 @@ func (d *Dispenser) PropErr(err ...error) error {
 	if len(err) > 0 {
 		return d.Errf("unexpected property: %q: %s", d.Val(), err[0].Error())
 	}
-	return d.Errf("unexpected property: '%s'", d.Val())
+	return d.Errf("unexpected property: %q", d.Val())
 }
 
 // SyntaxErr creates a generic syntax error which explains what was
 // found and what was expected.
 func (d *Dispenser) SyntaxErr(expected string) error {
-	msg := fmt.Sprintf("%s:%d - syntax error: unexpected token '%s', expecting '%s'", d.File(), d.Line(), d.Val(), expected)
+	msg := fmt.Sprintf("%s:%d - syntax error: unexpected token %q, expecting '%s'", d.File(), d.Line(), d.Val(), expected)
+	return errors.New(msg)
+}
+
+// PropEmptyErr create a error that a property was not defined or still empty after parsing.
+func (d *Dispenser) PropEmptyErr(prop string) error {
+	msg := fmt.Sprintf("property: %q can not be empty", prop)
 	return errors.New(msg)
 }
 
