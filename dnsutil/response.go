@@ -61,3 +61,8 @@ func Family(w dns.ResponseWriter) int {
 	}
 	return 2
 }
+
+const (
+	IPv4Family = 1
+	IPv6Family = 2
+)
