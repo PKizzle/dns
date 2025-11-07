@@ -6,6 +6,6 @@ import (
 
 //go:generate go run man_generate.go
 
-const version = "038"
+const version = "039"
 
 func main() { atom.Run(version) }
