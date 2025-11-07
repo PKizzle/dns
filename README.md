@@ -8,6 +8,7 @@
 
 - Everything from github.com/miekg/dns should work
   - ... and more.
+  - see README-diff-with-v1.md for the differences.
 - Fast(er); recvmmsg and pipeling suppport.
   - Since a46996c I can get 400K qps on my laptop (M2/Asahi Linux).
   - On my Dell XPS 17 (Intel) it is similar.
@@ -180,6 +181,7 @@ _all of them_
 
 ## Loosely Based Upon
 
+- dnsv1 - <https://github.com/miekg/dns/>
 - ldns - <https://nlnetlabs.nl/projects/ldns/about/>
 - NSD - <https://nlnetlabs.nl/projects/nsd/about/>
 - Net::DNS - <http://www.net-dns.org/>
