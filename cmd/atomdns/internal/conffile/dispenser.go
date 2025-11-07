@@ -275,7 +275,7 @@ func (d *Dispenser) SyntaxErr(expected string) error {
 
 // PropEmptyErr create a error that a property was not defined or still empty after parsing.
 func (d *Dispenser) PropEmptyErr(prop string) error {
-	msg := fmt.Sprintf("property: %q is empty", prop)
+	msg := fmt.Sprintf("property: %q can not be empty", prop)
 	return errors.New(msg)
 }
 
