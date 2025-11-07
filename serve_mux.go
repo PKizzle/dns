@@ -64,38 +64,35 @@ func NewServeMux() *ServeMux { return new(ServeMux) }
 var DefaultServeMux = NewServeMux()
 
 func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
-	mux.RLock()
 	if mux.z == nil {
-		mux.RUnlock()
 		return nil, ""
 	}
 
 	q = dnsutilCanonical(q)
 
 	var handler Handler
-	var zone string
-	for off, end := 0, false; !end; off, end = dnsutilNext(q, off) {
+	var ds, off, end = 0, 0, false
+	mux.RLock()
+	for ; !end; off, end = dnsutilNext(q, off) {
 		if h, ok := mux.z[q[off:]]; ok {
 			if t != TypeDS {
 				mux.RUnlock()
 				return h, q[off:]
 			}
-			// Continue for DS to see if we have a parent too, if so delegate to the parent
+			// Continue for DS to see if we have a parent too, if so delegate to the parent.
 			handler = h
-			zone = q[off:]
+			ds = off
 		}
 	}
+	mux.RUnlock()
 	if handler != nil {
-		mux.RUnlock()
-		return handler, zone
+		return handler, q[ds:]
 	}
 
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
-		mux.RUnlock()
 		return h, "."
 	}
-	mux.RUnlock()
 	return nil, ""
 }
 
