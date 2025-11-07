@@ -16,7 +16,6 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 					return co.ArgErr()
 				}
 				y.Caa = append(y.Caa, strings.TrimSpace(args[0]))
-
 			case "source":
 				args, err := co.RemainingIPs()
 				if err != nil {
