@@ -14,7 +14,7 @@ should chain. The syntax is as follows:
 .RS
 
 .nf
-ORIGIN [ORIGIN]... {
+ZONE [ZONE]... {
     [HANDLER]...
 }
 
@@ -22,20 +22,20 @@ ORIGIN [ORIGIN]... {
 .RE
 
 .PP
-Such a section is called a server block. Each block defines the handlers this particular server should run
+Such a section is called a \fIserver block\fP. Each block defines the handlers this particular server should run
 when it gets a query.
 
 .PP
-The \fBORIGIN\fP defines for which DNS zones this server should be called, multiple zones are allowed and must
+The \fBZONE\fP defines for which DNS zones this server should be called, multiple zones are allowed and must
 be \fIwhite space\fP separated.
 
 .PP
-When a query comes in, it is matched again all zones for all servers, the server with the longest match on the
+When a query comes in, it is matched again all zones for all servers, the server with the longest match for the
 query name will receive the query.
 
 .PP
 \fBHANDLER\fP defines the handlers(s) we want to load into this server. This is optional as well, but as
-server with no handlers will just return SERVFAIL for all queries. Each handlers can have a number of
+server with no handlers will just return REFUSED for all queries. Each handlers can have a number of
 properties than can have arguments, see the documentation for each handler (atomdns\-\fBHANDLER\fP(7)).
 
 .PP
@@ -59,7 +59,7 @@ a single server:
 .RS
 
 .nf
-ORIGIN [ORIGIN]...
+ZONE ZONE]...
 [HANDLER]...
 
 .fi
@@ -84,7 +84,7 @@ Is a valid config and is supported by \fB\fCatomdns\fR.
 
 .SH "GLOBAL"
 .PP
-A Conffile can have a global section, this is a section without an origin and holds various server wide
+A Conffile can have a global section, this is a section without a zone and holds various server wide
 options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
 and DOH) you have a section \fB\fCdns\fR, \fB\fCdot\fR and \fB\fCdoh\fR where you can configure the server, most notably the
 address and port you want to listen on.

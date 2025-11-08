@@ -25,8 +25,8 @@ An RR that fails to be converted into a proper \fB\fCdns.RR\fR is silently disca
 atomdns\-global(7) for details. The class is \fB\fCIN\fR and can't be overridden.
 
 .PP
-When atomdns startup the \fIdbsqlite\fP handler will log how many origins it found in the database, this is a live
-query and may differ with the origins specified in the configuration.
+When atomdns startup the \fIdbsqlite\fP handler will log how many zones it found in the database, this is a live
+query and may differ with the zones specified in the configuration.
 
 .PP
 The server will reply with minimal responses by default.
@@ -177,5 +177,5 @@ If you want \fIeverything\fP to end up in \fIdbsqlite\fP, you might be tempted t
 .RE
 
 .PP
-But this fails, \fIunless\fP you are actually authoritative for \fB\fC.\fR (the root zone), this because the origins are
+But this fails, \fIunless\fP you are actually authoritative for \fB\fC.\fR (the root zone), this because the zones are
 used to find those in the database.

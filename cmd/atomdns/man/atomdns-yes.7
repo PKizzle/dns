@@ -20,7 +20,7 @@ all potential names in the zone.
 
 .PP
 For A and AAAA queries the \fB\fCsource\fR property is used, it returns the IPv4 address for A and IPv6 address for
-AAAA queries. The default nameserver for this zone is \fB\fCns.<origin>\fR, but see the \fB\fCns\fR property if you need
+AAAA queries. The default nameserver for this zone is \fB\fCns.<zone>\fR, but see the \fB\fCns\fR property if you need
 extra server to be configured.
 
 .PP
@@ -80,7 +80,7 @@ certificate creation with respect to DNS. Also note that this handler simplifies
 anything wrong with the delegation (or setup) of this server. I.e. a service like dnsviz
 \[la]https://dnsviz.net/\[ra]
 must return "all green" when you are testing a name. This means the parent delegation to a zone served by
-\fIyes\fP needs at least the \fB\fCns.<origin>\fR server, plus the A (and potentially) AAAA glue that is need for an
+\fIyes\fP needs at least the \fB\fCns.<zone>\fR server, plus the A (and potentially) AAAA glue that is need for an
 in\-bailiwick delegation.
 
 .SH "BUGS"
