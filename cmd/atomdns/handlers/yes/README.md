@@ -14,7 +14,7 @@ TXT record with a specific value in it. The aim is to have the most _minimal_ se
 all potential names in the zone.
 
 For A and AAAA queries the `source` property is used, it returns the IPv4 address for A and IPv6 address for
-AAAA queries. The default nameserver for this zone is `ns.<origin>`, but see the `ns` property if you need
+AAAA queries. The default nameserver for this zone is `ns.<zone>`, but see the `ns` property if you need
 extra server to be configured.
 
 This handler handles A, AAAA, NS, SOA and CAA queries, all others will return a NODATA response.
@@ -59,7 +59,7 @@ This handler came into existence because some certificate authorities have ridic
 certificate creation with respect to DNS. Also note that this handler simplifies things, but there can't be
 anything wrong with the delegation (or setup) of this server. I.e. a service like [dnsviz](https://dnsviz.net/)
 must return "all green" when you are testing a name. This means the parent delegation to a zone served by
-_yes_ needs at least the `ns.<origin>` server, plus the A (and potentially) AAAA glue that is need for an
+_yes_ needs at least the `ns.<zone>` server, plus the A (and potentially) AAAA glue that is need for an
 in-bailiwick delegation.
 
 # Bugs

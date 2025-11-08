@@ -92,7 +92,7 @@ func (s *Server) Start() error {
 	if bi := builtinfo(); len(bi) == 4 {
 		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
 	}
-	slog.Info("Launched", "config", filepath.Base(s.global.Config), "version", "v"+s.version, "dns", dns.Version, "origins", len(s.global.Registered), "roles", strings.Join(roles, ","))
+	slog.Info("Launched", "config", filepath.Base(s.global.Config), "version", "v"+s.version, "dns", dns.Version, "zones", len(s.global.Registered), "roles", strings.Join(roles, ","))
 	return nil
 }
 
@@ -292,7 +292,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 			}
 
 			if !s.Quiet {
-				slog.Info(k, "handlers", "unpack,"+strings.Join(names, ",")+",refuse")
+				slog.Info(k, "handlers", strings.Join(names, ","))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
 			global.Registered[k] = struct{}{}

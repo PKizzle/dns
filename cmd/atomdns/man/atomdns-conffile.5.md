@@ -8,22 +8,22 @@ A _conffile_ specifies the internal servers atomdns should run and what handlers
 should chain. The syntax is as follows:
 
 ```txt
-ORIGIN [ORIGIN]... {
+ZONE [ZONE]... {
     [HANDLER]...
 }
 ```
 
-Such a section is called a server block. Each block defines the handlers this particular server should run
+Such a section is called a _server block_. Each block defines the handlers this particular server should run
 when it gets a query.
 
-The **ORIGIN** defines for which DNS zones this server should be called, multiple zones are allowed and must
+The **ZONE** defines for which DNS zones this server should be called, multiple zones are allowed and must
 be _white space_ separated.
 
-When a query comes in, it is matched again all zones for all servers, the server with the longest match on the
+When a query comes in, it is matched again all zones for all servers, the server with the longest match for the
 query name will receive the query.
 
 **HANDLER** defines the handlers(s) we want to load into this server. This is optional as well, but as
-server with no handlers will just return SERVFAIL for all queries. Each handlers can have a number of
+server with no handlers will just return REFUSED for all queries. Each handlers can have a number of
 properties than can have arguments, see the documentation for each handler (atomdns-**HANDLER**(7)).
 
 The order of the **HANDLER**s is the order in which they are executed! (If you know CoreDNS, this is
@@ -40,7 +40,7 @@ As an way to test things Conffile also supports a shorter way of writing things 
 a single server:
 
 ```conffile
-ORIGIN [ORIGIN]...
+ZONE ZONE]...
 [HANDLER]...
 ```
 
@@ -56,7 +56,7 @@ Is a valid config and is supported by `atomdns`.
 
 # Global
 
-A Conffile can have a global section, this is a section without an origin and holds various server wide
+A Conffile can have a global section, this is a section without a zone and holds various server wide
 options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
 and DOH) you have a section `dns`, `dot` and `doh` where you can configure the server, most notably the
 address and port you want to listen on.

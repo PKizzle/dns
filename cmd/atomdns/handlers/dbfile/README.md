@@ -24,7 +24,7 @@ dbfile FILE
 - **FILE** the zone file to load. If the path is relative, the path from the global root config will be
   prepended to it.
 
-If the origins specification contains multiple origins, they all will use the _same_ **FILE**. And you must make
+If the server block contains multiple zones, they all will use the _same_ **FILE**. And you must make
 sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names. Note that this break
 incoming transfers and thus will lead to an error when attempted.
 
@@ -48,10 +48,9 @@ dbfile FILE {
 - `transfer` details how zone transfers are handled, `from` deals with incoming AXFR from **IP**, and `to`
   deals with outgoing ones. Without `transfer` all transfers are prohibited. When transfer from a secondary
   _all_ SOA timers are ignored, every 10 time minutes the upstream(s) is(/are) check for SOA updates.
-
   - `from` allows for multiple upstream **IP**s to be specified, they will be tried in that order. Notifies
     from those servers will be matched against **IP**s.
-    If `from` is used _multipe_ origins are disallowed, and will cause an error because the transferred zone
+    If `from` is used _multipe_ zones are disallowed, and will cause an error because the transferred zone
     cant be shared. To save the zone file the directory of **FILE** must be writeable.
   - The `key` specification is for TSIG signed transfers. The **SECRET** must be base64 encoded.
   - `to` allows for multipe downstream **IP**s to be specified, those are all allowed to initiate a transfer.
@@ -95,7 +94,7 @@ www     IN A     127.0.0.1
         IN AAAA  ::1
 ```
 
-Or use a single zone file for multiple origins:
+Or use a single zone file for multiple zones:
 
 ```conffile
 example.org example.net {

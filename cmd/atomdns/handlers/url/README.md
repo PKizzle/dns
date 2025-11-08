@@ -23,8 +23,8 @@ url FILE {
 - **URL** the URL to fetch the zone from, a scheme must be used. This may be used multiple times, in which
   subsequent URLs are used as backup and downloaded when the earlier URL doesn't work.
 
-If the origins specification contains multiple origins, they all will use the _same_ **FILE**. And you must make
-sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names.
+If the server block specification contains multiple zones, they all will use the _same_ **FILE**. And you must make
+sure that zone **FILE** is generic enough, i.e. use `@` for zones instead of domain names.
 
 # Examples
 
