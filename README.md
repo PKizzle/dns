@@ -16,7 +16,7 @@
   - See `cmd/reflect` and do a `go build; go test -v`. Requires `dnsperf` to be installed.
 - More convenience functions included in _dns_ or otherwise in _dnsutils_.
 - Test helper function included _dnstest_.
-- Example programs included _and_ benchmarked in `cmd/`, `cmd/atomdns` runs as a nameserver for my domains.
+- Example programs included _and_ benchmarked in `cmd/`, `cmd/atomdns` runs as a nameserver for my zones.
 
 (Previous version is https://github.com/miekg/dns)
 
@@ -85,7 +85,7 @@ Miek Gieben - 2025- - <miek@miek.nl>
 This library uses Go modules and uses semantic versioning. Getting the code and working with the library is
 done via:
 
-    git clone git@codeberg.org:miekg/dns  # use https is you don't have a codeberg account
+    git clone git@codeberg.org:miekg/dns  # use https if you don't have a codeberg account
     cd dns
     # $EDTIOR *.go
 
@@ -153,7 +153,7 @@ _all of them_
 - 7043 - EUI48/EUI64 records
 - 7314 - DNS (EDNS) EXPIRE Option
 - 7477 - CSYNC RR
-- 7828 - tcp-keepalive EDNS0 Option
+- 7828 - TCP-keepalive EDNS0 Option
 - 7553 - URI record
 - 7719 - DNS Terminology
 - 7858 - DNS over TLS: Initiation and Performance Considerations
