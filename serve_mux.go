@@ -58,16 +58,12 @@ type ServeMux struct {
 }
 
 // NewServeMux allocates and returns a new ServeMux.
-func NewServeMux() *ServeMux { return new(ServeMux) }
+func NewServeMux() *ServeMux { return &ServeMux{z: map[string]Handler{}} }
 
 // DefaultServeMux is the default ServeMux used by Serve.
 var DefaultServeMux = NewServeMux()
 
 func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
-	if mux.z == nil {
-		return nil, ""
-	}
-
 	q = dnsutilCanonical(q)
 
 	var handler Handler
@@ -84,15 +80,18 @@ func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 			ds = off
 		}
 	}
-	mux.RUnlock()
 	if handler != nil {
+		mux.RUnlock()
 		return handler, q[ds:]
 	}
 
 	// Wildcard match, if we have found nothing try the root zone as a last resort.
 	if h, ok := mux.z["."]; ok {
+		mux.RUnlock()
 		return h, "."
 	}
+
+	mux.RUnlock()
 	return nil, ""
 }
 
