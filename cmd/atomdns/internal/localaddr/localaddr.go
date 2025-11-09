@@ -15,6 +15,9 @@ func Source(family int, sources []string) net.IP {
 			s1, _, _ := net.SplitHostPort(s)
 			sip = net.ParseIP(s1)
 		}
+		if sip == nil {
+			continue
+		}
 		switch family {
 		case dnsutil.IPv4Family:
 			if x := sip.To4(); x != nil {
