@@ -128,19 +128,16 @@ OLD                                                                  | NEW
 ```
 OLD                   | NEW
                       |
-r := m.Copy()         | r := &dns.Msg{Data: m.Data}
-                      | r.Unpack()
+r := m.Copy()         | r := m.Copy() // Shallow copy!
 ```
 
 ## Server
 
-Because Msg now carries its binary data too (you can still discard it) there is no need to do TSIG in the
-server it self, it can now be done in a handler. This, again, removes a little of internal code that slowed
-things down.
+Because `Msg` now carries its binary data too there is no need to do TSIG in the server it self, it can now be
+done in a handler. This, again, removes a little of internal code that slowed things down.
 
-The default implementation of `dns.ResponseWriter` is thread safe and this allows for TCP pipelining, which
-is thusly implemented in `dns.Server`. Writing or reading data is now done with `io.Copy` no more `ReadMsg` or
-`WriteMsg`.
+The default implementation of `dns.ResponseWriter` is thread safe and this for TCP pipelining, which is thusly
+implemented in `dns.Server`. Writing or reading data is now done with `io.Copy` no more `ReadMsg` or `WriteMsg`.
 
 A handler for instance:
 
