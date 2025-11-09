@@ -12,14 +12,36 @@ const (
 
 // for string we want to be able parse them with New().
 
-// KEEPALIVE implements  RFC 8490, Section 7.1: Keepalive TLV.
+// KEEPALIVE, see RFC 8490, section 7.1.
 //
 // This record must be put in the stateful section.
 type KEEPALIVE struct {
-	InactivityTimeout uint32
-	KeepAliveInterval uint32
+	Timeout  uint32
+	Interval uint32
 }
 
 func (d *KEEPALIVE) String() string {
-	return fmt.Sprintf("timeout %dms, interval %dms", d.InactivityTimeout, d.KeepAliveInterval)
+	return fmt.Sprintf("timeout %dms, interval %dms", d.Timeout, d.Interval)
+}
+
+// RETRYDELAY, see RFC 8490, section 7.2.
+//
+// This record must be put in the stateful section.
+type RETRYDELAY struct {
+	Delay uint32
+}
+
+func (d *RETRYDELAY) String() string {
+	return fmt.Sprintf("delay %dms", d.Delay)
+}
+
+// DPADDING option is used to add padding. See section 7.3.
+//
+// This record must be put in the stateful section.
+type DPADDING struct {
+	Padding string `dns:"octet"`
+}
+
+func (d *DPADDING) String() string {
+	return fmt.Sprintf("padding %s", d.Padding)
 }
