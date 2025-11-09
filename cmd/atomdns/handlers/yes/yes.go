@@ -3,11 +3,11 @@ package yes
 import (
 	"context"
 	"io"
-	"net"
 	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/localaddr"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -33,7 +33,7 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		switch qtype {
 		case dns.TypeA:
-			addr := source(1, y.Sources)
+			addr := localaddr.Source(dnsutil.IPv4Family, y.Sources)
 			if addr != nil {
 				rr := &dns.A{Hdr: h, A: addr}
 				m.Answer = append(m.Answer, rr)
@@ -41,7 +41,7 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Ns = append(m.Ns, soa)
 			}
 		case dns.TypeAAAA:
-			addr := source(2, y.Sources)
+			addr := localaddr.Source(dnsutil.IPv6Family, y.Sources)
 			if addr != nil {
 				rr := &dns.AAAA{Hdr: h, AAAA: addr}
 				m.Answer = append(m.Answer, rr)
@@ -75,17 +75,4 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		io.Copy(w, m)
 	})
-}
-
-func source(fam int, sources []string) net.IP {
-	for _, s := range sources {
-		sip := net.ParseIP(s)
-		if x := sip.To4(); x != nil && fam == 1 {
-			return x
-		}
-		if sip.To4() == nil && fam == 2 {
-			return sip
-		}
-	}
-	return nil
 }
