@@ -8,7 +8,6 @@ import (
 	"iter"
 	"net"
 	"strconv"
-	"strings"
 
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
@@ -466,7 +465,7 @@ func (m *Msg) String() string {
 	if m == nil {
 		return "<nil> Msg"
 	}
-	sb := strings.Builder{}
+	sb := builderPool.Get()
 
 	sb.WriteString(m.MsgHeader.String())
 	// if core EDNS flags are set, we print this (flags are already handled in MsgHeader)
@@ -479,28 +478,36 @@ func (m *Msg) String() string {
 	}
 
 	sections := [5]string{"QUESTION", "PSEUDO", "ANSWER", "AUTHORITY", "ADDITIONAL"}
+	const (
+		Question = iota
+		Pseudo
+		Answer
+		Authority
+		Additional
+		// Stateful
+	)
 	sb.WriteString(";; ")
-	sb.WriteString(sections[0])
+	sb.WriteString(sections[Question])
 	sb.WriteString(": ")
 	sb.WriteString(strconv.Itoa(len(m.Question)))
 	sb.WriteString(", ")
 
-	sb.WriteString(sections[1])
+	sb.WriteString(sections[Pseudo])
 	sb.WriteString(": ")
 	sb.WriteString(strconv.Itoa(len(m.Pseudo)))
 	sb.WriteString(", ")
 
-	sb.WriteString(sections[2])
+	sb.WriteString(sections[Answer])
 	sb.WriteString(": ")
 	sb.WriteString(strconv.Itoa(len(m.Answer)))
 	sb.WriteString(", ")
 
-	sb.WriteString(sections[3])
+	sb.WriteString(sections[Authority])
 	sb.WriteString(": ")
 	sb.WriteString(strconv.Itoa(len(m.Ns)))
 	sb.WriteString(", ")
 
-	sb.WriteString(sections[4])
+	sb.WriteString(sections[Additional])
 	sb.WriteString(": ")
 	sb.WriteString(strconv.Itoa(len(m.Extra)))
 	sb.WriteString(", ")
@@ -515,7 +522,7 @@ func (m *Msg) String() string {
 
 	if len(m.Question) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[0])
+		sb.WriteString(sections[Question])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Question {
 			// as we fake RRs to be present in the question section, just manual unpack print the header without the TTL here.
@@ -537,7 +544,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Pseudo) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[1])
+		sb.WriteString(sections[Pseudo])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Pseudo {
 			sb.WriteString(r.String())
@@ -546,7 +553,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Answer) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[2])
+		sb.WriteString(sections[Answer])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Answer {
 			sb.WriteString(r.String())
@@ -558,7 +565,7 @@ func (m *Msg) String() string {
 	}
 	if len(m.Ns) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[3])
+		sb.WriteString(sections[Authority])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Ns {
 			sb.WriteString(r.String())
@@ -567,14 +574,16 @@ func (m *Msg) String() string {
 	}
 	if len(m.Extra) > 0 {
 		sb.WriteString("\n;; ")
-		sb.WriteString(sections[4])
+		sb.WriteString(sections[Additional])
 		sb.WriteString(" SECTION:\n")
 		for _, r := range m.Extra {
 			sb.WriteString(r.String())
 			sb.WriteByte('\n')
 		}
 	}
-	return sb.String()
+	s := sb.String()
+	builderPool.Put(sb)
+	return s
 }
 
 // isCompressible returns whether the msg may be compressible.
@@ -851,7 +860,7 @@ func (m *Msg) All() iter.Seq[RR] {
 }
 
 // Copy returns a shallow copy of the message, specifically the RR contained in the message are copied by
-// reference, not via DeepCopy. If m was hijacked via [Msg.Hijack] the returned Msg will not be hijacked.
+// reference, not via a deep copy. If m was hijacked via [Msg.Hijack] the returned Msg will not be hijacked.
 // The msgPool of m will be copied, meaning the new message when traversing a default [dns.ResponseWriter]
 // will have it's buffer returned to the servers msg pool.
 func (m *Msg) Copy() *Msg {
