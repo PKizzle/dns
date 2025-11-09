@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/localaddr"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -64,13 +65,10 @@ func (t *Transfer) Notify(origin string) error {
 	m.Authoritative = true
 	m.Opcode = dns.OpcodeNotify
 	dnsutil.SetQuestion(m, origin, dns.TypeSOA)
-	c := new(dns.Client)
-	c.Transport = dns.NewDefaultTransport()
-	// TODO(miek): TSIG
 
 	var lasterr error
 	for _, ip := range t.IPs {
-		if err := notify(c, m, ip, t.Sources); err != nil {
+		if err := notify(m, ip, t.Sources); err != nil {
 			lasterr = err
 		}
 	}
@@ -79,8 +77,15 @@ func (t *Transfer) Notify(origin string) error {
 	return lasterr
 }
 
-func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
-	c.Dialer.LocalAddr = &net.UDPAddr{IP: source(ip, sources)}
+func notify(m *dns.Msg, ip string, sources []string) error {
+	c := new(dns.Client)
+	c.Transport = dns.NewDefaultTransport()
+	family := dnsutil.IPv4Family
+	if net.ParseIP(ip).To4() == nil {
+		family = dnsutil.IPv6Family
+	}
+
+	c.Dialer.LocalAddr = &net.UDPAddr{IP: localaddr.Source(family, sources)}
 	for range 2 {
 		alog := log().With("upstream", ip, "zone", m.Question[0].Header().Name)
 		r, _, err := c.Exchange(context.TODO(), m, "udp", ip)
@@ -95,22 +100,6 @@ func notify(c *dns.Client, m *dns.Msg, ip string, sources []string) error {
 		time.Sleep(time.Second)
 	}
 	return fmt.Errorf("upstream %q did not accept our notify for zone %q", ip, m.Question[0].Header().Name)
-}
-
-// returns the correct family address or nil, or nil when nothing is needed.
-func source(ip string, sources []string) net.IP {
-	h, _, _ := net.SplitHostPort(ip)
-	fam := net.ParseIP(h).To4() != nil
-	for _, s := range sources {
-		sip := net.ParseIP(s)
-		if x := sip.To4(); x != nil && fam {
-			return x
-		}
-		if sip.To4() == nil && !fam {
-			return sip
-		}
-	}
-	return nil
 }
 
 // AvailableFrom return true if the "other side" has a newer SOA then we have. The first IP that answers

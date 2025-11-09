@@ -1,0 +1,30 @@
+package localaddr
+
+import (
+	"bytes"
+	"net"
+	"testing"
+
+	"codeberg.org/miekg/dns/dnsutil"
+)
+
+func TestSource(t *testing.T) {
+	testcases := []struct {
+		sources []string
+		fam     int
+		exp     net.IP
+	}{
+		{[]string{"127.0.0.1"}, dnsutil.IPv6Family, nil},
+		{[]string{"127.0.0.1"}, dnsutil.IPv4Family, net.ParseIP("127.0.0.1").To4()},
+		{[]string{"127.0.0.1", "::1"}, dnsutil.IPv4Family, net.ParseIP("127.0.0.1").To4()},
+		{[]string{"127.0.0.1", "::1"}, dnsutil.IPv6Family, net.ParseIP("::1")},
+		{[]string{"::1"}, dnsutil.IPv4Family, nil},
+	}
+	for i, tc := range testcases {
+		got := Source(tc.fam, tc.sources)
+		if !bytes.Equal(tc.exp, got) {
+			t.Errorf("test %d, expected %q, got %q", i, tc.exp, got)
+
+		}
+	}
+}
