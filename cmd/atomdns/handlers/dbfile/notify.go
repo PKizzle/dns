@@ -80,8 +80,10 @@ func (t *Transfer) Notify(origin string) error {
 func notify(m *dns.Msg, ip string, sources []string) error {
 	c := new(dns.Client)
 	c.Transport = dns.NewDefaultTransport()
+	host, _, _ := net.SplitHostPort(ip)
+
 	family := dnsutil.IPv4Family
-	if net.ParseIP(ip).To4() == nil {
+	if net.ParseIP(host).To4() == nil {
 		family = dnsutil.IPv6Family
 	}
 
