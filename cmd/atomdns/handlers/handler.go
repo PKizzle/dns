@@ -20,14 +20,14 @@ import (
 //   - call the next handler, wait for it to return and modify the [dns.Msg], think of setting TSIG or a DNS
 //     cookie.
 type Handler interface {
-	HandlerFunc(dns.HandlerFunc) dns.HandlerFunc
+	HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc
 	Err(error) error
 }
 
 // Setupper holds a single method that is called when this Handler has configuration that needs to be parsed
-// from the config file. The options global.Global holds the server's global config.
+// from the config file. The co's Global holds the server's global config.
 type Setupper interface {
-	Setup(*dnsserver.Controller) error
+	Setup(co *dnsserver.Controller) error
 }
 
 // Compile takes the Handlers hs and creates a wrapped handle func.
@@ -37,8 +37,7 @@ func Compile(hs []Handler) dns.HandlerFunc {
 	}
 
 	wrapped := func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {}
-	// loop in reverse to preserve middleware order
-	for i := len(hs) - 1; i >= 0; i-- {
+	for i := len(hs) - 1; i >= 0; i-- { // loop in reverse to preserve middleware order
 		wrapped = hs[i].HandlerFunc(wrapped)
 	}
 	return wrapped
