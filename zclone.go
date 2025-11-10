@@ -777,7 +777,19 @@ func (rr *ZONEVERSION) Clone() RR {
 
 func (rr *KEEPALIVE) Clone() RR {
 	return &KEEPALIVE{
-		rr.InactivityTimeout,
-		rr.KeepAliveInterval,
+		rr.Timeout,
+		rr.Interval,
+	}
+}
+
+func (rr *RETRYDELAY) Clone() RR {
+	return &RETRYDELAY{
+		rr.Delay,
+	}
+}
+
+func (rr *DPADDING) Clone() RR {
+	return &DPADDING{
+		rr.Padding,
 	}
 }

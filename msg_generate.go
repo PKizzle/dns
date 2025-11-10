@@ -150,8 +150,6 @@ if rr.%s != "-" {
 					o("off, err = pack.StringHex(rr.%s, msg, off)\n")
 				case tag == `dns:"any"`:
 					o("off, err = pack.StringAny(rr.%s, msg, off)\n")
-				case tag == `dns:"octet"`:
-					o("off, err = pack.StringOctet(rr.%s, msg, off)\n")
 				case tag == "":
 					switch fieldtype {
 					case "uint8":
@@ -304,10 +302,10 @@ if rr.%s != "-" {
 					case "string":
 						unpackField("unpack.String")
 					default:
-						log.Fatalln("No tag or basic type", rrname, fieldname, tag)
+						log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 					}
 				default:
-					log.Fatalln(rrname, fieldname, tag)
+					log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 				}
 			}
 			fmt.Fprintf(b, `if !s.Empty() { return unpack.Errorf("trailing record data: %%s", "%s")}`+"\n", rrname)
