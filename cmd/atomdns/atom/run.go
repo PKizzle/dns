@@ -146,7 +146,7 @@ func builtinfo() []slog.Attr {
 	return []slog.Attr{
 		slog.String("GOOS", goos),
 		slog.String("GOARCH", goarch),
-		slog.String("GO", bi.GoVersion),
+		slog.String("go", strings.TrimPrefix(bi.GoVersion, "go")),
 		slog.String("revision", revision),
 	}
 }
