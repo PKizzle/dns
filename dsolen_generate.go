@@ -62,6 +62,10 @@ func main() {
 			switch {
 			case tag == `dns:"-"`:
 				// ignored
+			case tag == `dns:"hex"`:
+				o("l += len(rr.%s)/2\n")
+			case tag == `dns:"any"`:
+				o("l += len(rr.%s)\n")
 			case tag == "":
 				switch fieldtype {
 				case "uint8":
@@ -75,10 +79,10 @@ func main() {
 				case "string":
 					o("l += len(rr.%s) + 1\n")
 				default:
-					log.Fatalln(rrname, fieldname)
+					log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 				}
 			default:
-				log.Fatalln(rrname, fieldname, tag)
+				log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 			}
 		}
 		fmt.Fprint(b, "return l }\n\n")

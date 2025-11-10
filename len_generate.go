@@ -106,8 +106,6 @@ func main() {
 				o("l += len(rr.%s)+1\n")
 			case tag == `dns:"domain-name"`:
 				o("l += len(rr.%s)+1\n")
-			case tag == `dns:"octet"`:
-				o("l += len(rr.%s)\n")
 			case strings.HasPrefix(tag, `dns:"size-base64`):
 				fallthrough
 			case tag == `dns:"base64"`:
@@ -137,10 +135,10 @@ func main() {
 				case "string":
 					o("l += len(rr.%s) + 1\n")
 				default:
-					log.Fatalln(rrname, fieldname)
+					log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 				}
 			default:
-				log.Fatalln(rrname, fieldname, tag)
+				log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 			}
 		}
 		fmt.Fprint(b, "return l }\n\n")

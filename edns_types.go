@@ -130,7 +130,7 @@ func (o *NSID) String() string {
 //
 // This record must be put in the pseudo section.
 type PADDING struct {
-	Padding string `dns:"octet"`
+	Padding string `dns:"hex"`
 }
 
 func (o *PADDING) Len() int       { return tlv + len(o.Padding) }
@@ -517,5 +517,5 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	return 0, fmt.Errorf("dns: no option pack defined")
 }
 
-// type, length, value is the length the code (2 octets) and length (2 octects) of each EDNS0 option code.
+// type, length, value is the length the code (2 octets) and length (2 octets) of each EDNS0 option code.
 const tlv = 4
