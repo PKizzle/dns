@@ -53,7 +53,7 @@ func (d *DPADDING) String() string {
 TODO(miek): commented out because rdata with full blown RRs isn't supported.
 // SUBSCRIBE, see RFC 8765.
 type SUBSCRIBE struct {
-	RR RR
+	RR RR // RR is one without rdata, only name, class, and type are significant.
 }
 
 func (d *SUBSCRIBE) String() string { return d.RR.String() }
