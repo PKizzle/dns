@@ -50,7 +50,7 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			}
 		case dns.TypeCAA:
 			for i := range y.Caa {
-				rr := &dns.CAA{Hdr: h, Flag: 128, Tag: "issuer", Value: y.Caa[i]}
+				rr := &dns.CAA{Hdr: h, Flag: 128, Tag: "issue", Value: y.Caa[i]}
 				m.Answer = append(m.Answer, rr)
 			}
 		case dns.TypeNS:
