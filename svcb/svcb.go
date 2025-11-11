@@ -168,7 +168,7 @@ func (s *MANDATORY) Len() int { return tlv + 2*len(s.Key) }
 // Basic use pattern for creating an ALPN option, in a SVCB RR called s:
 //
 //	e := svcb.ALPN{Alpn: []string{"h2", "http/1.1"}}
-//	s.Value = append(h.Value, e)
+//	s.Value = append(s.Value, e)
 type ALPN struct {
 	Alpn []string
 }
@@ -230,10 +230,9 @@ func (s *ALPN) Len() int {
 // Should be used in conjunction with alpn.
 // Basic use pattern for creating a no-default-alpn option:
 //
-//	t := new(dns.ALPN)
-//	t.Alpn = []string{"xmpp-client"}
+//	t := &svcb.ALPN{Alpn: []string{"xmpp-client"}}
 //	s.Value = append(s.Value, t)
-//	e := new(dns.NODEFAULTALPN)
+//	e := &svcb.NODEFAULTALPN{}
 //	s.Value = append(s.Value, e)
 type NODEFAULTALPN struct{}
 
@@ -243,7 +242,7 @@ func (*NODEFAULTALPN) Len() int       { return tlv + 0 }
 // PORT pair defines the port for connection.
 // Basic use pattern for creating a port option:
 //
-//	s.Value = append(s.Value, &dns.PORT{Port: 80})
+//	s.Value = append(s.Value, &svcb.PORT{Port: 80})
 type PORT struct {
 	Port uint16
 }
@@ -258,8 +257,7 @@ func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 // Basic use pattern for creating an ipv4hint option:
 //
 //	 h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	 e := new(dns.IPV4HINT)
-//	 e.Hint = []net.IP{net.IPv4(1,1,1,1)}
+//	 e := &svcb.IPV4HINT{Hint: []net.IP{net.IPv4(1,1,1,1)}}
 //
 //	Or
 //
@@ -287,11 +285,10 @@ func (s *IPV4HINT) String() string {
 // Basic use pattern for creating an ech option:
 //
 //	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	e := new(dns.ECHCONFIG)
-//	e.ECH = []byte{0xfe, 0x08, ...}
+//	e := &svcb.ECHCONFIG{ECH: []byte{0xfe, 0x08, ...}}
 //	h.Value = append(h.Value, e)
 type ECHCONFIG struct {
-	ECH []byte // Specifically ECHConfigList including the redundant length prefix
+	ECH []byte // Specifically ECHConfigList including the redundant length prefix.
 }
 
 func (s *ECHCONFIG) String() string { return base64.StdEncoding.EncodeToString(s.ECH) }
@@ -304,8 +301,7 @@ func (s *ECHCONFIG) Len() int       { return tlv + len(s.ECH) }
 // Basic use pattern for creating an ipv6hint option:
 //
 //	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	e := new(dns.IPV6HINT)
-//	e.Hint = []net.IP{net.ParseIP("2001:db8::1")}
+//	e := &svcb.IPV6HINT{Hint: []net.IP{net.ParseIP("2001:db8::1")}}
 //	h.Value = append(h.Value, e)
 type IPV6HINT struct {
 	Hint []net.IP
@@ -333,8 +329,8 @@ func (s *IPV6HINT) String() string {
 // A basic example of using the dohpath option together with the alpn
 // option to indicate support for DNS over HTTPS on a certain path:
 //
-//	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
-//	p := &dns.DOHPATH{Template: "/dns-query{?dns}"}
+//	e := &svcb.ALPN{Alpn: []string{"h2", "h3"}}
+//	p := &svcb.DOHPATH{Template: "/dns-query{?dns}"}
 //	s.Value = append(s.Value, e, p)
 //
 // The parsing currently doesn't validate that Template is a valid RFC 6570 URI template.
@@ -356,7 +352,7 @@ func (s *DOHPATH) Len() int       { return tlv + len(s.Template) }
 // option to indicate support for DNS over HTTPS on a certain path:
 //
 //	e := &dns.ALPN{Alpn: []string{"h2", "h3"}}
-//	p := &dns.OHTTP{}
+//	p := &svcb.OHTTP{}
 //	s.Value = append(s.Value, e, p)
 type OHTTP struct{}
 
@@ -368,20 +364,15 @@ func (*OHTTP) Len() int       { return tlv + 0 }
 // Basic use pattern for creating a keyNNNNN option:
 //
 //	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	e := new(svcb.LOCAL)
-//	e.KeyCode = 65400
-//	e.Data = []byte("abc")
+//	e := &svcb.LOCAL{KeyCode: 65400, Data: []byte("abc")}
 //	h.Value = append(h.Value, e)
 type LOCAL struct {
-	KeyCode uint16 // just like RFC5559
+	KeyCode uint16 // Just like as in RFC 5559.
 	Data    []byte // All byte sequences are allowed.
 }
 
 func (s *LOCAL) String() string { return pairToString(s.Data) }
-
-func (s *LOCAL) Len() int { return tlv + len(s.Data) }
-
-const tlv = 4
+func (s *LOCAL) Len() int       { return tlv + len(s.Data) }
 
 func (s *MANDATORY) Clone() Pair     { return &MANDATORY{slices.Clone(s.Key)} }
 func (s *ALPN) Clone() Pair          { return &ALPN{slices.Clone(s.Alpn)} }
@@ -407,3 +398,5 @@ func (s *IPV6HINT) Clone() Pair {
 	}
 	return &IPV6HINT{Hint: hint}
 }
+
+const tlv = 4

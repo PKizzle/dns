@@ -6,8 +6,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// This tests everything valid about SVCB but parsing.
-// Parsing tests belong to parse_test.go.
+// This tests everything valid about SVCB but parsing. Parsing tests belong to parse_test.go.
 func TestSVCB(t *testing.T) {
 	svcbs := []struct {
 		key  string
