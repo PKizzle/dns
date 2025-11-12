@@ -24,7 +24,7 @@ const (
 // StringToMsg convert a string as created by [Msg.String] back to an dns message. If the parsing fails and
 // error is returned.
 // The ";; QUESTION: 1, PSEUDO: 0, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 0, DATA SIZE: 0" line is skipped when
-// encountered. A dynamic update message can't be parsed.
+// encountered.
 func StringToMsg(s string) (*dns.Msg, error) {
 	m := new(dns.Msg)
 	state := stateNone
