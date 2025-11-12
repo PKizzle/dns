@@ -44,14 +44,12 @@ func (set RRset) Swap(i, j int)      { set[i], set[j] = set[j], set[i] }
 // implemented.
 func CompareName(a, b string) int {
 	// See https://bert-hubert.blogspot.com/2015/10/how-to-do-fast-canonical-ordering-of.html
-	labels := 1
-
 	lasta, _ := dnsutilPrev(a, 0)
 	lastb, _ := dnsutilPrev(b, 0)
 
 	for {
-		cura, overshota := dnsutilPrev(a, labels)
-		curb, overshotb := dnsutilPrev(b, labels)
+		cura, overshota := dnsutilPrev(a[:lasta], 1)
+		curb, overshotb := dnsutilPrev(b[:lastb], 1)
 		if overshota && overshotb {
 			return 0
 		}
@@ -67,7 +65,6 @@ func CompareName(a, b string) int {
 		if x != 0 {
 			return x
 		}
-		labels++
 		lasta = cura
 		lastb = curb
 	}
