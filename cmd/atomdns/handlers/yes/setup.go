@@ -23,17 +23,8 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 					return co.PropEmptyErr("ns")
 				}
 				for _, arg := range args {
-					y.Ns = append(y.Ns, dnsutil.Canonical(arg))
+					y.Ns = dnsutil.Canonical(arg)
 				}
-			case "source":
-				args, err := co.RemainingIPs()
-				if err != nil {
-					return co.PropErr(err)
-				}
-				if len(args) == 0 {
-					return co.PropEmptyErr("source")
-				}
-				y.Sources = append(y.Sources, args...)
 			default:
 				return co.PropErr()
 			}
@@ -42,8 +33,8 @@ func (y *Yes) Setup(co *dnsserver.Controller) error {
 	if len(y.Caa) == 0 {
 		return co.PropEmptyErr("caa")
 	}
-	if len(y.Sources) == 0 {
-		return co.PropEmptyErr("source")
+	if y.Ns == "" {
+		return co.PropEmptyErr("ns")
 	}
 	return nil
 }

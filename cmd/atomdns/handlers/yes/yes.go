@@ -3,18 +3,17 @@ package yes
 import (
 	"context"
 	"io"
+	"net"
 	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/localaddr"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
 type Yes struct {
-	Caa     []string
-	Ns      []string
-	Sources []string
+	Caa []string
+	Ns  string
 }
 
 const ttl = 254
@@ -27,45 +26,35 @@ func (y *Yes) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m.Authoritative = true
 
 		h := dns.Header{Name: qname, Class: dns.ClassINET, TTL: ttl}
-		soa := &dns.SOA{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl},
-			Ns: dnsutil.Join("ns", dns.Zone(ctx)), Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
-			Serial: uint32(time.Now().Unix()), Minttl: ttl, Refresh: 3600, Retry: 3600, Expire: 3600}
 
 		switch qtype {
 		case dns.TypeA:
-			addr := localaddr.Source(dnsutil.IPv4Family, y.Sources)
-			if addr != nil {
-				rr := &dns.A{Hdr: h, A: addr}
-				m.Answer = append(m.Answer, rr)
-			} else {
-				m.Ns = append(m.Ns, soa)
-			}
+			rr := &dns.A{Hdr: h, A: net.ParseIP("198.51.100.1")}
+			m.Answer = append(m.Answer, rr)
 		case dns.TypeAAAA:
-			addr := localaddr.Source(dnsutil.IPv6Family, y.Sources)
-			if addr != nil {
-				rr := &dns.AAAA{Hdr: h, AAAA: addr}
-				m.Answer = append(m.Answer, rr)
-			} else {
-				m.Ns = append(m.Ns, soa)
-			}
+			rr := &dns.AAAA{Hdr: h, AAAA: net.ParseIP("2001:db8::1")}
+			m.Answer = append(m.Answer, rr)
 		case dns.TypeCAA:
 			for i := range y.Caa {
 				rr := &dns.CAA{Hdr: h, Flag: 128, Tag: "issue", Value: y.Caa[i]}
 				m.Answer = append(m.Answer, rr)
 			}
-		case dns.TypeNS:
-			rr := &dns.NS{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl}, Ns: dnsutil.Join("ns", dns.Zone(ctx))}
-			m.Answer = append(m.Answer, rr)
-			for i := range y.Ns {
-				rr := &dns.NS{Hdr: dns.Header{Name: dns.Zone(ctx), Class: dns.ClassINET, TTL: ttl}, Ns: y.Ns[i]}
-				m.Answer = append(m.Answer, rr)
-			}
-		case dns.TypeSOA:
-			m.Answer = append(m.Answer, soa)
 		case dns.TypeTXT:
 			rr := &dns.TXT{Hdr: h, Txt: []string{"yes"}}
 			m.Answer = append(m.Answer, rr)
+		case dns.TypeNS:
+			h.Name = dns.Zone(ctx)
+			rr := &dns.NS{Hdr: h, Ns: y.Ns}
+			m.Answer = append(m.Answer, rr)
+		case dns.TypeSOA:
+			h.Name = dns.Zone(ctx)
+			soa := &dns.SOA{Hdr: h, Ns: y.Ns, Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
+				Serial: uint32(time.Now().Unix()), Minttl: ttl, Refresh: 3600, Retry: 3600, Expire: 3600}
+			m.Answer = append(m.Answer, soa)
 		default: // nodata response
+			h.Name = dns.Zone(ctx)
+			soa := &dns.SOA{Hdr: h, Ns: y.Ns, Mbox: dnsutil.Join("hostmaster", dns.Zone(ctx)),
+				Serial: uint32(time.Now().Unix()), Minttl: ttl, Refresh: 3600, Retry: 3600, Expire: 3600}
 			m.Ns = append(m.Ns, soa)
 		}
 
