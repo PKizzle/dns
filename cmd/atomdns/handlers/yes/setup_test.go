@@ -12,17 +12,23 @@ func TestSetup(t *testing.T) {
 		input string
 		exp   *Yes
 	}{
-		{`yes {
+		{
+			`yes {
 				caa aaa
 				caa bb
-				source ::1
+				ns ns2.example.org
 			}
-		}`, &Yes{Caa: []string{"aaa", "bb"}, Sources: []string{"::1"}}},
-		{`yes {
+		}`,
+			&Yes{Caa: []string{"aaa", "bb"}, Ns: "ns2.example.org."},
+		},
+		{
+			`yes {
 				caa aaa
-				source 127.0.0.1
+				ns ns1.example.org
 			}
-		}`, &Yes{Caa: []string{"aaa"}, Sources: []string{"127.0.0.1"}}},
+		}`,
+			&Yes{Caa: []string{"aaa"}, Ns: "ns1.example.org."},
+		},
 	}
 	for i, tc := range testcases {
 		yes := new(Yes)
@@ -36,8 +42,8 @@ func TestSetup(t *testing.T) {
 		if slices.Compare(tc.exp.Caa, yes.Caa) != 0 {
 			t.Errorf("test %d: expected %v, got %v", i, tc.exp.Caa, yes.Caa)
 		}
-		if slices.Compare(tc.exp.Sources, yes.Sources) != 0 {
-			t.Errorf("test %d: expected %v, got %v", i, tc.exp.Sources, yes.Sources)
+		if tc.exp.Ns != yes.Ns {
+			t.Errorf("test %d: expected %q, got %q", i, tc.exp.Ns, yes.Ns)
 		}
 	}
 }
