@@ -31,7 +31,4 @@ func (n *Node) String() string {
 }
 
 // Less compares nodes a, b by Name and returns true if a is less than b.
-func Less(a, b *Node) bool {
-	x := dns.CompareName(a.Name, b.Name)
-	return x == -1
-}
+func Less(a, b *Node) bool { x := dns.CompareName(a.Name, b.Name); return x == -1 }
