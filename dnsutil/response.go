@@ -45,7 +45,7 @@ func Network(w dns.ResponseWriter) string {
 	return "udp"
 }
 
-// Family returns the family of the transport, 1 for IPv4 and 2 for IPv6 as defined by IANA.
+// Family returns the family of the transport, which is either [IPv4Family] or [IPv6Family] as defined by IANA.
 func Family(w dns.ResponseWriter) int {
 	var a net.IP
 	ip := w.RemoteAddr()

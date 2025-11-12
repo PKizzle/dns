@@ -9,9 +9,9 @@ import (
 )
 
 // NSEC3Name returns the hashed owner name according to RFC 5155.
-func NSEC3Name(name, salt string, iter uint16) string {
+func NSEC3Name(s, salt string, iter uint16) string {
 	hashdata := make([]byte, hex.DecodedLen(len(salt))+255)
-	n, err := pack.Name(name, hashdata, 0, nil, false)
+	n, err := pack.Name(s, hashdata, 0, nil, false)
 	if err != nil {
 		return ""
 	}
@@ -21,16 +21,16 @@ func NSEC3Name(name, salt string, iter uint16) string {
 	}
 	hashdata = hashdata[:n+m]
 
-	s := sha1.New()
+	hash := sha1.New()
 	// k = 0
-	s.Write(hashdata)
-	nsec3 := s.Sum(nil)
+	hash.Write(hashdata)
+	nsec3 := hash.Sum(nil)
 
 	for k := uint16(0); k < iter; k++ {
-		s.Reset()
-		s.Write(nsec3)
-		s.Write(hashdata[n:])
-		nsec3 = s.Sum(nil)
+		hash.Reset()
+		hash.Write(nsec3)
+		hash.Write(hashdata[n:])
+		nsec3 = hash.Sum(nil)
 	}
 	return base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(nsec3)
 }

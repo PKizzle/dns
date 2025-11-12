@@ -59,7 +59,7 @@ func main() {
 	// silly: go over bytes and remove `dns.` everyhwere.
 	source2 := bytes.Replace(source.Bytes(), []byte(`dns.`), nil, -1)
 	// but then "fix" it for function calls: IsFqdn, Fqdn and Next who are now named dnsutilIsFqdn, dnsutilFqdn, etc.
-	for _, fix := range [][]byte{[]byte(" IsFqdn(s)"), []byte(" Fqdn(s)"), []byte(" Next(s, off)"), []byte(" IsFqdn(name)"), []byte(" IsName(name)")} {
+	for _, fix := range [][]byte{[]byte(" IsFqdn(s)"), []byte(" Fqdn(s)"), []byte(" Next(s, off)"), []byte(" IsFqdn(s)"), []byte(" IsName(s)")} {
 		replace := append([]byte(" dnsutil"), fix[1:]...)
 		source2 = bytes.Replace(source2, fix, replace, -1)
 	}

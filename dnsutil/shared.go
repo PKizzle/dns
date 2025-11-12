@@ -90,7 +90,8 @@ func Prev(s string, n int) (i int, start bool) {
 	return 0, n > 1
 }
 
-// Fqdn return the fully qualified domain name from s. If s is already fully qualified, it behaves as the identity function.
+// Fqdn return the fully qualified domain name from s. If s is already fully qualified, it behaves as the
+// identity function.
 func Fqdn(s string) string {
 	if IsFqdn(s) {
 		return s
@@ -255,32 +256,32 @@ func StringToTime(s string) (uint32, error) {
 }
 
 // Absolute takes the name and origin and appends the origin to the name. This takes the 1035 presentation
-// format into account, i.e. "@" means the origin in name.
-// If Name is not a valid domain name, the empty string is returned. If the origin is needed to be appended,
-// but is empty the empty string is returned.
-func Absolute(name, origin string) string {
-	if name == "@" {
+// format into account, i.e. "@" means the origin in a name.
+// If s is not a valid domain name, the empty string is returned. If the origin is needed to be appended,
+// but is empty the empty string is also returned.
+func Absolute(s, origin string) string {
+	if s == "@" {
 		if origin == "" {
 			return ""
 		}
 		return origin
 	}
-	if name == "\n" || name == "" { // this can happen when a zone is parsed, internal quirk, should not be here...
+	if s == "\n" || s == "" { // this can happen when a zone is parsed, internal quirk, should not be here...
 		return ""
 	}
-	if IsName(name) == false { // done to make the conversion via dnsutil_generate.go work.
+	if IsName(s) == false { // done to make the conversion via dnsutil_generate.go work.
 		return ""
 	}
-	if IsFqdn(name) {
-		return name
+	if IsFqdn(s) {
+		return s
 	}
 	if origin == "" {
 		return ""
 	}
 	if origin == "." {
-		return name + origin
+		return s + origin
 	}
-	return name + "." + origin
+	return s + "." + origin
 }
 
 // maxSerialIncrement is the maximum difference between two serial numbers. See RFC 1982.
