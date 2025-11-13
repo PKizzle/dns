@@ -42,7 +42,7 @@ Read:
 			if err != nil {
 				// there is no Msg to speak of so we can't call MsgInvalidFunc...
 				for i := range BatchSize {
-					srv.MsgPool.Put((bufs[i])[:cap(bufs[i])])
+					srv.MsgPool.Put(bufs[i])
 				}
 				continue Read
 			}
@@ -57,7 +57,7 @@ Read:
 			}
 			// return if we over-allocated
 			for j := n + 1; j < BatchSize; j++ {
-				srv.MsgPool.Put((bufs[j])[:cap(bufs[j])])
+				srv.MsgPool.Put(bufs[j])
 			}
 		}
 	}

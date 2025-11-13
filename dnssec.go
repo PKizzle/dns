@@ -261,7 +261,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 
 	// Create the desired binary blob
 	signdata := options.Pooler.Get()
-	defer options.Pooler.Put(signdata[:cap(signdata)])
+	defer options.Pooler.Put(signdata)
 
 	n, _ := sigwire.pack(signdata)
 	m := rawSignatureData(signdata[n:], rrset, rr, *options)
@@ -379,7 +379,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	sigwire.SignerName = rr.SignerName
 	// Create the desired binary blob
 	signeddata := options.Pooler.Get()
-	defer options.Pooler.Put(signeddata[:cap(signeddata)])
+	defer options.Pooler.Put(signeddata)
 
 	n, _ := sigwire.pack(signeddata)
 	m := rawSignatureData(signeddata[n:], rrset, rr, *options)
