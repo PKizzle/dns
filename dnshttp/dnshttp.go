@@ -1,7 +1,7 @@
 // Package dnshttp deals with converting HTTP requests and responses to dns.Msg types. This is part of DNS
 // over HTTP (DOH).
-// The mandatory tls.Config must contain tlsConfig.NextProtos = []string{"h2", "http/1.1"}, otherwise it want
-// work with most clients.
+// The mandatory tls.Config must contain tlsConfig.NextProtos = []string{"h2", "http/1.1"}, otherwise it will
+// not work with most clients.
 package dnshttp
 
 import (
@@ -15,8 +15,6 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-// Request/Response from http pacg
-
 // MimeType is the DOH mimetype.
 const MimeType = "application/dns-message"
 
@@ -25,7 +23,7 @@ const Path = "/dns-query"
 
 // NewRequest returns a new DOH request given a HTTP method, URL and a [dns.Msg].
 //
-// The URL should not have a path, so exclude /dns-query. The URL will be prefixed with https:// by default,
+// The URL should not have a path, so "/dns-query" should be excluded. The URL will be prefixed with https:// by default,
 // unless it's already prefixed with either http:// or https://. Supported methods are GET or POST.
 func NewRequest(method, url string, m *dns.Msg) (*http.Request, error) {
 	// TODO(miek): hijack buffer?
@@ -114,12 +112,12 @@ func msg(r io.ReadCloser) (*dns.Msg, error) {
 	return m, err
 }
 
-// MsgAcceptAction is the function that checks if the incoming message is valid. It's a variable so it can be
-// set at the beginning.
+// MsgAcceptAction is the function that checks if the incoming message is valid. This is used in DOQ (DNS over
+// QUIC).
 var MsgAcceptAction = DefaultMsgAcceptFunc
 
-// DefaultMsgAcceptFunc implements the check mandated by DOQ, that the Pseudo section cannot contain an TCP-KEEPALIVE option.
-// See RFC 9250 and maybe RFC 8484 too.
+// DefaultMsgAcceptFunc implements the check mandated by DOQ, that the Pseudo section cannot contain an TCP-KEEPALIVE
+// option. Not other checks are performed.
 func DefaultMsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
 	for _, o := range m.Pseudo {
 		if _, ok := o.(*dns.TCPKEEPALIVE); ok {
