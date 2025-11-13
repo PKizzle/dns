@@ -27,12 +27,15 @@ Read:
 			srv.once.Do(func() { close(srv.exited) })
 			return
 		default:
-			buf := srv.MsgPool.Get()
-			n, _, src, err := xpc.ReadFrom(buf)
+			r := &Msg{Data: srv.MsgPool.Get()}
+			n, _, src, err := xpc.ReadFrom(r.Data)
+			r.Data = r.Data[:n]
 			if err != nil {
+				// here we can call MsgInvalidFunc, as we have one message, in case of ReadBatch we can't
+				// really, so also don't do that here.
+				srv.MsgPool.Put(r.Data[:cap(r.Data)])
 				continue Read
 			}
-			r := &Msg{Data: buf[:n]}
 			w := &response{conn: pc.(*net.UDPConn), session: &Session{src.(*net.UDPAddr), nil}}
 			wg.Add(1) // no wg.Go to prevent defer usage
 			go func() {
