@@ -98,6 +98,4 @@ func CompareSerial(a, b uint32) int {
 }
 
 // EqualSerial return true if a and b are equal. This function is here for consistency only.
-func EqualSerial(a, b uint32) bool {
-	return a == b
-}
+func EqualSerial(a, b uint32) bool { return a == b }
