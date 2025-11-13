@@ -35,7 +35,7 @@ func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 	}
 
 	rrdata := options.Pooler.Get()
-	defer options.Pooler.Put(rrdata[:cap(rrdata)])
+	defer options.Pooler.Put(rrdata)
 	s := hash.New()
 	for _, rr1 := range zone {
 		if _, ok := rr1.(*ZONEMD); ok {

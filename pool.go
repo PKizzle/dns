@@ -9,7 +9,7 @@ import (
 type Pooler interface {
 	// Get returns a (newly allocated) byte slice.
 	Get() []byte
-	// Put returns the byte slice.
+	// Put returns the byte slice. This uses cap to determine the size of the buffer.
 	Put([]byte)
 }
 
@@ -23,10 +23,10 @@ type Pool struct {
 func (p *Pool) Get() []byte { return p.pool.Get().([]byte) }
 
 func (p *Pool) Put(b []byte) {
-	if len(b) > p.size {
+	if cap(b) > p.size {
 		return
 	}
-	p.pool.Put(b)
+	p.pool.Put(b[:cap(b)])
 }
 
 // NewPool returns a new Pooler of size.

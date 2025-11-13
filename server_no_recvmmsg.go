@@ -33,7 +33,7 @@ Read:
 			if err != nil {
 				// here we can call MsgInvalidFunc, as we have one message, in case of ReadBatch we can't
 				// really, so also don't do that here.
-				srv.MsgPool.Put(r.Data[:cap(r.Data)])
+				srv.MsgPool.Put(r.Data)
 				continue Read
 			}
 			w := &response{conn: pc.(*net.UDPConn), session: &Session{src.(*net.UDPAddr), nil}}

@@ -36,8 +36,8 @@ func comparename(a, b string) int {
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
+	comparePool.Put(abuf)
+	comparePool.Put(bbuf)
 	return x
 }
 
@@ -49,8 +49,8 @@ func comparebase64(a, b string) int {
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
+	comparePool.Put(abuf)
+	comparePool.Put(bbuf)
 	return x
 }
 
@@ -62,8 +62,8 @@ func comparebase32(a, b string) int {
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
+	comparePool.Put(abuf)
+	comparePool.Put(bbuf)
 	return x
 }
 
@@ -75,8 +75,8 @@ func comparehex(a, b string) int {
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
+	comparePool.Put(abuf)
+	comparePool.Put(bbuf)
 	return x
 }
 
@@ -88,8 +88,8 @@ func comparepair(a, b []svcb.Pair) int {
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
+	comparePool.Put(abuf)
+	comparePool.Put(bbuf)
 	return x
 }
 
@@ -101,8 +101,8 @@ func compareinfo(a, b []deleg.Info) int {
 
 	x := bytes.Compare(abuf[:aoff], bbuf[:boff])
 
-	comparePool.Put(abuf[:cap(abuf)])
-	comparePool.Put(bbuf[:cap(bbuf)])
+	comparePool.Put(abuf)
+	comparePool.Put(bbuf)
 	return x
 }
 
