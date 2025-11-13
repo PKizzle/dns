@@ -273,9 +273,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 // set to set to 15.
 const BatchSize = 15
 
-// listenUDP starts a UDP listener for the server.
-
-// Serve a new TCP connection.
+// Serve a new TCP connection. ServeUDP is split out in server_no_recvmmsg.go and server_recvmmsg.go.
 func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 	w := &response{conn: conn}
 

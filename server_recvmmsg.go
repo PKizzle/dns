@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
+// listenUDP starts a UDP listener for the server.
 func (srv *Server) listenUDP(pc net.PacketConn) {
 	if f := srv.NotifyStartedFunc; f != nil {
 		f(srv.ctx)
@@ -44,7 +45,7 @@ Read:
 			for _, msg := range msgs[:n] {
 				r := &Msg{Data: msg.Buffers[0][:msg.N]}
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), msg.OOB[:msg.NN]}}
-				wg.Add(1)
+				wg.Add(1) // no wg.Go to prevent defer usage
 				go func() {
 					srv.serveDNS(w, r)
 					wg.Done()
