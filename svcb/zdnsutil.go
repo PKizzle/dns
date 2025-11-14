@@ -39,15 +39,6 @@ func dnsutilNext(s string, offset int) (i int, end bool) {
 		if s[i] != '.' {
 			continue
 		}
-		j := i - 1
-		for j >= 0 && s[j] == '\\' {
-			j--
-		}
-
-		if (j-i)%2 == 0 {
-			continue
-		}
-
 		return i + 1, false
 	}
 	return i + 1, true
@@ -72,15 +63,6 @@ func dnsutilPrev(s string, n int) (i int, start bool) {
 		if s[l] != '.' {
 			continue
 		}
-		j := l - 1
-		for j >= 0 && s[j] == '\\' {
-			j--
-		}
-
-		if (j-l)%2 == 0 {
-			continue
-		}
-
 		n--
 		if n == 0 {
 			return l + 1, false
