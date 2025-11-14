@@ -61,19 +61,19 @@ func TestIsName(t *testing.T) {
 		in string
 		ok bool
 	}{
-
 		{`www\.this.is.\131an.example.org.`, true},
 		{`www.example.org.`, true},
 		{`org.`, true},
 		{`.`, true},
 		{`..`, false},
 		{`.org`, false},
+		{`www..example.org.`, false},
+		{`www.example.org..`, false},
 	}
 	for _, tc := range testcases {
 		got := dnsutil.IsName(tc.in)
 		if got != tc.ok {
 			t.Errorf("expected %t for name %q", tc.ok, tc.in)
 		}
-
 	}
 }

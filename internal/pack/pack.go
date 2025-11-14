@@ -176,8 +176,13 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
 	ls := len(s)
-	if ls > 1 && s[0] == '.' {
-		// leading dots are not legal except for the root zone
+
+	if ls == 1 && s[0] == '.' {
+		msg[off] = 0
+		return off + 1, nil
+
+	}
+	if ls > 1 && s[0] == '.' { // leading dots are not legal except for the root zone
 		return len(msg), &Error{"leading dot in name: " + s}
 	}
 
@@ -193,7 +198,6 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		compBegin int
 		compOff   int
 		bs        []byte
-		wasDot    bool
 	)
 loop:
 	for i := 0; i < ls; i++ {
@@ -226,17 +230,13 @@ loop:
 				compOff++
 			}
 
-			wasDot = false
 		case '.':
-			if wasDot {
-				// two dots back to back is not legal
-				return len(msg), &Error{"consecutive dots in name: " + s}
-			}
-			wasDot = true
-
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
 				return len(msg), &Error{"illegal label type in name: " + s}
+			}
+			if labelLen == 0 {
+				return len(msg), &Error{"consecutive dots in name: " + s}
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)
@@ -248,7 +248,7 @@ loop:
 			// Don't try to compress '.'
 			// We should only compress when compress is true, but we should also still pick
 			// up names that can be used for *future* compression(s).
-			if compression != nil && !isRootLabel(s, bs, begin, ls) {
+			if compression != nil && labelLen > 1 {
 				if p, ok := compression[s[compBegin:]]; ok {
 					// The first hit is the longest matching dname
 					// keep the pointer offset we get back and store
@@ -278,18 +278,7 @@ loop:
 
 			begin = i + 1
 			compBegin = begin + compOff
-		default:
-			wasDot = false
 		}
-	}
-
-	// Root label is special
-	if isRootLabel(s, bs, 0, ls) {
-		return off, nil
-	}
-
-	if !wasDot {
-		return len(msg), &Error{"name must be fully qualified: " + string(s)}
 	}
 
 	// If we did compression and we find something add the pointer here
@@ -304,16 +293,6 @@ loop:
 	}
 
 	return off + 1, nil
-}
-
-// isRootLabel returns whether s or bs, from off to end, is the root label ".".
-// If bs is nil, s will be checked, otherwise bs will be checked.
-func isRootLabel(s string, bs []byte, off, end int) bool {
-	if bs == nil {
-		return s[off:end] == "."
-	}
-
-	return end-off == 1 && bs[off] == '.'
 }
 
 func StringBase32(s string, msg []byte, off int) (int, error) {
