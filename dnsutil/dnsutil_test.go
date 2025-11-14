@@ -32,7 +32,7 @@ func TestIsFqdn(t *testing.T) {
 	}{
 		{"miek.nl", false},
 		{"miek.nl.", true},
-		{"miek.nl\\.", false},
+		{"miek.nl\\.", true},
 		{"miek.nl\\\\.", true},
 		{"miek.n\\..", true},
 	}

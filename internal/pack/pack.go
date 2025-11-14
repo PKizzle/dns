@@ -182,9 +182,15 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		return off + 1, nil
 
 	}
-	if ls > 1 && s[0] == '.' { // leading dots are not legal except for the root zone
-		return len(msg), &Error{"leading dot in name: " + s}
+	if ls > 1 {
+		if s[0] == '.' { // leading dots are not legal except for the root zone
+			return len(msg), &Error{"leading dot in name: " + s}
+		}
 	}
+	// TODO(miek): add back?
+	//	if !strings.HasSuffix(s, ".") {
+	//		return len(msg), &Error{"name must be fully qualified: " + s}
+	//	}
 
 	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots. There is also a trailing zero.
@@ -246,9 +252,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 			compBegin = begin + compOff
 		}
 	}
-	if off < len(msg) { // force fqdn
-		msg[off] = 0
-	}
+	msg[off] = 0 // lenght check needed??
 	return off + 1, nil
 }
 
