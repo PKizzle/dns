@@ -176,6 +176,10 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
 	ls := len(s)
+	if ls > 1 && s[0] == '.' {
+		// leading dots are not legal except for the root zone
+		return len(msg), &Error{"leading dot in name: " + string(s)}
+	}
 
 	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots. There is also a trailing zero.
@@ -224,11 +228,6 @@ loop:
 
 			wasDot = false
 		case '.':
-			if i == 0 && len(s) > 1 {
-				// leading dots are not legal except for the root zone
-				return len(msg), &Error{"leading dot in name: " + string(s)}
-			}
-
 			if wasDot {
 				// two dots back to back is not legal
 				return len(msg), &Error{"consecutive dots in name: " + string(s)}
