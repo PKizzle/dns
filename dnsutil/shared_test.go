@@ -63,6 +63,7 @@ func TestIsName(t *testing.T) {
 	}{
 		{`www\.this.is.\131an.example.org.`, true},
 		{`www.example.org.`, true},
+		{`www.example.org`, true},
 		{`org.`, true},
 		{`.`, true},
 		{`..`, false},

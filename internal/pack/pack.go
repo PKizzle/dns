@@ -172,6 +172,7 @@ func AAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
+// Name packs a name, the name will be make fully qualified.
 func Name(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
@@ -189,9 +190,6 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots. There is also a trailing zero.
 
-	// Compression
-	pointer := ^uint16(0)
-
 	// Emit sequence of counted strings, chopping at dots.
 	var (
 		begin     int
@@ -199,7 +197,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		compOff   int
 		bs        []byte
 	)
-loop:
+
 	for i := 0; i < ls; i++ {
 		var c byte
 		if bs == nil {
@@ -257,8 +255,9 @@ loop:
 
 					// If compress is true, we're allowed to compress this dname
 					if compress {
-						pointer = p // Where to point to
-						break loop
+						// We have two bytes (14 bits) to put the pointer in
+						binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
+						return off + 2, nil
 					}
 				} else if off < maxCompressionOffset {
 					// Only offsets smaller than maxCompressionOffset can be used.
@@ -280,18 +279,9 @@ loop:
 			compBegin = begin + compOff
 		}
 	}
-
-	// If we did compression and we find something add the pointer here
-	if pointer != ^uint16(0) {
-		// We have two bytes (14 bits) to put the pointer in
-		binary.BigEndian.PutUint16(msg[off:], 0xC000|pointer)
-		return off + 2, nil
-	}
-
-	if off < len(msg) {
+	if off < len(msg) { // force fqdn
 		msg[off] = 0
 	}
-
 	return off + 1, nil
 }
 
