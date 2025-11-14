@@ -178,7 +178,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	ls := len(s)
 	if ls > 1 && s[0] == '.' {
 		// leading dots are not legal except for the root zone
-		return len(msg), &Error{"leading dot in name: " + string(s)}
+		return len(msg), &Error{"leading dot in name: " + s}
 	}
 
 	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
@@ -230,13 +230,13 @@ loop:
 		case '.':
 			if wasDot {
 				// two dots back to back is not legal
-				return len(msg), &Error{"consecutive dots in name: " + string(s)}
+				return len(msg), &Error{"consecutive dots in name: " + s}
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return len(msg), &Error{"illegal label type in name: " + string(s)}
+				return len(msg), &Error{"illegal label type in name: " + s}
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)

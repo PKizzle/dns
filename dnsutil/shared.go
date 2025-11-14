@@ -143,16 +143,22 @@ func IsName(s string) bool {
 	// XXX: The logic in this function was copied from pack.Name and should be kept in sync with that function.
 
 	const lenmsg = 256
+	ls := len(s)
 
-	// Each dot ends a segment of the name. Except for escaped dots (\.), which are normal dots.
+	if ls == 1 && s[0] == '.' {
+		return true
+	}
+
+	if ls > 1 && s[0] == '.' {
+		return false
+	}
 
 	var (
 		off    int
 		begin  int
-		wasDot bool
 		escape bool
 	)
-	for i := 0; i < len(s); i++ {
+	for i := 0; i < ls; i++ {
 		switch s[i] {
 		case '\\':
 			escape = !escape
@@ -169,22 +175,14 @@ func IsName(s string) bool {
 				begin++
 			}
 
-			wasDot = false
 		case '.':
 			escape = false
-			if i == 0 && len(s) > 1 {
-				// leading dots are not legal except for the root zone
-				return false
-			}
-
-			if wasDot {
-				// two dots back to back is not legal
-				return false
-			}
-			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
+				return false
+			}
+			if labelLen == 0 { // two dots back to back is not legal
 				return false
 			}
 
@@ -196,8 +194,6 @@ func IsName(s string) bool {
 			}
 
 			begin = i + 1
-		default:
-			wasDot = false
 		}
 	}
 	if escape {
