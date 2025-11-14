@@ -172,7 +172,6 @@ func AAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-// Name packs a name, the name will be make fully qualified.
 func Name(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
@@ -198,8 +197,8 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		bs        []byte
 	)
 
+	var c byte
 	for i := uint16(0); i < ls; i++ {
-		var c byte
 		if bs == nil {
 			c = s[i]
 		} else {
