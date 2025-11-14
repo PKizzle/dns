@@ -5,8 +5,6 @@ package svcb
 import (
 	"strings"
 	"time"
-
-	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 // This is copied to zdnsutil.go in the main package to also have access to these functions and not have an
@@ -135,30 +133,12 @@ func dnsutilIsName(s string) bool {
 	}
 
 	var (
-		off    uint16
-		begin  uint16
-		escape bool
+		off   uint16
+		begin uint16
 	)
 	for i := uint16(0); i < ls; i++ {
 		switch s[i] {
-		case '\\':
-			escape = !escape
-			if off+1 > lenmsg {
-				return false
-			}
-
-			// check for \DDD
-			if ddd.Is(s[i+1:]) {
-				i += 3
-				begin += 3
-			} else {
-				i++
-				begin++
-			}
-
 		case '.':
-			escape = false
-
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
 				return false
@@ -166,19 +146,14 @@ func dnsutilIsName(s string) bool {
 			if labelLen == 0 { // two dots back to back is not legal
 				return false
 			}
-
 			// off can already (we're in a loop) be bigger than lenmsg
 			// this happens when a name isn't fully qualified
 			off += 1 + labelLen
 			if off > lenmsg {
 				return false
 			}
-
 			begin = i + 1
 		}
-	}
-	if escape {
-		return false
 	}
 	return true
 }

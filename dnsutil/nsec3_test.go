@@ -14,7 +14,7 @@ func TestNSEC3Name(t *testing.T) {
 		{"*.w.example.", "R53BQ7CC2UVMUBFU5OCMM6PERS9TK9EN"},
 	}
 
-	for _, tc := range testcases {
+	for i, tc := range testcases {
 		got := NSEC3Name(tc.in, "aabbccdd", 12)
 		if got != tc.exp {
 			t.Errorf("test %d, expected %s, got %s", i, tc.exp, got)
