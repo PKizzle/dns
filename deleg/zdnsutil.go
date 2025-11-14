@@ -145,7 +145,7 @@ func dnsutilIsName(s string) bool {
 	// XXX: The logic in this function was copied from pack.Name and should be kept in sync with that function.
 
 	const lenmsg = 256
-	ls := len(s)
+	ls := uint16(len(s))
 
 	if ls == 1 && s[0] == '.' {
 		return true
@@ -156,11 +156,11 @@ func dnsutilIsName(s string) bool {
 	}
 
 	var (
-		off    int
-		begin  int
+		off    uint16
+		begin  uint16
 		escape bool
 	)
-	for i := 0; i < ls; i++ {
+	for i := uint16(0); i < ls; i++ {
 		switch s[i] {
 		case '\\':
 			escape = !escape
