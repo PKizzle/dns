@@ -226,18 +226,18 @@ loop:
 		case '.':
 			if i == 0 && len(s) > 1 {
 				// leading dots are not legal except for the root zone
-				return len(msg), &Error{"bad name: " + string(s)}
+				return len(msg), &Error{"leading dot in name: " + string(s)}
 			}
 
 			if wasDot {
 				// two dots back to back is not legal
-				return len(msg), &Error{"bad name: " + string(s)}
+				return len(msg), &Error{"consecutive dots in name: " + string(s)}
 			}
 			wasDot = true
 
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return len(msg), &Error{"bad label type"}
+				return len(msg), &Error{"illegal label type in name: " + string(s)}
 			}
 
 			// off can already (we're in a loop) be bigger than len(msg)

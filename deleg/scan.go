@@ -16,15 +16,15 @@ func Parse(i Info, b, o string) error {
 	case *SERVERNAME:
 		return x.parse(b, o)
 	}
-	return fmt.Errorf("dns: no deleg parse defined")
+	return fmt.Errorf("no deleg parse defined")
 }
 
 func (s *SERVERIPV4) parse(b string) error {
 	if len(b) == 0 {
-		return errors.New("dns: delegserveripv4: empty ips")
+		return errors.New("delegserveripv4: empty ips")
 	}
 	if strings.Contains(b, ":") {
-		return errors.New("dns: delegserveripv4: expected ipv4, got ipv6")
+		return errors.New("delegserveripv4: expected ipv4, got ipv6")
 	}
 
 	ips := make([]net.IP, 0, strings.Count(b, ",")+1)
@@ -33,7 +33,7 @@ func (s *SERVERIPV4) parse(b string) error {
 		e, b, _ = strings.Cut(b, ",")
 		ip := net.ParseIP(e).To4()
 		if ip == nil {
-			return errors.New("dns: delegserveripv4: bad ip")
+			return errors.New("delegserveripv4: bad ip")
 		}
 		ips = append(ips, ip)
 	}
@@ -43,7 +43,7 @@ func (s *SERVERIPV4) parse(b string) error {
 
 func (s *SERVERIPV6) parse(b string) error {
 	if len(b) == 0 {
-		return errors.New("dns: delegserveripv6: empty ips")
+		return errors.New("delegserveripv6: empty ips")
 	}
 
 	ips := make([]net.IP, 0, strings.Count(b, ",")+1)
@@ -52,10 +52,10 @@ func (s *SERVERIPV6) parse(b string) error {
 		e, b, _ = strings.Cut(b, ",")
 		ip := net.ParseIP(e)
 		if ip == nil {
-			return errors.New("dns: delegserveripv6: bad ip")
+			return errors.New("delegserveripv6: bad ip")
 		}
 		if ip.To4() != nil {
-			return errors.New("dns: delegserveripv6: expected ipv6, got ipv4-mapped-ipv6")
+			return errors.New("delegserveripv6: expected ipv6, got ipv4-mapped-ipv6")
 		}
 		ips = append(ips, ip)
 	}
@@ -65,7 +65,7 @@ func (s *SERVERIPV6) parse(b string) error {
 
 func (s *SERVERNAME) parse(b, o string) error {
 	if len(b) == 0 {
-		return errors.New("dns: delegservername: empty hostnames")
+		return errors.New("delegservername: empty hostnames")
 	}
 
 	hostnames := make([]string, 0, strings.Count(b, ",")+1)
@@ -74,7 +74,7 @@ func (s *SERVERNAME) parse(b, o string) error {
 		e, b, _ = strings.Cut(b, ",")
 		e = dnsutilAbsolute(e, o)
 		if e == "" {
-			return errors.New("dns: delegservername: bad hostname")
+			return errors.New("delegservername: bad hostname")
 		}
 		hostnames = append(hostnames, e)
 	}
@@ -84,7 +84,7 @@ func (s *SERVERNAME) parse(b, o string) error {
 
 func (s *INCLUDEDELEGI) parse(b, o string) error {
 	if len(b) == 0 {
-		return errors.New("dns: delegincludedelegi: empty domains")
+		return errors.New("delegincludedelegi: empty domains")
 	}
 
 	domains := make([]string, 0, strings.Count(b, ",")+1)
@@ -93,7 +93,7 @@ func (s *INCLUDEDELEGI) parse(b, o string) error {
 		e, b, _ = strings.Cut(b, ",")
 		e = dnsutilAbsolute(e, o)
 		if e == "" {
-			return errors.New("dns: delegincludedelegi: bad domain")
+			return errors.New("delegincludedelegi: bad domain")
 		}
 		domains = append(domains, e)
 	}
