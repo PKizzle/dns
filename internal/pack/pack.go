@@ -176,7 +176,7 @@ func AAAA(aaaa net.IP, msg []byte, off int) (int, error) {
 func Name(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
-	ls := len(s)
+	ls := uint16(len(s))
 
 	if ls == 1 && s[0] == '.' {
 		msg[off] = 0
@@ -192,13 +192,13 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 
 	// Emit sequence of counted strings, chopping at dots.
 	var (
-		begin     int
-		compBegin int
-		compOff   int
+		begin     uint16
+		compBegin uint16
+		compOff   uint16
 		bs        []byte
 	)
 
-	for i := 0; i < ls; i++ {
+	for i := uint16(0); i < ls; i++ {
 		var c byte
 		if bs == nil {
 			c = s[i]
@@ -239,7 +239,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 
 			// off can already (we're in a loop) be bigger than len(msg)
 			// this happens when a name isn't fully qualified
-			if off+1+labelLen > len(msg) {
+			if uint16(off)+1+labelLen > uint16(len(msg)) {
 				return len(msg), &Error{"buffer size too small"}
 			}
 
@@ -273,7 +273,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 			} else {
 				copy(msg[off+1:], bs[begin:i])
 			}
-			off += 1 + labelLen
+			off += 1 + int(labelLen)
 
 			begin = i + 1
 			compBegin = begin + compOff
