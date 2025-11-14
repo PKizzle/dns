@@ -247,14 +247,12 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 			// up names that can be used for *future* compression(s).
 			if compression != nil && labelLen > 1 {
 				if p, ok := compression[s[compBegin:]]; ok {
-					// The first hit is the longest matching dname
-					// keep the pointer offset we get back and store
-					// the offset of the current name, because that's
-					// where we need to insert the pointer later
+					// The first hit is the longest matching dname keep the pointer offset we get back and store
+					// the offset of the current name, because that's where we need to insert the pointer later
 
-					// If compress is true, we're allowed to compress this dname
+					// If compress is true, we're allowed to compress this name.
 					if compress {
-						// We have two bytes (14 bits) to put the pointer in
+						// We have two bytes (14 bits) to put the pointer in.
 						binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
 						return off + 2, nil
 					}
