@@ -101,30 +101,9 @@ func dnsutilFqdn(s string) string {
 	return s + "."
 }
 
-// IsFqdn checks if a domain name is fully qualified. Note that due the escapes in names this is not completely trivial to establish.
-func dnsutilIsFqdn(s string) bool {
-	if s == "." {
-		return true
-	}
-	l := len(s)
-	if l < 2 {
-		return false
-	}
-	if s[l-1] != '.' { // no dot in final elements
-		return false
-	}
-	// If we don't have an escape sequence before the final dot, we know it's fully qualified and can return here.
-	if s[l-2] != '\\' {
-		return true
-	}
-
-	// Otherwise we have to check if the dot is escaped or not by checking if there are an odd or even number of escape sequences before the dot.
-	i := strings.LastIndexFunc(s[:l-2], func(r rune) bool {
-		return r != '\\'
-	})
-	// TODO: revist! And TEST
-	return ((l-2)-i)%2 == 0
-}
+// IsFqdn checks if a domain name is fully qualified. As this library doesn't support escapes in names, this
+// simply calls strings.HasSuffix.
+func dnsutilIsFqdn(s string) bool { return strings.HasSuffix(s, ".") }
 
 // Canonical returns the domain name in canonical form. A name in canonical form is lowercase and fully qualified.
 // Only US-ASCII letters are affected. See Section 6.2 in RFC 4034.

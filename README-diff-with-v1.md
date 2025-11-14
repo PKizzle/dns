@@ -38,6 +38,8 @@
 - IsDuplicate is gone in favor of Compare and a full support for the `sort.Interface`, so you can just
   sort RRs in an RRset. This also simplified the DNSSEC signing and make wireformat even less important.
 - Copied, sanitized and removed tests that accumulated over 16 years of development.
+- Escapes in domain names is not supported. This added 50-100% overhead in low-level function that are often
+  used in the hot path.
 
 ## Setting EDNS0
 
