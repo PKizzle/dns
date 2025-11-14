@@ -34,7 +34,7 @@ func Parse(p Pair, b, o string) error {
 	case *LOCAL:
 		return x.parse(b)
 	}
-	return fmt.Errorf("dns: no svcb parse defined")
+	return fmt.Errorf("no svcb parse defined")
 }
 
 func (s *MANDATORY) parse(b string) error {
@@ -59,13 +59,13 @@ func (s *ALPN) parse(b string) error {
 	for p := 0; p < len(b); {
 		c, q := ddd.Next(b, p)
 		if q == 0 {
-			return errors.New("dns: svcbalpn: unterminated escape")
+			return errors.New("svcbalpn: unterminated escape")
 		}
 		p += q
 		// If we find a comma, we have finished reading an alpn.
 		if c == ',' {
 			if len(a) == 0 {
-				return errors.New("dns: svcbalpn: empty protocol identifier")
+				return errors.New("svcbalpn: empty protocol identifier")
 			}
 			alpn = append(alpn, string(a))
 			a = []byte{}
@@ -75,10 +75,10 @@ func (s *ALPN) parse(b string) error {
 		if c == '\\' {
 			dc, dq := ddd.Next(b, p)
 			if dq == 0 {
-				return errors.New("dns: svcbalpn: unterminated escape decoding comma-separated list")
+				return errors.New("svcbalpn: unterminated escape decoding comma-separated list")
 			}
 			if dc != '\\' && dc != ',' {
-				return errors.New("dns: svcbalpn: bad escaped character decoding comma-separated list")
+				return errors.New("svcbalpn: bad escaped character decoding comma-separated list")
 			}
 			p += dq
 			c = dc
@@ -87,7 +87,7 @@ func (s *ALPN) parse(b string) error {
 	}
 	// Add the final alpn.
 	if len(a) == 0 {
-		return errors.New("dns: svcbalpn: last protocol identifier empty")
+		return errors.New("svcbalpn: last protocol identifier empty")
 	}
 	s.Alpn = append(alpn, string(a))
 	return nil
@@ -95,7 +95,7 @@ func (s *ALPN) parse(b string) error {
 
 func (*NODEFAULTALPN) parse(b string) error {
 	if len(b) != 0 {
-		return errors.New("dns: svcbnodefaultalpn: no-default-alpn must have no value")
+		return errors.New("svcbnodefaultalpn: no-default-alpn must have no value")
 	}
 	return nil
 }
@@ -103,7 +103,7 @@ func (*NODEFAULTALPN) parse(b string) error {
 func (s *PORT) parse(b string) error {
 	port, err := strconv.ParseUint(b, 10, 16)
 	if err != nil {
-		return errors.New("dns: svcbport: port out of range")
+		return errors.New("svcbport: port out of range")
 	}
 	s.Port = uint16(port)
 	return nil
@@ -111,10 +111,10 @@ func (s *PORT) parse(b string) error {
 
 func (s *IPV4HINT) parse(b string) error {
 	if len(b) == 0 {
-		return errors.New("dns: svcbipv4hint: empty hint")
+		return errors.New("svcbipv4hint: empty hint")
 	}
 	if strings.Contains(b, ":") {
-		return errors.New("dns: svcbipv4hint: expected ipv4, got ipv6")
+		return errors.New("svcbipv4hint: expected ipv4, got ipv6")
 	}
 
 	hint := make([]net.IP, 0, strings.Count(b, ",")+1)
@@ -123,7 +123,7 @@ func (s *IPV4HINT) parse(b string) error {
 		e, b, _ = strings.Cut(b, ",")
 		ip := net.ParseIP(e).To4()
 		if ip == nil {
-			return errors.New("dns: svcbipv4hint: bad ip")
+			return errors.New("svcbipv4hint: bad ip")
 		}
 		hint = append(hint, ip)
 	}
@@ -134,7 +134,7 @@ func (s *IPV4HINT) parse(b string) error {
 func (s *ECHCONFIG) parse(b string) error {
 	x, err := pack.Base64([]byte(b))
 	if err != nil {
-		return errors.New("dns: svcbech: bad base64 ech")
+		return errors.New("svcbech: bad base64 ech")
 	}
 	s.ECH = x
 	return nil
@@ -142,7 +142,7 @@ func (s *ECHCONFIG) parse(b string) error {
 
 func (s *IPV6HINT) parse(b string) error {
 	if len(b) == 0 {
-		return errors.New("dns: svcbipv6hint: empty hint")
+		return errors.New("svcbipv6hint: empty hint")
 	}
 
 	hint := make([]net.IP, 0, strings.Count(b, ",")+1)
@@ -151,10 +151,10 @@ func (s *IPV6HINT) parse(b string) error {
 		e, b, _ = strings.Cut(b, ",")
 		ip := net.ParseIP(e)
 		if ip == nil {
-			return errors.New("dns: svcbipv6hint: bad ip")
+			return errors.New("svcbipv6hint: bad ip")
 		}
 		if ip.To4() != nil {
-			return errors.New("dns: svcbipv6hint: expected ipv6, got ipv4-mapped-ipv6")
+			return errors.New("svcbipv6hint: expected ipv6, got ipv4-mapped-ipv6")
 		}
 		hint = append(hint, ip)
 	}
@@ -165,7 +165,7 @@ func (s *IPV6HINT) parse(b string) error {
 func (s *DOHPATH) parse(b string) error {
 	template, err := stringToPair(b)
 	if err != nil {
-		return fmt.Errorf("dns: svcbdohpath: %w", err)
+		return fmt.Errorf("svcbdohpath: %w", err)
 	}
 	s.Template = string(template)
 	return nil
@@ -173,7 +173,7 @@ func (s *DOHPATH) parse(b string) error {
 
 func (*OHTTP) parse(b string) error {
 	if len(b) != 0 {
-		return errors.New("dns: svcbotthp: svcbotthp must have no value")
+		return errors.New("svcbotthp: svcbotthp must have no value")
 	}
 	return nil
 }
@@ -181,7 +181,7 @@ func (*OHTTP) parse(b string) error {
 func (s *LOCAL) parse(b string) error {
 	data, err := stringToPair(b)
 	if err != nil {
-		return fmt.Errorf("dns: svcblocal: svcb private/experimental key %w", err)
+		return fmt.Errorf("svcblocal: svcb private/experimental key %w", err)
 	}
 	s.Data = data
 	return nil
@@ -217,7 +217,7 @@ func stringToPair(b string) ([]byte, error) {
 			continue
 		}
 		if i+1 == len(b) {
-			return nil, errors.New("dns: escape unterminated")
+			return nil, errors.New("escape unterminated")
 		}
 		if ddd.IsDigit(b[i+1]) {
 			if i+3 < len(b) && ddd.IsDigit(b[i+2]) && ddd.IsDigit(b[i+3]) {
@@ -228,7 +228,7 @@ func stringToPair(b string) ([]byte, error) {
 					continue
 				}
 			}
-			return nil, errors.New("dns: bad escaped octet")
+			return nil, errors.New("bad escaped octet")
 		} else {
 			data = append(data, b[i+1])
 			i += 2
