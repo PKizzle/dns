@@ -49,9 +49,9 @@ type MsgAcceptFunc func(m *Msg) MsgAcceptAction
 
 // DefaultMsgAcceptFunc checks the request and will reject if:
 //
-//   - Isn't a request (don't respond in that case).
-//   - Has an opcode that isn't recognized (also no response).
-//   - Has more than a single "RR" in the question section (reject).
+//   - Isn't a request, returns [MsgIgnore].
+//   - Has an opcode that isn't recognized, returns [MsgIgnore].
+//   - Has more than a single "RR" in the question section, return [MsgReject].
 var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
 
 func defaultMsgAcceptFunc(r *Msg) MsgAcceptAction {

@@ -144,7 +144,6 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
-	// TODO(miek): custom RR types here?? You can just add to the map? document and test.
 	if newFn, ok := TypeToRR[h.t]; ok {
 		rr = newFn()
 		*rr.Header() = h
@@ -346,8 +345,6 @@ func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte)
 
 func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
 	// See unpackQuestions for why we don't pre-allocate here.
-	//
-	// In the additional section we stop unpacking when we see
 	var dst []RR
 	for i := 0; i < int(cnt); i++ {
 		r, err := unpackRR(msg, msgBuf)
@@ -355,6 +352,10 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 			return dst, err
 		}
 		dst = append(dst, r)
+	}
+	if cnt != uint16(len(dst)) {
+		return dst, unpack.Errorf("section count mismatch: %d != %d", cnt, len(dst))
+
 	}
 	return dst, nil
 }
@@ -395,8 +396,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	// section. Any TSIG and SIG0 records will also be put in the pseudo section, but after the options.
 	j := 0
 	for i := 0; i < len(m.Extra)-j; i++ {
-		rr := m.Extra[i]
-		if opt, ok := rr.(*OPT); ok {
+		if opt, ok := m.Extra[i].(*OPT); ok {
 			// move to end, so it can be removed later and unpack the opt for the settings.
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
@@ -412,7 +412,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 				m.Pseudo[i] = RR(o)
 			}
 
-			m.Extra[len(m.Extra)-j-1] = rr
+			m.Extra[len(m.Extra)-j-1] = m.Extra[i]
 			j++
 		}
 	}
@@ -438,7 +438,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 	}
 
 	if !s.Empty() {
-		return unpack.Errorf(": %d more octets", len(s))
+		return unpack.Errorf("%d more octets", len(s))
 	}
 	return nil
 }
