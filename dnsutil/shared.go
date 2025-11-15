@@ -3,8 +3,6 @@ package dnsutil
 import (
 	"strings"
 	"time"
-
-	"codeberg.org/miekg/dns/internal/ddd"
 )
 
 // This is copied to zdnsutil.go in the main package to also have access to these functions and not have an
@@ -39,15 +37,6 @@ func Next(s string, offset int) (i int, end bool) {
 		if s[i] != '.' {
 			continue
 		}
-		j := i - 1
-		for j >= 0 && s[j] == '\\' {
-			j--
-		}
-
-		if (j-i)%2 == 0 {
-			continue
-		}
-
 		return i + 1, false
 	}
 	return i + 1, true
@@ -72,15 +61,6 @@ func Prev(s string, n int) (i int, start bool) {
 		if s[l] != '.' {
 			continue
 		}
-		j := l - 1
-		for j >= 0 && s[j] == '\\' {
-			j--
-		}
-
-		if (j-l)%2 == 0 {
-			continue
-		}
-
 		n--
 		if n == 0 {
 			return l + 1, false
@@ -99,30 +79,9 @@ func Fqdn(s string) string {
 	return s + "."
 }
 
-// IsFqdn checks if a domain name is fully qualified. Note that due the escapes in names this is not completely trivial to establish.
-func IsFqdn(s string) bool {
-	if s == "." {
-		return true
-	}
-	l := len(s)
-	if l < 2 {
-		return false
-	}
-	if s[l-1] != '.' { // no dot in final elements
-		return false
-	}
-	// If we don't have an escape sequence before the final dot, we know it's fully qualified and can return here.
-	if s[l-2] != '\\' {
-		return true
-	}
-
-	// Otherwise we have to check if the dot is escaped or not by checking if there are an odd or even number of escape sequences before the dot.
-	i := strings.LastIndexFunc(s[:l-2], func(r rune) bool {
-		return r != '\\'
-	})
-	// TODO: revist! And TEST
-	return ((l-2)-i)%2 == 0
-}
+// IsFqdn checks if a domain name is fully qualified. As this library doesn't support escapes in names, this
+// simply calls strings.HasSuffix.
+func IsFqdn(s string) bool { return strings.HasSuffix(s, ".") }
 
 // Canonical returns the domain name in canonical form. A name in canonical form is lowercase and fully qualified.
 // Only US-ASCII letters are affected. See Section 6.2 in RFC 4034.
@@ -154,30 +113,12 @@ func IsName(s string) bool {
 	}
 
 	var (
-		off    uint16
-		begin  uint16
-		escape bool
+		off   uint16
+		begin uint16
 	)
 	for i := uint16(0); i < ls; i++ {
 		switch s[i] {
-		case '\\':
-			escape = !escape
-			if off+1 > lenmsg {
-				return false
-			}
-
-			// check for \DDD
-			if ddd.Is(s[i+1:]) {
-				i += 3
-				begin += 3
-			} else {
-				i++
-				begin++
-			}
-
 		case '.':
-			escape = false
-
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
 				return false
@@ -185,19 +126,14 @@ func IsName(s string) bool {
 			if labelLen == 0 { // two dots back to back is not legal
 				return false
 			}
-
 			// off can already (we're in a loop) be bigger than lenmsg
 			// this happens when a name isn't fully qualified
 			off += 1 + labelLen
 			if off > lenmsg {
 				return false
 			}
-
 			begin = i + 1
 		}
-	}
-	if escape {
-		return false
 	}
 	return true
 }

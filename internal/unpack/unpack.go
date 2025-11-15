@@ -19,10 +19,9 @@ const (
 	// maximum label length being 63. The wire format requires one extra byte over
 	// the presentation format, reducing the number of octets by 1. Each label in
 	// the name will be separated by a single period, with each octet in the label
-	// expanding to at most 4 bytes (\DDD). If all other labels are of the maximum
-	// length, then the final label can only be 61 octets long to not exceed the
-	// maximum allowed wire length.
-	maxNamePresentationLength = 61*4 + 1 + 63*4 + 1 + 63*4 + 1 + 63*4 + 1
+	// expanding to at most 1 byte as we don't support \DDD or \X, so these are
+	// counted as is.
+	maxNamePresentationLength = maxNameWireOctets - 1
 )
 
 func A(s *cryptobyte.String) (net.IP, error) {
@@ -138,15 +137,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
 				return "", &Error{"name exceeded max wire-format octets: " + string(*s)}
 			}
-			for _, b := range label {
-				if ddd.ShouldEscape(b) {
-					name = append(name, '\\', b)
-				} else if b < ' ' || b > '~' {
-					name = append(name, ddd.Escape(b)...)
-				} else {
-					name = append(name, b)
-				}
-			}
+			name = append(name, label...)
 			name = append(name, '.')
 		case 0xC0: // pointer
 			if msgBuf == nil {

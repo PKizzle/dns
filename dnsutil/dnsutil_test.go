@@ -32,7 +32,7 @@ func TestIsFqdn(t *testing.T) {
 	}{
 		{"miek.nl", false},
 		{"miek.nl.", true},
-		{"miek.nl\\.", false},
+		{"miek.nl\\.", true},
 		{"miek.nl\\\\.", true},
 		{"miek.n\\..", true},
 	}
@@ -41,14 +41,5 @@ func TestIsFqdn(t *testing.T) {
 		if got != tc.expected {
 			t.Errorf("test %d, %s, expected %t, got %t", i, tc.in, tc.expected, got)
 		}
-	}
-}
-
-func TestIsNameOpenEscape(t *testing.T) {
-	if ok := IsName("example.net."); !ok {
-		t.Fatalf("expected ok, but got not ok")
-	}
-	if ok := IsName("example.net\\"); ok {
-		t.Fatalf("expected not ok, but got ok")
 	}
 }

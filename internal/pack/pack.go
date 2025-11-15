@@ -182,9 +182,15 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		return off + 1, nil
 
 	}
-	if ls > 1 && s[0] == '.' { // leading dots are not legal except for the root zone
-		return len(msg), &Error{"leading dot in name: " + s}
+	if ls > 1 {
+		if s[0] == '.' { // leading dots are not legal except for the root zone
+			return len(msg), &Error{"leading dot in name: " + s}
+		}
 	}
+	// TODO(miek): add back?
+	//	if !strings.HasSuffix(s, ".") {
+	//		return len(msg), &Error{"name must be fully qualified: " + s}
+	//	}
 
 	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots. There is also a trailing zero.
@@ -194,39 +200,13 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		begin     uint16
 		compBegin uint16
 		compOff   uint16
-		bs        []byte
 	)
 
 	var c byte
 	for i := uint16(0); i < ls; i++ {
-		if bs == nil {
-			c = s[i]
-		} else {
-			c = bs[i]
-		}
+		c = s[i]
 
 		switch c {
-		case '\\':
-			if off+1 > len(msg) {
-				return len(msg), &Error{"buffer size too small"}
-			}
-
-			if bs == nil {
-				bs = []byte(s)
-			}
-
-			// check for \DDD
-			if ddd.Is(bs[i+1:]) {
-				bs[i] = ddd.ToByte(bs[i+1:])
-				copy(bs[i+1:ls-3], bs[i+4:])
-				ls -= 3
-				compOff += 3
-			} else {
-				copy(bs[i:ls-1], bs[i+1:])
-				ls--
-				compOff++
-			}
-
 		case '.':
 			labelLen := i - begin
 			if labelLen >= 1<<6 { // top two bits of length must be clear
@@ -265,20 +245,14 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 			// The following is covered by the length check above.
 			msg[off] = byte(labelLen)
 
-			if bs == nil {
-				copy(msg[off+1:], s[begin:i])
-			} else {
-				copy(msg[off+1:], bs[begin:i])
-			}
+			copy(msg[off+1:], s[begin:i])
 			off += 1 + int(labelLen)
 
 			begin = i + 1
 			compBegin = begin + compOff
 		}
 	}
-	if off < len(msg) { // force fqdn
-		msg[off] = 0
-	}
+	msg[off] = 0 // lenght check needed??
 	return off + 1, nil
 }
 

@@ -75,6 +75,7 @@ Send pull request if you want to be listed here.
 - DNS over HTTP (DOH), see the _dnshttp_ package.
 - Improved naming by embracing sub-packages.
 - Examples included the cmd/ directory.
+- Escapes (\DDD and \x) in domain names is not supported (anymore) - the overhead (50-100%) was too high.
 
 Have fun!
 
