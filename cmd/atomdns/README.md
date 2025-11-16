@@ -2,12 +2,12 @@
 
 atomdns is a DNS server/router, written in Go, that chains handlers. Each handler performs a (DNS) function.
 Its architecture is identical to HTTP servers with middleware. The order of the handlers in the configuration
-determines the order in which they are executed. (If you know CoreDNS; you might know that it has a fixed order -
-atomdns is _different_).
+determines the order in which they are executed. (If you know CoreDNS; you might know that it has a fixed
+order - atomdns is _different_).
 
 atomdns is a rock-solid replacement for CoreDNS, BIND9, Knot, NSD, etc. This is not a toy example on how to
-use the dns library. atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns you
-are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
+use the dns library. atomdns is a fast and flexible DNS server. The key word here is _flexible_: with atomdns
+you are able to do what you want with your DNS data by utilizing handlers. If some functionality is not
 provided out of the box, you can add it by writing a handler.
 
 But why another server? Personally I felt that CoreDNS went all "the cloud way", without properly laying the
@@ -27,12 +27,12 @@ atomdns can:
 - Serve as a router to router queries to some other (recursive) nameserver (_route_). [TODO]
 
 Each of these handlers has its own manual page, i.e. see atomdns-dbfile(7) for more information on the
-_dbfile_ handler for instance.
+_dbfile_ handler for instance. These are generated from the (extensive) READMEs each handler must have.
 
 ## Compilation from Source
 
-To compile atomdns, we assume you have a working Go setup. See various tutorials if you don’t have
-that already configured. We follow upstream Go closely and use new language features when they come available.
+To compile atomdns, we assume you have a working Go setup. See various tutorials if you don’t have that
+already configured. We follow upstream Go closely and use new language features when they come available.
 
 ```
 $ git clone https://codeberg.org/miekg/dns
@@ -44,9 +44,9 @@ This should yield a `atomdns` binary.
 
 ## Examples
 
-The configuration of atomdns is done through a file named `Conffile`. When atomdns starts, it will
-look for the `Conffile` from the current working directory. A `Conffile` for atomdns server that listens
-on port `1053` and enables `whoami` handler is:
+The configuration of atomdns is done through a file named `Conffile`. When atomdns starts, it will look for
+the `Conffile` from the current working directory. A `Conffile` for atomdns server that listens on port `1053`
+and enables `whoami` handler is:
 
 ```conffile
 {
