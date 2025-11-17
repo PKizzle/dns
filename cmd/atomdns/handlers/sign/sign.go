@@ -4,14 +4,12 @@ package sign
 import (
 	"context"
 	"log/slog"
-	"path"
 	"path/filepath"
 	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
-	"github.com/fsnotify/fsnotify"
 )
 
 type Sign struct {
@@ -49,72 +47,34 @@ const Interval = 5 * time.Hour // Interval is the resign wake up interval.
 
 // Resign launches a resign routine that listens for _write_ events to the origin zone files and resigns them.
 func (s *Sign) Resign() error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
+	fn := func() {
+		for _, z := range s.Zones {
+			alog := log().With(slog.String("zone", z.Origin()), slog.String("file", filepath.Base(s.Path)))
+			zs, err := s.Sign(z.Origin())
+			if err != nil {
+				alog.Error("Failed to resign", Err(err))
+				return
+			}
+			if err := s.Write(zs); err != nil {
+				alog.Error("Failed to resign", Err(err))
+				break
+			}
+			alog.With(slog.Uint64("serial", uint64(dnszone.Serial(zs)))).Info("Successful resign")
+		}
 	}
+
+	dnszone.Watch(s.ctx, s.Path, fn)
 
 	go func() {
 		ticker := time.NewTicker(Interval)
 		defer ticker.Stop()
 		for {
 			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					continue
-				}
-				switch {
-				case event.Has(fsnotify.Write):
-					time.Sleep(2 * time.Second)
-					for _, z := range s.Zones {
-						alog := log().With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(event.Name)))
-						if z.Path == path.Clean(event.Name) {
-							zs, err := s.Sign(z.Origin())
-							if err != nil {
-								alog.Error("Failed to resign", Err(err))
-								break
-							}
-							if err := s.Write(zs); err != nil {
-								alog.Error("Failed to resign", Err(err))
-								break
-							}
-							alog.With(slog.Uint64("serial", uint64(dnszone.Serial(zs)))).Info("Successful resign")
-						}
-					}
-				default:
-				}
-			case _, ok := <-watcher.Errors:
-				if !ok {
-					continue
-				}
 			case <-ticker.C:
-				for _, z := range s.Zones {
-					alog := log().With(slog.String("zone", z.Origin()), slog.String("path", filepath.Base(z.Path)))
-					expired, err := s.Expired(z.Origin())
-					if !expired {
-						continue
-					}
-					zs, err := s.Sign(z.Origin())
-					if err != nil {
-						alog.Error("Failed to resign", Err(err))
-						continue
-					}
-					if err := s.Write(zs); err != nil {
-						alog.Error("Failed to resign", Err(err))
-						continue
-					}
-					alog.Info("Successful resign")
-				}
-
-			case <-s.ctx.Done():
-				watcher.Close()
-				return
+				fn()
 			}
 		}
 	}()
 
-	for _, z := range s.Zones {
-		watcher.Add(filepath.Dir(z.Path))
-	}
 	return nil
 }
