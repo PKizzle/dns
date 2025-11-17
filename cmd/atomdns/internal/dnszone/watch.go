@@ -28,7 +28,10 @@ func Watch(ctx context.Context, file string, fn func()) error {
 					continue
 				}
 				switch {
+				default:
 
+				case event.Has(fsnotify.Remove):
+					fallthrough
 				case event.Has(fsnotify.Write):
 					fallthrough
 				case event.Has(fsnotify.Create):
@@ -37,9 +40,6 @@ func Watch(ctx context.Context, file string, fn func()) error {
 					if file == path.Clean(event.Name) {
 						timer.Reset(2 * time.Second)
 					}
-
-				case event.Has(fsnotify.Remove):
-				default:
 				}
 			case _, ok := <-watcher.Errors:
 				if !ok {
