@@ -2,6 +2,7 @@ package dnszone
 
 import (
 	"context"
+	"math"
 	"path"
 	"path/filepath"
 	"time"
@@ -17,6 +18,7 @@ func Watch(ctx context.Context, file string, fn func()) error {
 		return err
 	}
 	file = path.Clean(file)
+	timer := time.AfterFunc(math.MaxInt64, fn)
 
 	go func() {
 		for {
@@ -29,15 +31,14 @@ func Watch(ctx context.Context, file string, fn func()) error {
 
 				case event.Has(fsnotify.Write):
 					fallthrough
+				case event.Has(fsnotify.Create):
+					fallthrough
 				case event.Has(fsnotify.Rename):
-					time.Sleep(2 * time.Second)
-
 					if file == path.Clean(event.Name) {
-						fn()
+						timer.Reset(2 * time.Second)
 					}
 
 				case event.Has(fsnotify.Remove):
-				case event.Has(fsnotify.Create):
 				default:
 				}
 			case _, ok := <-watcher.Errors:
