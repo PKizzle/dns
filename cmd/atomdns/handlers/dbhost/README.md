@@ -1,6 +1,6 @@
 # Name
 
-_dbhosts_ - serve data from `/etc/hosts`
+_dbhosts_ - serve data from /etc/hosts
 
 # Description
 
