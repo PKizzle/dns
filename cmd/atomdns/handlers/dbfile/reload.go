@@ -27,7 +27,9 @@ func (d *Dbfile) Reload() error {
 			d.Zones[z.Origin()] = z1
 			d.Unlock()
 			alog.Info("Successful reload")
-			go d.To.Notify(z.Origin())
+			if d.To != nil && len(d.To.IPs) > 0 {
+				go d.To.Notify(z.Origin())
+			}
 		}
 	})
 	return nil

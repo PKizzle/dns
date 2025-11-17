@@ -49,5 +49,4 @@ miek.nl {
         zonemd
     }
     dbfile sign/testdata/db.miek.nl.signed
-    sign
 }
