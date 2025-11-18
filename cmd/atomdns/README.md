@@ -14,6 +14,8 @@ But why another server? Personally I felt that CoreDNS went all "the cloud way",
 basis for a DNS server that I want to run at home, there was also a lot of code duplication that was solved by
 writing miekg/dnsv2. And I needed a server to develop miekg/dnsv2 in tandem with the library.
 
+See <https://atomdns.miek.nl> for more complete docs.
+
 atomdns can:
 
 - Serve zone data from a file; with DNSSEC support (_dbfile_), plus:
@@ -94,4 +96,5 @@ __________________________________\o/_______
 Where the last INFO line shows the config parsed, the number of origins processed and for which protocols the
 server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS).
 
-See atomdns-conffile(7) for more information.
+See atomdns-conffile(7) for more information. For a more total experience head over to
+<https://atomdns.miek.nl>.
