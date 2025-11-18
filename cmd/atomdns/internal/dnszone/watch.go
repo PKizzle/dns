@@ -11,7 +11,7 @@ import (
 )
 
 // Watch watches the containing directory of file, and executes fn once a write event happens that matches file.
-// Specifically it performs fn() after fsnotify.Write and fsnotify.Rename.
+// Specifically it performs fn() after fsnotify.Write, fsnotify.Rename, and fsnotify.Create.
 func Watch(ctx context.Context, file string, fn func()) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
