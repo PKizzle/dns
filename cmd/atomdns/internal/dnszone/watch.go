@@ -30,8 +30,6 @@ func Watch(ctx context.Context, file string, fn func()) error {
 				switch {
 				default:
 
-				case event.Has(fsnotify.Remove):
-					fallthrough
 				case event.Has(fsnotify.Write):
 					fallthrough
 				case event.Has(fsnotify.Create):
