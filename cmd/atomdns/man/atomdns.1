@@ -7,7 +7,7 @@
 
 .SH "SYNOPSIS"
 .PP
-\fIatomdns\fP \fB[\-c CONFFILE]\fP \fB[\-C|\-H|\-V]\fP...
+\fIatomdns\fP \fB[\-C|\-H|\-V]\fP [CONFFILE]
 
 .SH "DESCRIPTION"
 .PP
@@ -58,13 +58,8 @@ succesful you are greeted with a banner (unless \fB\fCquiet\fR is true see atomd
 .RE
 
 .PP
-Available options:
-
-.TP
-\fB\-c\fP, \fB\-config\fP \fBCONFFILE\fP
-specify configuration file to load, if not given atomdns will look for a \fB\fCConffile\fR in the current directory, if that
-is also not found, it will use a built\-in (test) Conffile:
-
+There is optional positional argument, the \fBCONFFILE\fP to configure atomdns. If not given atomdns will use
+a built\-in Conffile:
 
 .PP
 .RS
@@ -83,6 +78,9 @@ example.org {
 
 .fi
 .RE
+
+.PP
+The following options are available:
 
 .TP
 \fB\-C\fP
@@ -155,4 +153,4 @@ Apache License 2.0
 
 .SH "SEE ALSO"
 .PP
-See atomdns\-conffile(5), and atomdns\-global(7).
+See atomdns\-conffile(5), and atomdns\-global(7), and https://atomdns.miek.nl with more documentation.

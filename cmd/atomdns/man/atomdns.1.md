@@ -4,7 +4,7 @@ _atomdns_ - DNS nameserver that runs handlers
 
 # Synopsis
 
-_atomdns_ **[-c CONFFILE]** **[-C|-H|-V]**...
+_atomdns_ **[-C|-H|-V]** [CONFFILE]
 
 # Description
 
@@ -41,11 +41,8 @@ succesful you are greeted with a banner (unless `quiet` is true see atomdns-glob
 __________________________________\o/_______
 ```
 
-Available options:
-
-**-c**, **-config** **CONFFILE**
-: specify configuration file to load, if not given atomdns will look for a `Conffile` in the current directory, if that
-is also not found, it will use a built-in (test) Conffile:
+There is optional positional argument, the **CONFFILE** to configure atomdns. If not given atomdns will use
+a built-in Conffile:
 
 ```confffile
 {
@@ -59,6 +56,8 @@ example.org {
   whoami
 }
 ```
+
+The following options are available:
 
 **-C**
 : check the configuration, report any erors and exit with status 1 or if everything is OK exit with status
@@ -106,4 +105,4 @@ Apache License 2.0
 
 # See Also
 
-See atomdns-conffile(5), and atomdns-global(7).
+See atomdns-conffile(5), and atomdns-global(7), and https://atomdns.miek.nl with more documentation.
