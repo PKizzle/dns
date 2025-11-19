@@ -23,15 +23,13 @@ func Run(version string) {
 		flagHandler bool
 		flagVersion bool
 		flagCheck   bool
-		flagConf    string
+		conffile    string
 		confdata    []byte
 		err         error
 	)
 	flag.BoolVar(&flagHandler, "H", false, "show sorted list of handlers")
 	flag.BoolVar(&flagVersion, "V", false, "show version")
 	flag.BoolVar(&flagCheck, "C", false, "check the configuration")
-	flag.StringVar(&flagConf, "config", "", "config to load")
-	flag.StringVar(&flagConf, "c", "", "config to load")
 
 	flag.Parse()
 	if flagVersion {
@@ -48,18 +46,19 @@ func Run(version string) {
 		return
 	}
 
-	if flagConf == "" {
+	if len(flag.Args()) == 0 {
 		confdata = []byte(confbuiltin)
-		flagConf = "<builtin>"
+		conffile = "<builtin>"
 	} else {
-		confdata, err = os.ReadFile(flagConf)
+		conffile = flag.Args()[0]
+		confdata, err = os.ReadFile(flag.Args()[0])
 		if err != nil {
-			slog.Error("Failed to parse configuration", slog.String("path", flagConf), slog.Any("error", err))
+			slog.Error("Failed to parse configuration", slog.String("path", conffile), slog.Any("error", err))
 			os.Exit(1)
 		}
 	}
 
-	s, err := New(flagConf, bytes.NewReader(confdata))
+	s, err := New(conffile, bytes.NewReader(confdata))
 	if err != nil {
 		slog.Error("Failed to create server", slog.Any("error", err))
 		os.Exit(1)

@@ -10,7 +10,7 @@ the next handler(s).
 
 The _dbhost_ handler can be used with readily available hosts files that block access to advertising servers.
 
-# The hosts file
+# The Hosts File
 
 Commonly the entries are of the form `IP_address canonical_hostname [aliases...]` as explained by
 the hosts(5) man page.
@@ -27,7 +27,7 @@ Examples:
 fdfc:a744:27b5:3b0e::1  example.com example
 ```
 
-## Reverse lookups
+## Reverse Lookups
 
 PTR records for reverse lookups are generated automatically.
 
@@ -62,7 +62,7 @@ example.org {
 }
 ```
 
-# See also
+# See Also
 
 The form of the entries in the `/etc/hosts` file are based on IETF [RFC
 952](https://tools.ietf.org/html/rfc952) which was updated by IETF [RFC
