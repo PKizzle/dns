@@ -83,6 +83,9 @@ Have fun!
 
 Miek Gieben - 2025- - <miek@miek.nl>
 
+See [anonymous users asking for support](https://berthub.eu/articles/posts/anonymous-help/) on why these kind
+of requests/issues usually get closed pretty swiftly.
+
 # Building/developing
 
 This library uses Go modules and uses semantic versioning. Getting the code and working with the library is
