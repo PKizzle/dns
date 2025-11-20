@@ -9,6 +9,11 @@ import (
 	"github.com/infobloxopen/go-trees/iptree"
 )
 
+const (
+	nettype = iota
+	contextype
+)
+
 func (a *Acl) Setup(co *dnsserver.Controller) error {
 	for co.Next() {
 		r := rule{}
@@ -27,34 +32,46 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			default:
 				return co.Errf("unexpected token %q, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
 			}
-
-			p.qtypes = []uint16{}
-			p.filter = iptree.NewTree()
-			hasNet := false
-			for _, arg := range co.RemainingArgs() {
-				// either DNS types or IP addresses, there is no overlap between the two
-				qtype := dns.StringToType[arg]
-				switch qtype {
-				case 0:
-					hasNet = true
-					_, source, err := net.ParseCIDR(normalize(arg))
-					if err != nil {
-						return co.Errf("illegal CIDR notation %q", normalize(arg))
-					}
-					p.filter.InplaceInsertNet(source, struct{}{})
-				default:
-					p.qtypes = append(p.qtypes, qtype)
-				}
-			}
-
-			if !hasNet {
+			args := co.RemainingArgs()
+			if len(args) == 0 {
+				p.net = &policyNet{filter: iptree.NewTree()}
 				_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
 				_, IPv6All, _ := net.ParseCIDR("::/0")
-				p.filter.InplaceInsertNet(IPv4All, struct{}{})
-				p.filter.InplaceInsertNet(IPv6All, struct{}{})
+				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
+				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				r.policies = append(r.policies, p)
+				continue
 			}
 
+			tp := contextype
+			if _, _, err := net.ParseCIDR(normalize(args[0])); err == nil { // == nil
+				tp = nettype
+				p.net = &policyNet{filter: iptree.NewTree()}
+			}
+			for i, arg := range args {
+				switch tp {
+				case contextype:
+					if i == 0 {
+						p.ctx = new(policyCtx)
+						p.ctx.ctx = arg
+					} else {
+						p.ctx.values = append(p.ctx.values, arg)
+					}
+				case nettype:
+					qtype := dns.StringToType[arg]
+					if qtype != 0 {
+						p.net.qtypes = append(p.net.qtypes, qtype)
+					} else {
+						_, source, err := net.ParseCIDR(normalize(arg))
+						if err != nil {
+							co.Errf("illegal CIDR notation %q", normalize(arg))
+						}
+						p.net.filter.InplaceInsertNet(source, struct{}{})
+					}
+				}
+			}
 			r.policies = append(r.policies, p)
+
 		}
 		a.Rules = append(a.Rules, r)
 	}

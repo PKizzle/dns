@@ -23,8 +23,8 @@ type policy struct {
 	action dns.MsgAcceptAction
 
 	// One of these is non-nil and carries the policy
-	*policyNet
-	*policyCtx
+	net *policyNet
+	ctx *policyCtx
 }
 
 type policyNet struct {
@@ -33,8 +33,8 @@ type policyNet struct {
 }
 
 type policyCtx struct {
-	ctx   string
-	value string
+	ctx    string
+	values []string
 }
 
 const MsgFilter = dns.MsgAcceptAction(10)
@@ -43,7 +43,7 @@ const MsgFilter = dns.MsgAcceptAction(10)
 func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.Msg) dns.MsgAcceptAction {
 	for _, policy := range policies {
 		switch {
-		case policy.policyNet != nil:
+		case policy.net != nil:
 			remote := dnsutil.RemoteIP(w)
 			ip := net.ParseIP(remote)
 			if idx := strings.IndexByte(remote, '%'); idx >= 0 {
@@ -55,32 +55,32 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 			}
 
 			_, qtype := dnsutil.Question(r)
-			matchAll := len(policy.qtypes) == 0
-			match := slices.Contains(policy.qtypes, qtype)
+			matchAll := len(policy.net.qtypes) == 0
+			match := slices.Contains(policy.net.qtypes, qtype)
 			if !matchAll && !match {
 				continue
 			}
 
-			if _, contained := policy.filter.GetByIP(ip); !contained {
+			if _, contained := policy.net.filter.GetByIP(ip); !contained {
 				continue
 			}
 
 			return policy.action
-		case policy.policyCtx != nil:
-			value := dnsctx.Ctx(ctx, policy.policyCtx.ctx)
+		case policy.ctx != nil:
+			value := dnsctx.Ctx(ctx, policy.ctx.ctx)
 			if value == nil {
 				return MsgFilter
 			}
 			switch x := value.(type) {
 			case bool:
-				if x && policy.policyCtx.value == "true" {
+				if x && slices.Contains(policy.ctx.values, "true") {
 					return policy.action
 				}
-				if !x && policy.policyCtx.value == "false" {
+				if !x && slices.Contains(policy.ctx.values, "false") {
 					return policy.action
 				}
 			case string:
-				if x == policy.policyCtx.value {
+				if slices.Contains(policy.ctx.values, x) {
 					return policy.action
 				}
 			}

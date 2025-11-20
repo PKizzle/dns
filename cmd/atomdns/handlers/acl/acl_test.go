@@ -15,6 +15,7 @@ var testcases = []struct {
 	name   string
 	config string
 	qtype  uint16
+	setup  func() context.Context
 
 	rcode         int
 	extendedError uint16
@@ -79,6 +80,14 @@ var testcases = []struct {
 			}`,
 		qtype: dns.TypeTXT,
 	},
+	{
+		name:  "ctx: block Cambridge",
+		setup: func() context.Context { return context.WithValue(context.TODO(), "geoip/city", "Cambridge") },
+		config: `acl {
+				block geoip/city Cambridge
+			}`,
+		qtype: dns.TypeTXT,
+	},
 }
 
 func TestAcl(t *testing.T) {
@@ -96,7 +105,11 @@ func TestAcl(t *testing.T) {
 			dnsutil.SetQuestion(r, "www.example.org.", tc.qtype)
 
 			next := new(whoami.Whoami).HandlerFunc(nil)
-			a.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
+			ctx := context.TODO()
+			if tc.setup != nil {
+				ctx = tc.setup()
+			}
+			a.HandlerFunc(next).ServeDNS(ctx, w, r)
 
 			if w.Msg.Rcode != uint16(tc.rcode) {
 				t.Errorf("rcode mismatch want %d, got %d", tc.rcode, w.Msg.Rcode)

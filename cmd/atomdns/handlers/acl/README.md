@@ -13,7 +13,8 @@ When evaluating the rule sets, _acl_ uses the source IP.
 
 ```
 acl {
-    ACTION [QTYPE|CTX]... [NET|VALUE]...
+    ACTION [QTYPE]... [NET]...
+    ACTION CTX VALUE...
 }
 ```
 
@@ -24,15 +25,18 @@ acl {
   - _filter_ stop the query and returns _noerror_ response with the extended error (EDE) 'filtered'.
   - _drop_ stop the query and don't send any reply.
 
-- **QTYPE|CTX** is the query type to match for the requests to be allowed or blocked. If **QTYPE** is omitted it
-  matches _all_ types. If a **CTX** is used it must be in the format `xxx/yyy`, i.e. two words seperated by a
-  slash. The _geoip_ handler for instance writes data under the key `geoip/city`, that can be used here. If
-  the key does not return any data it will considered a negative match.
+- **QTYPE** is the query type to match for the requests to be allowed or blocked. If **QTYPE** is omitted it
+  matches _all_ types.
 
-- **NET|VALUE** is the source IP address or value from the context found under the key **CTX** to match for the
-  requests to be allowed or blocked. Typical CIDR notation and single IP addresses are supported. A **VALUE**
-  can be used if the context key is references previously Again with the _geoip_ handler and using
-  `Cambridge` here you can have access control on a city level.
+- **NET** is the source IP address requests to be allowed or blocked. Typical CIDR notation and single IP
+  addresses are supported.
+
+- **CTX** must be used in the format `xxx/yyy`, i.e. two words seperated by a slash. The _geoip_ handler for
+  instance writes data under the key `geoip/city`, that can be used here. If the key does not return any data it
+  will considered a negative match.
+
+- **VALUE** is the value to match **CTX** to. Again with the _geoip_ handler and using `Cambridge` here you
+  can have access control on a city level.
 
 # Examples
 
