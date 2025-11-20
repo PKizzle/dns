@@ -820,9 +820,9 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 	return int64(n), err
 }
 
-// All allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
+// RRs allows ranging over the RRs of all the sections in m. This includes the question, pseudo and stateful
 // sections.
-func (m *Msg) All() iter.Seq[RR] {
+func (m *Msg) RRs() iter.Seq[RR] {
 	return func(yield func(RR) bool) {
 		for {
 			for _, rr := range m.Question {

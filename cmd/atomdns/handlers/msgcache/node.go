@@ -45,7 +45,7 @@ func (m *Msgcache) Set(x *dns.Msg) string {
 		return ""
 	}
 	minttl := uint32(600)
-	for rr := range x.All() {
+	for rr := range x.RRs() {
 		if rr.Header().TTL > minttl {
 			minttl = rr.Header().TTL
 		}
