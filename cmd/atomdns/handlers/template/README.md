@@ -62,8 +62,8 @@ Each template gets the following variables (see the godoc of Data):
 
 And the following functions (all functions start with a capital letter):
 
-- `Value(key string)` return the value for the key from the current context. This allows extracting any data
-  other handlers have added to the context, such as the _geoip_ handler.
+- `Ctx(key string)` return the value for the key from the current context. This allows extracting any data
+  other handlers have added to the context, such as the _geoip_ handler does.
 
 # Examples
 
@@ -87,8 +87,8 @@ Where `nxdomain.go.tmpl` contains:
 
 ;; AUTHORITY SECTION:
 {{.Zone}}   IN SOA ns.icann.org. noc.dns.icann.org. 2025082229 7200 3600 1209600 3600
-{{if value "geoip/asn"}}
-{{.Zone}}   IN TXT "{{dnsctx.Value "geoip/asn"}}"
+{{if Ctx "geoip/asn"}}
+{{.Zone}}   IN TXT "{{Ctx "geoip/asn"}}"
 {{end}}
 ```
 

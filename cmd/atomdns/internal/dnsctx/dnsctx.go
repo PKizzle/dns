@@ -44,8 +44,8 @@ func WithValue(ctx context.Context, key string, value any) context.Context {
 	return context.WithValue(ctx, key, value)
 }
 
-// Value returns the data under key. If key does not contain a slash nil is returned.
-func Value(ctx context.Context, key string) any {
+// Ctx returns the data under key. If key does not contain a slash nil is returned.
+func Ctx(ctx context.Context, key string) any {
 	if !strings.Contains(key, "/") {
 		return ""
 	}

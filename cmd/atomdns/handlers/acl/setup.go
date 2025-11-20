@@ -17,13 +17,13 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 
 			switch co.Val() {
 			case "allow":
-				p.action = actionAllow
+				p.action = dns.MsgAccept
 			case "block":
-				p.action = actionBlock
+				p.action = dns.MsgReject
 			case "filter":
-				p.action = actionFilter
+				p.action = MsgFilter
 			case "drop":
-				p.action = actionDrop
+				p.action = dns.MsgIgnore
 			default:
 				return co.Errf("unexpected token %q, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
 			}
