@@ -221,13 +221,13 @@ func TestZone(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			expmsg := tc.exp()
 			exprrs := []dns.RR{}
-			for rr := range expmsg.All() {
+			for rr := range expmsg.RRs() {
 				exprrs = append(exprrs, rr)
 			}
 
 			rmsg := dnszone.Retrieve(z, tc.in(), nil)
 			gotrrs := []dns.RR{}
-			for rr := range rmsg.All() {
+			for rr := range rmsg.RRs() {
 				gotrrs = append(gotrrs, rr)
 			}
 			if !rmsg.Authoritative && !strings.Contains(tc.name, "delegation") {
@@ -380,13 +380,13 @@ func TestZoneWildcard(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			expmsg := tc.exp()
 			exprrs := []dns.RR{}
-			for rr := range expmsg.All() {
+			for rr := range expmsg.RRs() {
 				exprrs = append(exprrs, rr)
 			}
 
 			rmsg := dnszone.Retrieve(z, tc.in(), nil)
 			gotrrs := []dns.RR{}
-			for rr := range rmsg.All() {
+			for rr := range rmsg.RRs() {
 				gotrrs = append(gotrrs, rr)
 			}
 			if len(exprrs) != len(gotrrs) {
@@ -430,13 +430,13 @@ func TestZoneEdgeCases(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			expmsg := tc.exp()
 			exprrs := []dns.RR{}
-			for rr := range expmsg.All() {
+			for rr := range expmsg.RRs() {
 				exprrs = append(exprrs, rr)
 			}
 
 			rmsg := dnszone.Retrieve(z, tc.in(), nil)
 			gotrrs := []dns.RR{}
-			for rr := range rmsg.All() {
+			for rr := range rmsg.RRs() {
 				gotrrs = append(gotrrs, rr)
 			}
 			if len(exprrs) != len(gotrrs) {

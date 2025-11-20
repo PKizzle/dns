@@ -25,7 +25,7 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 	i := 0
-	for rr := range r.All() {
+	for rr := range r.RRs() {
 		if rr.Header().Name != "whoami.example.org." {
 			t.Errorf("expected %q, got %q", "whoami.example.org.", rr.Header().Name)
 		}
