@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/infobloxopen/go-trees/iptree"
 )
@@ -66,9 +67,22 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 
 			return policy.action
 		case policy.policyCtx != nil:
-			value := ctx.Value(policy.policyCtx.ctx)
+			value := dnsctx.Ctx(ctx, policy.policyCtx.ctx)
 			if value == nil {
 				return MsgFilter
+			}
+			switch x := value.(type) {
+			case bool:
+				if x && policy.policyCtx.value == "true" {
+					return policy.action
+				}
+				if !x && policy.policyCtx.value == "false" {
+					return policy.action
+				}
+			case string:
+				if x == policy.policyCtx.value {
+					return policy.action
+				}
 			}
 		}
 	}

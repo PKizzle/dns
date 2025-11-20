@@ -1,3 +1,4 @@
+// package dnsctx helps with setting and getting data from the context of the current query.
 package dnsctx
 
 import (
