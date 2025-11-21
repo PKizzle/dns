@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"slices"
-	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
@@ -44,12 +43,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 	for _, policy := range policies {
 		switch {
 		case policy.net != nil:
-			remote := dnsutil.RemoteIP(w)
-			ip := net.ParseIP(remote)
-			if idx := strings.IndexByte(remote, '%'); idx >= 0 {
-				ip = net.ParseIP(remote[:idx])
-			}
-
+			ip := net.ParseIP(dnsutil.RemoteIP(w))
 			if ip == nil {
 				return dns.MsgIgnore
 			}
@@ -62,14 +56,14 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 			}
 
 			if _, contained := policy.net.filter.GetByIP(ip); !contained {
+				println(policy.action)
 				continue
 			}
-
 			return policy.action
 		case policy.ctx != nil:
 			value := dnsctx.Ctx(ctx, policy.ctx.ctx)
 			if value == nil {
-				return MsgFilter
+				return dns.MsgAccept
 			}
 			switch x := value.(type) {
 			case bool:

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"github.com/infobloxopen/go-trees/iptree"
 )
@@ -32,20 +33,21 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			default:
 				return co.Errf("unexpected token %q, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
 			}
-			args := co.RemainingArgs()
-			if len(args) == 0 {
-				p.net = &policyNet{filter: iptree.NewTree()}
-				_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
-				_, IPv6All, _ := net.ParseCIDR("::/0")
-				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
-				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
-				r.policies = append(r.policies, p)
-				continue
-			}
 
+			args := co.RemainingArgs()
+			hasnet := false
+			// qtype, cidr of ctx key
 			tp := contextype
+			if dns.StringToType[args[0]] != 0 {
+				tp = nettype
+			}
 			if _, _, err := net.ParseCIDR(normalize(args[0])); err == nil { // == nil
 				tp = nettype
+			}
+			if tp == contextype && !dnsctx.Valid(args[0]) {
+				return co.Errf("invalid context key: %s", args[0])
+			}
+			if tp == nettype {
 				p.net = &policyNet{filter: iptree.NewTree()}
 			}
 			for i, arg := range args {
@@ -66,10 +68,18 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 						if err != nil {
 							co.Errf("illegal CIDR notation %q", normalize(arg))
 						}
+						hasnet = true
 						p.net.filter.InplaceInsertNet(source, struct{}{})
 					}
 				}
 			}
+			if tp == nettype && !hasnet {
+				_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
+				_, IPv6All, _ := net.ParseCIDR("::/0")
+				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
+				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+			}
+
 			r.policies = append(r.policies, p)
 
 		}
@@ -80,10 +90,10 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 
 // normalize appends '/32' for any single IPv4 address and '/128' for IPv6.
 func normalize(rawNet string) string {
-	if idx := strings.IndexAny(rawNet, "/"); idx >= 0 {
+	if strings.Contains(rawNet, "/") {
 		return rawNet
 	}
-	if idx := strings.IndexAny(rawNet, ":"); idx >= 0 {
+	if strings.Contains(rawNet, ":") {
 		return rawNet + "/128"
 	}
 	return rawNet + "/32"
