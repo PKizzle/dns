@@ -33,7 +33,7 @@ acl {
 
 - **CTX** must be used in the format `xxx/yyy`, i.e. two words seperated by a slash. The _geoip_ handler for
   instance writes data under the key `geoip/city`, that can be used here. If the key does not return any data it
-  will considered a positive match.
+  will considered a positive match and **ACTION** is performed.
 
 - **VALUE** is the value to match **CTX** to. Again with the _geoip_ handler and using `Cambridge` here you
   can have access control on a city level.

@@ -33,7 +33,7 @@ type policyNet struct {
 
 type policyCtx struct {
 	ctx    string
-	values []string
+	values []any
 }
 
 const MsgFilter = dns.MsgAcceptAction(10)
@@ -60,22 +60,8 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 			}
 			return policy.action
 		case policy.ctx != nil:
-			value := dnsctx.Ctx(ctx, policy.ctx.ctx)
-			if value == nil {
-				return dns.MsgAccept
-			}
-			switch x := value.(type) {
-			case bool:
-				if x && slices.Contains(policy.ctx.values, "true") {
-					return policy.action
-				}
-				if !x && slices.Contains(policy.ctx.values, "false") {
-					return policy.action
-				}
-			case string:
-				if slices.Contains(policy.ctx.values, x) {
-					return policy.action
-				}
+			if dnsctx.Match(ctx, policy.ctx.ctx, policy.ctx.values) {
+				return policy.action
 			}
 		}
 	}
