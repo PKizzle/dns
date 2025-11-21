@@ -20,7 +20,11 @@ import (
 //   - call the next handler, wait for it to return and modify the [dns.Msg], think of setting TSIG or a DNS
 //     cookie.
 type Handler interface {
+	// HandlerFunc run the handler's code.
 	HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc
+
+	// Err returns a error with some extra data that identifies the handler in erroring. This method can be
+	// created with go generate, once some scaffolding is in place.
 	Err(error) error
 }
 

@@ -14,12 +14,12 @@ When evaluating the rule sets, _acl_ uses the source IP.
 ```
 acl {
     ACTION [QTYPE]... [NET]...
+    ACTION CTX VALUE...
 }
 ```
 
 - **ACTION** defines the way to deal with DNS queries matched by this rule. The default action is _allow_,
   DNS query not matched by any rules will be allowed to continue. The following actions are defined:
-
   - _allow_ forward the query to the next handler.
   - _block_ stop the query and return a _refused_ response with the extended error (EDE) 'blocked'.
   - _filter_ stop the query and returns _noerror_ response with the extended error (EDE) 'filtered'.
@@ -27,19 +27,25 @@ acl {
 
 - **QTYPE** is the query type to match for the requests to be allowed or blocked. If **QTYPE** is omitted it
   matches _all_ types.
-- **NET** is the source IP address to match for the requests to be allowed or blocked. Typical CIDR notation
-  and single IP addresses are supported.
+
+- **NET** is the source IP address requests to be allowed or blocked. Typical CIDR notation and single IP
+  addresses are supported.
+
+- **CTX** must be used in the format `xxx/yyy`, i.e. two words seperated by a slash. The _geoip_ handler for
+  instance writes data under the key `geoip/city`, that can be used here. If the key does not return any data it
+  will considered a positive match.
+
+- **VALUE** is the value to match **CTX** to. Again with the _geoip_ handler and using `Cambridge` here you
+  can have access control on a city level.
 
 # Examples
 
-To demonstrate the usage of _acl_, here we provide some typical examples.
-
-Block all DNS queries with record type A from 192.168.0.0/16：
+Block everything
 
 ```conffile
 . {
     acl {
-        block A 192.168.0.0/16
+        block
     }
 }
 ```
@@ -65,33 +71,14 @@ Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24:
 }
 ```
 
-Allow only DNS queries from 192.168.0.0/24 and 192.168.1.0/24:
+Drop all queries from Cambridge, this requires the _geoip_ handler to have populated the context for this
+query. Allow all countries that are in the EU.
 
 ```conffile
 . {
     acl {
-        allow 192.168.0.0/24 192.168.1.0/24
-        block
-    }
-}
-```
-
-Block all DNS queries from 192.168.1.0/24 towards a.example.org:
-
-```conffile
-a.example.org {
-    acl {
-        block 192.168.1.0/24
-    }
-}
-```
-
-Drop all DNS queries from 192.0.2.0/24:
-
-```conffile
-. {
-    acl {
-        drop 192.0.2.0/24
+        block geoip/city Cambridge
+        allow geoip/country/eu true
     }
 }
 ```

@@ -1,11 +1,12 @@
 package acl
 
 import (
+	"context"
 	"net"
 	"slices"
-	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/infobloxopen/go-trees/iptree"
 )
@@ -15,55 +16,68 @@ type rule struct {
 	policies []policy
 }
 
-// action defines the action against messages.
-type action int
-
 // policy defines the ACL policy for DNS messages.
-// A policy performs the specified action (block/allow) on all DNS messages
-// matched by source IP or QTYPE.
+// A policy performs the specified action (block/allow) on all DNS messages matched by source IP or QTYPE.
 type policy struct {
-	action action
+	action dns.MsgAcceptAction
+
+	// One of these is non-nil and carries the policy
+	net *policyNet
+	ctx *policyCtx
+}
+
+type policyNet struct {
 	qtypes []uint16
 	filter *iptree.Tree
 }
 
-const (
-	// actionNone does nothing on the messages.
-	actionNone = iota
-	// actionAllow allows authorized messages.
-	actionAllow
-	// actionBlock blocks unauthorized messages towards protected DNS zones.
-	actionBlock
-	// actionFilter returns empty sets for messages towards protected DNS zones.
-	actionFilter
-	// actionDrop does not respond for messages towards the protected DNS zones.
-	actionDrop
-)
+type policyCtx struct {
+	ctx    string
+	values []string
+}
+
+const MsgFilter = dns.MsgAcceptAction(10)
 
 // match matches the DNS message with a list of ACL polices and returns suitable action against the message.
-func match(policies []policy, w dns.ResponseWriter, r *dns.Msg) action {
-	remote := dnsutil.RemoteIP(w)
-	ip := net.ParseIP(remote)
-	if idx := strings.IndexByte(remote, '%'); idx >= 0 {
-		ip = net.ParseIP(remote[:idx])
-	}
-
-	if ip == nil {
-		return actionDrop
-	}
-	_, qtype := dnsutil.Question(r)
+func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.Msg) dns.MsgAcceptAction {
 	for _, policy := range policies {
-		matchAll := len(policy.qtypes) == 0
-		match := slices.Contains(policy.qtypes, qtype)
-		if !matchAll && !match {
-			continue
-		}
+		switch {
+		case policy.net != nil:
+			ip := net.ParseIP(dnsutil.RemoteIP(w))
+			if ip == nil {
+				return dns.MsgIgnore
+			}
 
-		if _, contained := policy.filter.GetByIP(ip); !contained {
-			continue
-		}
+			_, qtype := dnsutil.Question(r)
+			matchAll := len(policy.net.qtypes) == 0
+			match := slices.Contains(policy.net.qtypes, qtype)
+			if !matchAll && !match {
+				continue
+			}
 
-		return policy.action
+			if _, contained := policy.net.filter.GetByIP(ip); !contained {
+				continue
+			}
+			return policy.action
+		case policy.ctx != nil:
+			value := dnsctx.Ctx(ctx, policy.ctx.ctx)
+			if value == nil {
+				return dns.MsgAccept
+			}
+			switch x := value.(type) {
+			case bool:
+				if x && slices.Contains(policy.ctx.values, "true") {
+					return policy.action
+				}
+				if !x && slices.Contains(policy.ctx.values, "false") {
+					return policy.action
+				}
+			case string:
+				if slices.Contains(policy.ctx.values, x) {
+					return policy.action
+				}
+			}
+		}
 	}
-	return actionNone
+	return dns.MsgAccept
 }

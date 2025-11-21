@@ -21,19 +21,14 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 	Rules:
 		for _, rule := range a.Rules {
-			action := match(rule.policies, w, r)
+			action := match(ctx, rule.policies, w, r)
 			switch action {
-			case actionAllow:
-
+			case dns.MsgAccept:
 				break Rules
-
-			case actionDrop:
-
+			case dns.MsgIgnore:
 				RequestsDrop.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
 				return
-
-			case actionBlock:
-
+			case dns.MsgReject:
 				m := r.Copy()
 				dnsutil.SetReply(m, r)
 				m.Data = r.Data
@@ -45,9 +40,7 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 				RequestsBlock.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
 				return
-
-			case actionFilter:
-
+			case MsgFilter:
 				m := r.Copy()
 				dnsutil.SetReply(m, r)
 				m.Data = r.Data

@@ -1,7 +1,9 @@
+// package dnsctx helps with setting and getting data from the context of the current query.
 package dnsctx
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -38,15 +40,15 @@ func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 // WithValue stores value under the string value key, key must contain a slash and be formatted like
 // "<handler>/xxx". If key does not contain a slash, this function is noop.
 func WithValue(ctx context.Context, key string, value any) context.Context {
-	if !strings.Contains(key, "/") {
+	if !Valid(key) {
 		return ctx
 	}
 	return context.WithValue(ctx, key, value)
 }
 
-// Value returns the data under key. If key does not contain a slash nil is returned.
-func Value(ctx context.Context, key string) any {
-	if !strings.Contains(key, "/") {
+// Ctx returns the data under key. If key does not contain a slash nil is returned.
+func Ctx(ctx context.Context, key string) any {
+	if !Valid(key) {
 		return ""
 	}
 	v := ctx.Value(key)
@@ -54,4 +56,15 @@ func Value(ctx context.Context, key string) any {
 		return nil
 	}
 	return v
+}
+
+// Reserved are context key suffixes that are used internally by atomdns.
+var Reserved = []string{"/msgfunc"}
+
+// Valid returns a boolean indicating if the key is a valid context key.
+func Valid(key string) bool {
+	if slices.Contains(Reserved, key) {
+		return false
+	}
+	return strings.Contains(key, "/")
 }

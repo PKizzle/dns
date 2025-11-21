@@ -5,11 +5,19 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"github.com/infobloxopen/go-trees/iptree"
 )
 
+const (
+	nettype = iota
+	contextype
+)
+
 func (a *Acl) Setup(co *dnsserver.Controller) error {
+	var _, IPv4All, _ = net.ParseCIDR("0.0.0.0/0")
+	var _, IPv6All, _ = net.ParseCIDR("::/0")
 	for co.Next() {
 		r := rule{}
 		for co.NextBlock(0) {
@@ -17,44 +25,73 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 
 			switch co.Val() {
 			case "allow":
-				p.action = actionAllow
+				p.action = dns.MsgAccept
 			case "block":
-				p.action = actionBlock
+				p.action = dns.MsgReject
 			case "filter":
-				p.action = actionFilter
+				p.action = MsgFilter
 			case "drop":
-				p.action = actionDrop
+				p.action = dns.MsgIgnore
 			default:
 				return co.Errf("unexpected token %q, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
 			}
 
-			p.qtypes = []uint16{}
-			p.filter = iptree.NewTree()
-			hasNet := false
-			for _, arg := range co.RemainingArgs() {
-				// either DNS types or IP addresses, there is no overlap between the two
-				qtype := dns.StringToType[arg]
-				switch qtype {
-				case 0:
-					hasNet = true
-					_, source, err := net.ParseCIDR(normalize(arg))
-					if err != nil {
-						return co.Errf("illegal CIDR notation %q", normalize(arg))
-					}
-					p.filter.InplaceInsertNet(source, struct{}{})
-				default:
-					p.qtypes = append(p.qtypes, qtype)
-				}
+			args := co.RemainingArgs()
+
+			if len(args) == 0 {
+				p.net = &policyNet{filter: iptree.NewTree()}
+				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
+				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				r.policies = append(r.policies, p)
+				continue
 			}
 
-			if !hasNet {
-				_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
-				_, IPv6All, _ := net.ParseCIDR("::/0")
-				p.filter.InplaceInsertNet(IPv4All, struct{}{})
-				p.filter.InplaceInsertNet(IPv6All, struct{}{})
+			hasnet := false
+			// qtype, cidr of ctx key
+			tp := contextype
+			if dns.StringToType[args[0]] != 0 {
+				tp = nettype
+			}
+			if _, _, err := net.ParseCIDR(normalize(args[0])); err == nil { // == nil
+				tp = nettype
+			}
+			if tp == contextype && !dnsctx.Valid(args[0]) {
+				return co.Errf("invalid context key: %s", args[0])
+			}
+			if tp == nettype {
+				p.net = &policyNet{filter: iptree.NewTree()}
+			}
+			for i, arg := range args {
+				switch tp {
+				case contextype:
+					if i == 0 {
+						p.ctx = new(policyCtx)
+						p.ctx.ctx = arg
+					} else {
+						p.ctx.values = append(p.ctx.values, arg)
+					}
+				case nettype:
+					qtype := dns.StringToType[arg]
+					if qtype != 0 {
+						p.net.qtypes = append(p.net.qtypes, qtype)
+					} else {
+						_, source, err := net.ParseCIDR(normalize(arg))
+						if err != nil {
+							return co.Errf("illegal CIDR notation %q", normalize(arg))
+						}
+						hasnet = true
+						p.net.filter.InplaceInsertNet(source, struct{}{})
+					}
+				}
+			}
+			if tp == nettype && !hasnet {
+				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
+				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				hasnet = true
 			}
 
 			r.policies = append(r.policies, p)
+
 		}
 		a.Rules = append(a.Rules, r)
 	}
@@ -63,10 +100,10 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 
 // normalize appends '/32' for any single IPv4 address and '/128' for IPv6.
 func normalize(rawNet string) string {
-	if idx := strings.IndexAny(rawNet, "/"); idx >= 0 {
+	if strings.Contains(rawNet, "/") {
 		return rawNet
 	}
-	if idx := strings.IndexAny(rawNet, ":"); idx >= 0 {
+	if strings.Contains(rawNet, ":") {
 		return rawNet + "/128"
 	}
 	return rawNet + "/32"
