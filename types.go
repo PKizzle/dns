@@ -293,7 +293,7 @@ type MB struct {
 
 func (rr *MB) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Mb))
+	sb.WriteString(rr.Mb)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -307,7 +307,7 @@ type MG struct {
 
 func (rr *MG) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Mg))
+	sb.WriteString(rr.Mg)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -322,7 +322,7 @@ type MINFO struct {
 
 func (rr *MINFO) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, sprintName(rr.Rmail), sprintName(rr.Email))
+	sprintData(sb, rr.Rmail, rr.Email)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -336,7 +336,7 @@ type MR struct {
 
 func (rr *MR) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Mr))
+	sb.WriteString(rr.Mr)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -350,7 +350,7 @@ type MF struct {
 
 func (rr *MF) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Mf))
+	sb.WriteString(rr.Mf)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -364,7 +364,7 @@ type MD struct {
 
 func (rr *MD) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Md))
+	sb.WriteString(rr.Md)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -379,7 +379,7 @@ type MX struct {
 
 func (rr *MX) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), sprintName(rr.Mx))
+	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Mx)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -394,7 +394,7 @@ type AFSDB struct {
 
 func (rr *AFSDB) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Subtype)), sprintName(rr.Hostname))
+	sprintData(sb, strconv.Itoa(int(rr.Subtype)), rr.Hostname)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -438,7 +438,7 @@ type RT struct {
 
 func (rr *RT) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), sprintName(rr.Host))
+	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Host)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -452,7 +452,7 @@ type NS struct {
 
 func (rr *NS) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Ns))
+	sb.WriteString(rr.Ns)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -466,7 +466,7 @@ type PTR struct {
 
 func (rr *PTR) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Ptr))
+	sb.WriteString(rr.Ptr)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -481,7 +481,7 @@ type RP struct {
 
 func (rr *RP) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, sprintName(rr.Mbox), sprintName(rr.Txt))
+	sprintData(sb, rr.Mbox, rr.Txt)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -501,7 +501,7 @@ type SOA struct {
 
 func (rr *SOA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, sprintName(rr.Ns), sprintName(rr.Mbox),
+	sprintData(sb, rr.Ns, rr.Mbox,
 		strconv.FormatInt(int64(rr.Serial), 10),
 		strconv.FormatInt(int64(rr.Refresh), 10),
 		strconv.FormatInt(int64(rr.Retry), 10),
@@ -567,7 +567,7 @@ func (rr *SRV) String() string {
 	sb := sprintHeader(rr)
 	sprintData(sb, strconv.Itoa(int(rr.Priority)),
 		strconv.Itoa(int(rr.Weight)),
-		strconv.Itoa(int(rr.Port)), sprintName(rr.Target))
+		strconv.Itoa(int(rr.Port)), rr.Target)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -652,7 +652,7 @@ type DNAME struct {
 
 func (rr *DNAME) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Target))
+	sb.WriteString(rr.Target)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -715,7 +715,7 @@ type PX struct {
 
 func (rr *PX) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), sprintName(rr.Map822), sprintName(rr.Mapx400))
+	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Map822, rr.Mapx400)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -852,7 +852,7 @@ func (rr *RRSIG) String() string {
 		dnsutilTimeToString(rr.Expiration),
 		dnsutilTimeToString(rr.Inception),
 		strconv.Itoa(int(rr.KeyTag)),
-		sprintName(rr.SignerName),
+		rr.SignerName,
 		rr.Signature)
 	s := sb.String()
 	builderPool.Put(*sb)
@@ -888,7 +888,7 @@ type NSEC struct {
 
 func (rr *NSEC) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.NextDomain))
+	sb.WriteString(rr.NextDomain)
 	for _, t := range rr.TypeBitMap {
 		sb.WriteByte(' ')
 		sb.WriteString(sprintType(t))
@@ -940,7 +940,7 @@ type KX struct {
 
 func (rr *KX) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), sprintName(rr.Exchanger))
+	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Exchanger)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -975,7 +975,7 @@ type TALINK struct {
 
 func (rr *TALINK) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, sprintName(rr.PreviousName), sprintName(rr.NextName))
+	sprintData(sb, rr.PreviousName, rr.NextName)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1064,7 +1064,7 @@ type NSAPPTR struct {
 
 func (rr *NSAPPTR) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintName(rr.Ptr))
+	sb.WriteString(rr.Ptr)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1276,7 +1276,7 @@ func (rr *HIP) String() string {
 	sprintData(sb, strconv.Itoa(int(rr.PublicKeyAlgorithm)), rr.Hit, rr.PublicKey)
 	for _, d := range rr.RendezvousServers {
 		sb.WriteByte(' ')
-		sb.WriteString(sprintName(d))
+		sb.WriteString(d)
 	}
 	s := sb.String()
 	builderPool.Put(*sb)
@@ -1376,7 +1376,7 @@ type LP struct {
 
 func (rr *LP) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), sprintName(rr.Fqdn))
+	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Fqdn)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1583,7 +1583,7 @@ type SVCB struct {
 
 func (rr *SVCB) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Priority)), sprintName(rr.Target))
+	sprintData(sb, strconv.Itoa(int(rr.Priority)), rr.Target)
 	for _, p := range rr.Value {
 		sb.WriteByte(' ')
 		k := svcb.PairToKey(p)

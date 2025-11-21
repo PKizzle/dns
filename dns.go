@@ -116,7 +116,7 @@ func (h *Header) Clone() RR       { return &Header{h.Name, h.Class, h.TTL, h.t} 
 // header you need the RR type to correctly print it. See [dnsutil.TypeToString] omong others.
 func (h *Header) String() string {
 	sb := strings.Builder{}
-	sb.WriteString(sprintName(h.Name))
+	sb.WriteString(h.Name)
 	sb.WriteByte('\t')
 
 	sb.WriteString(strconv.FormatInt(int64(h.TTL), 10))
