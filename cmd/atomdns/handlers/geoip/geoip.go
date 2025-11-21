@@ -55,19 +55,19 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			}
 		}
 		if city.HasData() {
-			dnsctx.WithValue(ctx, "geoip/city", city.City.Names.English)
-			dnsctx.WithValue(ctx, "geoip/country", city.Country.ISOCode)
-			dnsctx.WithValue(ctx, "geoip/country/eu", city.Country.IsInEuropeanUnion)
-			dnsctx.WithValue(ctx, "geoip/continent", city.Continent.Code)
-			dnsctx.WithValue(ctx, "geoip/timezone", city.Location.TimeZone)
+			dnsctx.WithValue(ctx, g.Key()+"/city", city.City.Names.English)
+			dnsctx.WithValue(ctx, g.Key()+"/country", city.Country.ISOCode)
+			dnsctx.WithValue(ctx, g.Key()+"/country/eu", city.Country.IsInEuropeanUnion)
+			dnsctx.WithValue(ctx, g.Key()+"/continent", city.Continent.Code)
+			dnsctx.WithValue(ctx, g.Key()+"/timezone", city.Location.TimeZone)
 			if city.Location.HasCoordinates() {
-				dnsctx.WithValue(ctx, "geoip/latitude", *city.Location.Latitude)
-				dnsctx.WithValue(ctx, "geoip/longitude", *city.Location.Longitude)
+				dnsctx.WithValue(ctx, g.Key()+"/latitude", *city.Location.Latitude)
+				dnsctx.WithValue(ctx, g.Key()+"/longitude", *city.Location.Longitude)
 			}
 		}
 		if asn.HasData() {
-			dnsctx.WithValue(ctx, "geoip/asn", asn.AutonomousSystemNumber)
-			dnsctx.WithValue(ctx, "geoip/asn/organization", asn.AutonomousSystemOrganization)
+			dnsctx.WithValue(ctx, g.Key()+"/asn", asn.AutonomousSystemNumber)
+			dnsctx.WithValue(ctx, g.Key()+"/asn/organization", asn.AutonomousSystemOrganization)
 		}
 		next.ServeDNS(ctx, w, r)
 	})
