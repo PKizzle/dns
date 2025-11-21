@@ -86,7 +86,6 @@ var testcases = []struct {
 		config: `acl {
 				block geoip/city Cambridge
 			}`,
-		qtype: dns.TypeTXT,
 	},
 }
 
