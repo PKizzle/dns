@@ -16,6 +16,8 @@ const (
 )
 
 func (a *Acl) Setup(co *dnsserver.Controller) error {
+	var _, IPv4All, _ = net.ParseCIDR("0.0.0.0/0")
+	var _, IPv6All, _ = net.ParseCIDR("::/0")
 	for co.Next() {
 		r := rule{}
 		for co.NextBlock(0) {
@@ -35,6 +37,15 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			}
 
 			args := co.RemainingArgs()
+
+			if len(args) == 0 {
+				p.net = &policyNet{filter: iptree.NewTree()}
+				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
+				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				r.policies = append(r.policies, p)
+				continue
+			}
+
 			hasnet := false
 			// qtype, cidr of ctx key
 			tp := contextype
@@ -66,7 +77,7 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 					} else {
 						_, source, err := net.ParseCIDR(normalize(arg))
 						if err != nil {
-							co.Errf("illegal CIDR notation %q", normalize(arg))
+							return co.Errf("illegal CIDR notation %q", normalize(arg))
 						}
 						hasnet = true
 						p.net.filter.InplaceInsertNet(source, struct{}{})
@@ -74,10 +85,9 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 				}
 			}
 			if tp == nettype && !hasnet {
-				_, IPv4All, _ := net.ParseCIDR("0.0.0.0/0")
-				_, IPv6All, _ := net.ParseCIDR("::/0")
 				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
 				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				hasnet = true
 			}
 
 			r.policies = append(r.policies, p)

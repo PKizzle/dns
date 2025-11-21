@@ -155,7 +155,7 @@ func TestSetup(t *testing.T) {
 			co := dnsserver.NewTestController(tc.config)
 			err := acl.Setup(co)
 			if (err != nil) != tc.exp {
-				t.Errorf("expected %t, got %s for %s", tc.exp, err, tc.config)
+				t.Errorf("expected %t, for %s", tc.exp, tc.config)
 			}
 		})
 	}

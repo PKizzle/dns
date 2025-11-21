@@ -40,14 +40,12 @@ acl {
 
 # Examples
 
-To demonstrate the usage of _acl_, here we provide some typical examples.
-
-Block all DNS queries with record type A from 192.168.0.0/16：
+Block everything
 
 ```conffile
 . {
     acl {
-        block A 192.168.0.0/16
+        block
     }
 }
 ```

@@ -22,6 +22,13 @@ var testcases = []struct {
 	noResponse    bool
 }{
 	{
+		name: "block all",
+		config: `acl {
+				block
+			}`,
+		rcode: dns.RcodeRefused,
+	},
+	{
 		name: "blocklist block",
 		config: `acl {
 				block A 198.51.100.0/16
@@ -86,6 +93,7 @@ var testcases = []struct {
 		config: `acl {
 				block geoip/city Cambridge
 			}`,
+		rcode: dns.RcodeRefused,
 	},
 }
 
