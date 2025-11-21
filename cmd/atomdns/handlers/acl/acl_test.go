@@ -95,6 +95,16 @@ var testcases = []struct {
 			}`,
 		rcode: dns.RcodeRefused,
 	},
+	{
+		name: "ctx: block Cambridge",
+		setup: func() context.Context {
+			return context.WithValue(context.WithValue(context.TODO(), "geoip/country/eu", true), "geoip/city", "Amsterdam")
+		},
+		config: `acl {
+				block geoip/city Cambridge
+				allow geoip/country/eu true
+			}`,
+	},
 }
 
 func TestAcl(t *testing.T) {
