@@ -2,6 +2,7 @@ package acl
 
 import (
 	"net"
+	"strconv"
 	"strings"
 
 	"codeberg.org/miekg/dns"
@@ -18,6 +19,7 @@ const (
 func (a *Acl) Setup(co *dnsserver.Controller) error {
 	var _, IPv4All, _ = net.ParseCIDR("0.0.0.0/0")
 	var _, IPv6All, _ = net.ParseCIDR("::/0")
+
 	for co.Next() {
 		r := rule{}
 		for co.NextBlock(0) {
@@ -68,7 +70,7 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 						p.ctx = new(policyCtx)
 						p.ctx.ctx = arg
 					} else {
-						p.ctx.values = append(p.ctx.values, arg)
+						p.ctx.values = append(p.ctx.values, argtotype(arg))
 					}
 				case nettype:
 					qtype := dns.StringToType[arg]
@@ -107,4 +109,22 @@ func normalize(rawNet string) string {
 		return rawNet + "/128"
 	}
 	return rawNet + "/32"
+}
+
+// argtotype take the string arg and determines what the type could be and returns it. I.e. "true" will be
+// parsed as a bool that is true. This functions handles strings, int, float64s and bools.
+func argtotype(arg string) any {
+	if arg == "true" {
+		return true
+	}
+	if arg == "false" {
+		return false
+	}
+	if i, err := strconv.ParseInt(arg, 10, 64); err == nil {
+		return i
+	}
+	if f, err := strconv.ParseFloat(arg, 64); err == nil {
+		return f
+	}
+	return arg
 }

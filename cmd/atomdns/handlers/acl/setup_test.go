@@ -57,35 +57,35 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"drop 1",
+			"drop",
 			`acl {
 				drop 192.168.0.0/16
 			}`,
 			false,
 		},
 		{
-			"multiple networks 1",
+			"multiple networks",
 			`acl {
 				block 192.168.1.0/24 192.168.3.0/24
 			}`,
 			false,
 		},
 		{
-			"multiple qtypes 1",
+			"multiple qtypes",
 			`acl {
 				block TXT ANY CNAME 192.168.3.0/24
 			}`,
 			false,
 		},
 		{
-			"illegal argument 1",
+			"illegal argument",
 			`acl {
 				block ABC 192.168.0.0/16
 			}`,
 			true,
 		},
 		{
-			"illegal argument 2",
+			"illegal argument",
 			`acl {
 				blck A 192.168.0.0/16
 			}`,
@@ -107,44 +107,51 @@ func TestSetup(t *testing.T) {
 			false,
 		},
 		{
-			"filter 1 IPv6",
+			"filter IPv6",
 			`acl {
 				filter A 2001:0db8:85a3:0000:0000:8a2e:0370:7334
 			}`,
 			false,
 		},
 		{
-			"drop 1 IPv6",
-			`acl {
-				drop 2001:db8:abcd:0012::0/64
-			}`,
-			false,
-		},
-		{
-			"fine-grained 1 IPv6",
+			"fine-grained IPv6",
 			`acl {
 				block 2001:db8:abcd:0012::0/64
 			}`,
 			false,
 		},
 		{
-			"multiple networks 1 IPv6",
+			"multiple networks IPv6",
 			`acl {
 				block 2001:db8:abcd:0012::0/64 2001:db8:85a3::8a2e:370:7334/64
 			}`,
 			false,
 		},
 		{
-			"illegal argument 1 IPv6",
+			"illegal argument IPv6",
 			`acl {
 				block A 2001::85a3::8a2e:370:7334
 			}`,
 			true,
 		},
 		{
-			"illegal argument 2 IPv6",
+			"illegal argument IPv6",
 			`acl {
 				block A 2001:db8:85a3:::8a2e:370:7334
+			}`,
+			true,
+		},
+		{
+			"switch rule types",
+			`acl {
+				block A Cambridge
+			}`,
+			true,
+		},
+		{
+			"switch rule types",
+			`acl {
+				block 192.168.0.0/16 Cambridge
 			}`,
 			true,
 		},

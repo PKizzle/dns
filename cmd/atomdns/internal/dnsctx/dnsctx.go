@@ -68,3 +68,39 @@ func Valid(key string) bool {
 	}
 	return strings.Contains(key, "/")
 }
+
+// Match checks the value under key and see if it matches any of the elements in the list.
+// This function handles strings, ints, flaot64s and bools. A nil value for key returns true.
+func Match(ctx context.Context, key string, values []any) bool {
+	value := Ctx(ctx, key)
+	if value == nil {
+		return true
+	}
+	switch x := value.(type) {
+	case bool:
+		for _, v := range values {
+			if b, ok := v.(bool); ok && b == x {
+				return true
+			}
+		}
+	case string:
+		for _, v := range values {
+			if s, ok := v.(string); ok && s == x {
+				return true
+			}
+		}
+	case int:
+		for _, v := range values {
+			if i, ok := v.(int); ok && i == x {
+				return true
+			}
+		}
+	case float64:
+		for _, v := range values {
+			if f, ok := v.(float64); ok && f == x {
+				return true
+			}
+		}
+	}
+	return false
+}
