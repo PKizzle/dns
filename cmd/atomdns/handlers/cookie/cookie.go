@@ -35,12 +35,14 @@ func (c *Cookie) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				io.WriteString(f, cc.Cookie[:16])
 				io.WriteString(f, c.Secret)
 
-				ctx = dnsctx.WithFuncValue(ctx, c.Key(),
+				ctx = dnsctx.WithFunc(ctx, c.Key(),
 					func(m *dns.Msg) *dns.Msg {
 						cookie := &dns.COOKIE{Cookie: cc.Cookie[:16] + hex.EncodeToString(f.Sum(nil))}
 						m.Pseudo = append(m.Pseudo, cookie)
 						return m
 					})
+
+				ctx = dnsctx.WithValue(ctx, c.Key()+"/status", true)
 				break
 			}
 		}

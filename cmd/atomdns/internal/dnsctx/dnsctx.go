@@ -13,8 +13,8 @@ import (
 // Func is a function that can be set in the context and operates on a [dns.Msg].
 type Func func(*dns.Msg) *dns.Msg
 
-// WithFuncValue set the Func f in the context under the key <handler>/msgfunc.
-func WithFuncValue(ctx context.Context, handler string, f Func) context.Context {
+// WithFunc set the Func f in the context under the key <handler>/msgfunc.
+func WithFunc(ctx context.Context, handler string, f Func) context.Context {
 	return context.WithValue(ctx, funckey(handler), f)
 }
 
