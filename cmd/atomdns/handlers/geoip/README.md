@@ -27,7 +27,7 @@ geoip [subnet] {
   lookups. If the path is relative the path from `root` will be prepended. At least one database must be
   loaded.
 
-# Context Keys
+# Context
 
 The following values will be stored in the context of a request and can be used by other handlers.
 

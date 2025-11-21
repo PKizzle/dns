@@ -45,6 +45,14 @@ And now a client with NSID support will see an OPT record with the NSID option:
 ;whoami.example.org.		IN	A
 ```
 
+# Context
+
+The _nsid_ handler adds a single key to the context:
+
+| Key            | Type   | Example | Description                                  |
+| :------------- | :----- | :------ | :------------------------------------------- |
+| `nsid/msgfunc` | `func` |         | Function that adds nsid option to the reply. |
+
 # See Also
 
 RFC 5001.
