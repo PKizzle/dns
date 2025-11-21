@@ -9,53 +9,6 @@ import (
 	"codeberg.org/miekg/dns/internal/ddd"
 )
 
-func sprintName(s string) string {
-	sb := builderPool.Get()
-	defer builderPool.Put(sb)
-
-	for i := 0; i < len(s); {
-		if s[i] == '.' {
-			if sb.Len() != 0 {
-				sb.WriteByte('.')
-			}
-			i++
-			continue
-		}
-
-		b, n := ddd.Next(s, i)
-		if n == 0 {
-			// Drop "dangling" incomplete escapes.
-			if sb.Len() == 0 {
-				return s[:i]
-			}
-			break
-		}
-		if ddd.ShouldEscape(b) {
-			if sb.Len() == 0 {
-				sb.Grow(len(s) * 2)
-				sb.WriteString(s[:i])
-			}
-			sb.WriteByte('\\')
-			sb.WriteByte(b)
-		} else if b < ' ' || b > '~' { // unprintable, use \DDD
-			if sb.Len() == 0 {
-				sb.Grow(len(s) * 2)
-				sb.WriteString(s[:i])
-			}
-			sb.WriteString(ddd.Escape(b))
-		} else {
-			if sb.Len() != 0 {
-				sb.WriteByte(b)
-			}
-		}
-		i += n
-	}
-	if sb.Len() == 0 {
-		return s
-	}
-	return sb.String()
-}
-
 func sprintTxt(txt []string) string {
 	sb := builderPool.Get()
 	defer builderPool.Put(sb)
@@ -153,7 +106,7 @@ func euiToString(eui uint64, bits int) (hex string) {
 func sprintHeader(rr RR) *strings.Builder {
 	sb := builderPool.Get()
 
-	sb.WriteString(sprintName(rr.Header().Name))
+	sb.WriteString(rr.Header().Name)
 	sb.WriteByte('\t')
 
 	sb.WriteString(strconv.FormatInt(int64(rr.Header().TTL), 10))
