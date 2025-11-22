@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/pool"
 )
 
 func sprintTxt(txt []string) string {
@@ -45,35 +46,35 @@ func writeTxtByte(sb *strings.Builder, b byte) {
 	}
 }
 
-func sprintType(t uint16) string {
+func typeToString(t uint16) string {
 	if t1, ok := TypeToString[uint16(t)]; ok {
 		return t1
 	}
 	return "TYPE" + strconv.Itoa(int(t))
 }
 
-func sprintCode(t uint16) string {
+func codeToString(t uint16) string {
 	if t1, ok := CodeToString[uint16(t)]; ok {
 		return t1
 	}
 	return "CODE" + strconv.Itoa(int(t))
 }
 
-func sprintClass(c uint16) string {
+func classToString(c uint16) string {
 	if s, ok := ClassToString[uint16(c)]; ok {
 		return s
 	}
 	return "CLASS" + strconv.Itoa(int(c))
 }
 
-func sprintRcode(r uint16) string {
+func rcodeToString(r uint16) string {
 	if r1, ok := RcodeToString[r]; ok {
 		return r1
 	}
 	return "RCODE" + strconv.Itoa(int(r))
 }
 
-func sprintOpcode(o uint8) string {
+func opcodeToString(o uint8) string {
 	if o1, ok := OpcodeToString[o]; ok {
 		return o1
 	}
@@ -112,14 +113,14 @@ func sprintHeader(rr RR) *strings.Builder {
 	sb.WriteString(strconv.FormatInt(int64(rr.Header().TTL), 10))
 	sb.WriteByte('\t')
 
-	sb.WriteString(sprintClass(rr.Header().Class))
+	sb.WriteString(classToString(rr.Header().Class))
 	sb.WriteByte('\t')
 
 	rrtype := rr.Header().t
 	if rrtype == 0 {
 		rrtype = RRToType(rr)
 	}
-	sb.WriteString(sprintType(rrtype))
+	sb.WriteString(typeToString(rrtype))
 	sb.WriteByte('\t')
 	return &sb
 }
@@ -133,11 +134,11 @@ func sprintOptionHeader(rr EDNS0) *strings.Builder {
 
 	sb.WriteByte('\t') // skip TTL
 
-	sb.WriteString(sprintClass(rr.Header().Class))
+	sb.WriteString(classToString(rr.Header().Class))
 	sb.WriteByte('\t')
 
 	rrcode := RRToCode(rr)
-	sb.WriteString(sprintCode(rrcode))
+	sb.WriteString(codeToString(rrcode))
 	sb.WriteByte('\t')
 	return &sb
 }
@@ -172,4 +173,4 @@ func splitN(s string, n int) []string {
 	return sx
 }
 
-var builderPool = &builderPooler{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
+var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}

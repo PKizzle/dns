@@ -845,7 +845,7 @@ type RRSIG struct {
 
 func (rr *RRSIG) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, sprintType(rr.TypeCovered),
+	sprintData(sb, typeToString(rr.TypeCovered),
 		strconv.Itoa(int(rr.Algorithm)),
 		strconv.Itoa(int(rr.Labels)),
 		strconv.FormatInt(int64(rr.OrigTTL), 10),
@@ -891,7 +891,7 @@ func (rr *NSEC) String() string {
 	sb.WriteString(rr.NextDomain)
 	for _, t := range rr.TypeBitMap {
 		sb.WriteByte(' ')
-		sb.WriteString(sprintType(t))
+		sb.WriteString(typeToString(t))
 	}
 	s := sb.String()
 	builderPool.Put(*sb)
@@ -1092,7 +1092,7 @@ func (rr *NSEC3) String() string {
 		rr.NextDomain)
 	for _, t := range rr.TypeBitMap {
 		sb.WriteByte(' ')
-		sb.WriteString(sprintType(t))
+		sb.WriteString(typeToString(t))
 	}
 	s := sb.String()
 	builderPool.Put(*sb)
@@ -1511,7 +1511,7 @@ func (rr *CSYNC) String() string {
 	sprintData(sb, strconv.FormatInt(int64(rr.Serial), 10), strconv.Itoa(int(rr.Flags)))
 	for _, t := range rr.TypeBitMap {
 		sb.WriteByte(' ')
-		sb.WriteString(sprintType(t))
+		sb.WriteString(typeToString(t))
 	}
 	s := sb.String()
 	builderPool.Put(*sb)

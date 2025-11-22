@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+
+	"codeberg.org/miekg/dns/pool"
 )
 
 //go:generate go run rr_generate.go
@@ -122,10 +124,10 @@ func (h *Header) String() string {
 	sb.WriteString(strconv.FormatInt(int64(h.TTL), 10))
 	sb.WriteByte('\t')
 
-	sb.WriteString(sprintClass(h.Class))
+	sb.WriteString(classToString(h.Class))
 	sb.WriteByte('\t')
 
-	sb.WriteString(sprintType(h.t))
+	sb.WriteString(typeToString(h.t))
 	return sb.String()
 }
 
@@ -221,7 +223,7 @@ type Msg struct {
 	Options MsgOption
 
 	// msgPool is the [Pooler] from the server, *iff* the message was created by reading data from the wire.
-	msgPool  Pooler
+	msgPool  pool.Pooler
 	hijacked atomic.Bool // pool's allocation has been hijacked by caller
 }
 
@@ -246,9 +248,9 @@ const (
 func (h *MsgHeader) String() string {
 	sb := strings.Builder{}
 	sb.WriteString(";; ")
-	sb.WriteString(sprintOpcode(h.Opcode))
+	sb.WriteString(opcodeToString(h.Opcode))
 	sb.WriteString(", rcode: ")
-	sb.WriteString(sprintRcode(h.Rcode))
+	sb.WriteString(rcodeToString(h.Rcode))
 	sb.WriteString(", id: ")
 	sb.WriteString(strconv.Itoa(int(h.ID)))
 	sb.WriteByte(',')

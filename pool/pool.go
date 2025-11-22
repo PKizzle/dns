@@ -1,4 +1,4 @@
-package dns
+package pool
 
 import (
 	"strings"
@@ -29,8 +29,8 @@ func (p *Pool) Put(b []byte) {
 	p.pool.Put(b[:cap(b)])
 }
 
-// NewPool returns a new Pooler of size.
-func NewPool(size int) *Pool {
+// New returns a new Pooler of size.
+func New(size int) *Pool {
 	return &Pool{
 		size: size,
 		pool: sync.Pool{
@@ -39,20 +39,21 @@ func NewPool(size int) *Pool {
 	}
 }
 
-// noopPool is a Pooler that just allocates and does not cache.
-type noopPool struct {
+// Noop is a Pooler that just allocates and does not cache.
+type Noop struct {
 	size int
 }
 
-func (n *noopPool) Get() []byte { return make([]byte, n.size) }
-func (n *noopPool) Put([]byte)  {}
+func (n *Noop) Get() []byte { return make([]byte, n.size) }
+func (n *Noop) Put([]byte)  {}
 
-func newNoopPool(size int) *noopPool { return &noopPool{size: size} }
+// NewNoop returns a new noop pool.
+func NewNoop(size int) *Noop { return &Noop{size: size} }
 
-// builderPooler is a pool used by the String methods.
-type builderPooler struct {
+// Builder is a pool used by the String methods.
+type Builder struct {
 	sync.Pool
 }
 
-func (s *builderPooler) Get() strings.Builder   { return s.Pool.Get().(strings.Builder) }
-func (s *builderPooler) Put(sb strings.Builder) { sb.Reset(); s.Pool.Put(sb) }
+func (s *Builder) Get() strings.Builder   { return s.Pool.Get().(strings.Builder) }
+func (s *Builder) Put(sb strings.Builder) { sb.Reset(); s.Pool.Put(sb) }
