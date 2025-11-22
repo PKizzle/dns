@@ -8,6 +8,7 @@ import (
 
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/internal/pack"
+	"codeberg.org/miekg/dns/pool"
 	"codeberg.org/miekg/dns/svcb"
 )
 
@@ -106,4 +107,4 @@ func compareinfo(a, b []deleg.Info) int {
 	return x
 }
 
-var comparePool = NewPool(DefaultMsgSize)
+var comparePool = pool.New(DefaultMsgSize)

@@ -530,13 +530,13 @@ func (m *Msg) String() string {
 			sb.WriteString(r.Header().Name)
 			sb.WriteByte('\t')
 			sb.WriteByte('\t')
-			sb.WriteString(sprintClass(r.Header().Class))
+			sb.WriteString(classToString(r.Header().Class))
 			sb.WriteByte('\t')
 			rrtype := r.Header().t
 			if rrtype == 0 {
 				rrtype = RRToType(r)
 			}
-			sb.WriteString(sprintType(rrtype))
+			sb.WriteString(typeToString(rrtype))
 			sb.WriteByte('\n')
 		}
 	}

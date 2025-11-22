@@ -16,6 +16,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/pool"
 	"golang.org/x/crypto/ed25519"
 )
 
@@ -23,7 +24,7 @@ const Signed = ".signed"
 
 func (s *Sign) Setup(co *dnsserver.Controller) error {
 	s.ttl = 3600
-	s.pool = dns.NewPool(dns.MinMsgSize)
+	s.pool = pool.New(dns.MinMsgSize)
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	s.Zones = map[string]*zone.Zone{}
 	s.Directory = co.Global.Root

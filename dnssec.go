@@ -19,6 +19,7 @@ import (
 
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
+	"codeberg.org/miekg/dns/pool"
 )
 
 // DNSSEC encryption algorithm codes.
@@ -231,7 +232,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 		return ErrKey
 	}
 	if options.Pooler == nil {
-		options.Pooler = newNoopPool(DefaultMsgSize)
+		options.Pooler = pool.NewNoop(DefaultMsgSize)
 	}
 
 	h0 := rrset[0].Header()
@@ -361,7 +362,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	}
 
 	if options.Pooler == nil {
-		options.Pooler = newNoopPool(MinMsgSize)
+		options.Pooler = pool.NewNoop(MinMsgSize)
 	}
 
 	rr.Hdr.Name = rrset[0].Header().Name
@@ -465,7 +466,7 @@ func (rr *RRSIG) sigBuf() []byte {
 
 // SignOption are options that are given to the signer and verifier.
 type SignOption struct {
-	Pooler // If Pooler is set is will be used for all memory allocations.
+	pool.Pooler // If Pooler is set is will be used for all memory allocations.
 }
 
 // IsRRset is duplicated here, as isRRset to avoid a host of cyclic imports.

@@ -137,7 +137,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		}
 
 		if r.Rcode != RcodeSuccess {
-			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", sprintRcode(r.Rcode))}
+			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", rcodeToString(r.Rcode))}
 			return
 		}
 
@@ -225,7 +225,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		}
 
 		if r.Rcode != RcodeSuccess {
-			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", sprintRcode(r.Rcode))}
+			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", rcodeToString(r.Rcode))}
 			return
 		}
 

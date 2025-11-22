@@ -5,11 +5,13 @@ import (
 	"crypto"
 	"encoding/hex"
 	"fmt"
+
+	"codeberg.org/miekg/dns/pool"
 )
 
 // ZONEMDption are options that are given to the signer and verifier.
 type ZONEMDOption struct {
-	Pooler // If Pooler is set is will be used for all memory allocations.
+	pool.Pooler // If Pooler is set is will be used for all memory allocations.
 }
 
 // Sign "signs" an zone. When done successfully the rr's digest will be updated. ZONEMD must be a skeleton
@@ -21,7 +23,7 @@ func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 		return fmt.Errorf("bad ZONEMD Scheme")
 	}
 	if options.Pooler == nil {
-		options.Pooler = newNoopPool(DefaultMsgSize)
+		options.Pooler = pool.NewNoop(DefaultMsgSize)
 	}
 
 	var hash crypto.Hash

@@ -7,6 +7,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"codeberg.org/miekg/dns/pool"
 )
 
 // Default maximum number of TCP queries before we close the socket.
@@ -123,7 +125,7 @@ type Server struct {
 	NotifyShutdownFunc func(context.Context)
 
 	// MsgPool is the default [Pooler] used for allocation.
-	MsgPool Pooler
+	MsgPool pool.Pooler
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
@@ -159,7 +161,7 @@ func (srv *Server) init() {
 		srv.IdleTimeout = 8 * time.Second
 	}
 	if srv.MsgPool == nil {
-		srv.MsgPool = NewPool(srv.UDPSize)
+		srv.MsgPool = pool.New(srv.UDPSize)
 	}
 
 	srv.ctx, srv.cancel = context.WithCancel(context.Background())

@@ -10,6 +10,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
+	"codeberg.org/miekg/dns/pool"
 )
 
 type Sign struct {
@@ -17,7 +18,7 @@ type Sign struct {
 	Directory string
 	KeyPairs  []KeyPair
 	Zonemd    bool
-	pool      *dns.Pool
+	pool      *pool.Pool
 
 	Zones map[string]*zone.Zone
 	ttl   uint32 // default ttl on all records
