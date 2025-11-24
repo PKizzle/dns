@@ -142,21 +142,11 @@ func (rr *TXT) Len() int {
 }
 
 func (rr *SPF) Len() int {
-	l := rr.Hdr.Len()
-	for _, x := range rr.Txt {
-		l += len(x) + 1
-	}
-	return l
+	return rr.TXT.Len()
 }
-
 func (rr *AVC) Len() int {
-	l := rr.Hdr.Len()
-	for _, x := range rr.Txt {
-		l += len(x) + 1
-	}
-	return l
+	return rr.TXT.Len()
 }
-
 func (rr *SRV) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Priority

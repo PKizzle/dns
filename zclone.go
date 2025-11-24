@@ -3,10 +3,9 @@
 package dns
 
 import (
-	"slices"
-
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/svcb"
+	"slices"
 )
 
 func (rr *NULL) Clone() RR {
@@ -162,19 +161,11 @@ func (rr *TXT) Clone() RR {
 }
 
 func (rr *SPF) Clone() RR {
-	return &SPF{
-		rr.Hdr,
-		slices.Clone(rr.Txt),
-	}
+	return &SPF{*rr.TXT.Clone().(*TXT)}
 }
-
 func (rr *AVC) Clone() RR {
-	return &AVC{
-		rr.Hdr,
-		slices.Clone(rr.Txt),
-	}
+	return &AVC{*rr.TXT.Clone().(*TXT)}
 }
-
 func (rr *SRV) Clone() RR {
 	return &SRV{
 		rr.Hdr,

@@ -499,45 +499,17 @@ func (rr *TXT) unpack(data, msgBuf []byte) (err error) {
 }
 
 func (rr *SPF) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = pack.StringTxt(rr.Txt, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
+	return rr.TXT.pack(msg, off, compression)
 }
-
 func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	rr.Txt, err = unpack.StringTxt(&s)
-	if err != nil {
-		return err
-	}
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "SPF")
-	}
-	return nil
+	return rr.TXT.unpack(data, msgBuf)
 }
-
 func (rr *AVC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
-	off, err = pack.StringTxt(rr.Txt, msg, off)
-	if err != nil {
-		return off, err
-	}
-	return off, nil
+	return rr.TXT.pack(msg, off, compression)
 }
-
 func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
-	s := cryptobyte.String(data)
-	rr.Txt, err = unpack.StringTxt(&s)
-	if err != nil {
-		return err
-	}
-	if !s.Empty() {
-		return unpack.Errorf("trailing record data: %s", "AVC")
-	}
-	return nil
+	return rr.TXT.unpack(data, msgBuf)
 }
-
 func (rr *SRV) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {
