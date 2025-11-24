@@ -64,6 +64,22 @@ And now a client with NSID support will see an OPT record with the NSID option:
 .fi
 .RE
 
+.SH "CONTEXT"
+.PP
+The \fInsid\fP handler adds a single key to the context:
+
+.RS
+.TS
+allbox;
+l l l l
+l l l l
+.
+\fBKey\fP\fB	Type\fP\fB	Example\fP\fB	Description\fP
+\fB\fCnsid/msgfunc\fR	\fB\fCfunc\fR		Function that adds nsid option to the reply.
+.TE
+.RE
+
+
 .SH "SEE ALSO"
 .PP
 RFC 5001.
