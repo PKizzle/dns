@@ -1163,6 +1163,7 @@ func (rr *TKEY) String() string {
 // RFC3597 represents an unknown/generic RR. See RFC 3597.
 type RFC3597 struct {
 	Hdr   Header
+	Type  uint16 `dns:"-"` // actual type
 	Rdata string `dns:"hex"`
 }
 
@@ -1175,7 +1176,7 @@ func (rr *RFC3597) String() string {
 	sb.WriteByte('\t')
 	sb.WriteString("CLASS" + strconv.Itoa(int(rr.Hdr.Class)))
 	sb.WriteByte('\t')
-	sb.WriteString("TYPE" + strconv.Itoa(int(rr.Hdr.t)))
+	sb.WriteString("TYPE" + strconv.Itoa(int(rr.Type)))
 	sb.WriteByte('\t')
 
 	sb.WriteByte('\\')

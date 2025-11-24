@@ -125,14 +125,14 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 }
 
 func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
-	h, rdlength, err := unpackHeader(msg, msgBuf)
+	h, typ, rdlength, err := unpackHeader(msg, msgBuf)
 	if err != nil {
 		return nil, err
 	}
-	return unpackRRWithHeader(h, rdlength, msg, msgBuf)
+	return unpackRRWithHeader(h, typ, rdlength, msg, msgBuf)
 }
 
-func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
+func unpackRRWithHeader(h Header, typ, rdlength uint16, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	var data []byte
 	if !msg.ReadBytes(&data, int(rdlength)) {
 		h := h // Avoid spilling h to the heap in the happy path.
@@ -144,7 +144,7 @@ func unpackRRWithHeader(h Header, rdlength uint16, msg *cryptobyte.String, msgBu
 	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
-	if newFn, ok := TypeToRR[h.t]; ok {
+	if newFn, ok := TypeToRR[typ]; ok {
 		rr = newFn()
 		*rr.Header() = h
 	} else {
@@ -319,9 +319,9 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 	var rr RR
 	if newFn, ok := TypeToRR[qtype]; ok {
 		rr = newFn()
-		*rr.Header() = Header{Name: name, t: qtype, Class: qclass}
+		*rr.Header() = Header{Name: name, Class: qclass}
 	} else {
-		rr = &RFC3597{Hdr: Header{Name: name, t: qtype, Class: qclass}}
+		rr = &RFC3597{Hdr: Header{Name: name, Class: qclass}, Type: qtype}
 	}
 	return rr, nil
 }
@@ -532,9 +532,11 @@ func (m *Msg) String() string {
 			sb.WriteByte('\t')
 			sb.WriteString(classToString(r.Header().Class))
 			sb.WriteByte('\t')
-			rrtype := r.Header().t
+			rrtype := RRToType(r)
 			if rrtype == 0 {
-				rrtype = RRToType(r)
+				if r1, ok := r.(*RFC3597); ok {
+					rrtype = r1.Type
+				}
 			}
 			sb.WriteString(typeToString(rrtype))
 			sb.WriteByte('\n')

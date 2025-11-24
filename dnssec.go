@@ -155,7 +155,6 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	ds := new(DS)
 	ds.Hdr.Name = k.Hdr.Name
 	ds.Hdr.Class = k.Hdr.Class
-	ds.Hdr.t = TypeDS
 	ds.Hdr.TTL = k.Hdr.TTL
 	ds.Algorithm = k.Algorithm
 	ds.DigestType = h
@@ -209,7 +208,6 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 func (k *DNSKEY) ToCDNSKEY() *CDNSKEY {
 	c := &CDNSKEY{DNSKEY: *k}
 	c.Hdr = k.Hdr
-	c.Hdr.t = TypeCDNSKEY
 	return c
 }
 
@@ -217,7 +215,6 @@ func (k *DNSKEY) ToCDNSKEY() *CDNSKEY {
 func (d *DS) ToCDS() *CDS {
 	c := &CDS{DS: *d}
 	c.Hdr = d.Hdr
-	c.Hdr.t = TypeCDS
 	return c
 }
 
@@ -239,7 +236,6 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	if RRToType(rrset[0]) == TypeRRSIG {
 		return nil
 	}
-	rr.Hdr.t = TypeRRSIG
 	rr.Hdr.Name = h0.Name
 	rr.Hdr.TTL = h0.TTL
 	rr.Hdr.Class = h0.Class

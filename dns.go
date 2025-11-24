@@ -104,13 +104,12 @@ type Header struct {
 	Class uint16 // Class is the class of the RR, this is almost always [ClassINET].
 	TTL   uint32 // TTL is the time-to-live of the RR.
 
-	t uint16 // type is inferred from the Go type, and not exported, it is mostly used in RFC3597, as the type does not carry its actual type
 	// rdlength has no use for user of RRs in this library.
 }
 
 func (h *Header) Len() int        { return len(h.Name) + 1 + 10 } // +1 because miek.nl. is actually .miek.nl.
 func (h *Header) Header() *Header { return h }
-func (h *Header) Clone() RR       { return &Header{h.Name, h.Class, h.TTL, h.t} }
+func (h *Header) Clone() RR       { return &Header{h.Name, h.Class, h.TTL} }
 
 // String returns the string representation of h.
 // Note that as the RR type is derived from the RR containing this header, getting the text
@@ -127,7 +126,7 @@ func (h *Header) String() string {
 	sb.WriteString(classToString(h.Class))
 	sb.WriteByte('\t')
 
-	sb.WriteString(typeToString(h.t))
+	sb.WriteString("TYPE0")
 	return sb.String()
 }
 
@@ -303,9 +302,9 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf = buf[:off]
 
 	*rr = RFC3597{Hdr: *r.Header()}
-	rr.Hdr.t = uint16(off - headerEnd)
+	rr.Type = uint16(off - headerEnd)
 
-	if rr.Hdr.t == 0 {
+	if rr.Type == 0 {
 		return nil
 	}
 
@@ -316,6 +315,7 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 func (rr *RFC3597) fromRFC3597(r RR) error {
 	hdr := r.Header()
 	*hdr = rr.Hdr
+	// Type here, TODO(miek)
 
 	// Can't overflow uint16 as the length of Rdata is validated in (*RFC3597).parse.
 	// We can only get here when rr was constructed with that method.

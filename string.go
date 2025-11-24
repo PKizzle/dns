@@ -116,10 +116,13 @@ func sprintHeader(rr RR) *strings.Builder {
 	sb.WriteString(classToString(rr.Header().Class))
 	sb.WriteByte('\t')
 
-	rrtype := rr.Header().t
+	rrtype := RRToType(rr)
 	if rrtype == 0 {
-		rrtype = RRToType(rr)
+		if r, ok := rr.(*RFC3597); ok {
+			rrtype = r.Type
+		}
 	}
+
 	sb.WriteString(typeToString(rrtype))
 	sb.WriteByte('\t')
 	return &sb

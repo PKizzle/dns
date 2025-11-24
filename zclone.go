@@ -3,9 +3,10 @@
 package dns
 
 import (
+	"slices"
+
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/svcb"
-	"slices"
 )
 
 func (rr *NULL) Clone() RR {
@@ -414,6 +415,7 @@ func (rr *TKEY) Clone() RR {
 func (rr *RFC3597) Clone() RR {
 	return &RFC3597{
 		rr.Hdr,
+		rr.Type,
 		rr.Rdata,
 	}
 }
