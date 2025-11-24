@@ -538,45 +538,11 @@ func (rr *TXT) compare(b RR) (x int) {
 }
 
 func (rr *SPF) compare(b RR) (x int) {
-	j := 0
-	for i := range rr.Txt {
-		if i > j || x != 0 {
-			break
-		}
-		x = len(rr.Txt[i]) - len(b.(*SPF).Txt[j])
-		if x == 0 {
-			x = strings.Compare(rr.Txt[i], b.(*SPF).Txt[j])
-		}
-		j++
-	}
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	return 0
+	return rr.TXT.compare(&b.(*SPF).TXT)
 }
 
 func (rr *AVC) compare(b RR) (x int) {
-	j := 0
-	for i := range rr.Txt {
-		if i > j || x != 0 {
-			break
-		}
-		x = len(rr.Txt[i]) - len(b.(*AVC).Txt[j])
-		if x == 0 {
-			x = strings.Compare(rr.Txt[i], b.(*AVC).Txt[j])
-		}
-		j++
-	}
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	return 0
+	return rr.TXT.compare(&b.(*AVC).TXT)
 }
 
 func (rr *SRV) compare(b RR) (x int) {

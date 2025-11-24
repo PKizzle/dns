@@ -161,19 +161,11 @@ func (rr *TXT) Clone() RR {
 }
 
 func (rr *SPF) Clone() RR {
-	return &SPF{
-		rr.Hdr,
-		slices.Clone(rr.Txt),
-	}
+	return &SPF{*rr.TXT.Clone().(*TXT)}
 }
-
 func (rr *AVC) Clone() RR {
-	return &AVC{
-		rr.Hdr,
-		slices.Clone(rr.Txt),
-	}
+	return &AVC{*rr.TXT.Clone().(*TXT)}
 }
-
 func (rr *SRV) Clone() RR {
 	return &SRV{
 		rr.Hdr,
@@ -414,6 +406,7 @@ func (rr *TKEY) Clone() RR {
 func (rr *RFC3597) Clone() RR {
 	return &RFC3597{
 		rr.Hdr,
+		rr.Type,
 		rr.Rdata,
 	}
 }

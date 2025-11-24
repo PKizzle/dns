@@ -6,7 +6,6 @@ import (
 
 // Sign creates a TLSA record from a TLS certificate.
 func (rr *TLSA) Sign(usage, selector, matchingtype int, cert *x509.Certificate) (err error) {
-	rr.Hdr.t = TypeTLSA
 	rr.Usage = uint8(usage)
 	rr.Selector = uint8(selector)
 	rr.MatchingType = uint8(matchingtype)

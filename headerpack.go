@@ -10,18 +10,19 @@ import (
 // all need to move to internal/pack or internal/unpack
 
 // unpackHeader unpacks an RR header advancing msg.
-func unpackHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, rdlength uint16, err error) {
+func unpackHeader(msg *cryptobyte.String, msgBuf []byte) (h Header, typ, rdlength uint16, err error) {
 	h.Name, err = unpack.Name(msg, msgBuf)
 	if err != nil {
-		return h, 0, err
+		return h, 0, 0, err
 	}
-	if !msg.ReadUint16(&h.t) ||
+	t := uint16(0)
+	if !msg.ReadUint16(&t) ||
 		!msg.ReadUint16(&h.Class) ||
 		!msg.ReadUint32(&h.TTL) ||
 		!msg.ReadUint16(&rdlength) {
-		return h, rdlength, unpack.ErrTruncatedMessage
+		return h, t, rdlength, unpack.ErrTruncatedMessage
 	}
-	return h, rdlength, nil
+	return h, t, rdlength, nil
 }
 
 // packHeader packs an RR header, returning the off to the end of the header.

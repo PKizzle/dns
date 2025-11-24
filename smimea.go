@@ -6,7 +6,6 @@ import (
 
 // Sign creates a SMIMEA record from an SSL certificate.
 func (rr *SMIMEA) Sign(usage, selector, matchingType int, cert *x509.Certificate) (err error) {
-	rr.Hdr.t = TypeSMIMEA
 	rr.Usage = uint8(usage)
 	rr.Selector = uint8(selector)
 	rr.MatchingType = uint8(matchingType)

@@ -191,7 +191,8 @@ type ZoneParser struct {
 
 	defttl *ttlState
 
-	h Header
+	h Header // rr header as we parse
+	t uint16 // type as we parse, not stored in the header
 
 	// sub is used to parse $INCLUDE files and $GENERATE directives.
 	// Next, by calling subNext, forwards the resulting RRs from this
@@ -333,6 +334,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	st := zExpectOwnerDir // initial state
 	h := &zp.h
+	t := &zp.t
 
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		// zlexer spotted an error already
@@ -370,7 +372,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case zDirGenerate:
 				st = zExpectDirGenerateBl
 			case zRrtpe:
-				h.t = l.torc
+				t = &l.torc
 
 				st = zExpectRdata
 			case zClass:
@@ -547,7 +549,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					return zp.setParseError("missing TTL with no previous value", l)
 				}
 
-				h.t = l.torc
+				t = &l.torc
 
 				st = zExpectRdata
 			case zClass:
@@ -589,7 +591,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectRrtypeBl
 			case zRrtpe:
-				h.t = l.torc
+				t = &l.torc
 
 				st = zExpectRdata
 			default:
@@ -611,7 +613,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectRrtypeBl
 			case zRrtpe:
-				h.t = l.torc
+				t = &l.torc
 
 				st = zExpectRdata
 			default:
@@ -628,7 +630,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				return zp.setParseError("unknown RR type", l)
 			}
 
-			h.t = l.torc
+			t = &l.torc
 
 			st = zExpectRdata
 		case zExpectRdata:
@@ -638,7 +640,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			)
 			switch l.as {
 			case asRR:
-				if newFn, ok := TypeToRR[h.t]; ok {
+				if newFn, ok := TypeToRR[*t]; ok {
 					rr = newFn()
 					*rr.Header() = *h
 
@@ -652,10 +654,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 						parseAsRFC3597 = true
 					}
 				} else {
-					rr = &RFC3597{Hdr: *h}
+					rr = &RFC3597{Hdr: *h, Type: *t}
 				}
 			case asCode:
-				newFn, ok := CodeToRR[h.t]
+				newFn, ok := CodeToRR[*t]
 				if !ok {
 					return zp.setParseError("unknown EDNS0 type", l)
 				}
@@ -676,7 +678,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			parseAsRR := rr
 			if parseAsRFC3597 {
-				parseAsRR = &RFC3597{Hdr: *h}
+				parseAsRR = &RFC3597{Hdr: *h, Type: *t}
 			}
 
 			// This needs zparser which calles Parser for new types.

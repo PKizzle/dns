@@ -527,10 +527,7 @@ func (rr *TXT) String() string {
 }
 
 // SPF RR. See RFC 4408, Section 3.1.1.
-type SPF struct {
-	Hdr Header
-	Txt []string `dns:"txt"`
-}
+type SPF struct{ TXT }
 
 func (rr *SPF) String() string {
 	sb := sprintHeader(rr)
@@ -541,10 +538,7 @@ func (rr *SPF) String() string {
 }
 
 // AVC RR. See https://www.iana.org/assignments/dns-parameters/AVC/avc-completed-template.
-type AVC struct {
-	Hdr Header
-	Txt []string `dns:"txt"`
-}
+type AVC struct{ TXT }
 
 func (rr *AVC) String() string {
 	sb := sprintHeader(rr)
@@ -823,6 +817,22 @@ func (rr *LOC) String() string {
 // SIG RR. See RFC 2535. The SIG RR is identical to RRSIG and nowadays only used for SIG(0), See RFC 2931.
 type SIG struct{ RRSIG }
 
+func (rr *SIG) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, typeToString(rr.TypeCovered),
+		strconv.Itoa(int(rr.Algorithm)),
+		strconv.Itoa(int(rr.Labels)),
+		strconv.FormatInt(int64(rr.OrigTTL), 10),
+		dnsutilTimeToString(rr.Expiration),
+		dnsutilTimeToString(rr.Inception),
+		strconv.Itoa(int(rr.KeyTag)),
+		rr.SignerName,
+		rr.Signature)
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
 // NewSIG0 return a new SIG with initial fields set. This can be used SIG0 transaction signing.
 func NewSIG0() *SIG {
 	// TODO(miek)
@@ -879,6 +889,18 @@ func NewRRSIG(origin string, algorithm uint8, keytag uint16, incepexp ...uint32)
 // NXT RR. See RFC 2535.
 type NXT struct{ NSEC }
 
+func (rr *NXT) String() string {
+	sb := sprintHeader(rr)
+	sb.WriteString(rr.NextDomain)
+	for _, t := range rr.TypeBitMap {
+		sb.WriteByte(' ')
+		sb.WriteString(typeToString(t))
+	}
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
 // NSEC RR. See RFC 4034 and RFC 3755.
 type NSEC struct {
 	Hdr        Header
@@ -908,8 +930,30 @@ func (rr *NSEC) Len() int {
 // DLV RR. See RFC 4431.
 type DLV struct{ DS }
 
+func (rr *DLV) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.KeyTag)),
+		strconv.Itoa(int(rr.Algorithm)),
+		strconv.Itoa(int(rr.DigestType)),
+		strings.ToUpper(rr.Digest))
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
 // CDS RR. See RFC 7344.
 type CDS struct{ DS }
+
+func (rr *CDS) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.KeyTag)),
+		strconv.Itoa(int(rr.Algorithm)),
+		strconv.Itoa(int(rr.DigestType)),
+		strings.ToUpper(rr.Digest))
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
 
 // DS RR. See RFC 4034 and RFC 3658.
 type DS struct {
@@ -1002,8 +1046,30 @@ func (rr *SSHFP) String() string {
 // KEY RR. See RFC 2535.
 type KEY struct{ DNSKEY }
 
+func (rr *KEY) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.Flags)),
+		strconv.Itoa(int(rr.Protocol)),
+		strconv.Itoa(int(rr.Algorithm)),
+		rr.PublicKey)
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
 // CDNSKEY RR. See RFC 7344.
 type CDNSKEY struct{ DNSKEY }
+
+func (rr *CDNSKEY) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.Flags)),
+		strconv.Itoa(int(rr.Protocol)),
+		strconv.Itoa(int(rr.Algorithm)),
+		rr.PublicKey)
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
 
 // DNSKEY RR. See RFC 4034 and RFC 3755.
 type DNSKEY struct {
@@ -1163,6 +1229,7 @@ func (rr *TKEY) String() string {
 // RFC3597 represents an unknown/generic RR. See RFC 3597.
 type RFC3597 struct {
 	Hdr   Header
+	Type  uint16 `dns:"-"` // actual type
 	Rdata string `dns:"hex"`
 }
 
@@ -1175,7 +1242,7 @@ func (rr *RFC3597) String() string {
 	sb.WriteByte('\t')
 	sb.WriteString("CLASS" + strconv.Itoa(int(rr.Hdr.Class)))
 	sb.WriteByte('\t')
-	sb.WriteString("TYPE" + strconv.Itoa(int(rr.Hdr.t)))
+	sb.WriteString("TYPE" + strconv.Itoa(int(rr.Type)))
 	sb.WriteByte('\t')
 
 	sb.WriteByte('\\')
@@ -1602,7 +1669,22 @@ func (rr *SVCB) String() string {
 // Except that the HTTPS record is intended for use with the HTTP and HTTPS protocols.
 type HTTPS struct{ SVCB }
 
-func (rr *HTTPS) String() string { return rr.SVCB.String() }
+func (rr *HTTPS) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.Priority)), rr.Target)
+	for _, p := range rr.Value {
+		sb.WriteByte(' ')
+		k := svcb.PairToKey(p)
+		sb.WriteString(svcb.KeyToString(k))
+		sb.WriteByte('=')
+		sb.WriteByte('"')
+		sb.WriteString(p.String())
+		sb.WriteByte('"')
+	}
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
 
 // DELEG RR. See draft https://datatracker.ietf.org/doc/draft-ietf-deleg/.
 type DELEG struct {
@@ -1628,7 +1710,21 @@ func (rr *DELEG) String() string {
 
 type DELEGI struct{ DELEG }
 
-func (rr *DELEGI) String() string { return rr.DELEG.String() }
+func (rr *DELEGI) String() string {
+	sb := sprintHeader(rr)
+	for _, i := range rr.Value {
+		sb.WriteByte(' ')
+		k := deleg.InfoToKey(i)
+		sb.WriteString(deleg.KeyToString(k))
+		sb.WriteByte('=')
+		sb.WriteByte('"')
+		sb.WriteString(i.String())
+		sb.WriteByte('"')
+	}
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
 
 // See RFC 9859
 type DSYNC struct {
