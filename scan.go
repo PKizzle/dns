@@ -640,11 +640,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			)
 			switch l.as {
 			case asRR:
-				typ := uint16(0)
-				if t != nil {
-					typ = *t
-				}
-				if newFn, ok := TypeToRR[typ]; ok {
+				if newFn, ok := TypeToRR[*t]; ok {
 					rr = newFn()
 					*rr.Header() = *h
 
@@ -658,14 +654,10 @@ func (zp *ZoneParser) Next() (RR, bool) {
 						parseAsRFC3597 = true
 					}
 				} else {
-					rr = &RFC3597{Hdr: *h, Type: typ}
+					rr = &RFC3597{Hdr: *h, Type: *t}
 				}
 			case asCode:
-				typ := uint16(0)
-				if t != nil {
-					typ = *t
-				}
-				newFn, ok := CodeToRR[typ]
+				newFn, ok := CodeToRR[*t]
 				if !ok {
 					return zp.setParseError("unknown EDNS0 type", l)
 				}
@@ -685,12 +677,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			parseAsRR := rr
-			typ := uint16(0)
-			if t != nil {
-				typ = *t
-			}
 			if parseAsRFC3597 {
-				parseAsRR = &RFC3597{Hdr: *h, Type: typ}
+				parseAsRR = &RFC3597{Hdr: *h, Type: *t}
 			}
 
 			// This needs zparser which calles Parser for new types.
