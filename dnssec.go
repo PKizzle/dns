@@ -233,14 +233,15 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	}
 
 	h0 := rrset[0].Header()
-	if RRToType(rrset[0]) == TypeRRSIG {
+	t0 := RRToType(rrset[0])
+	if t0 == TypeRRSIG {
 		return nil
 	}
 	rr.Hdr.Name = h0.Name
 	rr.Hdr.TTL = h0.TTL
 	rr.Hdr.Class = h0.Class
 	rr.OrigTTL = h0.TTL
-	rr.TypeCovered = RRToType(rrset[0])
+	rr.TypeCovered = t0
 	rr.Labels = uint8(dnsutilLabels(h0.Name))
 	if strings.HasPrefix(h0.Name, "*.") {
 		rr.Labels-- // wildcard, remove from label count
