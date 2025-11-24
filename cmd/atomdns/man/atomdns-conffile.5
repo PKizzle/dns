@@ -7,8 +7,7 @@
 
 .SH "DESCRIPTION"
 .PP
-A \fIconffile\fP specifies the internal servers atomdns should run and what handlers each of these
-should chain. The syntax is as follows:
+A \fIconffile\fP specifies the handlers atomdns should chain. The syntax is as follows:
 
 .PP
 .RS
@@ -22,21 +21,21 @@ ZONE [ZONE]... {
 .RE
 
 .PP
-Such a section is called a \fIserver block\fP. Each block defines the handlers this particular server should run
-when it gets a query.
+Such a section is called a \fIhandler block\fP. Each block defines the handlers this server should run
+when it gets a query for the \fBZONE\fPs.
 
 .PP
-The \fBZONE\fP defines for which DNS zones this server should be called, multiple zones are allowed and must be
+The \fBZONE\fP defines for which zones this handler should be called, multiple zones are allowed and must be
 \fIwhite space\fP separated.
 
 .PP
-When a query comes in, it is matched again all zones for all servers, the server with the longest match for the
+When a query comes in, it is matched again all zones for all handlers locks, the block with the longest match for the
 query name will receive the query.
 
 .PP
-\fBHANDLER\fP defines the handlers(s) we want to load into this server. This is optional as well, but as server
-with no handlers will just return REFUSED for all queries. Each handlers can have a number of properties than
-can have arguments, see the documentation for each handler (atomdns\-\fBHANDLER\fP(7)).
+\fBHANDLER\fP defines the handlers(s) we want to load. This is optional as well, but a block with no handlers
+will just return REFUSED for all queries. Each handler can have a number of properties that can have
+arguments, see the documentation for each handler (atomdns\-\fBHANDLER\fP(7)).
 
 .PP
 The order of the \fBHANDLER\fPs is the order in which they are executed! (If you know CoreDNS, this is
@@ -53,7 +52,7 @@ Environment variables are supported and either the Unix or Windows form may be u
 
 .PP
 As an way to test things Conffile also supports a shorter way of writing things, but this only works for a
-single server:
+single handler:
 
 .PP
 .RS
@@ -84,7 +83,7 @@ Is a valid config and is supported by \fB\fCatomdns\fR.
 
 .SH "GLOBAL"
 .PP
-A Conffile must have a global section, this is a section without a zone and holds various server wide
+A Conffile must have a global block, this is a section without a zone and holds various server wide
 options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
 and DOH) you have a section \fB\fCdns\fR, \fB\fCdot\fR and \fB\fCdoh\fR where you can configure the server, most notably the
 address and port you want to listen on.
@@ -149,8 +148,8 @@ The \fBZONE\fP is root zone \fB\fC.\fR, the \fBhandler\fP is \fIchaos\fP. The \f
 .RE
 
 .PP
-When defining a new zone, you either create a new server, or add it to an existing one. Here we define one
-server that handles two zones; that potentially chain different handlers:
+When defining a new zone, you either create a new block, or add it to an existing one. Here we define two
+blocks that each handle a different zone, that potentially chain different handlers:
 
 .PP
 .RS
@@ -167,7 +166,7 @@ org {
 .RE
 
 .PP
-Is identical to:
+But this is identical to:
 
 .PP
 .RS

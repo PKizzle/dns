@@ -8,7 +8,7 @@ With _metrics_ metrics are exported from atomdns and any handler that adds extra
 The default address for the metrics server is `localhost:9153`. The metrics path is fixed to `/metrics`.
 See the global handler for details on how to change the address.
 
-You must also enable metrics in the server block, this allows you to specify where in the handler chain the
+You must also enable metrics in the handler block, this allows you to specify where in the handler chain the
 metrics are gathered. Usually this is the first handler. If the global section doesn't specify _metrics_ the
 metrics will not be able to be scraped, but they are still gathered.
 

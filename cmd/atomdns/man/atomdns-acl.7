@@ -20,6 +20,7 @@ When evaluating the rule sets, \fIacl\fP uses the source IP.
 .nf
 acl {
     ACTION [QTYPE]... [NET]...
+    ACTION CTX VALUE...
 }
 
 .fi
@@ -44,16 +45,20 @@ DNS query not matched by any rules will be allowed to continue. The following ac
 \fBQTYPE\fP is the query type to match for the requests to be allowed or blocked. If \fBQTYPE\fP is omitted it
 matches \fIall\fP types.
 .IP \(bu 4
-\fBNET\fP is the source IP address to match for the requests to be allowed or blocked. Typical CIDR notation
-and single IP addresses are supported.
+\fBNET\fP is the source IP address requests to be allowed or blocked. Typical CIDR notation and single IP
+addresses are supported.
+.IP \(bu 4
+\fBCTX\fP must be used in the format \fB\fCxxx/yyy\fR, i.e. two words seperated by a slash. The \fIgeoip\fP handler for
+instance writes data under the key \fB\fCgeoip/city\fR, that can be used here. If the key does not return any data it
+will considered a positive match and \fBACTION\fP is performed.
+.IP \(bu 4
+\fBVALUE\fP is the value to match \fBCTX\fP to. Again with the \fIgeoip\fP handler and using \fB\fCCambridge\fR here you
+can have access control on a city level.
 
 
 .SH "EXAMPLES"
 .PP
-To demonstrate the usage of \fIacl\fP, here we provide some typical examples.
-
-.PP
-Block all DNS queries with record type A from 192.168.0.0/16：
+Block everything
 
 .PP
 .RS
@@ -61,7 +66,7 @@ Block all DNS queries with record type A from 192.168.0.0/16：
 .nf
 \&. {
     acl {
-        block A 192.168.0.0/16
+        block
     }
 }
 
@@ -102,7 +107,8 @@ Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24:
 .RE
 
 .PP
-Allow only DNS queries from 192.168.0.0/24 and 192.168.1.0/24:
+Drop all queries from Cambridge, this requires the \fIgeoip\fP handler to have populated the context for this
+query. Allow all countries that are in the EU.
 
 .PP
 .RS
@@ -110,40 +116,8 @@ Allow only DNS queries from 192.168.0.0/24 and 192.168.1.0/24:
 .nf
 \&. {
     acl {
-        allow 192.168.0.0/24 192.168.1.0/24
-        block
-    }
-}
-
-.fi
-.RE
-
-.PP
-Block all DNS queries from 192.168.1.0/24 towards a.example.org:
-
-.PP
-.RS
-
-.nf
-a.example.org {
-    acl {
-        block 192.168.1.0/24
-    }
-}
-
-.fi
-.RE
-
-.PP
-Drop all DNS queries from 192.0.2.0/24:
-
-.PP
-.RS
-
-.nf
-\&. {
-    acl {
-        drop 192.0.2.0/24
+        block geoip/city Cambridge
+        allow geoip/country/eu true
     }
 }
 

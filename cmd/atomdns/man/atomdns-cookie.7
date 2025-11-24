@@ -38,6 +38,25 @@ example.org {
 .fi
 .RE
 
+.SH "CONTEXT"
+.PP
+The \fIcookie\fP handler adds two keys to the context:
+
+.RS
+.TS
+allbox;
+l l l l
+l l l l
+l l l l
+.
+\fBKey\fP\fB	Type\fP\fB	Example\fP\fB	Description\fP
+\fB\fCcookie/status\fR	\fB\fCbool\fR	true	The validation status of the cookie.
+\fB\fCcookie/msgfunc\fR	\fB\fCfunc\fR		Function that adds reply cookie to the reply.
+.TE
+.RE
+
+
 .SH "BUGS"
 .PP
-\fIcookie\fP does not implement a cache to validate client, is just does enough to make \fB\fCdig\fR happy.
+\fIcookie\fP does not implement a cache to validate client, is just does enough to make \fB\fCdig\fR happy, this implies
+that \fB\fCcookie/status\fR is always set to true.

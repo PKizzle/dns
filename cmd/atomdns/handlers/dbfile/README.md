@@ -24,7 +24,7 @@ dbfile FILE
 - **FILE** the zone file to load. If the path is relative, the path from the global root config will be
   prepended to it.
 
-If the server block contains multiple zones, they all will use the _same_ **FILE**. And you must make
+If the handler block contains multiple zones, they all will use the _same_ **FILE**. And you must make
 sure that zone **FILE** is generic enough, i.e. use `@` for origins instead of domain names. Note that this break
 incoming transfers and thus will lead to an error when attempted.
 

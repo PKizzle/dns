@@ -13,7 +13,7 @@ The default address for the metrics server is \fB\fClocalhost:9153\fR. The metri
 See the global handler for details on how to change the address.
 
 .PP
-You must also enable metrics in the server block, this allows you to specify where in the handler chain the
+You must also enable metrics in the handler block, this allows you to specify where in the handler chain the
 metrics are gathered. Usually this is the first handler. If the global section doesn't specify \fImetrics\fP the
 metrics will not be able to be scraped, but they are still gathered.
 
