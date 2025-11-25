@@ -10,9 +10,9 @@
   - ... and more.
   - see README-diff-with-v1.md for the differences.
 - Fast(er); recvmmsg and pipeling suppport.
-  - Since a46996c I can get 400K qps on my laptop (M2/Asahi Linux).
+  - Since a46996c I can get 370K (UDP) qps on my laptop (M2/Asahi Linux).
   - On my Dell XPS 17 (Intel) it is similar.
-  - On Intel/AMD it is lower (200K qps) - yet to understand why.
+  - On Intel/AMD it is lower (200K (UDP) qps) - yet to understand why.
   - See `cmd/reflect` and do a `go build; go test -v`. Requires `dnsperf` to be installed.
 - More convenience functions included in _dns_ or otherwise in _dnsutils_.
 - Test helper function included _dnstest_.
