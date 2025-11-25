@@ -154,9 +154,17 @@ type DSO interface {
 // MsgHeader is the header of a DNS message. This contains most header bits, except Rcode as that needs to be
 // set via a function because of the extended Rcode that lives in the pseudo section.
 type MsgHeader struct {
-	ID                 uint16
-	Response           bool
+	ID uint16
+
+	Rcode uint16 // Rcode is the message response code, extended rcodes can be set here as well.
+
+	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
+	// putting the bits in the right places and creating an OPT RR if needed.
+	UDPSize uint16 // UDPSize is the OPT's RR advertised UDP size.
+	Version uint8  // Version is the EDNS version, always zero.
+
 	Opcode             uint8
+	Response           bool
 	Authoritative      bool
 	Truncated          bool
 	RecursionDesired   bool
@@ -165,15 +173,10 @@ type MsgHeader struct {
 	AuthenticatedData  bool
 	CheckingDisabled   bool
 
-	Rcode uint16 // Rcode is the message response code, extended rcodes can be set here as well.
-
-	// Extended DNS (version 0) option that can be set directly on the message. The package takes care of
-	// putting the bits in the right places and creating an OPT RR if needed.
-	UDPSize        uint16 // UDPSize is the OPT's RR advertised UDP size.
-	Version        uint8  // Version is the EDNS version, always zero.
-	Security       bool   // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
-	CompactAnswers bool   // Compact Answers OK, https://datatracker.ietf.org/doc/draft-ietf-dnsop-compact-denial-of-existence/.
-	Delegation     bool   // Delegation is the DELEG OK bit, see https://datatracker.ietf.org/doc/draft-ietf-deleg/.
+	// Extended DNS
+	Security       bool // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
+	CompactAnswers bool // Compact Answers OK, https://datatracker.ietf.org/doc/draft-ietf-dnsop-compact-denial-of-existence/.
+	Delegation     bool // Delegation is the DELEG OK bit, see https://datatracker.ietf.org/doc/draft-ietf-deleg/.
 }
 
 // Msg is a DNS message. Each message has a Data field that contains the binary data buffer. This is filled when
@@ -188,23 +191,15 @@ type MsgHeader struct {
 type Msg struct {
 	MsgHeader
 
-	// optimization to put the qtype directly in the message, shortcuts needing to actually have a question
-	// section (this will then be zero) and avoid RRToType which is slightly slower in the hot path.
-	qtype uint16
-
 	// Question holds a single "RR", in quotes because it is only the domain name, type and class that is
 	// actually encoded here. This package takes care of taking and returning the right bit of an RR.
 	// Setting the question is done like so: msg.Question = []RR{&MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}}}
 	// This sets it to "miek.nl.", TypeMX, ClassINET. Just like all the other sections.
 	Question []RR
-	Answer   []RR // Holds the RR(s) of the answer section.
-	Ns       []RR // Holds the RR(s) of the authority section.
-	Extra    []RR // Holds the RR(s) of the additional section, except records that go into the pseudo section.
 
-	// ps holds the number of real RRs in the pseudo section, this is 2 max: TSIG and SIG(0), although that
-	// should never be the case. The number of virtual RR in pseudo is len(Pseudo). This is set after Unpack.
-	// The OPT RR is completely hidden from view, on m.Data holds that.
-	ps uint8
+	Answer []RR // Holds the RR(s) of the answer section.
+	Ns     []RR // Holds the RR(s) of the authority section.
+	Extra  []RR // Holds the RR(s) of the additional section, except records that go into the pseudo section.
 
 	// The Pseudo section is a virtual section that holds the OPT EDNS0 options, that are interpreted (and shown) as RRs.
 	// The OPT RR itself will never be visible in Extra, nor in the Pseudo section, this is all handled transparently.
@@ -218,18 +213,27 @@ type Msg struct {
 	// over the wire. Note that this data is a snapshot of the Msg when it was packed or unpacked.
 	Data []byte
 
-	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
-	Options MsgOption
-
 	// msgPool is the [Pooler] from the server, *iff* the message was created by reading data from the wire.
 	msgPool  pool.Pooler
 	hijacked atomic.Bool // pool's allocation has been hijacked by caller
+
+	// optimization to put the qtype directly in the message, shortcuts needing to actually have a question
+	// section (this will then be zero) and avoid RRToType which is slightly slower in the hot path.
+	qtype uint16
+
+	// ps holds the number of real RRs in the pseudo section, this is 2 max: TSIG and SIG(0), although that
+	// should never be the case. The number of virtual RR in pseudo is len(Pseudo). This is set after Unpack.
+	// The OPT RR is completely hidden from view, on m.Data holds that.
+	ps uint8
+
+	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
+	Options MsgOption
 }
 
 // Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
 // you only want to unpack the Question section you must also set unpack header: OptionUnpackHeader |
 // OptionUnpackQuestion.
-type MsgOption uint16
+type MsgOption uint8
 
 const (
 	MsgOptionUnpack         MsgOption = 0         // Unpack the entire message, mostly defined to serve as documentation.
