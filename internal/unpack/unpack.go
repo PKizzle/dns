@@ -106,26 +106,20 @@ func String(s *cryptobyte.String) (string, error) {
 
 // Name unpacks a name in a cryptobyte.String.
 func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
-	name := make([]byte, 0, maxNamePresentationLength) // should we make the cap smaller, and then pay the price for larger names?
-	budget := maxNameWireOctets
+	name := make([]byte, 0, maxNamePresentationLength)
 	var ptrs bool
 
 	// If we never see a pointer, we need to ensure that we advance s to our final position.
 	cs := *s
 
+	var c byte
 	for {
-		var c byte
 		if !cs.ReadUint8(&c) {
 			return "", &Error{"overflow"}
 		}
 		switch c & 0xC0 {
 		case 0x00: // literal string
-			var label []byte
-			if !cs.ReadBytes(&label, int(c)) {
-				return "", &Error{"overflow"}
-			}
-			// If we see a zero-length label (root label), this is the end of the name.
-			if len(label) == 0 {
+			if c == 0 { // If we see a zero-length label (root label), this is the end of the name.
 				if !ptrs {
 					*s = cs
 				}
@@ -134,8 +128,10 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 				}
 				return string(name), nil
 			}
-			if budget -= len(label) + 1; budget <= 0 { // +1 for the label separator
-				return "", &Error{"name exceeded max wire-format octets: " + string(*s)}
+
+			var label []byte
+			if !cs.ReadBytes(&label, int(c)) {
+				return "", &Error{"overflow"}
 			}
 			name = append(name, label...)
 			name = append(name, '.')

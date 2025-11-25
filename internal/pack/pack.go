@@ -282,17 +282,16 @@ func StringBase64(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-var base32HexNoPadEncoding = base32.HexEncoding.WithPadding(base32.NoPadding)
-
 func Base32(s []byte) (buf []byte, err error) {
 	for i, b := range s {
 		if b >= 'a' && b <= 'z' {
 			s[i] = b - 32
 		}
 	}
-	buflen := base32HexNoPadEncoding.DecodedLen(len(s))
+	b32hex := base32.HexEncoding.WithPadding(base32.NoPadding)
+	buflen := b32hex.DecodedLen(len(s))
 	buf = make([]byte, buflen)
-	n, err := base32HexNoPadEncoding.Decode(buf, s)
+	n, err := b32hex.Decode(buf, s)
 	buf = buf[:n]
 	return
 }

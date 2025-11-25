@@ -332,7 +332,7 @@ func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte)
 	// containing only the header that claims to contain 65535 questions. As
 	// Question takes 24-bytes, we'd end up allocating more than 1.5MiB from a
 	// mere 12-byte packet.
-	var dst []RR
+	dst := make([]RR, 0, 1)
 	for i := 0; i < int(cnt); i++ {
 		r, err := m.unpackQuestion(msg, msgBuf)
 		if err != nil {
@@ -345,7 +345,7 @@ func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte)
 
 func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
 	// See unpackQuestions for why we don't pre-allocate here.
-	var dst []RR
+	dst := make([]RR, 0, 3)
 	for i := 0; i < int(cnt); i++ {
 		r, err := unpackRR(msg, msgBuf)
 		if err != nil {
