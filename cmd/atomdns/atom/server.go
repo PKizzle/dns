@@ -28,7 +28,7 @@ import (
 
 type Server struct {
 	global  *global.Global
-	config  []byte // whole config when builtin is true
+	config  []byte
 	version string // atomdns version
 
 	mux     *dns.ServeMux
@@ -44,6 +44,7 @@ type Server struct {
 	Quiet bool // Quiet startup.
 }
 
+// Start starts a server.
 func (s *Server) Start() error {
 	if err := s.global.Startup(); err != nil {
 		return err
@@ -102,6 +103,7 @@ func Serve(ch chan error, srv *dns.Server, global *global.Global) {
 	}
 }
 
+// Shutdown shuts down a server.
 func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.global.Shutdown(); err != nil {
 		slog.Warn("Failed to run shutdown", slog.Any("error", err))
@@ -303,7 +305,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 // When a server is started on the wildcard port, this method can be used to get the actual address and
 // listening port. Note that with a wildcard port the servers will all run on a different port. For all
 // returned address the first half are the UDP listening port, the other half is TCP.
-// See [HttpAddr] for getting the addresss of the DOH server.
+// See [Server.HttpAddr] for getting the addresss of the DOH server.
 func (s *Server) Addr() []string {
 	addr := make([]string, len(s.servers))
 	for i, srv := range s.servers {
@@ -317,7 +319,7 @@ func (s *Server) Addr() []string {
 	return addr
 }
 
-// HttpAddr return the addresses of the DOH servers. See [Addr].
+// HttpAddr return the addresses of the DOH servers. See [Server.Addr].
 func (s *Server) HttpAddr() []string {
 	addr := make([]string, len(s.httpservers))
 	for i, srv := range s.httpservers {
@@ -326,7 +328,7 @@ func (s *Server) HttpAddr() []string {
 	return addr
 }
 
-// TlsAddr returns the addreses of the DOT servers. See [Addr].
+// TlsAddr returns the addreses of the DOT servers. See [Server.Addr].
 func (s *Server) TlsAddr() []string {
 	addr := make([]string, len(s.tlsservers))
 	for i, srv := range s.tlsservers {
