@@ -18,7 +18,7 @@ const (
 	// maximum wire length of a domain name is 255 octets (see above), with the
 	// maximum label length being 63. The wire format requires one extra byte over
 	// the presentation format.
-	maxNamePresentationLength = maxNameWireOctets + 1
+	maxNamePresentationLength = maxNameWireOctets - 1
 )
 
 func A(s *cryptobyte.String) (net.IP, error) {
@@ -129,6 +129,9 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			var label []byte
 			if !cs.ReadBytes(&label, int(c)) {
 				return "", &Error{"overflow"}
+			}
+			if len(name)+len(label)+1 > maxNamePresentationLength {
+				return "", &Error{"name exceeded max wire-format octets: " + string(*s)}
 			}
 			name = append(name, label...)
 			name = append(name, '.')
