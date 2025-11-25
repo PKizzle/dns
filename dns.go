@@ -101,15 +101,15 @@ type RRset []RR
 // without any data.
 type Header struct {
 	Name  string `dns:"cdomain-name"` // Name is the owner name of the RR.
-	Class uint16 // Class is the class of the RR, this is almost always [ClassINET].
 	TTL   uint32 // TTL is the time-to-live of the RR.
+	Class uint16 // Class is the class of the RR, this is almost always [ClassINET].
 
 	// rdlength has no use for user of RRs in this library.
 }
 
 func (h *Header) Len() int        { return len(h.Name) + 1 + 10 } // +1 because miek.nl. is actually .miek.nl.
 func (h *Header) Header() *Header { return h }
-func (h *Header) Clone() RR       { return &Header{h.Name, h.Class, h.TTL} }
+func (h *Header) Clone() RR       { return &Header{h.Name, h.TTL, h.Class} }
 
 // String returns the string representation of h.
 // Note that as the RR type is derived from the RR containing this header, getting the text
