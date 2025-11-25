@@ -80,7 +80,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		return true
 	})
 	if !s.Zonemd {
-		Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
+		Duration.WithLabelValues(z.Origin()).Set(float64(time.Since(now)))
 		return z, nil
 	}
 
@@ -103,7 +103,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		apex.RRs = append(apex.RRs, rrsig)
 	}
 
-	Duration.WithLabelValues(z.Origin()).Observe(float64(time.Since(now)))
+	Duration.WithLabelValues(z.Origin()).Set(float64(time.Since(now)))
 	return z, nil
 }
 

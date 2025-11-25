@@ -7,11 +7,11 @@ import (
 
 var (
 	// Duration is the metric used for exporting how fast we can sign each zone..
-	Duration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	Duration = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: Namespace,
 		Subsystem: (&Sign{}).Key(),
 		Name:      "duration_seconds",
-		Help:      "Histogram of the time (in seconds) each zone signing took.",
+		Help:      "Time (in seconds) each zone signing took.",
 	}, []string{"zone"})
 	// Expire is the metric used to track the signature expire.
 	Expire = promauto.NewGaugeVec(prometheus.GaugeOpts{
