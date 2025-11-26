@@ -12,7 +12,7 @@ When a query is being processed by atomdns, the following steps are performed:
   will be routed to the latter.
 
 - Once a handler chains has been found, it will be routed through that chain. This happens in the order as
-  defined in the configuration file (atomdns-conffile(5).
+  defined in the configuration file (atomdns-conffile(5)).
 
 - Each handler in the chain will inspect the query and determine if it should process it. A couple of things can now happen:
   1. The query is processed by this handler..
@@ -35,7 +35,7 @@ alog := log().With(slog.String("path", filepath.Base(d.Path)))
 alog.Error("Failed to reload", Err(err))
 // or
 alog.Info("Successful reload")
-``
+```
 
 ## Adding a New Handler
 
@@ -52,4 +52,3 @@ It is easier to list when a handler can be included in atomdns than to say it sh
 - It must have tests.
 - It must have a README.md for documentation.
 - Care must be taken to make it efficient in both memory and CPU.
-```
