@@ -150,6 +150,9 @@ func (rr *AVC) Len() int {
 func (rr *WALLET) Len() int {
 	return rr.TXT.Len()
 }
+func (rr *CLA) Len() int {
+	return rr.TXT.Len()
+}
 func (rr *SRV) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Priority

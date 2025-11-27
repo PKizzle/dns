@@ -56,6 +56,8 @@ func compare(a, b RR) int {
 		return x.compare(b)
 	case *WALLET:
 		return x.compare(b)
+	case *CLA:
+		return x.compare(b)
 	case *SRV:
 		return x.compare(b)
 	case *NAPTR:
@@ -549,6 +551,10 @@ func (rr *AVC) compare(b RR) (x int) {
 
 func (rr *WALLET) compare(b RR) (x int) {
 	return rr.TXT.compare(&b.(*WALLET).TXT)
+}
+
+func (rr *CLA) compare(b RR) (x int) {
+	return rr.TXT.compare(&b.(*CLA).TXT)
 }
 
 func (rr *SRV) compare(b RR) (x int) {

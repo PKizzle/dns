@@ -169,6 +169,9 @@ func (rr *AVC) Clone() RR {
 func (rr *WALLET) Clone() RR {
 	return &WALLET{*rr.TXT.Clone().(*TXT)}
 }
+func (rr *CLA) Clone() RR {
+	return &CLA{*rr.TXT.Clone().(*TXT)}
+}
 func (rr *SRV) Clone() RR {
 	return &SRV{
 		rr.Hdr,

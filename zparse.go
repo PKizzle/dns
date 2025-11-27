@@ -52,6 +52,8 @@ func parse(rr RR, c *zlexer, o string) *ParseError {
 		return x.parse(c, o)
 	case *WALLET:
 		return x.parse(c, o)
+	case *CLA:
+		return x.parse(c, o)
 	case *SRV:
 		return x.parse(c, o)
 	case *NAPTR:
