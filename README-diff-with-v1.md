@@ -21,10 +21,10 @@
 
   Pseudo section RR (EDNS0 OPT) can also be parsed from their (also unique to this library) presentation format.
 
-  The `Stateful` section in the message that holds DNS Stateful Operation (DSO) records, these
-  records are also _RRs_.
+  The `Stateful` section in the message that holds DNS Stateful Operation (DSO) records, these records are
+  also _RRs_.
 
-- `New` will return an RR, `NewRR` will be gone.
+- `New` will return an RR, `NewRR` is gone.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
 - More:
   - msg is a io.Writer.
@@ -50,6 +50,7 @@ m := new(dns.Msg)                             | m := dns.NewMsg("miek.nl.", dns.
 m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | m.UDPSize, m.Security = 4096, true
 m.SetEdns0(4096, true)                        |
                                               | OR
+                                              |
                                               | m := new(dns.Msg)
                                               | dnsutil.SetQuestion("miek.nl.", dns.TypeDNSKEY")
                                               | m.UDPSize, m.Security = 4096, true
