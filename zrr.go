@@ -24,6 +24,7 @@ func (rr *SOA) Header() *Header        { return &rr.Hdr }
 func (rr *TXT) Header() *Header        { return &rr.Hdr }
 func (rr *SPF) Header() *Header        { return &rr.Hdr }
 func (rr *AVC) Header() *Header        { return &rr.Hdr }
+func (rr *WALLET) Header() *Header     { return &rr.Hdr }
 func (rr *SRV) Header() *Header        { return &rr.Hdr }
 func (rr *NAPTR) Header() *Header      { return &rr.Hdr }
 func (rr *CERT) Header() *Header       { return &rr.Hdr }
@@ -110,6 +111,7 @@ var TypeToRR = map[uint16]func() RR{
 	TypeTXT:        func() RR { return new(TXT) },
 	TypeSPF:        func() RR { return new(SPF) },
 	TypeAVC:        func() RR { return new(AVC) },
+	TypeWALLET:     func() RR { return new(WALLET) },
 	TypeSRV:        func() RR { return new(SRV) },
 	TypeNAPTR:      func() RR { return new(NAPTR) },
 	TypeCERT:       func() RR { return new(CERT) },
@@ -219,6 +221,8 @@ func RRToType(rr RR) uint16 {
 		return TypeSPF
 	case *AVC:
 		return TypeAVC
+	case *WALLET:
+		return TypeWALLET
 	case *SRV:
 		return TypeSRV
 	case *NAPTR:
@@ -370,6 +374,7 @@ var TypeToString = map[uint16]string{
 	TypeTXT:        "TXT",
 	TypeSPF:        "SPF",
 	TypeAVC:        "AVC",
+	TypeWALLET:     "WALLET",
 	TypeSRV:        "SRV",
 	TypeNAPTR:      "NAPTR",
 	TypeCERT:       "CERT",

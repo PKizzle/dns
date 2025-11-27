@@ -96,6 +96,7 @@ const (
 	TypeAVC        uint16 = 258
 	TypeAMTRELAY   uint16 = 260 // Not implemented.
 	TypeRESINFO    uint16 = 261
+	TypeWALLET     uint16 = 262
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -541,6 +542,17 @@ func (rr *SPF) String() string {
 type AVC struct{ TXT }
 
 func (rr *AVC) String() string {
+	sb := sprintHeader(rr)
+	sb.WriteString(sprintTxt(rr.Txt))
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
+// WALLET RR. See https://www.iana.org/assignments/dns-parameters/WALLET/wallet-completed-template
+type WALLET struct{ TXT }
+
+func (rr *WALLET) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(sprintTxt(rr.Txt))
 	s := sb.String()

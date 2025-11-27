@@ -52,6 +52,8 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 		return x.pack(msg, off, compression)
 	case *AVC:
 		return x.pack(msg, off, compression)
+	case *WALLET:
+		return x.pack(msg, off, compression)
 	case *SRV:
 		return x.pack(msg, off, compression)
 	case *NAPTR:
@@ -225,6 +227,8 @@ func zunpack(rr RR, data, msgBuf []byte) error {
 	case *SPF:
 		return x.unpack(data, msgBuf)
 	case *AVC:
+		return x.unpack(data, msgBuf)
+	case *WALLET:
 		return x.unpack(data, msgBuf)
 	case *SRV:
 		return x.unpack(data, msgBuf)
