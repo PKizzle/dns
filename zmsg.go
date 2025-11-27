@@ -510,6 +510,12 @@ func (rr *AVC) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
 	return rr.TXT.unpack(data, msgBuf)
 }
+func (rr *WALLET) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return rr.TXT.pack(msg, off, compression)
+}
+func (rr *WALLET) unpack(data, msgBuf []byte) (err error) {
+	return rr.TXT.unpack(data, msgBuf)
+}
 func (rr *SRV) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {
