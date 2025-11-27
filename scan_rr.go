@@ -1529,6 +1529,15 @@ func (rr *WALLET) parse(c *zlexer, o string) *ParseError {
 	return nil
 }
 
+func (rr *CLA) parse(c *zlexer, o string) *ParseError {
+	s, e := endingToTxtSlice(c, "bad WALLET Txt")
+	if e != nil {
+		return e
+	}
+	rr.Txt = s
+	return nil
+}
+
 func (rr *URI) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.token, 10, 16)

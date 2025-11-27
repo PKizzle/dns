@@ -97,6 +97,7 @@ const (
 	TypeAMTRELAY   uint16 = 260 // Not implemented.
 	TypeRESINFO    uint16 = 261
 	TypeWALLET     uint16 = 262
+	TypeCLA        uint16 = 263
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -549,10 +550,21 @@ func (rr *AVC) String() string {
 	return s
 }
 
-// WALLET RR. See https://www.iana.org/assignments/dns-parameters/WALLET/wallet-completed-template
+// WALLET RR. See https://www.iana.org/assignments/dns-parameters/WALLET/wallet-completed-template.
 type WALLET struct{ TXT }
 
 func (rr *WALLET) String() string {
+	sb := sprintHeader(rr)
+	sb.WriteString(sprintTxt(rr.Txt))
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
+// CLA RR. See https://www.iana.org/assignments/dns-parameters/CLA/cla-completed-template.
+type CLA struct{ TXT }
+
+func (rr *CLA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(sprintTxt(rr.Txt))
 	s := sb.String()
