@@ -98,6 +98,7 @@ const (
 	TypeRESINFO    uint16 = 261
 	TypeWALLET     uint16 = 262
 	TypeCLA        uint16 = 263
+	TypeIPN        uint16 = 264
 
 	TypeTKEY uint16 = 249
 	TypeTSIG uint16 = 250
@@ -567,6 +568,20 @@ type CLA struct{ TXT }
 func (rr *CLA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(sprintTxt(rr.Txt))
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
+// IPN RR. See https://www.iana.org/assignments/dns-parameters/IPN/ipn-completed-template.
+type IPN struct {
+	Hdr  Header
+	Node uint64
+}
+
+func (rr *IPN) String() string {
+	sb := sprintHeader(rr)
+	sprintData(sb, strconv.Itoa(int(rr.Node)))
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s

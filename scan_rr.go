@@ -1530,12 +1530,22 @@ func (rr *WALLET) parse(c *zlexer, o string) *ParseError {
 }
 
 func (rr *CLA) parse(c *zlexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad WALLET Txt")
+	s, e := endingToTxtSlice(c, "bad CLA Txt")
 	if e != nil {
 		return e
 	}
 	rr.Txt = s
 	return nil
+}
+
+func (rr *IPN) parse(c *zlexer, o string) *ParseError {
+	l, _ := c.Next()
+	i, e := strconv.ParseUint(l.token, 10, 64)
+	if e != nil || l.err {
+		return &ParseError{err: "bad IPN Node", lex: l}
+	}
+	rr.Node = uint64(i)
+	return slurpRemainder(c)
 }
 
 func (rr *URI) parse(c *zlexer, o string) *ParseError {

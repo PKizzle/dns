@@ -172,6 +172,13 @@ func (rr *WALLET) Clone() RR {
 func (rr *CLA) Clone() RR {
 	return &CLA{*rr.TXT.Clone().(*TXT)}
 }
+func (rr *IPN) Clone() RR {
+	return &IPN{
+		rr.Hdr,
+		rr.Node,
+	}
+}
+
 func (rr *SRV) Clone() RR {
 	return &SRV{
 		rr.Hdr,

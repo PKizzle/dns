@@ -522,6 +522,25 @@ func (rr *CLA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *CLA) unpack(data, msgBuf []byte) (err error) {
 	return rr.TXT.unpack(data, msgBuf)
 }
+func (rr *IPN) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = pack.Uint64(rr.Node, msg, off)
+	if err != nil {
+		return off, err
+	}
+	return off, nil
+}
+
+func (rr *IPN) unpack(data, msgBuf []byte) (err error) {
+	s := cryptobyte.String(data)
+	if !s.ReadUint64(&rr.Node) {
+		return unpack.ErrOverflow
+	}
+	if !s.Empty() {
+		return unpack.Errorf("trailing record data: %s", "IPN")
+	}
+	return nil
+}
+
 func (rr *SRV) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	off, err = pack.Uint16(rr.Priority, msg, off)
 	if err != nil {
