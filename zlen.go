@@ -153,6 +153,12 @@ func (rr *WALLET) Len() int {
 func (rr *CLA) Len() int {
 	return rr.TXT.Len()
 }
+func (rr *IPN) Len() int {
+	l := rr.Hdr.Len()
+	l += 8 // Node
+	return l
+}
+
 func (rr *SRV) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Priority
