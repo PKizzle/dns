@@ -77,7 +77,7 @@ func (o *NSID) parse(c *zlexer, _ string) *ParseError {
 	if !strings.HasSuffix(l.token, ":") {
 		return &ParseError{err: "bad NSID Nsid"}
 	}
-	if (len(l.token)-1)%2 != 0 {
+	if (len(l.token)-1)%2 != 0 || len(l.token) < 2 {
 		return &ParseError{err: "bad NSID Nsid"}
 	}
 	o.Nsid = l.token[:len(l.token)-2]
