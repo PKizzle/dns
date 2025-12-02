@@ -63,6 +63,7 @@ func TestZoneParser(t *testing.T) {
 		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{"missing TTL with no"}},
 		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{"missing TTL with no"}},
 		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{"missing TTL with no"}},
+		{"nsid-truncated", " NSID :", nil, &Error{"bad NSID Nsid"}},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
