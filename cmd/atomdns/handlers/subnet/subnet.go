@@ -17,7 +17,6 @@ func (s *Subnet) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				break
 			}
 		}
-		println("caclling")
 		next.ServeDNS(ctx, w, r)
 	})
 }
