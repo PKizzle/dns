@@ -1,4 +1,4 @@
-package template
+package template_test
 
 import (
 	"context"
@@ -6,18 +6,19 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
 	"codeberg.org/miekg/dns/dnstest"
 )
 
 func TestTemplate(t *testing.T) {
-	h := &Template{Path: "testdata/msg.go.tmpl", Regexp: regexp.MustCompile(".*")}
+	h := &template.Template{Path: "testdata/msg.go.tmpl", Regexp: regexp.MustCompile(".*")}
 
 	r := dns.NewMsg("www.example.org.", dns.TypeA)
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	next := dns.HandlerFunc(func(_ context.Context, _ dns.ResponseWriter, _ *dns.Msg) {})
-	h.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
+	h.HandlerFunc(atomtest.Noop).ServeDNS(context.TODO(), w, r)
 
 	if w.Msg.ID != r.ID {
 		t.Fatalf("expected %d, got %d", r.ID, w.Msg.ID)

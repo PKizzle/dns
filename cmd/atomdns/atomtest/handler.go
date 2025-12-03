@@ -19,3 +19,6 @@ var Echo = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dn
 	}
 	io.Copy(w, m)
 })
+
+// Noop is a HandlerFunc that does nothing.
+var Noop = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {})
