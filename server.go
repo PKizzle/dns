@@ -54,9 +54,7 @@ type MsgAcceptFunc func(m *Msg) MsgAcceptAction
 //   - Isn't a request, returns [MsgIgnore].
 //   - Has an opcode that isn't recognized, returns [MsgIgnore].
 //   - Has more than a single "RR" in the question section, return [MsgReject].
-var DefaultMsgAcceptFunc MsgAcceptFunc = defaultMsgAcceptFunc
-
-func defaultMsgAcceptFunc(r *Msg) MsgAcceptAction {
+func DefaultMsgAcceptFunc(r *Msg) MsgAcceptAction {
 	if r.Response {
 		return MsgIgnore
 	}
