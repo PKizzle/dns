@@ -18,6 +18,11 @@ func WithFunc(ctx context.Context, handler string, f Func) context.Context {
 	return context.WithValue(ctx, funckey(handler), f)
 }
 
+const (
+	// Status is the subkey that should be used for setting a status of type bool in the context.
+	Status = "status"
+)
+
 // funckey returns the string value for the Func in the context.
 func funckey(s string) string { return s + "/msgfunc" }
 
@@ -46,8 +51,8 @@ func WithValue(ctx context.Context, key string, value any) context.Context {
 	return context.WithValue(ctx, key, value)
 }
 
-// Ctx returns the data under key. If key does not contain a slash nil is returned.
-func Ctx(ctx context.Context, key string) any {
+// Value returns the value under key. If key does not contain a slash nil is returned.
+func Value(ctx context.Context, key string) any {
 	if !Valid(key) {
 		return ""
 	}
@@ -72,7 +77,7 @@ func Valid(key string) bool {
 // Match checks the value under key and see if it matches any of the elements in the list.
 // This function handles strings, string slices, ints, flaot64s and bools. A nil value for key returns true.
 func Match(ctx context.Context, key string, values []any) bool {
-	value := Ctx(ctx, key)
+	value := Value(ctx, key)
 	if value == nil {
 		return true
 	}
