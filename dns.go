@@ -306,9 +306,9 @@ func (rr *RFC3597) ToRFC3597(r RR) error {
 	buf = buf[:off]
 
 	*rr = RFC3597{Hdr: *r.Header()}
-	rr.Type = uint16(off - headerEnd)
+	rr.RRType = uint16(off - headerEnd)
 
-	if rr.Type == 0 {
+	if rr.RRType == 0 {
 		return nil
 	}
 
@@ -324,7 +324,7 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	// We can only get here when rr was constructed with that method.
 
 	// rr.pack requires an extra allocation and a copy so we just decode Rdata manually, it's simpler anyway.
-	msg, err := hex.DecodeString(rr.Rdata)
+	msg, err := hex.DecodeString(rr.Data)
 	if err != nil {
 		return err
 	}

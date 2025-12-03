@@ -119,7 +119,7 @@ func sprintHeader(rr RR) *strings.Builder {
 	rrtype := RRToType(rr)
 	if rrtype == 0 {
 		if r, ok := rr.(*RFC3597); ok {
-			rrtype = r.Type
+			rrtype = r.RRType
 		}
 	}
 

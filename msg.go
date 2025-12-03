@@ -321,7 +321,7 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 		rr = newFn()
 		*rr.Header() = Header{Name: name, Class: qclass}
 	} else {
-		rr = &RFC3597{Hdr: Header{Name: name, Class: qclass}, Type: qtype}
+		rr = &RFC3597{Hdr: Header{Name: name, Class: qclass}, RRType: qtype}
 	}
 	return rr, nil
 }
@@ -535,7 +535,7 @@ func (m *Msg) String() string {
 			rrtype := RRToType(r)
 			if rrtype == 0 {
 				if r1, ok := r.(*RFC3597); ok {
-					rrtype = r1.Type
+					rrtype = r1.RRType
 				}
 			}
 			sb.WriteString(typeToString(rrtype))

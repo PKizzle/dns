@@ -1336,7 +1336,7 @@ func (rr *TKEY) compare(b RR) (x int) {
 }
 
 func (rr *RFC3597) compare(b RR) (x int) {
-	x = comparehex(rr.Rdata, b.(*RFC3597).Rdata)
+	x = comparehex(rr.Data, b.(*RFC3597).Data)
 	if x != 0 {
 		if x < 0 {
 			return -1

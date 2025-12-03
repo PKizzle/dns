@@ -654,7 +654,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 						parseAsRFC3597 = true
 					}
 				} else {
-					rr = &RFC3597{Hdr: *h, Type: *t}
+					rr = &RFC3597{Hdr: *h, RRType: *t}
 				}
 			case asCode:
 				newFn, ok := CodeToRR[*t]
@@ -678,7 +678,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			parseAsRR := rr
 			if parseAsRFC3597 {
-				parseAsRR = &RFC3597{Hdr: *h, Type: *t}
+				parseAsRR = &RFC3597{Hdr: *h, RRType: *t}
 			}
 
 			// This needs zparser which calles Parser for new types.

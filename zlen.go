@@ -360,7 +360,7 @@ func (rr *TKEY) Len() int {
 
 func (rr *RFC3597) Len() int {
 	l := rr.Hdr.Len()
-	l += len(rr.Rdata) / 2
+	l += len(rr.Data) / 2
 	return l
 }
 

@@ -419,8 +419,8 @@ func (rr *TKEY) Clone() RR {
 func (rr *RFC3597) Clone() RR {
 	return &RFC3597{
 		rr.Hdr,
-		rr.Type,
-		rr.Rdata,
+		rr.RRType,
+		rr.Data,
 	}
 }
 

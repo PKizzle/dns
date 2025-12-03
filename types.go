@@ -1267,9 +1267,9 @@ func (rr *TKEY) String() string {
 
 // RFC3597 represents an unknown/generic RR. See RFC 3597.
 type RFC3597 struct {
-	Hdr   Header
-	Type  uint16 `dns:"-"` // actual type
-	Rdata string `dns:"hex"`
+	Hdr    Header
+	RRType uint16 `dns:"-"` // actual type
+	Data   string `dns:"hex"`
 }
 
 func (rr *RFC3597) String() string {
@@ -1281,16 +1281,19 @@ func (rr *RFC3597) String() string {
 	sb.WriteByte('\t')
 	sb.WriteString("CLASS" + strconv.Itoa(int(rr.Hdr.Class)))
 	sb.WriteByte('\t')
-	sb.WriteString("TYPE" + strconv.Itoa(int(rr.Type)))
+	sb.WriteString("TYPE" + strconv.Itoa(int(rr.RRType)))
 	sb.WriteByte('\t')
 
 	sb.WriteByte('\\')
 	sb.WriteByte('#')
-	sprintData(&sb, strconv.Itoa(len(rr.Rdata)/2), rr.Rdata)
+	sprintData(&sb, strconv.Itoa(len(rr.Data)/2), rr.Data)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
 }
+
+// Type implements the Typer interface.
+func (rr *RFC3597) Type() uint16 { return rr.RRType }
 
 // URI RR. See RFC 7553.
 type URI struct {
