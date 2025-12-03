@@ -37,7 +37,7 @@ The continent codes are: `AF`: Africa, `AN`: Antarctica, `AS`: Asia, `EU`: Europ
 | Key                      | Type       | Example       | Description                        |
 | :----------------------- | :--------- | :------------ | :--------------------------------- |
 | `geoip/city`             | `string`   | Cambridge     | The city name in English language. |
-| `geoip/city/region`      | `[]string` | ENG,TWH       | Regional ISO 3166-2 codes.         |
+| `geoip/city/region`      | `[]string` | ENG TWH       | Regional ISO 3166-2 codes.         |
 | `geoip/country`          | `string`   | GB            | Country ISO 3166-1 code.           |
 | `geoip/country/eu`       | `bool`     | false         | Country is EU member.              |
 | `geoip/continent`        | `string`   | EU            | Continent code.                    |
