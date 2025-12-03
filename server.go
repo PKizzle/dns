@@ -15,22 +15,12 @@ import (
 const maxTCPQueries = 1024
 
 // ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
-func ListenAndServe(addr string, network string, handler Handler) error {
+func ListenAndServe(addr, network string, handler Handler) error {
 	server := NewServer()
 	server.Addr = addr
 	server.Net = network
 	server.Handler = handler
 	return server.ListenAndServe()
-}
-
-// ActivateAndServe activates a server with a listener from systemd, l and p should not both be non-nil.
-// If both l and p are not nil only p will be used. Invokes handler for incoming queries.
-func ActivateAndServe(l net.Listener, p net.PacketConn, handler Handler) error {
-	server := NewServer()
-	server.Listener = l
-	server.PacketConn = p
-	server.Handler = handler
-	return server.ActivateAndServe()
 }
 
 // MsgAcceptAction represents the action to be taken.
@@ -207,24 +197,7 @@ func (srv *Server) ListenAndServe() error {
 	return &Error{err: "bad network"}
 }
 
-// ActivateAndServe starts a nameserver with the PacketConn or Listener configured in *Server. Its main use is to start a server from systemd.
-func (srv *Server) ActivateAndServe() error {
-	srv.init()
-	if srv.PacketConn != nil {
-		if t, ok := srv.PacketConn.(*net.UDPConn); ok && t != nil {
-			if e := setUDPSocketOptions(t); e != nil {
-				return e
-			}
-		}
-		srv.listenUDP(srv.PacketConn)
-	}
-	if srv.Listener != nil {
-		srv.listenTCP(srv.Listener)
-	}
-	return &Error{err: "bad listeners"}
-}
-
-// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe and ActivateAndServe will return.
+// Shutdown shuts down a server. After a call to Shutdown, ListenAndServe will return.
 // A context.Context may be passed to limit how long to wait for connections to terminate. Not used at the moment.
 func (srv *Server) Shutdown(ctx context.Context) {
 	srv.cancel()

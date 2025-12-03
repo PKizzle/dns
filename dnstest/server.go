@@ -4,24 +4,19 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
-	"net"
-	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
-// Server returns a new running server. The returned cancel function shuts down the server. Any options should
-// be set by opts.
-func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (cancel func(), addr string, err error) {
+// Server returns a new running (UDP) server. The returned cancel function shuts down the server. Any options should
+// be set by opts. The returned strings have the actual addresses, this is useful in case of listenen on the
+// wildcard port. If now network is configured via the opts functions, udp is assumed.
+func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening string, err error) {
 	s := dns.NewServer()
-	s.PacketConn = pc
-	s.Listener = l
-
-	waitLock := sync.Mutex{}
-	waitLock.Lock()
-	s.NotifyStartedFunc = func(context.Context) { waitLock.Unlock() }
+	s.Addr = addr
+	wait := make(chan error, 1)
+	s.NotifyStartedFunc = func(context.Context) { wait <- nil }
 	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
 		fmt.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
 	}
@@ -29,48 +24,53 @@ func Server(pc net.PacketConn, l net.Listener, opts ...func(*dns.Server)) (cance
 	for _, opt := range opts {
 		opt(s)
 	}
-
-	var closer io.Closer
-	if l != nil {
-		addr = l.Addr().String()
-		closer = l
-	} else {
-		addr = pc.LocalAddr().String()
-		closer = pc
+	if s.Net == "" {
+		s.Net = "udp"
 	}
 
 	go func() {
-		s.ActivateAndServe()
-		closer.Close()
+		err := s.ListenAndServe()
+		if err != nil {
+			wait <- err
+		}
 	}()
+	if err := <-wait; err != nil {
+		return nil, "", err
+	}
 
-	waitLock.Lock()
+	if s.PacketConn != nil {
+		listening = s.PacketConn.LocalAddr().String()
+	}
+	if s.Listener != nil {
+		listening = s.Listener.Addr().String()
+	}
 	cancel = func() { s.Shutdown(context.TODO()) }
-	return cancel, addr, nil
+	return cancel, listening, nil
 }
 
+// UDPServer calls [Server] but only returns the UDP listening address.
 func UDPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
-	pc, err := net.ListenPacket("udp", addr)
-	if err != nil {
-		return nil, "", err
-	}
-	return Server(pc, nil, opts...)
+	opt := func(s *dns.Server) { s.Net = "udp" }
+	opts = append(opts, opt)
+	cancel, listen, err := Server(addr, opts...)
+	return cancel, listen, err
 }
 
+// TCPServer calls [Server] but only returns the TCP listening address.
 func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		return nil, "", err
-	}
-	return Server(nil, l, opts...)
+	opt := func(s *dns.Server) { s.Net = "tcp" }
+	opts = append(opts, opt)
+	cancel, listen, err := Server(addr, opts...)
+	return cancel, listen, err
 }
 
+// TLSServer calls [Server] with a TLS configuration.
 func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		return nil, "", err
+	tlsopt := func(s *dns.Server) {
+		s.TLSConfig = TLSConfig()
 	}
-	return Server(nil, tls.NewListener(l, TLSConfig()), opts...)
+	opts = append(opts, tlsopt)
+	return TCPServer(addr, opts...)
 }
 
 // TLSConfig returns the testing TLS config.
