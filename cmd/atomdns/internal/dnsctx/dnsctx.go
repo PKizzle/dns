@@ -70,7 +70,7 @@ func Valid(key string) bool {
 }
 
 // Match checks the value under key and see if it matches any of the elements in the list.
-// This function handles strings, ints, flaot64s and bools. A nil value for key returns true.
+// This function handles strings, string slices, ints, flaot64s and bools. A nil value for key returns true.
 func Match(ctx context.Context, key string, values []any) bool {
 	value := Ctx(ctx, key)
 	if value == nil {
@@ -86,6 +86,12 @@ func Match(ctx context.Context, key string, values []any) bool {
 	case string:
 		for _, v := range values {
 			if s, ok := v.(string); ok && s == x {
+				return true
+			}
+		}
+	case []string:
+		for _, v := range values {
+			if slices.Contains(value.([]string), v.(string)) {
 				return true
 			}
 		}

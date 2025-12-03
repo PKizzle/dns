@@ -23,7 +23,6 @@ type Geoip struct {
 func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
-		// TODO: subnet
 		var (
 			city *geoip2.City
 			asn  *geoip2.ASN
@@ -56,6 +55,11 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		if city.HasData() {
 			dnsctx.WithValue(ctx, g.Key()+"/city", city.City.Names.English)
+			regions := make([]string, len(city.Subdivisions))
+			for i, region := range city.Subdivisions {
+				regions[i] = region.ISOCode
+			}
+			dnsctx.WithValue(ctx, g.Key()+"/city/region", regions)
 			dnsctx.WithValue(ctx, g.Key()+"/country", city.Country.ISOCode)
 			dnsctx.WithValue(ctx, g.Key()+"/country/eu", city.Country.IsInEuropeanUnion)
 			dnsctx.WithValue(ctx, g.Key()+"/continent", city.Continent.Code)
