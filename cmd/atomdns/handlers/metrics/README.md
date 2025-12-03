@@ -63,3 +63,20 @@ example.org {
     whoami
 }
 ```
+
+To scrape metrics with prometheus you need something like this in the main `prometheus.yaml` configuration
+file:
+
+```yaml
+global:
+  scrape_interval: 1m
+
+scrape_configs:
+  - job_name: atomdns
+    static_configs:
+      - targets: ["localhost:9153"]
+```
+
+# Also See
+
+[Getting Started with Prometheus](https://prometheus.io/docs/prometheus/latest/getting_started/).
