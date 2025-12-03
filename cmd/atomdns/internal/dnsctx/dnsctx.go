@@ -46,8 +46,8 @@ func WithValue(ctx context.Context, key string, value any) context.Context {
 	return context.WithValue(ctx, key, value)
 }
 
-// Ctx returns the data under key. If key does not contain a slash nil is returned.
-func Ctx(ctx context.Context, key string) any {
+// Value returns the value under key. If key does not contain a slash nil is returned.
+func Value(ctx context.Context, key string) any {
 	if !Valid(key) {
 		return ""
 	}
@@ -72,7 +72,7 @@ func Valid(key string) bool {
 // Match checks the value under key and see if it matches any of the elements in the list.
 // This function handles strings, string slices, ints, flaot64s and bools. A nil value for key returns true.
 func Match(ctx context.Context, key string, values []any) bool {
-	value := Ctx(ctx, key)
+	value := Value(ctx, key)
 	if value == nil {
 		return true
 	}

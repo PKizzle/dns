@@ -22,7 +22,8 @@ geoip [subnet] {
 
 - `subnet` signals if given to use [EDNS0 subnet](https://en.wikipedia.org/wiki/EDNS_Client_Subnet) (if present)
   for the lookup instead of the source IP address. **NOTE:** due to security reasons, recursive DNS resolvers
-  may mask a few bits off of the clients' IP address, which can cause inaccuracies in resolution.
+  may mask a few bits off of the clients' IP address, which can cause inaccuracies in resolution. This
+  requires that the _subnet_ handler has seen this query and added the data to the context.
 - `city` and `asn` define the database files that should be used for country, city or AS number
   lookups. If the path is relative the path from `root` will be prepended. At least one database must be
   loaded.

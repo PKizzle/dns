@@ -20,6 +20,7 @@ var Handlers = []string{
 	"nsid",
 	"refuse",
 	"sign",
+	"subnet",
 	"template",
 	"unpack",
 	"url",
