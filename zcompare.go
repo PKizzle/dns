@@ -116,6 +116,8 @@ func compare(a, b RR) int {
 		return x.compare(b)
 	case *TKEY:
 		return x.compare(b)
+	case *RFC3597:
+		return x.compare(b)
 	case *URI:
 		return x.compare(b)
 	case *DHCID:

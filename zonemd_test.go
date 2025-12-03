@@ -52,7 +52,10 @@ ns2           3600   IN  AAAA    2001:db8::63
 			}
 			zonemd := dns.NewZONEMD("example.", dns.ZONEMDSchemeSimple, dns.ZONEMDHashSHA384)
 			sort.Sort(dns.RRset(zone))
-			zonemd.Sign(zone, &dns.ZONEMDOption{})
+			err := zonemd.Sign(zone, &dns.ZONEMDOption{})
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			digest, _ := hex.DecodeString(zonemd.Digest)
 			tcdigest, _ := hex.DecodeString(tc.zonemd.Digest)

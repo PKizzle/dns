@@ -114,6 +114,8 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 		return x.pack(msg, off, compression)
 	case *TKEY:
 		return x.pack(msg, off, compression)
+	case *RFC3597:
+		return x.pack(msg, off, compression)
 	case *URI:
 		return x.pack(msg, off, compression)
 	case *DHCID:
@@ -293,6 +295,8 @@ func zunpack(rr RR, data, msgBuf []byte) error {
 	case *NSEC3PARAM:
 		return x.unpack(data, msgBuf)
 	case *TKEY:
+		return x.unpack(data, msgBuf)
+	case *RFC3597:
 		return x.unpack(data, msgBuf)
 	case *URI:
 		return x.unpack(data, msgBuf)

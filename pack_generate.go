@@ -27,9 +27,9 @@ import (
 var packFunc = template.Must(template.New("packFunc").Parse(`
 func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
 	switch x := rr.(type) {
-{{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
+{{range .}}  case *{{.}}:
 	return x.pack(msg, off, compression)
-{{end}}{{end}} }
+{{end}} }
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := rr.(Packer); ok {
 		return x.Pack(msg, off)
@@ -42,9 +42,9 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 var unpackFunc = template.Must(template.New("unpackFunc").Parse(`
 func zunpack(rr RR, data, msgBuf []byte) error {
 	switch x := rr.(type) {
-{{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
+{{range .}}  case *{{.}}:
 	return x.unpack(data, msgBuf)
-{{end}}{{end}} }
+{{end}} }
 	// if here, we don't have the RR in our pkg, check if it does Packer.
 	if x, ok := rr.(Packer); ok {
 		return x.Unpack(data)

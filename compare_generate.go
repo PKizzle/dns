@@ -30,9 +30,9 @@ import (
 var compareFunc = template.Must(template.New("compareFunc").Parse(`
 func compare(a, b RR) int {
 	switch x := a.(type) {
-{{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
+{{range .}}  case *{{.}}:
 	return x.compare(b)
-{{end}}{{end}} }
+{{end}} }
 	if x, ok := a.(Comparer); ok {
 		return x.Compare(b)
 	}
