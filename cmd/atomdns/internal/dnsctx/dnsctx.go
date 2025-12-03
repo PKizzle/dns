@@ -18,6 +18,11 @@ func WithFunc(ctx context.Context, handler string, f Func) context.Context {
 	return context.WithValue(ctx, funckey(handler), f)
 }
 
+const (
+	// Status is the subkey that should be used for setting a status of type bool in the context.
+	Status = "status"
+)
+
 // funckey returns the string value for the Func in the context.
 func funckey(s string) string { return s + "/msgfunc" }
 
