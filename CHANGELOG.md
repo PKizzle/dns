@@ -3,6 +3,91 @@
 This is the generated changelog for codeberg.org/miekg/dns.
 
 
+## v0.5.32 - 2025-12-03
+
+3 commits. With the following change log.
+
+* 773ecbe Rename some RFC3597 rdata fields. Fix sort by adding Type() method. (Miek Gieben)
+
+## v0.5.31 - 2025-12-03
+
+9 commits.
+
+
+## v0.5.30 - 2025-11-27
+
+19 commits.
+
+
+## v0.5.29 - 2025-11-25
+
+7 commits.
+
+
+## v0.5.28 - 2025-11-25
+
+4 commits.
+
+
+## v0.5.27 - 2025-11-25
+
+48 commits. With the following change log.
+
+* 80d013d Atomdns,acl: use context.Context for matching as well. (Miek Gieben)
+
+## v0.5.26 - 2025-11-17
+
+63 commits. With the following change log.
+
+* 2d48353 Add all DSO types. (Miek Gieben)
+
+## v0.5.25 - 2025-11-09
+
+19 commits.
+
+
+## v0.5.24 - 2025-11-07
+
+10 commits.
+
+
+## v0.5.23 - 2025-11-06
+
+23 commits.
+
+
+## v0.5.22 - 2025-11-05
+
+17 commits.
+
+
+## v0.5.21 - 2025-11-04
+
+8 commits.
+
+
+## v0.5.20 - 2025-11-04
+
+7 commits.
+
+
+## v0.5.19 - 2025-11-03
+
+8 commits.
+
+
+## v0.5.18 - 2025-11-03
+
+6 commits.
+
+
+## v0.5.17 - 2025-11-02
+
+20 commits. With the following change log.
+
+* 6720620 Atomdns, add _url_ handler. (Miek Gieben)
+* 7d0ccec Add complete ZONEMD support, implement ZONEMD.Sign. (Miek Gieben)
+
 ## v0.5.16 - 2025-10-29
 
 53 commits. With the following change log.

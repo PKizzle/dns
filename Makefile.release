@@ -47,3 +47,7 @@ push:
 	@echo Pushing release $(VERSION) to main
 	git push --tags
 	git push
+
+.PHONY: CHANGELOG.md
+CHANGELOG.md:
+	gitcl -tmpl .changelog.go.tmpl > CHANGELOG.md
