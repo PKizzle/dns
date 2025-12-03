@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
 	"codeberg.org/miekg/dns/dnstest"
 )
 
@@ -17,7 +16,7 @@ func TestTemplate(t *testing.T) {
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	next := new(whoami.Whoami).HandlerFunc(nil)
+	next := dns.HandlerFunc(func(_ context.Context, _ dns.ResponseWriter, _ *dns.Msg) {})
 	h.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
 
 	if w.Msg.ID != r.ID {

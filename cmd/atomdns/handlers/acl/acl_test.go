@@ -1,11 +1,12 @@
-package acl
+package acl_test
 
 import (
 	"context"
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
+	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/acl"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -110,7 +111,7 @@ var testcases = []struct {
 func TestAcl(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			a := new(Acl)
+			a := new(acl.Acl)
 			co := dnsserver.NewTestController(tc.config)
 			a.Setup(co)
 
@@ -121,12 +122,11 @@ func TestAcl(t *testing.T) {
 			}
 			dnsutil.SetQuestion(r, "www.example.org.", tc.qtype)
 
-			next := new(whoami.Whoami).HandlerFunc(nil)
 			ctx := context.TODO()
 			if tc.setup != nil {
 				ctx = tc.setup()
 			}
-			a.HandlerFunc(next).ServeDNS(ctx, w, r)
+			a.HandlerFunc(atomtest.Echo).ServeDNS(ctx, w, r)
 
 			if w.Msg.Rcode != uint16(tc.rcode) {
 				t.Errorf("rcode mismatch want %d, got %d", tc.rcode, w.Msg.Rcode)

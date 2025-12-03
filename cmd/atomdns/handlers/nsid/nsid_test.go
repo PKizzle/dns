@@ -1,4 +1,4 @@
-package nsid
+package nsid_test
 
 import (
 	"context"
@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
+	"codeberg.org/miekg/dns/cmd/atomdns/atomtest"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
 	"codeberg.org/miekg/dns/dnstest"
 )
 
 func TestNsid(t *testing.T) {
 	in := "Use the force"
-	h := &Nsid{Data: hex.EncodeToString([]byte(in))}
+	h := &nsid.Nsid{Data: hex.EncodeToString([]byte(in))}
 
 	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
 	r.ID = 3
@@ -20,8 +21,7 @@ func TestNsid(t *testing.T) {
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	next := new(whoami.Whoami).HandlerFunc(nil)
-	h.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
+	h.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
 
 	if len(w.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")

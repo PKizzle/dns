@@ -2,21 +2,21 @@ package atomtest
 
 import (
 	"context"
+	"io"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Handler is a handler that execute Func inside the HandlerFunc method.
-type Handler struct {
-	Func dns.HandlerFunc
-	Next bool // If Next is true the next handler in the chain is called.
-}
+// Echo is a HandlerFunc that echo the message m.
+var Echo = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+	m := r.Copy()
+	dnsutil.SetReply(m, r)
+	m = dnsctx.Funcs(ctx, m)
+	if err := m.Pack(); err != nil {
+		return
+	}
+	io.Copy(w, m)
 
-func (h *Handler) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
-	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		h.Func(ctx, w, r)
-		if h.Next {
-			next.ServeDNS(ctx, w, r)
-		}
-	})
-}
+})
