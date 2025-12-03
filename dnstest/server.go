@@ -48,7 +48,7 @@ func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening st
 	return cancel, listening, nil
 }
 
-// UDPServer calls [Server] but only returns the UDP listening address.
+// UDPServer calls [Server] with the option to start a UDP server.
 func UDPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	opt := func(s *dns.Server) { s.Net = "udp" }
 	opts = append(opts, opt)
@@ -56,7 +56,7 @@ func UDPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return cancel, listen, err
 }
 
-// TCPServer calls [Server] but only returns the TCP listening address.
+// TCPServer calls [Server] with the option to start a TCP server,
 func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	opt := func(s *dns.Server) { s.Net = "tcp" }
 	opts = append(opts, opt)
