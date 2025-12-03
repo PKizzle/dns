@@ -22,7 +22,7 @@ func TestSubnet(t *testing.T) {
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
 	next := dns.HandlerFunc(func(ctx context.Context, _ dns.ResponseWriter, _ *dns.Msg) {
-		address := dnsctx.Value(ctx, "subnet/address")
+		address := dnsctx.Value(ctx, h.Key()+"/address")
 		if address == nil {
 			t.Fatal("expected subnet/address, got none")
 		}
