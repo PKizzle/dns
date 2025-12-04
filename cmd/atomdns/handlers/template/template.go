@@ -38,7 +38,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 		funcs := template.FuncMap{
-			"Ctx": func(key string) any { return dnsctx.Value(ctx, key) },
+			"Value": func(key string) any { return dnsctx.Value(ctx, key) },
 		}
 		var err error
 		tmpl := template.New(t.Path).Funcs(funcs)
@@ -50,20 +50,17 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		tmpl, err = tmpl.Parse(string(text))
 
-		data := new(Data)
-		data.Zone = dns.Zone(ctx)
-		data.ID = r.ID
-		data.Name = r.Question[0].Header().Name
-		data.Class = dns.ClassToString[r.Question[0].Header().Class]
-		data.Type = dns.TypeToString[dns.RRToType(r.Question[0])]
-		data.Msg = r
-		data.ResponseWriter = ResponseWriter{
-			Family:     dnsutil.Family(w),
-			LocalIP:    dnsutil.LocalIP(w),
-			LocalPort:  dnsutil.LocalPort(w),
-			Network:    dnsutil.Network(w),
-			RemoteIP:   dnsutil.RemoteIP(w),
-			RemotePort: dnsutil.RemotePort(w),
+		data := &Data{Zone: dns.Zone(ctx), ID: r.ID, Msg: r, Name: r.Question[0].Header().Name,
+			Class: dns.ClassToString[r.Question[0].Header().Class],
+			Type:  dns.TypeToString[dns.RRToType(r.Question[0])],
+			ResponseWriter: ResponseWriter{
+				Family:     dnsutil.Family(w),
+				LocalIP:    dnsutil.LocalIP(w),
+				LocalPort:  dnsutil.LocalPort(w),
+				Network:    dnsutil.Network(w),
+				RemoteIP:   dnsutil.RemoteIP(w),
+				RemotePort: dnsutil.RemotePort(w),
+			},
 		}
 
 		buf := bufPool.Get().(*bytes.Buffer)

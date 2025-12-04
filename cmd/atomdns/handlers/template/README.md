@@ -62,7 +62,7 @@ Each template gets the following variables (see the godoc of Data):
 
 And the following functions (all functions start with a capital letter):
 
-- `Ctx(key string)` return the value for the key from the current context. This allows extracting any data
+- `Value(key string)` return the value for the key from the current context. This allows extracting any data
   other handlers have added to the context, such as the _geoip_ handler does.
 
 # Examples
