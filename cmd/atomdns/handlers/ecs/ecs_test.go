@@ -2,6 +2,7 @@ package ecs_test
 
 import (
 	"context"
+	"net"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -16,7 +17,6 @@ func TestEcs(t *testing.T) {
 
 	ecs := &dns.SUBNET{Family: dnsutil.IPv4Family, SourceNetmask: 32, Address: dnstest.IPv4}
 	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
-	r.ID = 3
 	r.Pseudo = []dns.RR{ecs}
 	r.Pack()
 
@@ -24,13 +24,12 @@ func TestEcs(t *testing.T) {
 	next := dns.HandlerFunc(func(ctx context.Context, _ dns.ResponseWriter, _ *dns.Msg) {
 		address := dnsctx.Value(ctx, h.Key()+"/address")
 		if address == nil {
-			t.Fatal("expected subnet/address, got none")
+			t.Fatal("expected ecs/address, got none")
 		}
-		if address.(string) != dnstest.IPv4.String() {
+		if address.(net.IP).String() != dnstest.IPv4.String() {
 			t.Fatalf("expected %s, got %s", dnstest.IPv4.String(), address.(string))
 		}
-	},
-	)
+	})
 	ctx := context.TODO()
 	h.HandlerFunc(next).ServeDNS(ctx, w, r)
 }

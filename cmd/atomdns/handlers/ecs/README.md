@@ -28,9 +28,9 @@ example.org {
 
 The _ecs_ handler adds a single key to the context:
 
-| Key           | Type         | Example      | Description  |
-| :------------ | :----------- | :----------- | :----------- |
-| `ecs/address` | `netip.Addr` | 198.51.100.1 | The address. |
+| Key           | Type     | Example      | Description  |
+| :------------ | :------- | :----------- | :----------- |
+| `ecs/address` | `net.IP` | 198.51.100.1 | The address. |
 
 # See Also
 
