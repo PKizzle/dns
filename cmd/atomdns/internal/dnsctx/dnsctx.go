@@ -21,11 +21,12 @@ func WithFunc(ctx context.Context, handler string, f Func) context.Context {
 
 const (
 	// Status is the subkey that should be used for setting a status of type bool in the context.
-	Status = "status"
+	Status  = "status"
+	MsgFunc = "msgfunc"
 )
 
 // funckey returns the string value for the Func in the context.
-func funckey(s string) string { return s + "/msgfunc" }
+func funckey(s string) string { return s + "/" + MsgFunc }
 
 // Funcs iterates over all handlers and run the functions that are set in the context over the message. The possibly
 // modified message is returned.
@@ -65,7 +66,7 @@ func Value(ctx context.Context, key string) any {
 }
 
 // Reserved are context key suffixes that are used internally by atomdns.
-var Reserved = []string{"/msgfunc"}
+var Reserved = []string{"/" + MsgFunc}
 
 // Valid returns a boolean indicating if the key is a valid context key.
 func Valid(key string) bool {
