@@ -14,11 +14,13 @@ When a query is being processed by atomdns, the following steps are performed:
 - Once a handler chains has been found, it will be routed through that chain. This happens in the order as
   defined in the configuration file (atomdns-conffile(5)).
 
-- Each handler in the chain will inspect the query and determine if it should process it. A couple of things can now happen:
+- Each handler in the chain will inspect the query and determine if it should process it. A couple of things
+  can now happen:
   1. The query is processed by this handler..
   2. The query is not processed by this handler.
   3. The query is processed by this handler, but it decides it needs to call the next handler.
-  4. The query is processed by this handler, a "hint" is added to the context and the next handler is called.
+  4. The query is processed by this handler, a key/value (see [dnsctx])is added to the context and the next
+     handler is called.
 
 Processing a query means a handler will respond to the client with a reply.
 
