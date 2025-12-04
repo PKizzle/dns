@@ -16,13 +16,13 @@ func TestSetup(t *testing.T) {
 			`geoip {
                    		city testdata/GeoIPCity.dat
 	        	}`,
-			&Geoip{Subnet: false, City: new(geoip2.Reader)},
+			&Geoip{City: new(geoip2.Reader)},
 		},
 		{
-			`geoip subnet {
+			`geoip {
                    		city testdata/GeoIPCity.dat	testdata/GeoIPCity.dat
 	        	}`,
-			&Geoip{Subnet: true, City: new(geoip2.Reader), City6: new(geoip2.Reader)},
+			&Geoip{City: new(geoip2.Reader), City6: new(geoip2.Reader)},
 		},
 	}
 	for i, tc := range testcases {
@@ -32,13 +32,9 @@ func TestSetup(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if tc.exp.Subnet != geoip.Subnet {
-			t.Errorf("test %d: expected %t, got %t", i, tc.exp.Subnet, geoip.Subnet)
-		}
 		if geoip.City == nil {
 			t.Errorf("test %d, city, expected non-nil, got nil", i)
 		}
-
 		if tc.exp.City == nil && geoip.City != nil {
 			t.Errorf("test %d, city, expected nil, got %v", i, tc.exp.City)
 		}

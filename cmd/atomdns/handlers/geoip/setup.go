@@ -7,13 +7,6 @@ import (
 
 func (g *Geoip) Setup(co *dnsserver.Controller) (err error) {
 	for co.Next() {
-		args := co.RemainingArgs()
-		if len(args) == 1 {
-			if args[0] != "subnet" {
-				return co.PropErr()
-			}
-			g.Subnet = true
-		}
 		for co.NextBlock(0) {
 			val := co.Val()
 			paths := co.RemainingPaths()

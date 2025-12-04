@@ -1,18 +1,18 @@
-package subnet_test
+package ecs_test
 
 import (
 	"context"
 	"testing"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/subnet"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/ecs"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-func TestSubnet(t *testing.T) {
-	h := &subnet.Subnet{}
+func TestEcs(t *testing.T) {
+	h := &ecs.Ecs{}
 
 	ecs := &dns.SUBNET{Family: dnsutil.IPv4Family, SourceNetmask: 32, Address: dnstest.IPv4}
 	r := dns.NewMsg("whoami.example.org.", dns.TypeA)

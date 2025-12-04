@@ -16,13 +16,17 @@ type Geoip struct {
 	City6 *geoip2.Reader
 	Asn   *geoip2.Reader
 	Asn6  *geoip2.Reader
-
-	Subnet bool
 }
 
 func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
+		if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
+			if s, ok := x.(string); ok {
+				log().Debug("Using 'ecs/address'")
+				ip, _ = netip.ParseAddr(s)
+			}
+		}
 		var (
 			city *geoip2.City
 			asn  *geoip2.ASN
@@ -32,24 +36,24 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		case true:
 			if g.City != nil {
 				if city, err = g.City.City(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 			if g.Asn != nil {
 				if asn, err = g.Asn.ASN(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 
 		case false:
 			if g.City6 != nil {
 				if city, err = g.City6.City(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 			if g.Asn6 != nil {
 				if asn, err = g.Asn6.ASN(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 		}
