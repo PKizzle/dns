@@ -3,6 +3,7 @@ package acl
 import (
 	"context"
 	"net"
+	"net/netip"
 	"slices"
 
 	"codeberg.org/miekg/dns"
@@ -44,6 +45,12 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 		switch {
 		case policy.net != nil:
 			ip := net.ParseIP(dnsutil.RemoteIP(w))
+			if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
+				if s, ok := x.(netip.Addr); ok {
+					log().Debug("Using 'ecs/address'")
+					ip = net.IP(s.AsSlice())
+				}
+			}
 			if ip == nil {
 				return dns.MsgIgnore
 			}

@@ -7,7 +7,8 @@ _acl_ - enforces access control policies
 With _acl_, users are able to block or filter suspicious DNS queries by configuring IP filter rule sets, i.e.
 allowing authorized queries or blocking unauthorized queries.
 
-When evaluating the rule sets, _acl_ uses the source IP.
+When evaluating the rule sets, _acl_ uses the source IP adresss, unless the _ecs_ handler has added an address
+to the context.
 
 # Syntax
 
@@ -32,8 +33,8 @@ acl {
   addresses are supported.
 
 - **CTX** must be used in the format `xxx/yyy`, i.e. two words seperated by a slash. The _geoip_ handler for
-  instance writes data under the key `geoip/city`, that can be used here. If the key does not return any data it
-  will considered a positive match and **ACTION** is performed.
+  instance writes data under (among other) the key `geoip/city`, that can be used here. If the key does not
+  return any data it will considered a positive match and **ACTION** is performed.
 
 - **VALUE** is the value to match **CTX** to. Again with the _geoip_ handler and using `Cambridge` here you
   can have access control on a city level.
@@ -94,6 +95,10 @@ If monitoring is enabled (via the _metrics_ handler) then the following metrics 
 
 The `zone`,`network` and `family` labels are explained in the _metrics_ handler documentation.
 
+# Also See
+
+See the _ecs_ handler that can added a better source address.
+
 # Bugs
 
-_acl_ should also check TSIG and other signed messages.
+_acl_ should also check TSIG and other signed messages, see https://codeberg.org/miekg/dns/issues/426.
