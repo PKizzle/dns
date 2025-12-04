@@ -9,7 +9,7 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-// Echo is a HandlerFunc that echos the message m. Any dnsctx.Funcs set in the context are run.
+// Echo is a [dns.HandlerFunc] that echos the message m. Any dnsctx.Funcs set in the context are run.
 var Echo = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	m := r.Copy()
 	dnsutil.SetReply(m, r)
@@ -20,5 +20,5 @@ var Echo = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dn
 	io.Copy(w, m)
 })
 
-// Noop is a HandlerFunc that does nothing.
+// Noop is a [dns.HandlerFunc] that does nothing.
 var Noop = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {})

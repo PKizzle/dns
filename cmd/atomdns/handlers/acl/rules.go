@@ -44,6 +44,10 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 		switch {
 		case policy.net != nil:
 			ip := net.ParseIP(dnsutil.RemoteIP(w))
+			if i := ecsContext(ctx); i != nil {
+				ip = i
+			}
+
 			if ip == nil {
 				return dns.MsgIgnore
 			}
@@ -66,4 +70,13 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 		}
 	}
 	return dns.MsgAccept
+}
+
+func ecsContext(ctx context.Context) net.IP {
+	if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
+		if i, ok := x.(net.IP); ok {
+			return i
+		}
+	}
+	return nil
 }

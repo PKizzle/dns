@@ -16,8 +16,13 @@ type Acl struct {
 
 func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		net := dnsutil.Network(w)
-		fam := strconv.Itoa(dnsutil.Family(w))
+		fam := dnsutil.Family(w)
+		if i := ecsContext(ctx); i != nil {
+			fam = dnsutil.IPv6Family
+			if i.To4() != nil {
+				fam = dnsutil.IPv4Family
+			}
+		}
 
 	Rules:
 		for _, rule := range a.Rules {
@@ -26,7 +31,7 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			case dns.MsgAccept:
 				break Rules
 			case dns.MsgIgnore:
-				RequestsDrop.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				RequestsDrop.WithLabelValues(dns.Zone(ctx), dnsutil.Network(w), strconv.Itoa(fam)).Inc()
 				return
 			case dns.MsgReject:
 				m := r.Copy()
@@ -38,7 +43,7 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Pack()
 				io.Copy(w, m)
 
-				RequestsBlock.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				RequestsBlock.WithLabelValues(dns.Zone(ctx), dnsutil.Network(w), strconv.Itoa(fam)).Inc()
 				return
 			case MsgFilter:
 				m := r.Copy()
@@ -50,12 +55,12 @@ func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 				m.Pack()
 				io.Copy(w, m)
 
-				RequestsFilter.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+				RequestsFilter.WithLabelValues(dns.Zone(ctx), dnsutil.Network(w), strconv.Itoa(fam)).Inc()
 				return
 			}
 		}
 
-		RequestsAllow.WithLabelValues(dns.Zone(ctx), net, fam).Inc()
+		RequestsAllow.WithLabelValues(dns.Zone(ctx), dnsutil.Network(w), strconv.Itoa(fam)).Inc()
 		next.ServeDNS(ctx, w, r)
 	})
 }

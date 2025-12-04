@@ -22,11 +22,12 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
 		if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
-			if s, ok := x.(string); ok {
+			if s, ok := x.(netip.Addr); ok {
 				log().Debug("Using 'ecs/address'")
-				ip, _ = netip.ParseAddr(s)
+				ip = s
 			}
 		}
+
 		var (
 			city *geoip2.City
 			asn  *geoip2.ASN
