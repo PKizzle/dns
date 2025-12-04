@@ -23,6 +23,7 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
 		if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
 			if s, ok := x.(string); ok {
+				log().Debug("Using 'ecs/address'")
 				ip, _ = netip.ParseAddr(s)
 			}
 		}
@@ -35,24 +36,24 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		case true:
 			if g.City != nil {
 				if city, err = g.City.City(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 			if g.Asn != nil {
 				if asn, err = g.Asn.ASN(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 
 		case false:
 			if g.City6 != nil {
 				if city, err = g.City6.City(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 			if g.Asn6 != nil {
 				if asn, err = g.Asn6.ASN(ip); err != nil {
-					log().Debug("Geo lookup failed", Err(err))
+					log().Debug("Lookup failed", Err(err))
 				}
 			}
 		}

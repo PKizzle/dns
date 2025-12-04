@@ -19,7 +19,7 @@ func TestSetup(t *testing.T) {
 			&Geoip{City: new(geoip2.Reader)},
 		},
 		{
-			`geoip subnet {
+			`geoip {
                    		city testdata/GeoIPCity.dat	testdata/GeoIPCity.dat
 	        	}`,
 			&Geoip{City: new(geoip2.Reader), City6: new(geoip2.Reader)},
