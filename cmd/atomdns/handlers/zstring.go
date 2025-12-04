@@ -12,6 +12,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbhost"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbsqlite"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/ecs"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/geoip"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
@@ -19,7 +20,6 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/subnet"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/url"
@@ -38,6 +38,7 @@ var StringToHandler = map[string]func() Handler{
 	"dbhost":   func() Handler { return new(dbhost.Dbhost) },
 	"dbsqlite": func() Handler { return new(dbsqlite.Dbsqlite) },
 	"drunk":    func() Handler { return new(drunk.Drunk) },
+	"ecs":      func() Handler { return new(ecs.Ecs) },
 	"geoip":    func() Handler { return new(geoip.Geoip) },
 	"log":      func() Handler { return new(log.Log) },
 	"metrics":  func() Handler { return new(metrics.Metrics) },
@@ -45,7 +46,6 @@ var StringToHandler = map[string]func() Handler{
 	"nsid":     func() Handler { return new(nsid.Nsid) },
 	"refuse":   func() Handler { return new(refuse.Refuse) },
 	"sign":     func() Handler { return new(sign.Sign) },
-	"subnet":   func() Handler { return new(subnet.Subnet) },
 	"template": func() Handler { return new(template.Template) },
 	"unpack":   func() Handler { return new(unpack.Unpack) },
 	"url":      func() Handler { return new(url.Url) },

@@ -16,13 +16,16 @@ type Geoip struct {
 	City6 *geoip2.Reader
 	Asn   *geoip2.Reader
 	Asn6  *geoip2.Reader
-
-	Subnet bool
 }
 
 func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
+		if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
+			if s, ok := x.(string); ok {
+				ip, _ = netip.ParseAddr(s)
+			}
+		}
 		var (
 			city *geoip2.City
 			asn  *geoip2.ASN

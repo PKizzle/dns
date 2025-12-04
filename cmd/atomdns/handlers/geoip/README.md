@@ -9,21 +9,19 @@ on Debian systems with `apt-get install geoip-database`, or see https://mailfud.
 
 There is no automatic reloading of the databases under the assumption they will not change _that_ often.
 
-If an IP address does not have associated geographical location data, nothing is added to the context.
+If an IP address does not have associated geographical location data, nothing is added to the context. If the
+_ecs_ handler is active and has added data to the context the address from there is used instead of the
+sources address of the query.
 
 # Syntax
 
 ```
-geoip [subnet] {
+geoip {
     city DBFILE4 [DBFILE6]
     asn DBFILE4 [DBFILE6]
 }
 ```
 
-- `subnet` signals if given to use [EDNS0 subnet](https://en.wikipedia.org/wiki/EDNS_Client_Subnet) (if present)
-  for the lookup instead of the source IP address. **NOTE:** due to security reasons, recursive DNS resolvers
-  may mask a few bits off of the clients' IP address, which can cause inaccuracies in resolution. This
-  requires that the _subnet_ handler has seen this query and added the data to the context.
 - `city` and `asn` define the database files that should be used for country, city or AS number
   lookups. If the path is relative the path from `root` will be prepended. At least one database must be
   loaded.
@@ -63,3 +61,7 @@ example.org. {
     }
 }
 ```
+
+# See Also
+
+See the _ecs_ handler.
