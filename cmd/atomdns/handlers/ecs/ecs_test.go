@@ -26,8 +26,8 @@ func TestEcs(t *testing.T) {
 		if address == nil {
 			t.Fatal("expected ecs/address, got none")
 		}
-		if address.(net.IP).String() != dnstest.IPv4.String() {
-			t.Fatalf("expected %s, got %s", dnstest.IPv4.String(), address.(string))
+		if !address.(net.IP).Equal(dnstest.IPv4) {
+			t.Fatalf("expected %s, got %s", dnstest.IPv4, address)
 		}
 	})
 	ctx := context.TODO()
