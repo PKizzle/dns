@@ -16,7 +16,7 @@ type Func func(*dns.Msg) *dns.Msg
 
 // WithFunc set the Func f in the context under the key <handler>/msgfunc.
 func WithFunc(ctx context.Context, handler string, f Func) context.Context {
-	return context.WithValue(ctx, funckey(handler), f)
+	return context.WithValue(ctx, Key(handler, MsgFunc), f)
 }
 
 const (
@@ -25,14 +25,14 @@ const (
 	MsgFunc = "msgfunc"
 )
 
-// funckey returns the string value for the Func in the context.
-func funckey(s string) string { return s + "/" + MsgFunc }
+// Key creates a key from the given strings.
+func Key(handler, key string) string { return handler + "/" + key }
 
 // Funcs iterates over all handlers and run the functions that are set in the context over the message. The possibly
 // modified message is returned.
 func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 	for _, h := range dnsserver.Handlers {
-		key := funckey(h)
+		key := Key(h, MsgFunc)
 		v := ctx.Value(key)
 		if v == nil {
 			continue
