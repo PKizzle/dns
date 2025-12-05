@@ -6,7 +6,7 @@ _tsig_ - validate incoming TSIG signed messages
 
 With _tsig_, you can define TSIG secret keys. Using those keys, _tsig_ validates incoming TSIG messages. This
 is only done for notifies and zone transfers. It does not itself sign messages; it is up to the respective
-handler sending them to the keys defined by _tsig_. See the "Context" section.
+handler sending those to use the data added to the context by _tsig_. See the "Context" section for details.
 
 # Syntax
 
@@ -42,4 +42,5 @@ The _tsig_ handler adds the following keys to the context:
 | `tsig/secret`    | `string` | No...Pkv=        | Secret, as configured.         |
 | `tsig/algorithm` | `string` | hmac-sha512.     | Algorithm, as configured.      |
 
-Each of these can be used by respective "upstream" handlers to sign messages.
+Each of these can be used by respective "upstream" handlers to sign messages. Note _tsig_ does not register a
+`tsig/msgfunc` as these are unconditionally executed by all handlers that returns a message.
