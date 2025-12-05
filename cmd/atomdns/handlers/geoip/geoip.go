@@ -59,24 +59,24 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			}
 		}
 		if city.HasData() {
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "city"), city.City.Names.English)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "city"), city.City.Names.English)
 			regions := make([]string, len(city.Subdivisions))
 			for i, region := range city.Subdivisions {
 				regions[i] = region.ISOCode
 			}
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "city/region"), regions)
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "country"), city.Country.ISOCode)
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "country/eu"), city.Country.IsInEuropeanUnion)
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "continent"), city.Continent.Code)
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "timezone"), city.Location.TimeZone)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "city/region"), regions)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "country"), city.Country.ISOCode)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "country/eu"), city.Country.IsInEuropeanUnion)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "continent"), city.Continent.Code)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "timezone"), city.Location.TimeZone)
 			if city.Location.HasCoordinates() {
-				dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "latitude"), *city.Location.Latitude)
-				dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "longitude"), *city.Location.Longitude)
+				dnsctx.WithValue(ctx, dnsctx.Key(g, "latitude"), *city.Location.Latitude)
+				dnsctx.WithValue(ctx, dnsctx.Key(g, "longitude"), *city.Location.Longitude)
 			}
 		}
 		if asn.HasData() {
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "asn"), asn.AutonomousSystemNumber)
-			dnsctx.WithValue(ctx, dnsctx.Key(g.Key(), "asn/organization"), asn.AutonomousSystemOrganization)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "asn"), asn.AutonomousSystemNumber)
+			dnsctx.WithValue(ctx, dnsctx.Key(g, "asn/organization"), asn.AutonomousSystemOrganization)
 		}
 		next.ServeDNS(ctx, w, r)
 	})
