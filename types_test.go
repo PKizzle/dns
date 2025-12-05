@@ -12,11 +12,11 @@ func ExampleA() {
 	m := dns.NewMsg("www.example.org", dns.TypeA)
 	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
 	if err != nil {
-		log.Printf("Failed to retrieve records: %v", err)
+		log.Printf("Failed to exchange: %v", err)
 		return
 	}
-	for _, answer := range r.Answer {
-		if a, ok := answer.(*dns.A); ok {
+	for _, rr := range r.Answer {
+		if a, ok := rr.(*dns.A); ok {
 			fmt.Println(a.A)
 		}
 	}
@@ -26,11 +26,11 @@ func ExampleMX() {
 	m := dns.NewMsg("example.org", dns.TypeMX)
 	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
 	if err != nil {
-		log.Printf("Failed to retrieve records: %v", err)
+		log.Printf("Failed to exchange: %v", err)
 		return
 	}
-	for _, answer := range r.Answer {
-		if mx, ok := answer.(*dns.MX); ok {
+	for _, rr := range r.Answer {
+		if mx, ok := rr.(*dns.MX); ok {
 			fmt.Println(mx.Preference, mx.Mx)
 		}
 	}
