@@ -1,0 +1,42 @@
+package dns_test
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"codeberg.org/miekg/dns"
+)
+
+func ExampleExchange() {
+	m := dns.NewMsg("www.example.org", dns.TypeA)
+	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
+	if err != nil {
+		log.Printf("Failed to exchange: %v", err)
+		return
+	}
+	for _, rr := range r.Answer {
+		if a, ok := rr.(*dns.A); ok {
+			fmt.Println(a.A)
+		}
+	}
+}
+
+func ExampleExchange_nxdomain() {
+	m := dns.NewMsg("wwww.example.org", dns.TypeA)
+	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
+	if err != nil {
+		log.Printf("Failed to exchange: %v", err)
+		return
+	}
+	if m.Rcode != dns.RcodeNameError {
+		log.Printf("Expected NXDOMAIN, got %s", dns.RcodeToString[m.Rcode])
+		return
+	}
+	// Authority section should contain the SOA record.
+	for _, rr := range r.Ns {
+		if soa, ok := rr.(*dns.SOA); ok {
+			fmt.Println(soa.Serial)
+		}
+	}
+}
