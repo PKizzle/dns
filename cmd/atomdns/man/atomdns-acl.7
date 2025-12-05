@@ -11,7 +11,8 @@ With \fIacl\fP, users are able to block or filter suspicious DNS queries by conf
 allowing authorized queries or blocking unauthorized queries.
 
 .PP
-When evaluating the rule sets, \fIacl\fP uses the source IP.
+When evaluating the rule sets, \fIacl\fP uses the source IP adresss, unless the \fIecs\fP handler has added an address
+to the context.
 
 .SH "SYNTAX"
 .PP
@@ -49,8 +50,8 @@ matches \fIall\fP types.
 addresses are supported.
 .IP \(bu 4
 \fBCTX\fP must be used in the format \fB\fCxxx/yyy\fR, i.e. two words seperated by a slash. The \fIgeoip\fP handler for
-instance writes data under the key \fB\fCgeoip/city\fR, that can be used here. If the key does not return any data it
-will considered a positive match and \fBACTION\fP is performed.
+instance writes data under (among other) the key \fB\fCgeoip/city\fR, that can be used here. If the key does not
+return any data it will considered a positive match and \fBACTION\fP is performed.
 .IP \(bu 4
 \fBVALUE\fP is the value to match \fBCTX\fP to. Again with the \fIgeoip\fP handler and using \fB\fCCambridge\fR here you
 can have access control on a city level.
@@ -141,6 +142,10 @@ If monitoring is enabled (via the \fImetrics\fP handler) then the following metr
 .PP
 The \fB\fCzone\fR,\fB\fCnetwork\fR and \fB\fCfamily\fR labels are explained in the \fImetrics\fP handler documentation.
 
+.SH "ALSO SEE"
+.PP
+See the \fIecs\fP handler that can added a better source address.
+
 .SH "BUGS"
 .PP
-\fIacl\fP should also check TSIG and other signed messages.
+\fIacl\fP should also check TSIG and other signed messages, see https://codeberg.org/miekg/dns/issues/426.

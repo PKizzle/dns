@@ -14,14 +14,16 @@ on Debian systems with \fB\fCapt-get install geoip-database\fR, or see https://m
 There is no automatic reloading of the databases under the assumption they will not change \fIthat\fP often.
 
 .PP
-If an IP address does not have associated geographical location data, nothing is added to the context.
+If an IP address does not have associated geographical location data, nothing is added to the context. If the
+\fIecs\fP handler is active and has added data to the context the address from there is used instead of the
+sources address of the query.
 
 .SH "SYNTAX"
 .PP
 .RS
 
 .nf
-geoip [subnet] {
+geoip {
     city DBFILE4 [DBFILE6]
     asn DBFILE4 [DBFILE6]
 }
@@ -29,12 +31,6 @@ geoip [subnet] {
 .fi
 .RE
 
-.IP \(bu 4
-\fB\fCsubnet\fR signals if given to use EDNS0 subnet
-\[la]https://en.wikipedia.org/wiki/EDNS_Client_Subnet\[ra] (if present)
-for the lookup instead of the source IP address. \fBNOTE:\fP due to security reasons, recursive DNS resolvers
-may mask a few bits off of the clients' IP address, which can cause inaccuracies in resolution. This
-requires that the \fIsubnet\fP handler has seen this query and added the data to the context.
 .IP \(bu 4
 \fB\fCcity\fR and \fB\fCasn\fR define the database files that should be used for country, city or AS number
 lookups. If the path is relative the path from \fB\fCroot\fR will be prepended. At least one database must be
@@ -99,3 +95,7 @@ example.org. {
 
 .fi
 .RE
+
+.SH "SEE ALSO"
+.PP
+See the \fIecs\fP handler.
