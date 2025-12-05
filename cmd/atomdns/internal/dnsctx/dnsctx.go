@@ -11,11 +11,16 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
+type Keyer interface {
+	// Key returns the "key" of the handler.
+	Key() string
+}
+
 // Func is a function that can be set in the context and operates on a [dns.Msg].
 type Func func(*dns.Msg) *dns.Msg
 
 // WithFunc set the Func f in the context under the key <handler>/msgfunc.
-func WithFunc(ctx context.Context, handler string, f Func) context.Context {
+func WithFunc(ctx context.Context, handler Keyer, f Func) context.Context {
 	return context.WithValue(ctx, Key(handler, MsgFunc), f)
 }
 
@@ -26,14 +31,13 @@ const (
 )
 
 // Key creates a key from the given strings.
-func Key(handler, key string) string { return handler + "/" + key }
+func Key(handler Keyer, key string) string { return handler.Key() + "/" + key }
 
 // Funcs iterates over all handlers and run the functions that are set in the context over the message. The possibly
 // modified message is returned.
 func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 	for _, h := range dnsserver.Handlers {
-		key := Key(h, MsgFunc)
-		v := ctx.Value(key)
+		v := ctx.Value(h + "/" + MsgFunc)
 		if v == nil {
 			continue
 		}
