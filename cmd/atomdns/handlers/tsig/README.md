@@ -20,8 +20,6 @@ tsig NAME ALGORITHM SECRET
 
 # Examples
 
-Require TSIG signed transactions for transfer requests to `example.zone`.
-
 ```
 example.org {
   tsig example.org.key hmac-sha512 NoTCJU+DMqFWywaPyxSijrDEA/eC3nK0xi3AMEZuPVk=
