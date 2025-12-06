@@ -8,7 +8,7 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-func ExampleExchange() {
+func ExampleClient_Exchange() {
 	m := dns.NewMsg("www.example.org", dns.TypeA)
 	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
 	if err != nil {

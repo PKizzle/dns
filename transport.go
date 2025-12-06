@@ -34,15 +34,16 @@ var defaultTransport = Transport{
 	WriteTimeout: 2 * time.Second,
 }
 
-// NewDefaultTransport returns the default transport. That transport has Diailer timeout of 5s, keep alive of
-// 3s and read and write timeout set to 2s.
-func NewDefaultTransport() *Transport {
+// NewTransport returns the default transport. That transport has Dialer timeout of 5s, keep alive of 3s and
+// read and write timeout set to 2s.
+func NewTransport() *Transport {
 	d := defaultTransport
 	return &d
 }
 
-// dial dials address via network. If tls config is set, a tls dialer is used.
-func (t *Transport) dial(ctx context.Context, network, address string) (net.Conn, error) {
+// Dial dials address via network. If tls config is set, a tls dialer is used. This method can be overriden to
+// return e.g. a static net.Conn that is previously created.
+func (t *Transport) Dial(ctx context.Context, network, address string) (net.Conn, error) {
 	if t.TLSConfig != nil {
 		dialer := tls.Dialer{NetDialer: t.Dialer, Config: t.TLSConfig}
 		return dialer.DialContext(ctx, network, address)

@@ -79,7 +79,7 @@ func (t *Transfer) Notify(origin string) error {
 
 func notify(m *dns.Msg, ip string, sources []string) error {
 	c := new(dns.Client)
-	c.Transport = dns.NewDefaultTransport()
+	c.Transport = dns.NewTransport()
 	host, _, _ := net.SplitHostPort(ip)
 
 	family := dnsutil.IPv4Family

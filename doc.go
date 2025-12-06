@@ -13,8 +13,7 @@ a separate section in [Msg], the pseudo section.
 
 Basic usage pattern for creating a new resource record:
 
-	r := &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600},
-			Preference: 10, Mx: "mx.miek.nl."}
+	r := &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
 
 Or directly from a string (which is slower):
 
@@ -41,42 +40,39 @@ The message m is now a message with the question section set to ask the MX recor
 After creating a message it can be sent. Basic use pattern for synchronous querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
 
 	c := new(dns.Client)
-	in, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
+	r, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
 
 When this functions returns you will get DNS message back. A DNS message consists out of four (five in this package) sections.
 
-  - The question section: in.Question.
-  - The answer section: in.Answer.
-  - The authority section: in.Ns.
-  - The additional section: in.Extra.
-  - And the extra and new fifth the pseudo section: in.Pseudo, see [Msg].
+  - The question section: r.Question.
+  - The answer section: r.Answer.
+  - The authority section: r.Ns.
+  - The additional section: r.Extra.
+  - And the extra and new fifth the pseudo section: r.Pseudo, see [Msg].
 
 The latter was added to make it easier to deal with EDNS0 option codes, which become more and more prevalent.
 
 Each of these sections contain a []RR. Basic use pattern for accessing the rdata of a TXT RR as the first RR in
 the Answer section:
 
-	if t, ok := in.Answer[0].(*dns.TXT); ok {
+	if t, ok := r.Answer[0].(*dns.TXT); ok {
 		// do something with t.Txt
 	}
 
 Or if you sent an NSID EDNS0 option:
 
-	if n, ok := in.Pseudo[0].(*dns.NSID); ok {
+	if n, ok := r.Pseudo[0].(*dns.NSID); ok {
 		// do something with n.Nsid
 	}
 
 # Domain Name and TXT Character String Representations
 
-Both domain names and TXT character strings are converted to presentation form
-both when unpacked and when converted to strings.
+Domain names are converted to presentation form as-is, there is no conversion of unprintable characters, i.e.
+\DDD are left as-is.
 
-For TXT character strings, tabs, carriage returns and line feeds will be
-converted to \t, \r and \n respectively. Back slashes and quotations marks will
-be escaped. Bytes below 32 and above 127 will be converted to \DDD form.
-
-For domain names, in addition to the above rules brackets, periods, spaces,
-semicolons and the at symbol are escaped.
+TXT character strings are converted to presentation form both when unpacked and when converted to strings.
+Tabs, carriage returns and line feeds will be converted to \t, \r and \n respectively. Back slashes and
+quotations marks will be escaped. Bytes below 32 and above 127 will be converted to \DDD form.
 
 # DNSSEC
 
@@ -108,8 +104,8 @@ These are just RRs with an extra Pseudo() method.
 
 Basic use pattern for a server to check if (and which) options are set, which is similar to how to deal with RRs.
 
-	for _, o := range m.Pseudo {
-		switch x := o.(type) {
+	for _, rr := range m.Pseudo {
+		switch x := rr.(type) {
 		case *dns.NSID:
 			// do stuff with x.Nsid
 		case *dns.SUBNET:

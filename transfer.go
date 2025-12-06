@@ -45,9 +45,9 @@ type Envelope struct {
 //	}
 func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string) (<-chan *Envelope, error) {
 	if c.Transport == nil {
-		c.Transport = NewDefaultTransport()
+		c.Transport = NewTransport()
 	}
-	conn, err := c.Transport.dial(ctx, network, address)
+	conn, err := c.Transport.Dial(ctx, network, address)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 // If the clients's transport is nil [NewDefaultTransport] will be set and used.
 func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (err error) {
 	if c.Transport == nil {
-		c.Transport = NewDefaultTransport()
+		c.Transport = NewTransport()
 	}
 	defer func() {
 		// drain channel reads

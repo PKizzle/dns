@@ -18,7 +18,7 @@ type Client struct {
 
 // NewClient returns a client with the transport set to [NewDefaultTransport].
 func NewClient() *Client {
-	return &Client{Transport: NewDefaultTransport()}
+	return &Client{Transport: NewTransport()}
 }
 
 // Exchange performs a synchronous query over "network". It sends the message m to the address
@@ -54,10 +54,10 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // checks are performed, i.e. a different question name, but a correct ID will be accepted.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
-		c.Transport = NewDefaultTransport()
+		c.Transport = NewTransport()
 	}
 
-	conn, err := c.Transport.dial(ctx, network, address)
+	conn, err := c.Transport.Dial(ctx, network, address)
 	if err != nil {
 		return nil, 0, err
 	}
