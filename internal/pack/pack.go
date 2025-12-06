@@ -252,7 +252,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 			compBegin = begin + compOff
 		}
 	}
-	msg[off] = 0 // lenght check needed??
+	msg[off] = 0 // length check needed??
 	return off + 1, nil
 }
 

@@ -15,7 +15,7 @@ func (e *Error) Fmt(format string, a ...any) error {
 func (e *Error) Error() string { return "dns: " + e.err }
 
 var (
-	ErrID      = &Error{err: "ID mismatch"}       // ErrID signals a mismatch with the sent message ID and the one returnd.
+	ErrID      = &Error{err: "ID mismatch"}       // ErrID signals a mismatch with the sent message ID and the one returned.
 	ErrAlg     = &Error{err: "bad algorithm"}     // ErrAlg indicates an error with the (DNSSEC) algorithm.
 	ErrSig     = &Error{err: "bad signature"}     // ErrSig indicates that a signature can not be cryptographically validated.
 	ErrKeyAlg  = &Error{err: "bad key algorithm"} // ErrKeyAlg indicates that the algorithm in the key is not valid.
