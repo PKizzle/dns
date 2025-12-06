@@ -40,7 +40,7 @@ The message m is now a message with the question section set to ask the MX recor
 After creating a message it can be sent. Basic use pattern for synchronous querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
 
 	c := new(dns.Client)
-	r, rtt, err := c.Exchange(m1, "udp", "127.0.0.1:53")
+	r, rtt, err := c.Exchange(m, "udp", "127.0.0.1:53")
 
 When this functions returns you will get DNS message back. A DNS message consists out of four (five in this package) sections.
 
