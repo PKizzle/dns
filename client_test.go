@@ -21,8 +21,7 @@ func ExampleClient_Exchange() {
 		}
 	}
 }
-
-func ExampleExchange_nxdomain() {
+func ExampleClient_Exchange_nxdomain() {
 	m := dns.NewMsg("wwww.example.org", dns.TypeA)
 	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
 	if err != nil {
