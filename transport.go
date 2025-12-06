@@ -41,9 +41,9 @@ func NewTransport() *Transport {
 	return &d
 }
 
-// Dial dials address via network. If tls config is set, a tls dialer is used. This method can be overriden to
+// dial dials address via network. If tls config is set, a tls dialer is used. This method can be overriden to
 // return e.g. a static net.Conn that is previously created.
-func (t *Transport) Dial(ctx context.Context, network, address string) (net.Conn, error) {
+func (t *Transport) dial(ctx context.Context, network, address string) (net.Conn, error) {
 	if t.TLSConfig != nil {
 		dialer := tls.Dialer{NetDialer: t.Dialer, Config: t.TLSConfig}
 		return dialer.DialContext(ctx, network, address)

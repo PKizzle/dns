@@ -57,7 +57,7 @@ func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) 
 		c.Transport = NewTransport()
 	}
 
-	conn, err := c.Transport.Dial(ctx, network, address)
+	conn, err := c.Transport.dial(ctx, network, address)
 	if err != nil {
 		return nil, 0, err
 	}
