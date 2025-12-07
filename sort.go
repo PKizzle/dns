@@ -41,7 +41,7 @@ func (set RRset) Swap(i, j int)      { set[i], set[j] = set[j], set[i] }
 
 // CompareName compares the name a and b as defined in RFC 4034, canonical ordering of names.
 // If a label is the asterisks label "*" it is always equal (wildcard match). TODO(miek): this isn't
-// implemented.
+// implemented?
 func CompareName(a, b string) int {
 	// See https://bert-hubert.blogspot.com/2015/10/how-to-do-fast-canonical-ordering-of.html
 	lasta, _ := dnsutilPrev(a, 0)

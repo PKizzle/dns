@@ -50,9 +50,11 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // The full binary data is included in the (decoded) message as r.Data. If the Data buffer in m is empty
 // client.Exchange calls m.Pack().
 //
-// It returns an error (ErrID) if the message returned does not have the same ID as the message sent. A
-// non-response reply also leads to an error.
-// No other checks are performed, i.e. a different question name, but a correct ID will be accepted.
+// An error is returned if:
+//   - if the message returned does not have the same ID as the message sent.
+//   - the response bit is not set on the reply.
+//
+// See [CompareName] for checking the question name the point to another possible check.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
 		c.Transport = NewTransport()
@@ -106,7 +108,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 		return r, time.Since(t), err
 	}
 	if !r.Response {
-		return r, time.Since(t), &Error{err: "not a response"}
+		return r, time.Since(t), &Error{err: "response bit is not set"}
 	}
 	if r.ID != m.ID {
 		return r, time.Since(t), ErrID.Fmt(": %d != %d", r.ID, m.ID)
