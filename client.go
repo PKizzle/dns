@@ -50,8 +50,9 @@ func Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, err
 // The full binary data is included in the (decoded) message as r.Data. If the Data buffer in m is empty
 // client.Exchange calls m.Pack().
 //
-// It returns an error (ErrID) if the message returned does not have the same ID as the message sent. No other
-// checks are performed, i.e. a different question name, but a correct ID will be accepted.
+// It returns an error (ErrID) if the message returned does not have the same ID as the message sent. A
+// non-response reply also leads to an error.
+// No other checks are performed, i.e. a different question name, but a correct ID will be accepted.
 func (c *Client) Exchange(ctx context.Context, m *Msg, network, address string) (r *Msg, rtt time.Duration, err error) {
 	if c.Transport == nil {
 		c.Transport = NewTransport()
@@ -74,7 +75,7 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 	}
 
 	t := time.Now()
-	remote := &response{conn: conn} // for Session() call in msg.go#L926
+	remote := &response{conn: conn} // for Session() call in msg.go#L750
 	if _, err := io.Copy(remote, m); err != nil {
 		return nil, time.Since(t), err
 	}
@@ -103,6 +104,9 @@ func (c *Client) ExchangeWithConn(ctx context.Context, m *Msg, conn net.Conn) (r
 
 	if err = r.Unpack(); err != nil {
 		return r, time.Since(t), err
+	}
+	if !r.Response {
+		return r, time.Since(t), &Error{err: "not a response"}
 	}
 	if r.ID != m.ID {
 		return r, time.Since(t), ErrID.Fmt(": %d != %d", r.ID, m.ID)
