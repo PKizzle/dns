@@ -70,6 +70,9 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		if err != nil {
 			return nil, err
 		}
+		if len(buf) > 65536 {
+			return nil, fmt.Errorf("dns msg too big")
+		}
 		m := &dns.Msg{Data: buf}
 		err = m.Unpack()
 		if err != nil {
