@@ -39,7 +39,7 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 		return
 	}
 	ll := l
-	if x := global.HttpLimits.MaxInflight; x > 0 {
+	if x := global.HttpLimits.MaxInflight; x >= 0 {
 		ll = netutil.LimitListener(l, x)
 	}
 
