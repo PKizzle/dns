@@ -103,16 +103,16 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					if err != nil {
 						return err
 					}
-					g.MaxTCPQueries = l.MaxTCPQueries
+					g.Limits.MaxTCPQueries = l.MaxTCPQueries
 					if l.Servers != -1 {
-						g.Servers = l.Servers
+						g.Limits.Servers = l.Servers
 					}
 				default:
 					return d.ArgErr()
 				}
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "dns", g.Addr, "tcp", g.MaxTCPQueries, "run", g.Servers)
+				log.Info("Startup", "dns", g.Addr, "tcp", g.Limits.MaxTCPQueries, "run", g.Limits.Servers)
 				return nil
 			})
 
@@ -133,17 +133,17 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					if err != nil {
 						return err
 					}
-					g.TlsMaxTCPQueries = l.MaxTCPQueries
+					g.TlsLimits.MaxTCPQueries = l.MaxTCPQueries
 					if l.Servers != -1 {
-						g.TlsServers = l.Servers
+						g.TlsLimits.Servers = l.Servers
 					}
 				default:
 					return d.ArgErr()
 				}
 			}
-			if g.TlsServers > 0 {
+			if g.TlsLimits.Servers > 0 {
 				g.OnStartup(func() error {
-					log.Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsMaxTCPQueries, "run", g.TlsServers)
+					log.Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers)
 					return nil
 				})
 			}
@@ -166,15 +166,18 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 						return err
 					}
 					if l.Servers != -1 {
-						g.HttpServers = l.Servers
+						g.HttpLimits.Servers = l.Servers
+					}
+					if l.MaxInflight > 0 {
+						g.HttpLimits.MaxInflight = l.MaxInflight
 					}
 				default:
 					return d.ArgErr()
 				}
 			}
-			if g.HttpServers > 0 {
+			if g.HttpLimits.Servers > 0 {
 				g.OnStartup(func() error {
-					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpServers, "path", "/dns-query")
+					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, "inflight", g.HttpLimits.MaxInflight, "path", "/dns-query")
 					return nil
 				})
 			}

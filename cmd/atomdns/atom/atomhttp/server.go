@@ -11,6 +11,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/reuse"
 	"codeberg.org/miekg/dns/dnshttp"
+	"golang.org/x/net/netutil"
 )
 
 // ServeHTTP implements the http.Handler and is the bridge between the HTTP and DNS worlds.
@@ -37,7 +38,12 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 		ch <- err
 		return
 	}
-	lt := l
+	ll := l
+	if x := global.HttpLimits.MaxInflight; x > 0 {
+		ll = netutil.LimitListener(l, x)
+	}
+
+	lt := ll
 	if global.TlsConfig != nil {
 		lt = tls.NewListener(l, global.TlsConfig)
 	}

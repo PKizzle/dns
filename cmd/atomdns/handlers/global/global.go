@@ -24,17 +24,15 @@ type Global struct {
 	// Pprof
 	PprofListener net.Listener
 	// dns
-	Quiet         bool
-	Addr          string
-	MaxTCPQueries int
-	Servers       int
+	Quiet  bool
+	Addr   string
+	Limits Limits
 	// doh
-	HttpAddr    string
-	HttpServers int
+	HttpAddr   string
+	HttpLimits Limits
 	// dot
-	TlsAddr          string
-	TlsServers       int
-	TlsMaxTCPQueries int
+	TlsAddr   string
+	TlsLimits Limits
 	// tls
 	TlsConfig     *tls.Config // manual
 	TlsCertConfig *certmagic.Config

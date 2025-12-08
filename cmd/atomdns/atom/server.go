@@ -81,10 +81,10 @@ func (s *Server) Start() error {
 
 	roles := []string{"DNS:" + s.Addr()[0]}
 	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
-		if s.global.HttpServers > 0 {
+		if s.global.HttpLimits.Servers > 0 {
 			roles = append(roles, "DOH:"+s.HttpAddr()[0])
 		}
-		if s.global.TlsServers > 0 {
+		if s.global.TlsLimits.Servers > 0 {
 			roles = append(roles, "DOT:"+s.TlsAddr()[0])
 		}
 	}
@@ -140,7 +140,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.global = global
 
 	// dns servers
-	s.servers = make([]*dns.Server, global.Servers*2) // *2=udp/tcp
+	s.servers = make([]*dns.Server, global.Limits.Servers*2) // *2=udp/tcp
 	s.started = make(chan error, len(s.servers))
 	for j := range s.servers {
 		net := "tcp"
@@ -149,7 +149,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		s.servers[j] = &dns.Server{
 			ReuseAddr: true, ReusePort: true,
-			Handler: s.mux, Net: net, Addr: global.Addr, MaxTCPQueries: global.MaxTCPQueries,
+			Handler: s.mux, Net: net, Addr: global.Addr, MaxTCPQueries: global.Limits.MaxTCPQueries,
 		}
 		i, N := uint64(0), global.MetricsN
 		s.servers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
@@ -165,7 +165,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 	}
 
 	// dot server
-	s.tlsservers = make([]*dns.Server, global.TlsServers)
+	s.tlsservers = make([]*dns.Server, global.TlsLimits.Servers)
 	s.tlsstarted = make(chan error, len(s.tlsservers))
 	for j := range s.tlsservers {
 		tlsConfig := &tls.Config{}
@@ -178,7 +178,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 		tlsConfig.NextProtos = []string{"dot"}
 		s.tlsservers[j] = &dns.Server{
 			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
-			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsMaxTCPQueries,
+			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
 		}
 		i, N := uint64(0), global.MetricsN
 		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, err error) {
@@ -194,7 +194,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 	}
 
 	// doh servers
-	s.httpservers = make([]*atomhttp.Server, global.HttpServers)
+	s.httpservers = make([]*atomhttp.Server, global.HttpLimits.Servers)
 	s.httpstarted = make(chan error, len(s.httpservers))
 	for j := range s.httpservers {
 		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
@@ -221,13 +221,12 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 
 	certmagic.Default.Logger = zlog.New(false)
 	global := &global.Global{
-		Registered:    make(map[string]struct{}),
-		Config:        conf,
-		Root:          func() string { wd, _ := os.Getwd(); return wd }(),
-		Addr:          "[::]:53",
-		MaxTCPQueries: 128,
-		Servers:       runtime.NumCPU() * 3,
-		TlsAddr:       "[::]:853",
+		Registered: make(map[string]struct{}),
+		Config:     conf,
+		Root:       func() string { wd, _ := os.Getwd(); return wd }(),
+		Addr:       "[::]:53",
+		Limits:     global.Limits{MaxTCPQueries: dns.MaxTCPQueries, Servers: runtime.NumCPU() * 3},
+		TlsAddr:    "[::]:853",
 	}
 
 	return global, s.Setup(conf, global, blocks)
