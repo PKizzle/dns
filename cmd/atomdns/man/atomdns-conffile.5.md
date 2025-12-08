@@ -51,7 +51,7 @@ log
 whoami
 ```
 
-Is a valid config and is supported by `atomdns`.
+Is a valid configuration and is supported by `atomdns`.
 
 # Global
 
@@ -74,8 +74,8 @@ See atomdns-global(7) for more information.
 
 # Import
 
-You can use the _import_ "handler" to include parts of other files, or snippets that are defined in the config
-file see atomdns-import(7). To prevent infinite recursion a maximum of a 1000 imports are allowed.
+You can use the _import_ "handler" to include parts of other files, or snippets that are defined in the
+configuration file see atomdns-import(7). To prevent infinite recursion a maximum of a 1000 imports are allowed.
 
 # Snippets
 
@@ -131,7 +131,7 @@ Reverse zones can be specified as domain names:
 }
 ```
 
-or by just using the CIDR notation:
+Or by just using the CIDR notation:
 
 ```conffile
 10.0.0.0/24 {
@@ -189,4 +189,5 @@ Apache License 2.0
 
 # See Also
 
-The manual page for atomdns: atomdns(1) and the manual pages for the handlers.
+The manual page for atomdns: atomdns(1) and the manual pages for the handlers. Particular atomdns-global(7)
+for the server parameters.

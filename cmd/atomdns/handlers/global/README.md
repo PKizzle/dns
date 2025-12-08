@@ -28,10 +28,17 @@ global section, see the configuration examples below.
             run EXPR
         }
     }
+    dot {
+        addr ADDRESS
+        limits {
+            run EXPR
+        }
+    }
     doh {
         addr ADDRESS
         limits {
             run EXPR
+            inflight LIMIT
         }
     }
     tls ISSUER {
@@ -73,7 +80,7 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
 - `limits` set further limits:
-  - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.
+  - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
   - `run` **EXPR**, run this many servers the default is `NumCPU*3`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
     lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
@@ -86,7 +93,7 @@ With `dot` you control DNS TLS server options, defined are:
 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:853`.
 - `limits` set further limits:
-  - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 128, -1 disables.
+  - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
   - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in lowercase.
     These are all TCP servers, so `run 5` will start 5 servers, not 10 as would the case with `dns`.
@@ -101,6 +108,7 @@ With `doh` you set http server options, defined are.
 - `limits` set further limits:
   - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in lowercase.
+  - `inflight` **LIMIT**, how many inflight connection are we allowing, default is 1024, -1 disables.
 
 To allow the certificate challenge, all DOH web servers will also handle the TLS-ALPN-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be

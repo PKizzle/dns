@@ -33,10 +33,17 @@ global section, see the configuration examples below.
             run EXPR
         }
     }
+    dot {
+        addr ADDRESS
+        limits {
+            run EXPR
+        }
+    }
     doh {
         addr ADDRESS
         limits {
             run EXPR
+            inflight LIMIT
         }
     }
     tls ISSUER {
@@ -99,7 +106,7 @@ With \fB\fCdns\fR you set DNS (port (usually) 53, TCP and UDP) server options, d
 
 .RS
 .IP \(en 4
-\fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 128, \-1 disables.
+\fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 1024, \-1 disables.
 .IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*3\fR, this can be a bare number,
 like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in
@@ -121,7 +128,7 @@ With \fB\fCdot\fR you control DNS TLS server options, defined are:
 
 .RS
 .IP \(en 4
-\fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 128, \-1 disables.
+\fB\fCtcp\fR \fBLIMIT\fP, break off TCP connections after this many queries, default is 1024, \-1 disables.
 .IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*1\fR, this can be a bare number,
 like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in lowercase.
@@ -146,6 +153,8 @@ With \fB\fCdoh\fR you set http server options, defined are.
 .IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*1\fR, this can be a bare number,
 like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in lowercase.
+.IP \(en 4
+\fB\fCinflight\fR \fBLIMIT\fP, how many inflight connection are we allowing, default is 1024, \-1 disables.
 
 .RE
 

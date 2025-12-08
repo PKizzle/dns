@@ -12,7 +12,7 @@ import (
 )
 
 // Default maximum number of TCP queries before we close the socket.
-const maxTCPQueries = 1024
+const MaxTCPQueries = 1024
 
 // ListenAndServe Starts a server on address and network specified and invokes handler for incoming queries.
 func ListenAndServe(addr, network string, handler Handler) error {
@@ -89,7 +89,7 @@ type Server struct {
 	ReadTimeout time.Duration
 	// TCP idle timeout for multiple queries, if nil, defaults to 8 * time.Second (RFC 5966).
 	IdleTimeout time.Duration
-	// Maximum number of TCP queries before we close the socket. Default is maxTCPQueries (128), unlimited if -1.
+	// Maximum number of TCP queries before we close the socket. Default is [MaxTCPQueries], unlimited if -1.
 	// See [ResponseWriter.Hijack] on how a handler can bypass this.
 	MaxTCPQueries int
 	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
@@ -252,7 +252,7 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 
 	limit := srv.MaxTCPQueries
 	if limit == 0 {
-		limit = maxTCPQueries
+		limit = MaxTCPQueries
 	}
 
 	readtimeout := srv.ReadTimeout
