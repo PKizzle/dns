@@ -17,6 +17,7 @@
         addr [::]:1443
         limits {
             run numcpu()*1
+            inflight 100
         }
     }
     dot {
