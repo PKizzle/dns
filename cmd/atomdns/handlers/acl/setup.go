@@ -20,6 +20,8 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 	var _, IPv4All, _ = net.ParseCIDR("0.0.0.0/0")
 	var _, IPv6All, _ = net.ParseCIDR("::/0")
 
+	a.N = co.Global.MetricsN
+
 	for co.Next() {
 		r := rule{}
 		for co.NextBlock(0) {

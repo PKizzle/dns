@@ -6,7 +6,7 @@ _metrics_ - enable [prometheus](https://prometheus.io/) metrics
 
 With _metrics_ metrics are exported from atomdns and any handler that adds extra ones.
 The default address for the metrics server is `localhost:9153`. The metrics path is fixed to `/metrics`.
-See the global handler for details on how to change the address.
+See the _global_ handler for details on how to change the address, and other properties.
 
 You must also enable metrics in the handler block, this allows you to specify where in the handler chain the
 metrics are gathered. Usually this is the first handler. If the global section doesn't specify _metrics_ the
@@ -15,7 +15,8 @@ metrics will not be able to be scraped, but they are still gathered.
 Enabling metrics means taking a (severe) performance hit (50 Kqps, seen in [limited] testing), to alleviate
 this, by default, only 1 in 10 queries will be monitored. See the _global_ handler's documentation on how to change this.
 When displaying these metrics in (e.g.) Grafana, be sure to \*10, otherwise your queries per second is lower
-then you hoped for.
+then you hoped for. Other handlers that use metrics on a per-query basis also adhere to this limit, for
+instance the _acl_ handler gathers one in `N`.
 
 In addition to the default Go metrics exported by the [prometheus Go
 client](https://prometheus.io/docs/guides/go-application/), the following metrics are exported:

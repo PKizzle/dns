@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmetrics"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,12 +29,10 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-		if m.i%m.N != 0 {
-			m.i++
+		if !dnsmetrics.Should(&m.i, m.N) {
 			next.ServeDNS(ctx, w, r)
 			return
 		}
-		m.i++
 
 		net := dnsutil.Network(w)
 		fam := strconv.Itoa(dnsutil.Family(w))
