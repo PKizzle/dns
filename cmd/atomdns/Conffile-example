@@ -24,6 +24,7 @@
         addr [::]:8053
         limits {
             run 1
+            inflight 200
         }
     }
     tls manual {

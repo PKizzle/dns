@@ -74,13 +74,18 @@ type Server struct {
 	// If "tcp" it will invoke a TCP listener, otherwise an UDP one. If TLSConfig is not nil and Net is "tcp" a TLS server is
 	// started.
 	Net string
-	// TCP Listener to use, this is to aid in systemd's socket activation.
+	// TCP Listener that is created.
 	Listener net.Listener
+	// ListenFunc takes a *Server and modifies it. This function is called after the listener is set up, but
+	// before it is used, as such this can be used to wrap the listeners.
+	ListenFunc func(*Server)
 	// TLS connection configuration. Use for DOT (DNS over TCP). Not NextProtos must have "dot", for this to
 	// work with DOT clients.
 	TLSConfig *tls.Config
-	// UDP "Listener" to use, this is to aid in systemd's socket activation.
+	// UDP "Listener" that is created.
 	PacketConn net.PacketConn
+	// PacketConnFunc is simular to ListenerFunc, but works on the servers UDP listener.
+	PacketConnFunc func(*Server)
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
 	// Default buffer size to use to read incoming UDP messages. If not set it defaults to MinMsgSize (512 B).
@@ -176,6 +181,9 @@ func (srv *Server) ListenAndServe() error {
 			l = tls.NewListener(l, srv.TLSConfig)
 		}
 		srv.Listener = l
+		if srv.ListenFunc != nil {
+			srv.ListenFunc(srv)
+		}
 		srv.listenTCP(l)
 		return nil
 	case "udp", "udp4", "udp6":

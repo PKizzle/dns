@@ -24,6 +24,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/caddyserver/certmagic"
+	"golang.org/x/net/netutil"
 )
 
 type Server struct {
@@ -61,6 +62,11 @@ func (s *Server) Start() error {
 	}
 
 	for i := range s.tlsservers {
+		if x := s.global.TlsLimits.MaxInflight; x > 0 {
+			s.tlsservers[i].ListenFunc = func(srv *dns.Server) {
+				srv.Listener = netutil.LimitListener(srv.Listener, x)
+			}
+		}
 		go Serve(s.tlsstarted, s.tlsservers[i], s.global)
 	}
 	for range s.tlsservers {
