@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
+	"net/netip"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
@@ -21,9 +21,9 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 
 		family := dnsutil.Family(w)
 		if family == 1 {
-			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: net.ParseIP(dnsutil.RemoteIP(w)).To4()}
+			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: netip.MustParseAddr(dnsutil.RemoteIP(w))}
 		} else {
-			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: net.ParseIP(dnsutil.RemoteIP(w))}
+			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: netip.MustParseAddr(dnsutil.RemoteIP(w))}
 		}
 
 		port := dnsutil.RemotePort(w)

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"net"
+	"net/netip"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 )
@@ -141,34 +142,26 @@ func TxtString(s string, msg []byte, off int) (int, error) {
 	return off, nil
 }
 
-func A(a net.IP, msg []byte, off int) (int, error) {
-	switch len(a) {
-	case net.IPv4len, net.IPv6len:
-		// It must be a slice of 4, even if it is 16, we encode only the first 4
-		if off+net.IPv4len > len(msg) {
-			return len(msg), &Error{"overflow a"}
-		}
-
-		copy(msg[off:], a.To4())
-		off += net.IPv4len
-	default:
+func A(a netip.Addr, msg []byte, off int) (int, error) {
+	if off+net.IPv4len > len(msg) {
 		return len(msg), &Error{"overflow a"}
 	}
+	if !a.Is4() && !a.Is4In6() {
+		return len(msg), &Error{"invalid a"}
+	}
+	val := a.As4()
+	copy(msg[off:], val[:])
+	off += net.IPv4len
 	return off, nil
 }
 
-func AAAA(aaaa net.IP, msg []byte, off int) (int, error) {
-	switch len(aaaa) {
-	case net.IPv6len:
-		if off+net.IPv6len > len(msg) {
-			return len(msg), &Error{"overflow aaaa"}
-		}
-
-		copy(msg[off:], aaaa)
-		off += net.IPv6len
-	default:
+func AAAA(aaaa netip.Addr, msg []byte, off int) (int, error) {
+	if off+net.IPv6len > len(msg) {
 		return len(msg), &Error{"overflow aaaa"}
 	}
+	val := aaaa.As16()
+	copy(msg[off:], val[:])
+	off += net.IPv6len
 	return off, nil
 }
 

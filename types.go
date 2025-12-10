@@ -2,7 +2,7 @@ package dns
 
 import (
 	"fmt"
-	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -655,12 +655,12 @@ func (rr *DNAME) String() string {
 // A RR. See RFC 1035.
 type A struct {
 	Hdr Header
-	A   net.IP `dns:"a"`
+	A   netip.Addr `dns:"a"`
 }
 
 func (rr *A) String() string {
 	sb := sprintHeader(rr)
-	if rr.A == nil {
+	if !rr.A.IsValid() {
 		s := sb.String()
 		builderPool.Put(*sb)
 		return s
@@ -674,20 +674,12 @@ func (rr *A) String() string {
 // AAAA RR. See RFC 3596.
 type AAAA struct {
 	Hdr  Header
-	AAAA net.IP `dns:"aaaa"`
+	AAAA netip.Addr `dns:"aaaa"`
 }
 
 func (rr *AAAA) String() string {
 	sb := sprintHeader(rr)
-	if rr.AAAA == nil {
-		s := sb.String()
-		builderPool.Put(*sb)
-		return s
-	}
-
-	if rr.AAAA.To4() != nil {
-		sb.WriteString(ipv4InIPv6Prefix)
-		sb.WriteString(rr.AAAA.String())
+	if !rr.AAAA.IsValid() {
 		s := sb.String()
 		builderPool.Put(*sb)
 		return s
@@ -1392,13 +1384,13 @@ func (rr *NID) String() string {
 type L32 struct {
 	Hdr        Header
 	Preference uint16
-	Locator32  net.IP `dns:"a"`
+	Locator32  netip.Addr `dns:"a"`
 }
 
 func (rr *L32) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(strconv.Itoa(int(rr.Preference)))
-	if rr.Locator32 == nil {
+	if !rr.Locator32.IsValid() {
 		s := sb.String()
 		builderPool.Put(*sb)
 		return s

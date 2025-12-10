@@ -3,7 +3,7 @@ package svcb
 import (
 	"errors"
 	"fmt"
-	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 
@@ -117,12 +117,12 @@ func (s *IPV4HINT) parse(b string) error {
 		return errors.New("svcbipv4hint: expected ipv4, got ipv6")
 	}
 
-	hint := make([]net.IP, 0, strings.Count(b, ",")+1)
+	hint := make([]netip.Addr, 0, strings.Count(b, ",")+1)
 	for len(b) > 0 {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e).To4()
-		if ip == nil {
+		ip, err := netip.ParseAddr(e)
+		if err != nil || !ip.Is4() {
 			return errors.New("svcbipv4hint: bad ip")
 		}
 		hint = append(hint, ip)
@@ -145,15 +145,15 @@ func (s *IPV6HINT) parse(b string) error {
 		return errors.New("svcbipv6hint: empty hint")
 	}
 
-	hint := make([]net.IP, 0, strings.Count(b, ",")+1)
+	hint := make([]netip.Addr, 0, strings.Count(b, ",")+1)
 	for len(b) > 0 {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e)
-		if ip == nil {
+		ip, err := netip.ParseAddr(e)
+		if err != nil {
 			return errors.New("svcbipv6hint: bad ip")
 		}
-		if ip.To4() != nil {
+		if !ip.Is6() || ip.Is4In6() {
 			return errors.New("svcbipv6hint: expected ipv6, got ipv4-mapped-ipv6")
 		}
 		hint = append(hint, ip)

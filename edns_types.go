@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"net"
+	"net/netip"
 	"strconv"
 
 	"codeberg.org/miekg/dns/internal/reverse"
@@ -297,17 +297,17 @@ type SUBNET struct {
 	Family        uint16 // 1 for IP, 2 for IP6.
 	SourceNetmask uint8  // 32 for IPV4, 128 for IPv6.
 	SourceScope   uint8
-	Address       net.IP // Client IP address.
+	Address       netip.Addr // Client IP address.
 }
 
-func (o *SUBNET) Len() int { return tlv + 2 + 2 + len(o.Address) }
+func (o *SUBNET) Len() int { return tlv + 2 + 2 + o.Address.BitLen()/8 }
 func (o *SUBNET) String() string {
 	sb := sprintOptionHeader(o)
 	switch {
-	case o.Address == nil:
+	case !o.Address.IsValid():
 		sb.WriteString("<nil>")
-	case o.Address.To4() != nil:
-		sb.WriteString(o.Address.String())
+	case o.Address.Unmap().Is4():
+		sb.WriteString(o.Address.Unmap().String())
 	default:
 		sb.WriteByte('[')
 		sb.WriteString(o.Address.String())

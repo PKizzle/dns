@@ -3,7 +3,7 @@ package deleg
 import (
 	"errors"
 	"fmt"
-	"net"
+	"net/netip"
 	"strings"
 )
 
@@ -27,12 +27,12 @@ func (s *SERVERIPV4) parse(b string) error {
 		return errors.New("delegserveripv4: expected ipv4, got ipv6")
 	}
 
-	ips := make([]net.IP, 0, strings.Count(b, ",")+1)
+	ips := make([]netip.Addr, 0, strings.Count(b, ",")+1)
 	for len(b) > 0 {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e).To4()
-		if ip == nil {
+		ip, err := netip.ParseAddr(e)
+		if err != nil || !ip.Is4() {
 			return errors.New("delegserveripv4: bad ip")
 		}
 		ips = append(ips, ip)
@@ -46,15 +46,15 @@ func (s *SERVERIPV6) parse(b string) error {
 		return errors.New("delegserveripv6: empty ips")
 	}
 
-	ips := make([]net.IP, 0, strings.Count(b, ",")+1)
+	ips := make([]netip.Addr, 0, strings.Count(b, ",")+1)
 	for len(b) > 0 {
 		var e string
 		e, b, _ = strings.Cut(b, ",")
-		ip := net.ParseIP(e)
-		if ip == nil {
+		ip, err := netip.ParseAddr(e)
+		if err != nil {
 			return errors.New("delegserveripv6: bad ip")
 		}
-		if ip.To4() != nil {
+		if !ip.Is6() || ip.Is4In6() {
 			return errors.New("delegserveripv6: expected ipv6, got ipv4-mapped-ipv6")
 		}
 		ips = append(ips, ip)

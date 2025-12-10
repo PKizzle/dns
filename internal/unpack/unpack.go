@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"net"
+	"net/netip"
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
@@ -24,18 +25,26 @@ const (
 	maxNamePresentationLength = maxNameWireOctets - 1
 )
 
-func A(s *cryptobyte.String) (net.IP, error) {
-	ip := make(net.IP, net.IPv4len)
-	if !s.CopyBytes(ip) {
-		return nil, &Error{"overflow a"}
+func A(s *cryptobyte.String) (netip.Addr, error) {
+	in := make([]byte, net.IPv4len)
+	if !s.CopyBytes(in) {
+		return netip.Addr{}, &Error{"overflow a"}
+	}
+	ip, ok := netip.AddrFromSlice(in)
+	if !ok {
+		return netip.Addr{}, &Error{"invalid a"}
 	}
 	return ip, nil
 }
 
-func AAAA(s *cryptobyte.String) (net.IP, error) {
-	ip := make(net.IP, net.IPv6len)
-	if !s.CopyBytes(ip) {
-		return nil, &Error{"overflow aaaa"}
+func AAAA(s *cryptobyte.String) (netip.Addr, error) {
+	in := make([]byte, net.IPv6len)
+	if !s.CopyBytes(in) {
+		return netip.Addr{}, &Error{"overflow a"}
+	}
+	ip, ok := netip.AddrFromSlice(in)
+	if !ok {
+		return netip.Addr{}, &Error{"invalid a"}
 	}
 	return ip, nil
 }

@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"net"
+	"net/netip"
 
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
@@ -236,7 +236,7 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	}
 	switch o.Family {
 	case 0:
-		o.Address = net.IPv4(0, 0, 0, 0)
+		o.Address = netip.MustParseAddr("0.0.0.0")
 	case 1:
 		o.Address, err = unpack.A(s)
 	case 2:

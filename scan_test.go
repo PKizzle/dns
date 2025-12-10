@@ -3,7 +3,7 @@ package dns
 import (
 	"errors"
 	"io/fs"
-	"net"
+	"net/netip"
 	"os"
 	"strings"
 	"testing"
@@ -21,9 +21,9 @@ func TestZoneParser(t *testing.T) {
 			"$generate",
 			"$ORIGIN example.org.\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$",
 			[]RR{
-				&A{Hdr: Header{Name: "foo012.example.org.", Class: ClassINET}, A: net.ParseIP("127.0.0.10")},
-				&A{Hdr: Header{Name: "foo013.example.org.", Class: ClassINET}, A: net.ParseIP("127.0.0.11")},
-				&A{Hdr: Header{Name: "foo014.example.org.", Class: ClassINET}, A: net.ParseIP("127.0.0.12")},
+				&A{Hdr: Header{Name: "foo012.example.org.", Class: ClassINET}, A: netip.MustParseAddr("127.0.0.10")},
+				&A{Hdr: Header{Name: "foo013.example.org.", Class: ClassINET}, A: netip.MustParseAddr("127.0.0.11")},
+				&A{Hdr: Header{Name: "foo014.example.org.", Class: ClassINET}, A: netip.MustParseAddr("127.0.0.12")},
 			},
 			nil,
 		},
@@ -31,8 +31,8 @@ func TestZoneParser(t *testing.T) {
 			"aaaa",
 			"1.example.org. 600 IN AAAA ::1\n2.example.org. 600 IN AAAA ::FFFF:127.0.0.1",
 			[]RR{
-				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: net.IPv6loopback},
-				&AAAA{Hdr: Header{Name: "2.example.org.", Class: ClassINET}, AAAA: net.ParseIP("::FFFF:127.0.0.1")},
+				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: netip.IPv6Loopback()},
+				&AAAA{Hdr: Header{Name: "2.example.org.", Class: ClassINET}, AAAA: netip.MustParseAddr("::FFFF:127.0.0.1")},
 			},
 			nil,
 		},

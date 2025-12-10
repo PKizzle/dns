@@ -3,7 +3,7 @@ package dbhost
 import (
 	"bufio"
 	"bytes"
-	"net"
+	"net/netip"
 	"os"
 
 	"codeberg.org/miekg/dns"
@@ -32,22 +32,24 @@ func (d *Dbhost) Load() error {
 		}
 
 		// make into RRs and put then in a dnszone.Node
-		v6 := bytes.Index(fs[0], []byte{':'}) > -1
-		ip := net.ParseIP(string(fs[0]))
+		ip, err := netip.ParseAddr(string(fs[0]))
+		if err != nil {
+			return err
+		}
 		for _, f := range fs[1:] {
 			key := dnsutil.Canonical(string(f))
 			n, ok := data[key]
 			if !ok {
 				n = dnszone.Node{Name: key}
 			}
-			if v6 {
+			if ip.Is6() {
 				n.RRs = append(n.RRs, &dns.AAAA{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, AAAA: ip})
 			} else {
 				n.RRs = append(n.RRs, &dns.A{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, A: ip})
 			}
 			data[key] = n
 
-			rev := dnsutil.Canonical(dnsutil.ReverseAddr(ip))
+			rev := dnsutil.Canonical(dnsutil.ReverseAddr(ip.AsSlice()))
 			n, ok = data[rev]
 			if !ok {
 				n = dnszone.Node{Name: rev}
