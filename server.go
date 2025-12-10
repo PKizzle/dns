@@ -74,7 +74,8 @@ type Server struct {
 	// If "tcp" it will invoke a TCP listener, otherwise an UDP one. If TLSConfig is not nil and Net is "tcp" a TLS server is
 	// started.
 	Net string
-	// TCP Listener that is created.
+	// TCP Listener that is used. If Listener is set before Serve is called, its value will be used and no
+	// new Listener will be created. Note in that case ListenFunc isn't ran either.
 	Listener net.Listener
 	// ListenFunc takes a *Server and modifies it. This function is called after the listener is set up, but
 	// before it is used, as such this can be used to wrap the listeners.
@@ -82,10 +83,9 @@ type Server struct {
 	// TLS connection configuration. Use for DOT (DNS over TCP). Not NextProtos must have "dot", for this to
 	// work with DOT clients.
 	TLSConfig *tls.Config
-	// UDP "Listener" that is created.
+	// UDP "Listener" that is used. If PacketConn is set before Serve is called, its value will be used a no
+	// new PacketConn will be created. Note in that case ListenFunc isn't ran either.
 	PacketConn net.PacketConn
-	// PacketConnFunc is simular to ListenerFunc, but works on the servers UDP listener.
-	PacketConnFunc func(*Server)
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
 	// Default buffer size to use to read incoming UDP messages. If not set it defaults to MinMsgSize (512 B).
@@ -173,6 +173,10 @@ func (srv *Server) ListenAndServe() error {
 
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
+		if srv.Listener != nil {
+			srv.listenTCP(srv.Listener)
+			return nil
+		}
 		l, err := listenTCP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
 			return err
@@ -187,6 +191,10 @@ func (srv *Server) ListenAndServe() error {
 		srv.listenTCP(l)
 		return nil
 	case "udp", "udp4", "udp6":
+		if srv.PacketConn != nil {
+			srv.listenUDP(srv.PacketConn)
+			return nil
+		}
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
 			return err
