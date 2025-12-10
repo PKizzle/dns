@@ -75,7 +75,7 @@ type Server struct {
 	// started.
 	Net string
 	// TCP Listener that is used. If Listener is set before Serve is called, its value will be used and no
-	// new Listener will be created.
+	// new Listener will be created. Note in that case ListenFunc isn't ran either.
 	Listener net.Listener
 	// ListenFunc takes a *Server and modifies it. This function is called after the listener is set up, but
 	// before it is used, as such this can be used to wrap the listeners.
@@ -84,7 +84,7 @@ type Server struct {
 	// work with DOT clients.
 	TLSConfig *tls.Config
 	// UDP "Listener" that is used. If PacketConn is set before Serve is called, its value will be used a no
-	// new PacketConn will be created.
+	// new PacketConn will be created. Note in that case ListenFunc isn't ran either.
 	PacketConn net.PacketConn
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
