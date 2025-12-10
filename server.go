@@ -244,7 +244,7 @@ func (srv *Server) listenTCP(ln net.Listener) {
 		select {
 		case <-srv.shutdown:
 			ln.Close()
-			wg.Wait()
+			wg.Wait() // this has a data race because we slump &wg in the server... this _only_ this on shutdown though...
 			srv.once.Do(func() { close(srv.exited) })
 			return
 		default:

@@ -93,7 +93,8 @@ If monitoring is enabled (via the _metrics_ handler) then the following metrics 
 - `atomdns_acl_allowed_requests_total{zone, network, family}` - counter of DNS requests being allowed.
 - `atomdns_acl_dropped_requests_total{zone, network, family}` - counter of DNS requests being dropped.
 
-The `zone`,`network` and `family` labels are explained in the _metrics_ handler documentation.
+The `zone`,`network` and `family` labels are explained in the _metrics_ handler documentation. These metrics
+follow the _global_'s metric `\N` setup, and as such should be multiplied by `N` to get the actual value.
 
 # Also See
 

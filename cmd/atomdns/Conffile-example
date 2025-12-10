@@ -46,6 +46,7 @@ example.org {
 
 miek.nl {
     log
+    metrics
     sign sign/testdata/db.miek.nl {
         key sign/testdata/Kmiek.nl.+013+59725
         zonemd
