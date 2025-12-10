@@ -197,6 +197,9 @@ func (srv *Server) ListenAndServe() error {
 			return err
 		}
 		srv.PacketConn = l
+		if srv.ListenFunc != nil {
+			srv.ListenFunc(srv)
+		}
 		srv.listenUDP(u)
 		return nil
 	}
