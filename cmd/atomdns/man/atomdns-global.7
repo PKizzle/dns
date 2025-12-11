@@ -29,7 +29,7 @@ global section, see the configuration examples below.
     dns {
         addr ADDRESS
         limits {
-            tcp LIMIT
+            tcp EXPR
             run EXPR
         }
     }
@@ -43,7 +43,7 @@ global section, see the configuration examples below.
         addr ADDRESS
         limits {
             run EXPR
-            inflight LIMIT
+            inflight EXPR
         }
     }
     tls ISSUER {
@@ -152,9 +152,9 @@ With \fB\fCdoh\fR you set http server options, defined are.
 .RS
 .IP \(en 4
 \fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU*1\fR, this can be a bare number,
-like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()\fR may be spelled in lowercase.
+like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()*\fR may be spelled in lowercase.
 .IP \(en 4
-\fB\fCinflight\fR \fBLIMIT\fP, how many inflight connection are we allowing, default is 1024, \-1 disables.
+\fB\fCinflight\fR \fBEXPR\fP, like \fB\fCrun\fR, how many inflight connection are we allowing, default is 1024, \-1 disables.
 
 .RE
 

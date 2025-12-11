@@ -24,7 +24,7 @@ global section, see the configuration examples below.
     dns {
         addr ADDRESS
         limits {
-            tcp LIMIT
+            tcp EXPR
             run EXPR
         }
     }
@@ -38,7 +38,7 @@ global section, see the configuration examples below.
         addr ADDRESS
         limits {
             run EXPR
-            inflight LIMIT
+            inflight EXPR
         }
     }
     tls ISSUER {
@@ -107,8 +107,8 @@ With `doh` you set http server options, defined are.
 - `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
 - `limits` set further limits:
   - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
-    like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in lowercase.
-  - `inflight` **LIMIT**, how many inflight connection are we allowing, default is 1024, -1 disables.
+    like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()*` may be spelled in lowercase.
+  - `inflight` **EXPR**, like `run`, how many inflight connection are we allowing, default is 1024, -1 disables.
 
 To allow the certificate challenge, all DOH web servers will also handle the TLS-ALPN-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
