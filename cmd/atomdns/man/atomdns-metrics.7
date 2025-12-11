@@ -10,7 +10,7 @@
 .PP
 With \fImetrics\fP metrics are exported from atomdns and any handler that adds extra ones.
 The default address for the metrics server is \fB\fClocalhost:9153\fR. The metrics path is fixed to \fB\fC/metrics\fR.
-See the global handler for details on how to change the address.
+See the \fIglobal\fP handler for details on how to change the address, and other properties.
 
 .PP
 You must also enable metrics in the handler block, this allows you to specify where in the handler chain the
@@ -21,7 +21,8 @@ metrics will not be able to be scraped, but they are still gathered.
 Enabling metrics means taking a (severe) performance hit (50 Kqps, seen in [limited] testing), to alleviate
 this, by default, only 1 in 10 queries will be monitored. See the \fIglobal\fP handler's documentation on how to change this.
 When displaying these metrics in (e.g.) Grafana, be sure to *10, otherwise your queries per second is lower
-then you hoped for.
+then you hoped for. Other handlers that use metrics on a per\-query basis also adhere to this limit, for
+instance the \fIacl\fP handler gathers one in \fB\fCN\fR.
 
 .PP
 In addition to the default Go metrics exported by the prometheus Go

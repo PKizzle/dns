@@ -10,7 +10,7 @@ the next handler(s).
 
 The _dbhost_ handler can be used with readily available hosts files that block access to advertising servers.
 
-# The Hosts File
+# Hosts File
 
 Commonly the entries are of the form `IP_address canonical_hostname [aliases...]` as explained by
 the hosts(5) man page.
