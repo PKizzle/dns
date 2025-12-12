@@ -6,9 +6,6 @@
 
 # Status
 
-- Everything from github.com/miekg/dns should work
-  - ... and more.
-  - see README-diff-with-v1.md for the differences.
 - Fast(er); recvmmsg and pipeling suppport.
   - Since a46996c I can get 370K (UDP) qps on my laptop (M2/Asahi Linux).
   - On my Dell XPS 17 (Intel) it is similar.
@@ -18,8 +15,7 @@
 - Test helper function included _dnstest_.
 - Example programs included _and_ benchmarked in `cmd/`, [`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/README.md)
   runs as a nameserver on my server.
-
-(Previous version is https://github.com/miekg/dns)
+- Everything from <https://github.com/miekg/dns> should work. See README-diff-with-v1.md for the differences.
 
 > Less is more.
 
@@ -34,7 +30,7 @@ The naming of types follows the RFCs. EDNS0 types are similarly named, for insta
 If there is a clash between an actual RR's and an EDNS0 one, the EDNS0 type will get an 'E' as prefix, e.g.
 EDHU. This will also be done if the RR was named later than the EDNS0 option! The same is the for DSO (DNS
 Stateful Operations), when clashing those types will be prefixed with a 'D'. If EDNS0 and DSO clash, EDNS0
-wins. See [PADDING] and [DPADDING] as an example.
+wins. See PADDING and DPADDING as an example.
 
 # Goals
 
@@ -99,9 +95,9 @@ and import codeberg.org/miekg/dns in your Go files.
 
 ## Examples
 
-A short "how to use the API" is at the beginning of doc.go (this also will show when you call `godoc codeberg.org/miekg/dns`).
-The cmd/ directory contains a reflect example program that is used for benchmarking, and further has atomdns
-which is full fledged DNS server that is developed in tandem with the library.
+A short "how to use the API" is at the beginning of doc.go. The cmd/ directory contains a reflect example
+program that is used for benchmarking, and further has atomdns which is full fledged DNS server that is
+developed in tandem with the library.
 
 ## Supported RFCs
 
@@ -183,11 +179,3 @@ _all of them_
 - 9859 - DSYNC RR
 - draft-ietf-compact-denial - CO bit
 - draft-ietf-deleg - DELEG RR
-
-## Loosely Based Upon
-
-- dnsv1 - <https://github.com/miekg/dns/>
-- ldns - <https://nlnetlabs.nl/projects/ldns/about/>
-- NSD - <https://nlnetlabs.nl/projects/nsd/about/>
-- Net::DNS - <http://www.net-dns.org/>
-- GRONG - <https://github.com/bortzmeyer/grong>

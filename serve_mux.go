@@ -41,17 +41,13 @@ type HandlerFunc func(context.Context, ResponseWriter, *Msg)
 // ServeDNS calls f(w, r).
 func (f HandlerFunc) ServeDNS(ctx context.Context, w ResponseWriter, r *Msg) { f(ctx, w, r) }
 
-// ServeMux is an DNS request multiplexer. It matches the zone name of
-// each incoming request against a list of registered patterns add calls
-// the handler for the pattern that most closely matches the zone name.
+// ServeMux is an DNS request multiplexer. It matches the zone name of each incoming request against a list of
+// registered patterns add calls the handler for the pattern that most closely matches the zone name.
 //
-// ServeMux is DNSSEC aware, meaning that queries for the DS record are
-// redirected to the parent zone (if that is also registered), otherwise
-// the child gets the query.
+// ServeMux is DNSSEC aware, meaning that queries for the DS record are redirected to the parent zone (if that
+// is also registered), otherwise the child gets the query.
 //
-// ServeMux is also safe for concurrent access from multiple goroutines.
-//
-// The zero ServeMux is empty and ready for use.
+// ServeMux is also safe for concurrent access from multiple goroutines. The zero ServeMux is empty and ready for use.
 type ServeMux struct {
 	z map[string]Handler
 	sync.RWMutex
@@ -95,8 +91,7 @@ func (mux *ServeMux) match(q string, t uint16) (Handler, string) {
 	return nil, ""
 }
 
-// Handle adds a handler to the ServeMux for pattern. An identical patterns silently overwrites earlier
-// handlers.
+// Handle adds a handler to the ServeMux for pattern. Identical patterns silently overwrites earlier handlers.
 func (mux *ServeMux) Handle(pattern string, handler Handler) {
 	if dnsutilCanonical(pattern) != pattern || pattern == "" {
 		panic("dns: pattern should be in canonical form: " + pattern)
@@ -141,14 +136,14 @@ func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
 	refuse(w, req)
 }
 
-// Handle registers the handler with the given pattern
-// in the DefaultServeMux. The documentation for ServeMux explains how patterns are matched.
+// Handle registers the handler with the given pattern in the [DefaultServeMux]. The documentation for
+// [ServeMux] explains how patterns are matched.
 func Handle(pattern string, handler Handler) { DefaultServeMux.Handle(pattern, handler) }
 
-// HandleRemove deregisters the handle with the given pattern in the DefaultServeMux.
+// HandleRemove deregisters the handle with the given pattern in the [DefaultServeMux].
 func HandleRemove(pattern string) { DefaultServeMux.HandleRemove(pattern) }
 
-// HandleFunc registers the handler function with the given pattern in the DefaultServeMux.
+// HandleFunc registers the handler function with the given pattern in the [DefaultServeMux].
 func HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg)) {
 	DefaultServeMux.HandleFunc(pattern, handler)
 }

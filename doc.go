@@ -15,7 +15,7 @@ Basic usage pattern for creating a new resource record:
 
 	r := &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
 
-Or directly from a string (which is slower):
+Or directly from a string (which is much slower):
 
 	mx, err := dns.New("miek.nl. 3600 IN MX 10 mx.miek.nl.")
 
