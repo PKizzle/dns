@@ -3,7 +3,7 @@ package dnsctx
 
 import (
 	"context"
-	"net/netip"
+	"net"
 	"slices"
 	"strings"
 
@@ -81,7 +81,7 @@ func Valid(key string) bool {
 }
 
 // Match checks the value under key and see if it matches any of the elements in the list.
-// This function handles strings, string slices, ints, flaot64s, netip.Addrs and bools. A nil value for key returns true.
+// This function handles strings, string slices, ints, flaot64s, net.IPs and bools. A nil value for key returns true.
 func Match(ctx context.Context, key string, values []any) bool {
 	value := Value(ctx, key)
 	if value == nil {
@@ -118,9 +118,9 @@ func Match(ctx context.Context, key string, values []any) bool {
 				return true
 			}
 		}
-	case netip.Addr:
+	case net.IP:
 		for _, v := range values {
-			if ip, ok := v.(netip.Addr); ok && ip == x {
+			if ip, ok := v.(net.IP); ok && ip.Equal(x) {
 				return true
 			}
 		}
