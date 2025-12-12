@@ -7,119 +7,119 @@ import (
 	"net"
 )
 
-func (rr *NULL) Len() int {
+func (rdata NULL) Len() int {
 	l := 0
-	l += len(rr.Null)
+	l += len(rdata.Null)
 	return l
 }
 
-func (rr *CNAME) Len() int {
+func (rdata CNAME) Len() int {
 	l := 0
-	l += len(rr.Target) + 1
+	l += len(rdata.Target) + 1
 	return l
 }
 
-func (rr *HINFO) Len() int {
+func (rdata HINFO) Len() int {
 	l := 0
-	l += len(rr.Cpu) + 1
-	l += len(rr.Os) + 1
+	l += len(rdata.Cpu) + 1
+	l += len(rdata.Os) + 1
 	return l
 }
 
-func (rr *MB) Len() int {
+func (rdata MB) Len() int {
 	l := 0
-	l += len(rr.Mb) + 1
+	l += len(rdata.Mb) + 1
 	return l
 }
 
-func (rr *MG) Len() int {
+func (rdata MG) Len() int {
 	l := 0
-	l += len(rr.Mg) + 1
+	l += len(rdata.Mg) + 1
 	return l
 }
 
-func (rr *MINFO) Len() int {
+func (rdata MINFO) Len() int {
 	l := 0
-	l += len(rr.Rmail) + 1
-	l += len(rr.Email) + 1
+	l += len(rdata.Rmail) + 1
+	l += len(rdata.Email) + 1
 	return l
 }
 
-func (rr *MR) Len() int {
+func (rdata MR) Len() int {
 	l := 0
-	l += len(rr.Mr) + 1
+	l += len(rdata.Mr) + 1
 	return l
 }
 
-func (rr *MF) Len() int {
+func (rdata MF) Len() int {
 	l := 0
-	l += len(rr.Mf) + 1
+	l += len(rdata.Mf) + 1
 	return l
 }
 
-func (rr *MD) Len() int {
+func (rdata MD) Len() int {
 	l := 0
-	l += len(rr.Md) + 1
+	l += len(rdata.Md) + 1
 	return l
 }
 
-func (rr *MX) Len() int {
+func (rdata MX) Len() int {
 	l := 0
 	l += 2 // Preference
-	l += len(rr.Mx) + 1
+	l += len(rdata.Mx) + 1
 	return l
 }
 
-func (rr *AFSDB) Len() int {
+func (rdata AFSDB) Len() int {
 	l := 0
 	l += 2 // Subtype
-	l += len(rr.Hostname) + 1
+	l += len(rdata.Hostname) + 1
 	return l
 }
 
-func (rr *X25) Len() int {
+func (rdata X25) Len() int {
 	l := 0
-	l += len(rr.PSDNAddress) + 1
+	l += len(rdata.PSDNAddress) + 1
 	return l
 }
 
-func (rr *ISDN) Len() int {
+func (rdata ISDN) Len() int {
 	l := 0
-	l += len(rr.Address) + 1
-	l += len(rr.SubAddress) + 1
+	l += len(rdata.Address) + 1
+	l += len(rdata.SubAddress) + 1
 	return l
 }
 
-func (rr *RT) Len() int {
+func (rdata RT) Len() int {
 	l := 0
 	l += 2 // Preference
-	l += len(rr.Host) + 1
+	l += len(rdata.Host) + 1
 	return l
 }
 
-func (rr *NS) Len() int {
+func (rdata NS) Len() int {
 	l := 0
-	l += len(rr.Ns) + 1
+	l += len(rdata.Ns) + 1
 	return l
 }
 
-func (rr *PTR) Len() int {
+func (rdata PTR) Len() int {
 	l := 0
-	l += len(rr.Ptr) + 1
+	l += len(rdata.Ptr) + 1
 	return l
 }
 
-func (rr *RP) Len() int {
+func (rdata RP) Len() int {
 	l := 0
-	l += len(rr.Mbox) + 1
-	l += len(rr.Txt) + 1
+	l += len(rdata.Mbox) + 1
+	l += len(rdata.Txt) + 1
 	return l
 }
 
-func (rr *SOA) Len() int {
+func (rdata SOA) Len() int {
 	l := 0
-	l += len(rr.Ns) + 1
-	l += len(rr.Mbox) + 1
+	l += len(rdata.Ns) + 1
+	l += len(rdata.Mbox) + 1
 	l += 4 // Serial
 	l += 4 // Refresh
 	l += 4 // Retry
@@ -128,88 +128,88 @@ func (rr *SOA) Len() int {
 	return l
 }
 
-func (rr *TXT) Len() int {
+func (rdata TXT) Len() int {
 	l := 0
-	for _, x := range rr.Txt {
+	for _, x := range rdata.Txt {
 		l += len(x) + 1
 	}
 	return l
 }
 
-func (rr *IPN) Len() int {
+func (rdata IPN) Len() int {
 	l := 0
 	l += 8 // Node
 	return l
 }
 
-func (rr *SRV) Len() int {
+func (rdata SRV) Len() int {
 	l := 0
 	l += 2 // Priority
 	l += 2 // Weight
 	l += 2 // Port
-	l += len(rr.Target) + 1
+	l += len(rdata.Target) + 1
 	return l
 }
 
-func (rr *NAPTR) Len() int {
+func (rdata NAPTR) Len() int {
 	l := 0
 	l += 2 // Order
 	l += 2 // Preference
-	l += len(rr.Flags) + 1
-	l += len(rr.Service) + 1
-	l += len(rr.Regexp) + 1
-	l += len(rr.Replacement) + 1
+	l += len(rdata.Flags) + 1
+	l += len(rdata.Service) + 1
+	l += len(rdata.Regexp) + 1
+	l += len(rdata.Replacement) + 1
 	return l
 }
 
-func (rr *CERT) Len() int {
+func (rdata CERT) Len() int {
 	l := 0
 	l += 2 // Type
 	l += 2 // KeyTag
 	l++    // Algorithm
-	l += base64.StdEncoding.DecodedLen(len(rr.Certificate))
+	l += base64.StdEncoding.DecodedLen(len(rdata.Certificate))
 	return l
 }
 
-func (rr *DNAME) Len() int {
+func (rdata DNAME) Len() int {
 	l := 0
-	l += len(rr.Target) + 1
+	l += len(rdata.Target) + 1
 	return l
 }
 
-func (rr *A) Len() int {
+func (rdata A) Len() int {
 	l := 0
-	if rr.Addr.IsValid() {
+	if rdata.Addr.IsValid() {
 		l += net.IPv4len
 	}
 	return l
 }
 
-func (rr *AAAA) Len() int {
+func (rdata AAAA) Len() int {
 	l := 0
-	if rr.Addr.IsValid() {
+	if rdata.Addr.IsValid() {
 		l += net.IPv6len
 	}
 	return l
 }
 
-func (rr *PX) Len() int {
+func (rdata PX) Len() int {
 	l := 0
 	l += 2 // Preference
-	l += len(rr.Map822) + 1
-	l += len(rr.Mapx400) + 1
+	l += len(rdata.Map822) + 1
+	l += len(rdata.Mapx400) + 1
 	return l
 }
 
-func (rr *GPOS) Len() int {
+func (rdata GPOS) Len() int {
 	l := 0
-	l += len(rr.Longitude) + 1
-	l += len(rr.Latitude) + 1
-	l += len(rr.Altitude) + 1
+	l += len(rdata.Longitude) + 1
+	l += len(rdata.Latitude) + 1
+	l += len(rdata.Altitude) + 1
 	return l
 }
 
-func (rr *LOC) Len() int {
+func (rdata LOC) Len() int {
 	l := 0
 	l++    // Version
 	l++    // Size
@@ -221,7 +221,7 @@ func (rr *LOC) Len() int {
 	return l
 }
 
-func (rr *RRSIG) Len() int {
+func (rdata RRSIG) Len() int {
 	l := 0
 	l += 2 // TypeCovered
 	l++    // Algorithm
@@ -230,290 +230,290 @@ func (rr *RRSIG) Len() int {
 	l += 4 // Expiration
 	l += 4 // Inception
 	l += 2 // KeyTag
-	l += len(rr.SignerName) + 1
-	l += base64.StdEncoding.DecodedLen(len(rr.Signature))
+	l += len(rdata.SignerName) + 1
+	l += base64.StdEncoding.DecodedLen(len(rdata.Signature))
 	return l
 }
 
-func (rr *DS) Len() int {
+func (rdata DS) Len() int {
 	l := 0
 	l += 2 // KeyTag
 	l++    // Algorithm
 	l++    // DigestType
-	l += len(rr.Digest) / 2
+	l += len(rdata.Digest) / 2
 	return l
 }
 
-func (rr *KX) Len() int {
+func (rdata KX) Len() int {
 	l := 0
 	l += 2 // Preference
-	l += len(rr.Exchanger) + 1
+	l += len(rdata.Exchanger) + 1
 	return l
 }
 
-func (rr *TA) Len() int {
+func (rdata TA) Len() int {
 	l := 0
 	l += 2 // KeyTag
 	l++    // Algorithm
 	l++    // DigestType
-	l += len(rr.Digest) / 2
+	l += len(rdata.Digest) / 2
 	return l
 }
 
-func (rr *TALINK) Len() int {
+func (rdata TALINK) Len() int {
 	l := 0
-	l += len(rr.PreviousName) + 1
-	l += len(rr.NextName) + 1
+	l += len(rdata.PreviousName) + 1
+	l += len(rdata.NextName) + 1
 	return l
 }
 
-func (rr *SSHFP) Len() int {
+func (rdata SSHFP) Len() int {
 	l := 0
 	l++ // Algorithm
 	l++ // Type
-	l += len(rr.FingerPrint) / 2
+	l += len(rdata.FingerPrint) / 2
 	return l
 }
 
-func (rr *DNSKEY) Len() int {
+func (rdata DNSKEY) Len() int {
 	l := 0
 	l += 2 // Flags
 	l++    // Protocol
 	l++    // Algorithm
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64.StdEncoding.DecodedLen(len(rdata.PublicKey))
 	return l
 }
 
-func (rr *RKEY) Len() int {
+func (rdata RKEY) Len() int {
 	l := 0
 	l += 2 // Flags
 	l++    // Protocol
 	l++    // Algorithm
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64.StdEncoding.DecodedLen(len(rdata.PublicKey))
 	return l
 }
 
-func (rr *NSAPPTR) Len() int {
+func (rdata NSAPPTR) Len() int {
 	l := 0
-	l += len(rr.Ptr) + 1
+	l += len(rdata.Ptr) + 1
 	return l
 }
 
-func (rr *NSEC3PARAM) Len() int {
+func (rdata NSEC3PARAM) Len() int {
 	l := 0
 	l++    // Hash
 	l++    // Flags
 	l += 2 // Iterations
 	l++    // SaltLength
-	l += len(rr.Salt) / 2
+	l += len(rdata.Salt) / 2
 	return l
 }
 
-func (rr *TKEY) Len() int {
+func (rdata TKEY) Len() int {
 	l := 0
-	l += len(rr.Algorithm) + 1
+	l += len(rdata.Algorithm) + 1
 	l += 4 // Inception
 	l += 4 // Expiration
 	l += 2 // Mode
 	l += 2 // Error
 	l += 2 // KeySize
-	l += len(rr.Key) / 2
+	l += len(rdata.Key) / 2
 	l += 2 // OtherLen
-	l += len(rr.OtherData) / 2
+	l += len(rdata.OtherData) / 2
 	return l
 }
 
-func (rr *RFC3597) Len() int {
+func (rdata RFC3597) Len() int {
 	l := 0
-	l += len(rr.Data) / 2
+	l += len(rdata.Data) / 2
 	return l
 }
 
-func (rr *URI) Len() int {
+func (rdata URI) Len() int {
 	l := 0
 	l += 2 // Priority
 	l += 2 // Weight
-	l += len(rr.Target)
+	l += len(rdata.Target)
 	return l
 }
 
-func (rr *DHCID) Len() int {
+func (rdata DHCID) Len() int {
 	l := 0
-	l += base64.StdEncoding.DecodedLen(len(rr.Digest))
+	l += base64.StdEncoding.DecodedLen(len(rdata.Digest))
 	return l
 }
 
-func (rr *TLSA) Len() int {
-	l := 0
-	l++ // Usage
-	l++ // Selector
-	l++ // MatchingType
-	l += len(rr.Certificate) / 2
-	return l
-}
-
-func (rr *SMIMEA) Len() int {
+func (rdata TLSA) Len() int {
 	l := 0
 	l++ // Usage
 	l++ // Selector
 	l++ // MatchingType
-	l += len(rr.Certificate) / 2
+	l += len(rdata.Certificate) / 2
 	return l
 }
 
-func (rr *HIP) Len() int {
+func (rdata SMIMEA) Len() int {
+	l := 0
+	l++ // Usage
+	l++ // Selector
+	l++ // MatchingType
+	l += len(rdata.Certificate) / 2
+	return l
+}
+
+func (rdata HIP) Len() int {
 	l := 0
 	l++    // HitLength
 	l++    // PublicKeyAlgorithm
 	l += 2 // PublicKeyLength
-	l += len(rr.Hit) / 2
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
-	for _, x := range rr.RendezvousServers {
+	l += len(rdata.Hit) / 2
+	l += base64.StdEncoding.DecodedLen(len(rdata.PublicKey))
+	for _, x := range rdata.RendezvousServers {
 		l += len(x) + 1
 	}
 	return l
 }
 
-func (rr *NINFO) Len() int {
+func (rdata NINFO) Len() int {
 	l := 0
-	for _, x := range rr.ZSData {
+	for _, x := range rdata.ZSData {
 		l += len(x) + 1
 	}
 	return l
 }
 
-func (rr *NID) Len() int {
+func (rdata NID) Len() int {
 	l := 0
 	l += 2 // Preference
 	l += 8 // NodeID
 	return l
 }
 
-func (rr *L32) Len() int {
+func (rdata L32) Len() int {
 	l := 0
 	l += 2 // Preference
-	if rr.Locator32.IsValid() {
+	if rdata.Locator32.IsValid() {
 		l += net.IPv4len
 	}
 	return l
 }
 
-func (rr *L64) Len() int {
+func (rdata L64) Len() int {
 	l := 0
 	l += 2 // Preference
 	l += 8 // Locator64
 	return l
 }
 
-func (rr *LP) Len() int {
+func (rdata LP) Len() int {
 	l := 0
 	l += 2 // Preference
-	l += len(rr.Fqdn) + 1
+	l += len(rdata.Fqdn) + 1
 	return l
 }
 
-func (rr *EUI48) Len() int {
+func (rdata EUI48) Len() int {
 	l := 0
 	l += 6 // Address
 	return l
 }
 
-func (rr *EUI64) Len() int {
+func (rdata EUI64) Len() int {
 	l := 0
 	l += 8 // Address
 	return l
 }
 
-func (rr *CAA) Len() int {
+func (rdata CAA) Len() int {
 	l := 0
 	l++ // Flag
-	l += len(rr.Tag) + 1
-	l += len(rr.Value)
+	l += len(rdata.Tag) + 1
+	l += len(rdata.Value)
 	return l
 }
 
-func (rr *UID) Len() int {
+func (rdata UID) Len() int {
 	l := 0
 	l += 4 // Uid
 	return l
 }
 
-func (rr *GID) Len() int {
+func (rdata GID) Len() int {
 	l := 0
 	l += 4 // Gid
 	return l
 }
 
-func (rr *UINFO) Len() int {
+func (rdata UINFO) Len() int {
 	l := 0
-	l += len(rr.Uinfo) + 1
+	l += len(rdata.Uinfo) + 1
 	return l
 }
 
-func (rr *EID) Len() int {
+func (rdata EID) Len() int {
 	l := 0
-	l += len(rr.Endpoint) / 2
+	l += len(rdata.Endpoint) / 2
 	return l
 }
 
-func (rr *NIMLOC) Len() int {
+func (rdata NIMLOC) Len() int {
 	l := 0
-	l += len(rr.Locator) / 2
+	l += len(rdata.Locator) / 2
 	return l
 }
 
-func (rr *OPENPGPKEY) Len() int {
+func (rdata OPENPGPKEY) Len() int {
 	l := 0
-	l += base64.StdEncoding.DecodedLen(len(rr.PublicKey))
+	l += base64.StdEncoding.DecodedLen(len(rdata.PublicKey))
 	return l
 }
 
-func (rr *ZONEMD) Len() int {
+func (rdata ZONEMD) Len() int {
 	l := 0
 	l += 4 // Serial
 	l++    // Scheme
 	l++    // Hash
-	l += len(rr.Digest) / 2
+	l += len(rdata.Digest) / 2
 	return l
 }
 
-func (rr *SVCB) Len() int {
+func (rdata SVCB) Len() int {
 	l := 0
 	l += 2 // Priority
-	l += len(rr.Target) + 1
-	for _, x := range rr.Value {
+	l += len(rdata.Target) + 1
+	for _, x := range rdata.Value {
 		l += x.Len()
 	}
 	return l
 }
 
-func (rr *DELEG) Len() int {
+func (rdata DELEG) Len() int {
 	l := 0
-	for _, x := range rr.Value {
+	for _, x := range rdata.Value {
 		l += x.Len()
 	}
 	return l
 }
 
-func (rr *DSYNC) Len() int {
+func (rdata DSYNC) Len() int {
 	l := 0
 	l += 2 // Type
 	l++    // Scheme
 	l += 2 // Port
-	l += len(rr.Target) + 1
+	l += len(rdata.Target) + 1
 	return l
 }
 
-func (rr *TSIG) Len() int {
+func (rdata TSIG) Len() int {
 	l := 0
-	l += len(rr.Algorithm) + 1
+	l += len(rdata.Algorithm) + 1
 	l += 6 // TimeSigned
 	l += 2 // Fudge
 	l += 2 // MACSize
-	l += len(rr.MAC) / 2
+	l += len(rdata.MAC) / 2
 	l += 2 // OrigID
 	l += 2 // Error
 	l += 2 // OtherLen
-	l += len(rr.OtherData) / 2
+	l += len(rdata.OtherData) / 2
 	return l
 }
