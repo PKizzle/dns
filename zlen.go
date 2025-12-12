@@ -196,7 +196,7 @@ func (rr *DNAME) Len() int {
 
 func (rr *A) Len() int {
 	l := rr.Hdr.Len()
-	if len(rr.A) != 0 {
+	if rr.A.IsValid() {
 		l += net.IPv4len
 	}
 	return l
@@ -204,7 +204,7 @@ func (rr *A) Len() int {
 
 func (rr *AAAA) Len() int {
 	l := rr.Hdr.Len()
-	if len(rr.AAAA) != 0 {
+	if rr.AAAA.IsValid() {
 		l += net.IPv6len
 	}
 	return l
@@ -427,7 +427,7 @@ func (rr *NID) Len() int {
 func (rr *L32) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Preference
-	if len(rr.Locator32) != 0 {
+	if rr.Locator32.IsValid() {
 		l += net.IPv4len
 	}
 	return l

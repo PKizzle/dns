@@ -4,7 +4,7 @@
 package deleg
 
 import (
-	"net"
+	"net/netip"
 	"slices"
 	"strconv"
 	"strings"
@@ -126,7 +126,7 @@ func (s *INCLUDEDELEGI) Len() int {
 
 // SERVERIPV4 info adds IPv4 addresses to the DELEG RR.
 type SERVERIPV4 struct {
-	IPs []net.IP
+	IPs []netip.Addr
 }
 
 func (s *SERVERIPV4) Len() int { return tlv + 4*len(s.IPs) }
@@ -141,7 +141,7 @@ func (s *SERVERIPV4) String() string {
 
 // SERVERIPV6 info adds IPv6 addresses to the DELEG RR.
 type SERVERIPV6 struct {
-	IPs []net.IP
+	IPs []netip.Addr
 }
 
 func (s *SERVERIPV6) Len() int { return tlv + 16*len(s.IPs) }

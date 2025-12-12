@@ -35,6 +35,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/netip"
 	"os"
 	"os/signal"
 	"runtime"
@@ -56,7 +57,7 @@ const dom = "whoami.miek.nl."
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	var (
 		rr dns.RR
-		a  net.IP
+		a  netip.Addr
 	)
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
@@ -65,14 +66,14 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
-		a = ip.IP
+		a = ip.AddrPort().Addr()
 	}
 	if ip, ok := w.RemoteAddr().(*net.TCPAddr); ok {
-		a = ip.IP
+		a = ip.AddrPort().Addr()
 	}
 
 	if dnsutil.Family(w) == 1 {
-		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: a.To4()}
+		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: a}
 	} else {
 		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: a}
 	}

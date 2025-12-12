@@ -2,6 +2,7 @@ package dnsutil
 
 import (
 	"net"
+	"net/netip"
 
 	"codeberg.org/miekg/dns"
 )
@@ -47,16 +48,16 @@ func Network(w dns.ResponseWriter) string {
 
 // Family returns the family of the transport, which is either [IPv4Family] or [IPv6Family] as defined by IANA.
 func Family(w dns.ResponseWriter) int {
-	var a net.IP
+	var a netip.Addr
 	ip := w.RemoteAddr()
 	if i, ok := ip.(*net.UDPAddr); ok {
-		a = i.IP
+		a = i.AddrPort().Addr()
 	}
 	if i, ok := ip.(*net.TCPAddr); ok {
-		a = i.IP
+		a = i.AddrPort().Addr()
 	}
 
-	if a.To4() != nil {
+	if a.Is4() {
 		return IPv4Family
 	}
 	return IPv6Family

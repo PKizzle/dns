@@ -117,9 +117,9 @@ func main() {
 			case tag == `dns:"any"`:
 				o("l += len(rr.%s)\n")
 			case tag == `dns:"a"`:
-				o("if len(rr.%s) != 0 { l += net.IPv4len }\n")
+				o("if rr.%s.IsValid() { l += net.IPv4len }\n")
 			case tag == `dns:"aaaa"`:
-				o("if len(rr.%s) != 0 { l += net.IPv6len }\n")
+				o("if rr.%s.IsValid() { l += net.IPv6len }\n")
 			case tag == `dns:"uint48"`:
 				o("l += 6 // %s\n")
 			case tag == "":

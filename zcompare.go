@@ -3,7 +3,6 @@
 package dns
 
 import (
-	"bytes"
 	"slices"
 	"strings"
 )
@@ -715,7 +714,7 @@ func (rr *DNAME) compare(b RR) (x int) {
 }
 
 func (rr *A) compare(b RR) (x int) {
-	x = bytes.Compare(rr.A, b.(*A).A)
+	x = rr.A.Compare(b.(*A).A)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -726,7 +725,7 @@ func (rr *A) compare(b RR) (x int) {
 }
 
 func (rr *AAAA) compare(b RR) (x int) {
-	x = bytes.Compare(rr.AAAA, b.(*AAAA).AAAA)
+	x = rr.AAAA.Compare(b.(*AAAA).AAAA)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -1553,7 +1552,7 @@ func (rr *L32) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = bytes.Compare(rr.Locator32, b.(*L32).Locator32)
+	x = rr.Locator32.Compare(b.(*L32).Locator32)
 	if x != 0 {
 		if x < 0 {
 			return -1

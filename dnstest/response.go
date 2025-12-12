@@ -2,6 +2,7 @@ package dnstest
 
 import (
 	"net"
+	"net/netip"
 
 	"codeberg.org/miekg/dns"
 )
@@ -24,8 +25,8 @@ type ResponseWriter6 struct {
 
 // IP addresses for documentation and test purposes.
 var (
-	IPv4 = net.ParseIP("198.51.100.1") // RFC 5737
-	IPv6 = net.ParseIP("2001:db8::1")  // RFC 5156
+	IPv4 = netip.MustParseAddr("198.51.100.1") // RFC 5737
+	IPv6 = netip.MustParseAddr("2001:db8::1")  // RFC 5156
 )
 
 func (t *ResponseWriter6) LocalAddr() net.Addr {
@@ -38,9 +39,9 @@ func (t *ResponseWriter6) LocalAddr() net.Addr {
 
 func (t *ResponseWriter6) RemoteAddr() net.Addr {
 	if t.TCP {
-		return &net.TCPAddr{IP: IPv6, Port: port}
+		return &net.TCPAddr{IP: IPv6.AsSlice(), Port: port}
 	}
-	return &net.UDPAddr{IP: IPv6, Port: port}
+	return &net.UDPAddr{IP: IPv6.AsSlice(), Port: port}
 }
 
 func (t *ResponseWriter) LocalAddr() net.Addr {
@@ -53,9 +54,9 @@ func (t *ResponseWriter) LocalAddr() net.Addr {
 
 func (t *ResponseWriter) RemoteAddr() net.Addr {
 	if t.TCP {
-		return &net.TCPAddr{IP: IPv4, Port: port}
+		return &net.TCPAddr{IP: IPv4.AsSlice(), Port: port}
 	}
-	return &net.UDPAddr{IP: IPv4, Port: port}
+	return &net.UDPAddr{IP: IPv4.AsSlice(), Port: port}
 }
 
 func (t *ResponseWriter) Write(buf []byte) (int, error) { return len(buf), nil }

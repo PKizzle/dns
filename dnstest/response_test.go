@@ -34,7 +34,7 @@ func (h reflect) ServeDNS(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	ip := w.RemoteAddr().(*net.UDPAddr)
 	str := "Port: " + strconv.Itoa(ip.Port) + " (udp)"
 
-	a := &dns.A{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, A: ip.IP.To4()}
+	a := &dns.A{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, A: ip.AddrPort().Addr()}
 	t := &dns.TXT{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, Txt: []string{str}}
 
 	m.Answer = append(m.Answer, a)

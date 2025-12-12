@@ -2,7 +2,7 @@ package dns
 
 import (
 	"encoding/base64"
-	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 
@@ -97,27 +97,21 @@ func endingToTxtSlice(c *zlexer, errstr string) ([]string, *ParseError) {
 
 func (rr *A) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	rr.A = net.ParseIP(l.token)
-	// IPv4 addresses cannot include ":".
-	// We do this rather than use net.IP's To4() because
-	// To4() treats IPv4-mapped IPv6 addresses as being
-	// IPv4.
-	isIPv4 := !strings.Contains(l.token, ":")
-	if rr.A == nil || !isIPv4 || l.err {
+	value, err := netip.ParseAddr(l.token)
+	if l.err || err != nil || !value.Is4() {
 		return &ParseError{err: "bad A A", lex: l}
 	}
+	rr.A = value
 	return slurpRemainder(c)
 }
 
 func (rr *AAAA) parse(c *zlexer, o string) *ParseError {
 	l, _ := c.Next()
-	rr.AAAA = net.ParseIP(l.token)
-	// IPv6 addresses must include ":", and IPv4
-	// addresses cannot include ":".
-	isIPv6 := strings.Contains(l.token, ":")
-	if rr.AAAA == nil || !isIPv6 || l.err {
+	value, err := netip.ParseAddr(l.token)
+	if l.err || err != nil || !value.Is6() {
 		return &ParseError{err: "bad AAAA AAAA", lex: l}
 	}
+	rr.AAAA = value
 	return slurpRemainder(c)
 }
 
@@ -1611,10 +1605,11 @@ func (rr *L32) parse(c *zlexer, o string) *ParseError {
 	rr.Preference = uint16(i)
 	c.Next()        // zBlank
 	l, _ = c.Next() // zString
-	rr.Locator32 = net.ParseIP(l.token)
-	if rr.Locator32 == nil || l.err {
+	loc, err := netip.ParseAddr(l.token)
+	if l.err || err != nil || !loc.Is4() {
 		return &ParseError{err: "bad L32 Locator", lex: l}
 	}
+	rr.Locator32 = loc
 	return slurpRemainder(c)
 }
 

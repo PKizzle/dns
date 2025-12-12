@@ -4,7 +4,7 @@ package svcb
 
 import (
 	"encoding/base64"
-	"net"
+	"net/netip"
 	"slices"
 	"strconv"
 	"strings"
@@ -257,14 +257,14 @@ func (s *PORT) String() string { return strconv.FormatUint(uint64(s.Port), 10) }
 // Basic use pattern for creating an ipv4hint option:
 //
 //	 h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	 e := &svcb.IPV4HINT{Hint: []net.IP{net.IPv4(1,1,1,1)}}
+//	 e := &svcb.IPV4HINT{Hint: []netip.Addr{netip.MustParseAddr("1.1.1.1")}}
 //
 //	Or
 //
-//	 e.Hint = []net.IP{net.ParseIP("1.1.1.1").To4()}
+//	 e.Hint = []netip.Addr{netip.MustParseAddr("1.1.1.1")}
 //	 h.Value = append(h.Value, e)
 type IPV4HINT struct {
-	Hint []net.IP
+	Hint []netip.Addr
 }
 
 func (s *IPV4HINT) Len() int { return tlv + 4*len(s.Hint) }
@@ -272,11 +272,10 @@ func (s *IPV4HINT) Len() int { return tlv + 4*len(s.Hint) }
 func (s *IPV4HINT) String() string {
 	str := make([]string, len(s.Hint))
 	for i, e := range s.Hint {
-		x := e.To4()
-		if x == nil {
+		if !e.IsValid() || !e.Is4() {
 			return "<nil>"
 		}
-		str[i] = x.String()
+		str[i] = e.String()
 	}
 	return strings.Join(str, ",")
 }
@@ -301,10 +300,10 @@ func (s *ECHCONFIG) Len() int       { return tlv + len(s.ECH) }
 // Basic use pattern for creating an ipv6hint option:
 //
 //	h := &dns.HTTPS{Hdr: dns.Header{Name: ".", Class: dns.ClassINET}}
-//	e := &svcb.IPV6HINT{Hint: []net.IP{net.ParseIP("2001:db8::1")}}
+//	e := &svcb.IPV6HINT{Hint: []netip.Addr{netip.MustParseAddr("2001:db8::1")}}
 //	h.Value = append(h.Value, e)
 type IPV6HINT struct {
-	Hint []net.IP
+	Hint []netip.Addr
 }
 
 func (s *IPV6HINT) Len() int { return tlv + 16*len(s.Hint) }
@@ -312,7 +311,7 @@ func (s *IPV6HINT) Len() int { return tlv + 16*len(s.Hint) }
 func (s *IPV6HINT) String() string {
 	str := make([]string, len(s.Hint))
 	for i, e := range s.Hint {
-		if x := e.To4(); x != nil {
+		if e.Is4() {
 			return "<nil>"
 		}
 		str[i] = e.String()
@@ -384,19 +383,11 @@ func (s *DOHPATH) Clone() Pair       { return &DOHPATH{Template: s.Template} }
 func (s *LOCAL) Clone() Pair         { return &LOCAL{s.KeyCode, slices.Clone(s.Data)} }
 
 func (s *IPV4HINT) Clone() Pair {
-	hint := make([]net.IP, len(s.Hint))
-	for i, ip := range s.Hint {
-		hint[i] = slices.Clone(ip)
-	}
-	return &IPV4HINT{Hint: hint}
+	return &IPV4HINT{Hint: slices.Clone(s.Hint)}
 }
 
 func (s *IPV6HINT) Clone() Pair {
-	hint := make([]net.IP, len(s.Hint))
-	for i, ip := range s.Hint {
-		hint[i] = slices.Clone(ip)
-	}
-	return &IPV6HINT{Hint: hint}
+	return &IPV6HINT{Hint: slices.Clone(s.Hint)}
 }
 
 const tlv = 4
