@@ -19,6 +19,12 @@ var exclude = []string{""}
 
 var FlagDebug = flag.Bool("debug", false, "Emit the non-formatted code to standard output and do not write it to a file.")
 
+// EmptyData are RR that don't have rdata (or are embedding another type) and as such do not have an entry in rdata/rdata.go
+var EmptyData = []string{
+	"ANY", "AVC", "AXFR", "CDNSKEY", "CDS", "CLA", "DELEGI", "DLV", "HTTPS",
+	"IXFR", "KEY", "NXNAME", "NXT", "OPT", "SIG", "SPF", "RESINFO", "WALLET",
+}
+
 // Ast returns the *ast.File of file or an error.
 func Ast(file string) (f *ast.File, t *token.FileSet, err error) {
 	fset := token.NewFileSet()
@@ -96,6 +102,17 @@ func fields(node ast.Node) []string {
 		}
 	}
 	return fields
+}
+
+// FilterTypeSpecs filters the type specs on name.
+func FilterTypeSpecs(typeSpecs []*ast.TypeSpec, names []string) []*ast.TypeSpec {
+	filtered := []*ast.TypeSpec{}
+	for i := range typeSpecs {
+		if slices.Contains(names, typeSpecs[i].Name.String()) {
+			filtered = append(filtered, typeSpecs[i])
+		}
+	}
+	return filtered
 }
 
 // StructTypeSpecs returns the struct types from file that can be inspected for the struct tags.

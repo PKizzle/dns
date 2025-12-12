@@ -32,7 +32,7 @@ const out = "zlen.go"
 
 func main() {
 	flag.Parse()
-	specs, err := generate.StructTypeSpecs("types.go")
+	specs, err := generate.StructTypeSpecs("rdata/rdata.go")
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}

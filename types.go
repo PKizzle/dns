@@ -253,6 +253,7 @@ type NXNAME struct {
 	// Does not have any rdata
 }
 
+func (rr *NXNAME) Len() int       { return rr.Hdr.Len() }
 func (rr *NXNAME) String() string { return rr.Hdr.String() }
 
 func (*NXNAME) parse(c *zlexer, origin string) *ParseError {
@@ -415,9 +416,8 @@ func (rr *X25) String() string {
 
 // ISDN RR. See RFC 1183, Section 3.2.
 type ISDN struct {
-	Hdr        Header
-	Address    string
-	SubAddress string
+	Hdr Header
+	rdata.ISDN
 }
 
 func (rr *ISDN) String() string {
@@ -676,12 +676,12 @@ type A struct {
 
 func (rr *A) String() string {
 	sb := sprintHeader(rr)
-	if !rr.A.A.IsValid() {
+	if !rr.Addr.IsValid() {
 		s := sb.String()
 		builderPool.Put(*sb)
 		return s
 	}
-	sb.WriteString(rr.A.A.String())
+	sb.WriteString(rr.Addr.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -695,13 +695,13 @@ type AAAA struct {
 
 func (rr *AAAA) String() string {
 	sb := sprintHeader(rr)
-	if !rr.AAAA.AAAA.IsValid() {
+	if !rr.Addr.IsValid() {
 		s := sb.String()
 		builderPool.Put(*sb)
 		return s
 	}
 
-	sb.WriteString(rr.AAAA.AAAA.String())
+	sb.WriteString(rr.Addr.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1687,6 +1687,7 @@ type ANY struct {
 	Hdr Header
 }
 
+func (rr *ANY) Len() int       { return rr.Hdr.Len() }
 func (rr *ANY) String() string { return rr.Hdr.String() }
 
 func (*ANY) parse(c *zlexer, origin string) *ParseError {
@@ -1698,6 +1699,7 @@ type AXFR struct {
 	Hdr Header
 }
 
+func (rr *AXFR) Len() int       { return rr.Hdr.Len() }
 func (rr *AXFR) String() string { return rr.Hdr.String() }
 
 func (*AXFR) parse(c *zlexer, origin string) *ParseError {
@@ -1709,6 +1711,7 @@ type IXFR struct {
 	Hdr Header
 }
 
+func (rr *IXFR) Len() int       { return rr.Hdr.Len() }
 func (rr *IXFR) String() string { return rr.Hdr.String() }
 
 func (*IXFR) parse(c *zlexer, origin string) *ParseError {

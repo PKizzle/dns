@@ -13,11 +13,6 @@ func (rr *NULL) Len() int {
 	return l
 }
 
-func (rr *NXNAME) Len() int {
-	l := rr.Hdr.Len()
-	return l
-}
-
 func (rr *CNAME) Len() int {
 	l := rr.Hdr.Len()
 	l += len(rr.Target) + 1
@@ -141,18 +136,6 @@ func (rr *TXT) Len() int {
 	return l
 }
 
-func (rr *SPF) Len() int {
-	return rr.TXT.Len()
-}
-func (rr *AVC) Len() int {
-	return rr.TXT.Len()
-}
-func (rr *WALLET) Len() int {
-	return rr.TXT.Len()
-}
-func (rr *CLA) Len() int {
-	return rr.TXT.Len()
-}
 func (rr *IPN) Len() int {
 	l := rr.Hdr.Len()
 	l += 8 // Node
@@ -196,7 +179,7 @@ func (rr *DNAME) Len() int {
 
 func (rr *A) Len() int {
 	l := rr.Hdr.Len()
-	if rr.A.IsValid() {
+	if rr.Addr.IsValid() {
 		l += net.IPv4len
 	}
 	return l
@@ -204,7 +187,7 @@ func (rr *A) Len() int {
 
 func (rr *AAAA) Len() int {
 	l := rr.Hdr.Len()
-	if rr.AAAA.IsValid() {
+	if rr.Addr.IsValid() {
 		l += net.IPv6len
 	}
 	return l
@@ -238,9 +221,6 @@ func (rr *LOC) Len() int {
 	return l
 }
 
-func (rr *SIG) Len() int {
-	return rr.RRSIG.Len()
-}
 func (rr *RRSIG) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // TypeCovered
@@ -255,15 +235,6 @@ func (rr *RRSIG) Len() int {
 	return l
 }
 
-func (rr *NXT) Len() int {
-	return rr.NSEC.Len()
-}
-func (rr *DLV) Len() int {
-	return rr.DS.Len()
-}
-func (rr *CDS) Len() int {
-	return rr.DS.Len()
-}
 func (rr *DS) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // KeyTag
@@ -304,12 +275,6 @@ func (rr *SSHFP) Len() int {
 	return l
 }
 
-func (rr *KEY) Len() int {
-	return rr.DNSKEY.Len()
-}
-func (rr *CDNSKEY) Len() int {
-	return rr.DNSKEY.Len()
-}
 func (rr *DNSKEY) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Flags
@@ -512,14 +477,6 @@ func (rr *ZONEMD) Len() int {
 	return l
 }
 
-func (rr *RESINFO) Len() int {
-	l := rr.Hdr.Len()
-	for _, x := range rr.Txt {
-		l += len(x) + 1
-	}
-	return l
-}
-
 func (rr *SVCB) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Priority
@@ -530,9 +487,6 @@ func (rr *SVCB) Len() int {
 	return l
 }
 
-func (rr *HTTPS) Len() int {
-	return rr.SVCB.Len()
-}
 func (rr *DELEG) Len() int {
 	l := rr.Hdr.Len()
 	for _, x := range rr.Value {
@@ -541,30 +495,12 @@ func (rr *DELEG) Len() int {
 	return l
 }
 
-func (rr *DELEGI) Len() int {
-	return rr.DELEG.Len()
-}
 func (rr *DSYNC) Len() int {
 	l := rr.Hdr.Len()
 	l += 2 // Type
 	l++    // Scheme
 	l += 2 // Port
 	l += len(rr.Target) + 1
-	return l
-}
-
-func (rr *ANY) Len() int {
-	l := rr.Hdr.Len()
-	return l
-}
-
-func (rr *AXFR) Len() int {
-	l := rr.Hdr.Len()
-	return l
-}
-
-func (rr *IXFR) Len() int {
-	l := rr.Hdr.Len()
 	return l
 }
 

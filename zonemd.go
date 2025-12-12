@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"codeberg.org/miekg/dns/pool"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 // ZONEMDption are options that are given to the signer and verifier.
@@ -83,5 +84,5 @@ func (rr *ZONEMD) Verify(zone []RR, options *ZONEMDOption) error {
 
 // NewZONEMD returns a ZONEMD record that can be used as a placeholder in a zone.
 func NewZONEMD(origin string, scheme, hash uint8) *ZONEMD {
-	return &ZONEMD{Hdr: Header{Name: origin, Class: ClassINET}, Scheme: scheme, Hash: hash}
+	return &ZONEMD{Header{Name: origin, Class: ClassINET}, rdata.ZONEMD{Scheme: scheme, Hash: hash}}
 }

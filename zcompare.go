@@ -206,10 +206,6 @@ func (rr *NULL) compare(b RR) (x int) {
 	return 0
 }
 
-func (rr *NXNAME) compare(b RR) (x int) {
-	return 0
-}
-
 func (rr *CNAME) compare(b RR) (x int) {
 	x = comparename(rr.Target, b.(*CNAME).Target)
 	if x != 0 {
@@ -544,22 +540,6 @@ func (rr *TXT) compare(b RR) (x int) {
 	return 0
 }
 
-func (rr *SPF) compare(b RR) (x int) {
-	return rr.TXT.compare(&b.(*SPF).TXT)
-}
-
-func (rr *AVC) compare(b RR) (x int) {
-	return rr.TXT.compare(&b.(*AVC).TXT)
-}
-
-func (rr *WALLET) compare(b RR) (x int) {
-	return rr.TXT.compare(&b.(*WALLET).TXT)
-}
-
-func (rr *CLA) compare(b RR) (x int) {
-	return rr.TXT.compare(&b.(*CLA).TXT)
-}
-
 func (rr *IPN) compare(b RR) (x int) {
 	x = int(rr.Node) - int(b.(*IPN).Node)
 	if x != 0 {
@@ -714,7 +694,7 @@ func (rr *DNAME) compare(b RR) (x int) {
 }
 
 func (rr *A) compare(b RR) (x int) {
-	x = rr.A.Compare(b.(*A).A)
+	x = rr.Addr.Compare(b.(*A).Addr)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -725,7 +705,7 @@ func (rr *A) compare(b RR) (x int) {
 }
 
 func (rr *AAAA) compare(b RR) (x int) {
-	x = rr.AAAA.Compare(b.(*AAAA).AAAA)
+	x = rr.Addr.Compare(b.(*AAAA).Addr)
 	if x != 0 {
 		if x < 0 {
 			return -1
@@ -859,10 +839,6 @@ func (rr *LOC) compare(b RR) (x int) {
 	return 0
 }
 
-func (rr *SIG) compare(b RR) (x int) {
-	return rr.RRSIG.compare(&b.(*SIG).RRSIG)
-}
-
 func (rr *RRSIG) compare(b RR) (x int) {
 	x = int(rr.TypeCovered) - int(b.(*RRSIG).TypeCovered)
 	if x != 0 {
@@ -930,10 +906,6 @@ func (rr *RRSIG) compare(b RR) (x int) {
 	return 0
 }
 
-func (rr *NXT) compare(b RR) (x int) {
-	return rr.NSEC.compare(&b.(*NXT).NSEC)
-}
-
 func (rr *NSEC) compare(b RR) (x int) {
 	x = comparename(rr.NextDomain, b.(*NSEC).NextDomain)
 	if x != 0 {
@@ -950,14 +922,6 @@ func (rr *NSEC) compare(b RR) (x int) {
 		return 1
 	}
 	return 0
-}
-
-func (rr *DLV) compare(b RR) (x int) {
-	return rr.DS.compare(&b.(*DLV).DS)
-}
-
-func (rr *CDS) compare(b RR) (x int) {
-	return rr.DS.compare(&b.(*CDS).DS)
 }
 
 func (rr *DS) compare(b RR) (x int) {
@@ -1083,14 +1047,6 @@ func (rr *SSHFP) compare(b RR) (x int) {
 		return 1
 	}
 	return 0
-}
-
-func (rr *KEY) compare(b RR) (x int) {
-	return rr.DNSKEY.compare(&b.(*KEY).DNSKEY)
-}
-
-func (rr *CDNSKEY) compare(b RR) (x int) {
-	return rr.DNSKEY.compare(&b.(*CDNSKEY).DNSKEY)
 }
 
 func (rr *DNSKEY) compare(b RR) (x int) {
@@ -1789,31 +1745,6 @@ func (rr *ZONEMD) compare(b RR) (x int) {
 	return 0
 }
 
-func (rr *OPT) compare(b RR) (x int) {
-	return 0
-}
-
-func (rr *RESINFO) compare(b RR) (x int) {
-	j := 0
-	for i := range rr.Txt {
-		if i > j || x != 0 {
-			break
-		}
-		x = len(rr.Txt[i]) - len(b.(*RESINFO).Txt[j])
-		if x == 0 {
-			x = strings.Compare(rr.Txt[i], b.(*RESINFO).Txt[j])
-		}
-		j++
-	}
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
-	return 0
-}
-
 func (rr *SVCB) compare(b RR) (x int) {
 	x = int(rr.Priority) - int(b.(*SVCB).Priority)
 	if x != 0 {
@@ -1839,10 +1770,6 @@ func (rr *SVCB) compare(b RR) (x int) {
 	return 0
 }
 
-func (rr *HTTPS) compare(b RR) (x int) {
-	return rr.SVCB.compare(&b.(*HTTPS).SVCB)
-}
-
 func (rr *DELEG) compare(b RR) (x int) {
 	x = compareinfo(rr.Value, b.(*DELEG).Value)
 	if x != 0 {
@@ -1852,10 +1779,6 @@ func (rr *DELEG) compare(b RR) (x int) {
 		return 1
 	}
 	return 0
-}
-
-func (rr *DELEGI) compare(b RR) (x int) {
-	return rr.DELEG.compare(&b.(*DELEGI).DELEG)
 }
 
 func (rr *DSYNC) compare(b RR) (x int) {
@@ -1887,18 +1810,6 @@ func (rr *DSYNC) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	return 0
-}
-
-func (rr *ANY) compare(b RR) (x int) {
-	return 0
-}
-
-func (rr *AXFR) compare(b RR) (x int) {
-	return 0
-}
-
-func (rr *IXFR) compare(b RR) (x int) {
 	return 0
 }
 
@@ -1966,5 +1877,77 @@ func (rr *TSIG) compare(b RR) (x int) {
 		}
 		return 1
 	}
+	return 0
+}
+
+func (rr *NXNAME) compare(b RR) (x int) {
+	return 0
+}
+
+func (rr *SPF) compare(b RR) (x int) {
+	return rr.TXT.compare(&b.(*SPF).TXT)
+}
+
+func (rr *AVC) compare(b RR) (x int) {
+	return rr.TXT.compare(&b.(*AVC).TXT)
+}
+
+func (rr *WALLET) compare(b RR) (x int) {
+	return rr.TXT.compare(&b.(*WALLET).TXT)
+}
+
+func (rr *CLA) compare(b RR) (x int) {
+	return rr.TXT.compare(&b.(*CLA).TXT)
+}
+
+func (rr *SIG) compare(b RR) (x int) {
+	return rr.RRSIG.compare(&b.(*SIG).RRSIG)
+}
+
+func (rr *NXT) compare(b RR) (x int) {
+	return rr.NSEC.compare(&b.(*NXT).NSEC)
+}
+
+func (rr *DLV) compare(b RR) (x int) {
+	return rr.DS.compare(&b.(*DLV).DS)
+}
+
+func (rr *CDS) compare(b RR) (x int) {
+	return rr.DS.compare(&b.(*CDS).DS)
+}
+
+func (rr *KEY) compare(b RR) (x int) {
+	return rr.DNSKEY.compare(&b.(*KEY).DNSKEY)
+}
+
+func (rr *CDNSKEY) compare(b RR) (x int) {
+	return rr.DNSKEY.compare(&b.(*CDNSKEY).DNSKEY)
+}
+
+func (rr *OPT) compare(b RR) (x int) {
+	return 0
+}
+
+func (rr *RESINFO) compare(b RR) (x int) {
+	return rr.TXT.compare(&b.(*RESINFO).TXT)
+}
+
+func (rr *HTTPS) compare(b RR) (x int) {
+	return rr.SVCB.compare(&b.(*HTTPS).SVCB)
+}
+
+func (rr *DELEGI) compare(b RR) (x int) {
+	return rr.DELEG.compare(&b.(*DELEGI).DELEG)
+}
+
+func (rr *ANY) compare(b RR) (x int) {
+	return 0
+}
+
+func (rr *AXFR) compare(b RR) (x int) {
+	return 0
+}
+
+func (rr *IXFR) compare(b RR) (x int) {
 	return 0
 }

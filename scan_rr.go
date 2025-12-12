@@ -101,7 +101,7 @@ func (rr *A) parse(c *zlexer, o string) *ParseError {
 	if l.err || err != nil || !value.Is4() {
 		return &ParseError{err: "bad A A", lex: l}
 	}
-	rr.A.A = value
+	rr.A.Addr = value
 	return slurpRemainder(c)
 }
 
@@ -111,7 +111,7 @@ func (rr *AAAA) parse(c *zlexer, o string) *ParseError {
 	if l.err || err != nil || !value.Is6() {
 		return &ParseError{err: "bad AAAA AAAA", lex: l}
 	}
-	rr.AAAA.AAAA = value
+	rr.AAAA.Addr = value
 	return slurpRemainder(c)
 }
 

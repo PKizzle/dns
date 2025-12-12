@@ -32,10 +32,15 @@ const out = "zmsg.go"
 
 func main() {
 	flag.Parse()
-	specs, err := generate.StructTypeSpecs("types.go")
+	specs, err := generate.StructTypeSpecs("rdata/rdata.go")
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
+	emptydata, err := generate.StructTypeSpecs("types.go")
+	if err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
+	specs = append(specs, generate.FilterTypeSpecs(emptydata, generate.EmptyData)...)
 	b := &bytes.Buffer{}
 	b.WriteString(hdr)
 

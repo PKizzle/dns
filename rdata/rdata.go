@@ -153,12 +153,12 @@ type DNAME struct {
 
 // A RR. See RFC 1035.
 type A struct {
-	A netip.Addr `dns:"a"`
+	Addr netip.Addr `dns:"a"`
 }
 
 // AAAA RR. See RFC 3596.
 type AAAA struct {
-	AAAA netip.Addr `dns:"aaaa"`
+	Addr netip.Addr `dns:"aaaa"`
 }
 
 // PX RR. See RFC 2163.
@@ -427,11 +427,6 @@ type ZONEMD struct {
 	Scheme uint8
 	Hash   uint8
 	Digest string `dns:"hex"`
-}
-
-// RESINFO RR. See RFC 9606.
-type RESINFO struct {
-	Txt []string `dns:"txt"`
 }
 
 // SVCB RR. See RFC 9460.
