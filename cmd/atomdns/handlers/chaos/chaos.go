@@ -11,6 +11,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 // Chaos allows atomdns to reply to CH TXT queries and return author or version information.
@@ -41,7 +42,7 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		case strings.HasPrefix(qname, "authors."):
 			rnd := rand.New(rand.NewSource(time.Now().Unix()))
 			for _, i := range rnd.Perm(len(c.Authors)) {
-				m.Answer = append(m.Answer, &dns.TXT{Hdr: hdr, Txt: []string{c.Authors[i]}})
+				m.Answer = append(m.Answer, &dns.TXT{Hdr: hdr, TXT: rdata.TXT{Txt: []string{c.Authors[i]}}})
 			}
 		case strings.HasPrefix(qname, "hostname."):
 			fallthrough
@@ -50,10 +51,9 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			if err != nil {
 				hostname = "localhost"
 			}
-			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{hostname}}}
-
+			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, TXT: rdata.TXT{Txt: []string{hostname}}}}
 		default:
-			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, Txt: []string{c.Version}}}
+			m.Answer = []dns.RR{&dns.TXT{Hdr: hdr, TXT: rdata.TXT{Txt: []string{c.Version}}}}
 		}
 
 		m = dnsctx.Funcs(ctx, m)

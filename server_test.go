@@ -10,19 +10,20 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 func helloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
-	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello world"}}}
+	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"Hello world"}}}}
 	io.Copy(w, m)
 }
 
 func anotherHelloHandler(ctx context.Context, w dns.ResponseWriter, req *dns.Msg) {
 	m := new(dns.Msg)
 	dnsutil.SetReply(m, req)
-	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, Txt: []string{"Hello example"}}}
+	m.Extra = []dns.RR{&dns.TXT{Hdr: dns.Header{Name: m.Question[0].Header().Name, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"Hello example"}}}}
 	io.Copy(w, m)
 }
 

@@ -9,6 +9,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 func TestResponseWriter(t *testing.T) {
@@ -19,7 +20,7 @@ func TestResponseWriter(t *testing.T) {
 	h := reflect{}
 
 	h.ServeDNS(context.TODO(), rec, m)
-	if x := rec.Msg.Answer[0].(*dns.A).A.String(); x != IPv4.String() {
+	if x := rec.Msg.Answer[0].(*dns.A).A.Addr.String(); x != IPv4.String() {
 		t.Errorf("expected %s in answer, got %s", IPv4.String(), x)
 	}
 }
@@ -34,8 +35,8 @@ func (h reflect) ServeDNS(_ context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	ip := w.RemoteAddr().(*net.UDPAddr)
 	str := "Port: " + strconv.Itoa(ip.Port) + " (udp)"
 
-	a := &dns.A{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, A: ip.AddrPort().Addr()}
-	t := &dns.TXT{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, Txt: []string{str}}
+	a := &dns.A{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, A: rdata.A{Addr: ip.AddrPort().Addr()}}
+	t := &dns.TXT{Hdr: dns.Header{Name: "example.org.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{str}}}
 
 	m.Answer = append(m.Answer, a)
 	m.Extra = append(m.Extra, t)

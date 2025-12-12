@@ -45,6 +45,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 var (
@@ -73,13 +74,13 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	if dnsutil.Family(w) == 1 {
-		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: a}
+		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: rdata.A{Addr: a}}
 	} else {
-		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: a}
+		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: a}}
 	}
 
 	str := "Port: " + dnsutil.RemotePort(w) + " (" + dnsutil.Network(w) + ")"
-	t := &dns.TXT{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, Txt: []string{str}}
+	t := &dns.TXT{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{str}}}
 
 	switch r.Question[0].(type) {
 	case *dns.TXT:

@@ -9,6 +9,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 func (d *Dbhost) Load() error {
@@ -43,9 +44,9 @@ func (d *Dbhost) Load() error {
 				n = dnszone.Node{Name: key}
 			}
 			if ip.Is6() {
-				n.RRs = append(n.RRs, &dns.AAAA{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, AAAA: ip})
+				n.RRs = append(n.RRs, &dns.AAAA{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, AAAA: rdata.AAAA{Addr: ip}})
 			} else {
-				n.RRs = append(n.RRs, &dns.A{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, A: ip})
+				n.RRs = append(n.RRs, &dns.A{Hdr: dns.Header{Name: key, Class: dns.ClassINET, TTL: d.ttl}, A: rdata.A{Addr: ip}})
 			}
 			data[key] = n
 
@@ -54,7 +55,7 @@ func (d *Dbhost) Load() error {
 			if !ok {
 				n = dnszone.Node{Name: rev}
 			}
-			n.RRs = append(n.RRs, &dns.PTR{Hdr: dns.Header{Name: rev, Class: dns.ClassINET, TTL: d.ttl}, Ptr: dnsutil.Fqdn(string(f))})
+			n.RRs = append(n.RRs, &dns.PTR{Hdr: dns.Header{Name: rev, Class: dns.ClassINET, TTL: d.ttl}, PTR: rdata.PTR{Ptr: dnsutil.Fqdn(string(f))}})
 			data[rev] = n
 		}
 	}

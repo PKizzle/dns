@@ -15,6 +15,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 // Sign signs the zone with origin from s. It returns the signed zone.
@@ -84,7 +85,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		return z, nil
 	}
 
-	zonemd := &dns.ZONEMD{Hdr: dns.Header{Name: origin, Class: dns.ClassINET, TTL: s.ttl}, Scheme: dns.ZONEMDSchemeSimple, Hash: dns.ZONEMDHashSHA384}
+	zonemd := &dns.ZONEMD{Hdr: dns.Header{Name: origin, Class: dns.ClassINET, TTL: s.ttl}, ZONEMD: rdata.ZONEMD{Scheme: dns.ZONEMDSchemeSimple, Hash: dns.ZONEMDHashSHA384}}
 	zone := []dns.RR{}
 	z.Walk(func(n *dnszone.Node) bool {
 		zone = append(zone, n.RRs...)
@@ -159,9 +160,8 @@ func (nf *nsecfn) Last(origin string) *dnszone.Node { return nf.nsec(origin) }
 // nsec creates an NSEC node from nf.
 func (nf *nsecfn) nsec(name string) *dnszone.Node {
 	nsec := &dns.NSEC{
-		Hdr:        dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
-		NextDomain: name,
-		TypeBitMap: nf.bitmap,
+		Hdr:  dns.Header{Name: nf.last, TTL: nf.ttl, Class: dns.ClassINET},
+		NSEC: rdata.NSEC{NextDomain: name, TypeBitMap: nf.bitmap},
 	}
 	nsecnode := &dnszone.Node{Name: nf.last}
 	nsecnode.RRs = append(nsecnode.RRs, nsec)

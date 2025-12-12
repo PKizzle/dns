@@ -5,6 +5,8 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"testing"
+
+	"codeberg.org/miekg/dns/rdata"
 )
 
 func TestDNSSECSignVerify(t *testing.T) {
@@ -18,27 +20,27 @@ func TestDNSSECSignVerify(t *testing.T) {
 		{
 			"rsasha256", RSASHA256, 1024,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, SRV: rdata.SRV{Port: 1000, Weight: 80, Target: "web1.miek.nl."}},
 			},
 		},
 		{
 			"ecdsap256sha256", ECDSAP256SHA256, 256,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, SRV: rdata.SRV{Port: 1000, Weight: 80, Target: "web1.miek.nl."}},
 			},
 		},
 		{
 			"ed25519", ED25519, 256,
 			[]RR{
-				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, Port: 1000, Weight: 80, Target: "web1.miek.nl."},
+				&SRV{Hdr: Header{Name: "srv.miek.nl.", Class: ClassINET, TTL: 600}, SRV: rdata.SRV{Port: 1000, Weight: 80, Target: "web1.miek.nl."}},
 			},
 		},
 		{
 			"rsasha256-sorting", RSASHA256, 1024,
 			[]RR{
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "linode.atoom.net."}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "ns-ext.nlnetlabs.nl."}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "omval.tednet.nl"}},
 			},
 		},
 	}
@@ -105,14 +107,16 @@ func TestDNSSECVerify(t *testing.T) {
 		{
 			"root",
 			&DNSKEY{
-				Hdr: Header{Name: ".", Class: ClassINET, TTL: 172800}, Flags: 256, Protocol: 3, Algorithm: RSASHA256,
-				PublicKey: "AwEAAbauxLSFZ+KSWi2cT6TJbm3d+GIVqb2N1XnDjMsRme0b6JlGp/cvwmM5CaJ5LQ7tG1r7LuTHjYZadtbNk2nZmclq9r4KInS48ungoAZb0gJXVw8IvBTBb1YWQmiBqD285pJuORwTii7DF++nNJJk3i55HJt9SmBI7m7t8nvx7OOY/w0inxg3fLH2uY0SKO8he4FGwMc4Ubiab8N8Yhyhh+FkKKdD/+oAcuGF75PjlSXO460B4MlNLlEcjDEzIsKauRYx4YVgSaNomGhMMFblmXRzgW+1R6ywvm5mC9+omlyyizZp2GJfPwGMezuKSGDndO6CYYEc5/lsRhvBYsGjdPM=",
+				Hdr: Header{Name: ".", Class: ClassINET, TTL: 172800}, DNSKEY: rdata.DNSKEY{Flags: 256, Protocol: 3, Algorithm: RSASHA256,
+					PublicKey: "AwEAAbauxLSFZ+KSWi2cT6TJbm3d+GIVqb2N1XnDjMsRme0b6JlGp/cvwmM5CaJ5LQ7tG1r7LuTHjYZadtbNk2nZmclq9r4KInS48ungoAZb0gJXVw8IvBTBb1YWQmiBqD285pJuORwTii7DF++nNJJk3i55HJt9SmBI7m7t8nvx7OOY/w0inxg3fLH2uY0SKO8he4FGwMc4Ubiab8N8Yhyhh+FkKKdD/+oAcuGF75PjlSXO460B4MlNLlEcjDEzIsKauRYx4YVgSaNomGhMMFblmXRzgW+1R6ywvm5mC9+omlyyizZp2GJfPwGMezuKSGDndO6CYYEc5/lsRhvBYsGjdPM=",
+				},
 			},
 			&RRSIG{
-				Hdr: Header{Name: ".", Class: ClassINET, TTL: 86400}, TypeCovered: TypeSOA, Algorithm: RSASHA256, Expiration: 1760245200, Inception: 1759118400, OrigTTL: 86400, KeyTag: 46441, SignerName: ".",
-				Signature: "Bi335z6iBqX1BsA6AUc29BdgoVcn2a6hfoowvC0OqNbQ1XdIz6lJ6L7iXPBYwUXTP85yII2wIBhIQJSKKuBnGmYwgXsRR7d6vxbcC63UKp6lG/xjMzae2TvuQINQhMCE2N+ufN4DCmlZspdDmWOyPkemJhncrWA+V6GGWLbCtVXPEbcgAvaNyVtFlLp788SdoDy1rpvIM2ZI9tGM2gxZG7wMLPIODtdl865H87kHaHbBkfKkCHsVCeWANoW9r8usdgt8+2HHf3w67HTERUv2NN31fgdkezaS1/7LMaMUb+5mqLygIJPVXbmK8wiUbnyuYW6Ems+R1FEnc2Dd5x5kAw==",
+				Hdr: Header{Name: ".", Class: ClassINET, TTL: 86400}, RRSIG: rdata.RRSIG{TypeCovered: TypeSOA, Algorithm: RSASHA256, Expiration: 1760245200, Inception: 1759118400, OrigTTL: 86400, KeyTag: 46441, SignerName: ".",
+					Signature: "Bi335z6iBqX1BsA6AUc29BdgoVcn2a6hfoowvC0OqNbQ1XdIz6lJ6L7iXPBYwUXTP85yII2wIBhIQJSKKuBnGmYwgXsRR7d6vxbcC63UKp6lG/xjMzae2TvuQINQhMCE2N+ufN4DCmlZspdDmWOyPkemJhncrWA+V6GGWLbCtVXPEbcgAvaNyVtFlLp788SdoDy1rpvIM2ZI9tGM2gxZG7wMLPIODtdl865H87kHaHbBkfKkCHsVCeWANoW9r8usdgt8+2HHf3w67HTERUv2NN31fgdkezaS1/7LMaMUb+5mqLygIJPVXbmK8wiUbnyuYW6Ems+R1FEnc2Dd5x5kAw==",
+				},
 			},
-			[]RR{&SOA{Hdr: Header{Name: ".", Class: ClassINET, TTL: 86400}, Ns: "a.root-servers.net.", Mbox: "nstld.verisign-grs.com.", Serial: 2025092900, Refresh: 1800, Retry: 900, Expire: 604800, Minttl: 86400}},
+			[]RR{&SOA{Hdr: Header{Name: ".", Class: ClassINET, TTL: 86400}, SOA: rdata.SOA{Ns: "a.root-servers.net.", Mbox: "nstld.verisign-grs.com.", Serial: 2025092900, Refresh: 1800, Retry: 900, Expire: 604800, Minttl: 86400}}},
 		},
 	}
 

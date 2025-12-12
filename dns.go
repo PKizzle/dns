@@ -47,7 +47,7 @@ type RR interface {
 	// a slightly too large value is OK.
 	Len() int
 
-	// Cloner
+	Cloner
 }
 
 // The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option

@@ -2,6 +2,13 @@
 [![Go Doc](https://godoc.org/coreberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
 [![status-badge](https://ci.codeberg.org/api/badges/15045/status.svg)](https://ci.codeberg.org/repos/15045)
 
+Major changes:
+
+In #470 the rdata was split off into a rdata subpackage. See #258 and https://miek.nl/2022/july/15/a-miekg/dns-v2-package/,
+where I expressed this need also.
+
+In #468 as mass move to the netip package was made.
+
 # Even more alternative approach to a DNS library (version 2)
 
 # Status

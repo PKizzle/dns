@@ -5,6 +5,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 func TestIsRRset(t *testing.T) {
@@ -16,23 +17,23 @@ func TestIsRRset(t *testing.T) {
 		{
 			"good",
 			[]dns.RR{
-				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, Txt: []string{"Hello world"}},
-				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, Txt: []string{"_o/"}},
+				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"Hello world"}}},
+				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"_o/"}}},
 			},
 			true,
 		},
 		{
 			"inconsitentname",
 			[]dns.RR{
-				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, Txt: []string{"Hello world"}},
-				&dns.TXT{Hdr: dns.Header{Name: "nama.cloudflare.com.", Class: dns.ClassINET}, Txt: []string{"_o/"}},
+				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"Hello world"}}},
+				&dns.TXT{Hdr: dns.Header{Name: "nama.cloudflare.com.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"_o/"}}},
 			},
 			false,
 		},
 		{
 			"inconsitenttype",
 			[]dns.RR{
-				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, Txt: []string{"Hello world"}},
+				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"Hello world"}}},
 				&dns.A{Hdr: dns.Header{Name: "nama.cloudflare.com.", Class: dns.ClassINET}},
 			},
 			false,
@@ -40,8 +41,8 @@ func TestIsRRset(t *testing.T) {
 		{
 			"inconsitentclass",
 			[]dns.RR{
-				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, Txt: []string{"Hello world"}},
-				&dns.TXT{Hdr: dns.Header{Name: "nama.cloudflare.com.", Class: dns.ClassCHAOS}, Txt: []string{"_o/"}},
+				&dns.TXT{Hdr: dns.Header{Name: "name.cloudflare.com.", Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{"Hello world"}}},
+				&dns.TXT{Hdr: dns.Header{Name: "nama.cloudflare.com.", Class: dns.ClassCHAOS}, TXT: rdata.TXT{Txt: []string{"_o/"}}},
 			},
 			false,
 		},

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"codeberg.org/miekg/dns/rdata"
 )
 
 func TestZoneParser(t *testing.T) {
@@ -21,9 +23,9 @@ func TestZoneParser(t *testing.T) {
 			"$generate",
 			"$ORIGIN example.org.\n$GENERATE 10-12 foo${2,3,d} IN A 127.0.0.$",
 			[]RR{
-				&A{Hdr: Header{Name: "foo012.example.org.", Class: ClassINET}, A: netip.MustParseAddr("127.0.0.10")},
-				&A{Hdr: Header{Name: "foo013.example.org.", Class: ClassINET}, A: netip.MustParseAddr("127.0.0.11")},
-				&A{Hdr: Header{Name: "foo014.example.org.", Class: ClassINET}, A: netip.MustParseAddr("127.0.0.12")},
+				&A{Hdr: Header{Name: "foo012.example.org.", Class: ClassINET}, A: rdata.A{Addr: netip.MustParseAddr("127.0.0.10")}},
+				&A{Hdr: Header{Name: "foo013.example.org.", Class: ClassINET}, A: rdata.A{Addr: netip.MustParseAddr("127.0.0.11")}},
+				&A{Hdr: Header{Name: "foo014.example.org.", Class: ClassINET}, A: rdata.A{Addr: netip.MustParseAddr("127.0.0.12")}},
 			},
 			nil,
 		},
@@ -31,8 +33,8 @@ func TestZoneParser(t *testing.T) {
 			"aaaa",
 			"1.example.org. 600 IN AAAA ::1\n2.example.org. 600 IN AAAA ::FFFF:127.0.0.1",
 			[]RR{
-				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: netip.IPv6Loopback()},
-				&AAAA{Hdr: Header{Name: "2.example.org.", Class: ClassINET}, AAAA: netip.MustParseAddr("::FFFF:127.0.0.1")},
+				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: rdata.AAAA{Addr: netip.IPv6Loopback()}},
+				&AAAA{Hdr: Header{Name: "2.example.org.", Class: ClassINET}, AAAA: rdata.AAAA{Addr: netip.MustParseAddr("::FFFF:127.0.0.1")}},
 			},
 			nil,
 		},
@@ -42,7 +44,7 @@ func TestZoneParser(t *testing.T) {
 		{
 			"unknown-rdata",
 			"example. 3600 tYpe44 \\# 03 75  0100",
-			[]RR{&SSHFP{Hdr: Header{Name: "example.", Class: ClassINET}, Algorithm: 117, Type: 1, FingerPrint: "00"}},
+			[]RR{&SSHFP{Hdr: Header{Name: "example.", Class: ClassINET}, SSHFP: rdata.SSHFP{Algorithm: 117, Type: 1, FingerPrint: "00"}}},
 			nil,
 		},
 		{
