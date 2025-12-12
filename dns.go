@@ -50,6 +50,12 @@ type RR interface {
 	Cloner
 }
 
+// An RDATA represents a DNS rdata element, this is the part of the RR minus the [Header].
+type RDATA interface {
+	// Len is the length of the RDATA when encoded in wire format.
+	Len() int
+}
+
 // The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option
 // code when the "RR" is an EDNS0 option. This is only needed for RRs that are defined outside of this package.
 // Once this method is defined the following extra registration needs to happen:

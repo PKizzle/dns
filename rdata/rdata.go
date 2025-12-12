@@ -7,6 +7,8 @@ import (
 	"codeberg.org/miekg/dns/svcb"
 )
 
+//go:generate go run len_generate.go
+
 // NULL RR. See RFC 1035.
 type NULL struct {
 	Null string `dns:"any"`
