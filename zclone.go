@@ -3,9 +3,10 @@
 package dns
 
 import (
+	"slices"
+
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/svcb"
-	"slices"
 )
 
 func (rr *NULL) Clone() RR {

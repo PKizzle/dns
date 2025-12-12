@@ -11,6 +11,7 @@ import (
 
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
+	"codeberg.org/miekg/dns/rdata"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -321,7 +322,7 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 		rr = newFn()
 		*rr.Header() = Header{Name: name, Class: qclass}
 	} else {
-		rr = &RFC3597{Hdr: Header{Name: name, Class: qclass}, RRType: qtype}
+		rr = &RFC3597{Header{Name: name, Class: qclass}, rdata.RFC3597{RRType: qtype}}
 	}
 	return rr, nil
 }

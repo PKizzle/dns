@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"codeberg.org/miekg/dns/rdata"
 )
 
 const maxTok = 512 // Token buffer start size, and growth size amount.
@@ -654,7 +656,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 						parseAsRFC3597 = true
 					}
 				} else {
-					rr = &RFC3597{Hdr: *h, RRType: *t}
+					rr = &RFC3597{*h, rdata.RFC3597{RRType: *t}}
 				}
 			case asCode:
 				newFn, ok := CodeToRR[*t]
@@ -678,7 +680,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 			parseAsRR := rr
 			if parseAsRFC3597 {
-				parseAsRR = &RFC3597{Hdr: *h, RRType: *t}
+				parseAsRR = &RFC3597{*h, rdata.RFC3597{RRType: *t}}
 			}
 
 			// This needs zparser which calles Parser for new types.
