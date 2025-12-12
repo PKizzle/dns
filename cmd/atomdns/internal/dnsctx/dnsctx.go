@@ -49,7 +49,8 @@ func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 }
 
 // WithValue stores value under the string value key, key must contain a slash and be formatted like
-// "<handler>/xxx". If key does not contain a slash, this function is noop.
+// "<handler>/xxx". If key does not contain a slash, this function is noop. This function panics if
+// value is of a non-supported type.
 func WithValue(ctx context.Context, key string, value any) context.Context {
 	if !Valid(key) {
 		return ctx
