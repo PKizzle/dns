@@ -1,7 +1,7 @@
 package rdata
 
 import (
-	"net"
+	"net/netip"
 
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/svcb"
@@ -153,12 +153,12 @@ type DNAME struct {
 
 // A RR. See RFC 1035.
 type A struct {
-	A net.IP `dns:"a"`
+	A netip.Addr `dns:"a"`
 }
 
 // AAAA RR. See RFC 3596.
 type AAAA struct {
-	AAAA net.IP `dns:"aaaa"`
+	AAAA netip.Addr `dns:"aaaa"`
 }
 
 // PX RR. See RFC 2163.
@@ -353,7 +353,7 @@ type NID struct {
 // L32 RR, See RFC 6742.
 type L32 struct {
 	Preference uint16
-	Locator32  net.IP `dns:"a"`
+	Locator32  netip.Addr `dns:"a"`
 }
 
 // L64 RR, See RFC 6742.
