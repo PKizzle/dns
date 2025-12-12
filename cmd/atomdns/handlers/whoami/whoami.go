@@ -10,6 +10,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 type Whoami int
@@ -29,16 +30,16 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		if ip.Is4() {
-			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: ip}
+			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: rdata.A{Addr: ip}}
 		} else {
-			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: ip}
+			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: ip}}
 		}
 
 		port := dnsutil.RemotePort(w)
 		network := dnsutil.Network(w)
 		t := &dns.TXT{
 			Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET},
-			Txt: []string{fmt.Sprintf("Port: %s (%s)", port, network)},
+			TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Port: %s (%s)", port, network)}},
 		}
 
 		switch r.Question[0].(type) {

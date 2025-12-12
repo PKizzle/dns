@@ -3,6 +3,8 @@ package dns
 import (
 	"sort"
 	"testing"
+
+	"codeberg.org/miekg/dns/rdata"
 )
 
 type name []string
@@ -64,31 +66,31 @@ func TestSortRRset(t *testing.T) {
 		{
 			"miekns",
 			RRset([]RR{
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "linode.atoom.net."}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "omval.tednet.nl"}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "ns-ext.nlnetlabs.nl."}},
 			}),
 			RRset([]RR{
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "omval.tednet.nl"},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "linode.atoom.net."},
-				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, Ns: "ns-ext.nlnetlabs.nl."},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "omval.tednet.nl"}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "linode.atoom.net."}},
+				&NS{Hdr: Header{Name: "miek.nl.", Class: ClassINET, TTL: 600}, NS: rdata.NS{Ns: "ns-ext.nlnetlabs.nl."}},
 			}),
 		},
 		{
 			"zwns",
 			RRset([]RR{
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "zw-ns.anycast.pch.net."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1zim.telone.co.zw."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2zim.telone.co.zw."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1.liquidtelecom.net."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2.liquidtelecom.net."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "zw-ns.anycast.pch.net."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns1zim.telone.co.zw."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns2zim.telone.co.zw."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns1.liquidtelecom.net."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns2.liquidtelecom.net."}},
 			}),
 			RRset([]RR{
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1.liquidtelecom.net."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2.liquidtelecom.net."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "zw-ns.anycast.pch.net."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns1zim.telone.co.zw."},
-				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, Ns: "ns2zim.telone.co.zw."},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns1.liquidtelecom.net."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns2.liquidtelecom.net."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "zw-ns.anycast.pch.net."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns1zim.telone.co.zw."}},
+				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns2zim.telone.co.zw."}},
 			}),
 		},
 	}
@@ -117,14 +119,14 @@ func TestCompare(t *testing.T) {
 	}{
 		{
 			"ok:aaaa",
-			func() RR { rr, _ := New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
-			func() RR { rr, _ := New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
+			dnstestNew("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
+			dnstestNew("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
 			true,
 		},
 		{
 			"diff:aaaa",
-			func() RR { rr, _ := New("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
-			func() RR { rr, _ := New("a.example.org.  IN AAAA    3a01:7e00::f03c:91ff:fef1:6735"); return rr }(),
+			dnstestNew("a.example.org.  IN AAAA    2a01:7e00::f03c:91ff:fef1:6735"),
+			dnstestNew("a.example.org.  IN AAAA    3a01:7e00::f03c:91ff:fef1:6735"),
 			false,
 		},
 	}

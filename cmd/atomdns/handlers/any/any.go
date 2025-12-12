@@ -7,6 +7,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 type Any int
@@ -21,7 +22,7 @@ func (a *Any) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m := r.Copy()
 		dnsutil.SetReply(m, r)
 		hdr := dns.Header{Name: r.Question[0].Header().Name, TTL: 8482, Class: dns.ClassINET}
-		m.Answer = []dns.RR{&dns.HINFO{Hdr: hdr, Cpu: "ANY obsoleted", Os: "See RFC 8482"}}
+		m.Answer = []dns.RR{&dns.HINFO{Hdr: hdr, HINFO: rdata.HINFO{Cpu: "ANY obsoleted", Os: "See RFC 8482"}}}
 
 		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {

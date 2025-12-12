@@ -26,6 +26,8 @@ package dns
 
 import (
 	"slices"
+
+    "codeberg.org/miekg/dns/rdata"
     "codeberg.org/miekg/dns/svcb"
     "codeberg.org/miekg/dns/deleg"
 )
@@ -36,15 +38,22 @@ const out = "zclone.go"
 
 func main() {
 	flag.Parse()
-	specs, err := generate.StructTypeSpecs("types.go")
+	specs, err := generate.StructTypeSpecs("rdata/rdata.go")
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
+	emptydata, err := generate.StructTypeSpecs("types.go")
+	if err != nil {
+		log.Fatalf("Failed to generate %s: %v", out, err)
+	}
+	specs = append(specs, generate.FilterTypeSpecs(emptydata, generate.EmptyData)...)
+
 	lspecs := len(specs)
 	especs, err := generate.StructTypeSpecs("edns_types.go")
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
+
 	dspecs, err := generate.StructTypeSpecs("dso_types.go")
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
@@ -78,6 +87,12 @@ func main() {
 		fmt.Fprintf(b, "return &%s{\n", rrname)
 		if i < lspecs { // edns0 types dont' even have Hdr.
 			fmt.Fprintf(b, "\trr.Hdr,\n")
+		}
+
+		if i < lspecs {
+			if !slices.Contains(generate.EmptyData, rrname) {
+				fmt.Fprintf(b, "rdata.%s{\n", rrname)
+			}
 		}
 
 		for _, field := range strct.Fields.List {
@@ -141,7 +156,11 @@ func main() {
 			}
 
 			o("rr.%s,\n")
-
+		}
+		if i < lspecs {
+			if !slices.Contains(generate.EmptyData, rrname) {
+				fmt.Fprint(b, "},\n")
+			}
 		}
 		fmt.Fprint(b, "}\n}\n\n")
 	}

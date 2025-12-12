@@ -9,7 +9,6 @@ import (
 	"go/ast"
 	"log"
 	"slices"
-	"strings"
 
 	"codeberg.org/miekg/dns/internal/generate"
 )
@@ -21,18 +20,13 @@ var hdr = `
 
 package dns
 
-import (
-	"encoding/base64"
-	"net"
-)
-
 `
 
 const out = "zlen.go"
 
 func main() {
 	flag.Parse()
-	specs, err := generate.StructTypeSpecs("types.go")
+	specs, err := generate.StructTypeSpecs("rdata/rdata.go")
 	if err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
@@ -45,103 +39,14 @@ func main() {
 			continue
 		}
 
-		fmt.Fprintf(b, "func (rr *%s) Len() int {\n", rrname)
+		fmt.Fprintf(b, "func (rr *%s) Len() int { ", rrname)
 		strct := spec.Type.(*ast.StructType)
 		if generate.IsEmbedded(strct) {
-			fmt.Fprintf(b, "return rr.%s.Len()\n}\n", strct.Fields.List[0].Type)
+			fmt.Fprintf(b, "return rr.%s.Len() }", strct.Fields.List[0].Type)
 			continue
 		}
 
-		fmt.Fprintf(b, "l := rr.Hdr.Len()\n")
-		for _, field := range strct.Fields.List {
-			if len(field.Names) == 0 {
-				continue
-			}
-
-			fieldname := field.Names[0].String()
-			if fieldname == "Hdr" {
-				continue
-			}
-
-			// fieldtype is either slice or the actual singular type name.
-			fieldtype := ""
-			if id, ok := field.Type.(*ast.Ident); ok {
-				fieldtype = id.Name
-			}
-			if _, ok := field.Type.(*ast.ArrayType); ok {
-				fieldtype = "slice"
-			}
-
-			tag := ""
-			if field.Tag != nil {
-				tag = strings.Trim(field.Tag.Value, "`")
-			}
-
-			o := func(s string) { fmt.Fprintf(b, s, fieldname) }
-
-			if fieldtype == "slice" {
-				switch tag {
-				case `dns:"-"`:
-					// ignored
-				case `dns:"cdomain-name"`:
-					o("for _, x := range rr.%s { l += len(x)+1 }\n")
-				case `dns:"domain-name"`:
-					o("for _, x := range rr.%s { l += len(x)+1 }\n")
-				case `dns:"txt"`:
-					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
-				case `dns:"pairs"`:
-					o("for _, x := range rr.%s { l += x.Len() }\n")
-				case `dns:"infos"`:
-					o("for _, x := range rr.%s { l += x.Len() }\n")
-				default:
-					log.Fatalln(rrname, fieldname, tag)
-				}
-				continue
-			}
-
-			switch {
-			case tag == `dns:"-"`:
-				// ignored
-			case tag == `dns:"cdomain-name"`:
-				o("l += len(rr.%s)+1\n")
-			case tag == `dns:"domain-name"`:
-				o("l += len(rr.%s)+1\n")
-			case strings.HasPrefix(tag, `dns:"size-base64`):
-				fallthrough
-			case tag == `dns:"base64"`:
-				o("l += base64.StdEncoding.DecodedLen(len(rr.%s))\n")
-			case strings.HasPrefix(tag, `dns:"size-hex:`): // this has an extra field where the length is stored
-				o("l += len(rr.%s)/2\n")
-			case tag == `dns:"hex"`:
-				o("l += len(rr.%s)/2\n")
-			case tag == `dns:"any"`:
-				o("l += len(rr.%s)\n")
-			case tag == `dns:"a"`:
-				o("if rr.%s.IsValid() { l += net.IPv4len }\n")
-			case tag == `dns:"aaaa"`:
-				o("if rr.%s.IsValid() { l += net.IPv6len }\n")
-			case tag == `dns:"uint48"`:
-				o("l += 6 // %s\n")
-			case tag == "":
-				switch fieldtype {
-				case "uint8":
-					o("l++ // %s\n")
-				case "uint16":
-					o("l += 2 // %s\n")
-				case "uint32":
-					o("l += 4 // %s\n")
-				case "uint64":
-					o("l += 8 // %s\n")
-				case "string":
-					o("l += len(rr.%s) + 1\n")
-				default:
-					log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
-				}
-			default:
-				log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
-			}
-		}
-		fmt.Fprint(b, "return l }\n\n")
+		fmt.Fprintf(b, "return rr.Hdr.Len() + rr.%s.Len() }\n", rrname)
 	}
 
 	generate.Write(b, out)

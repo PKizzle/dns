@@ -13,7 +13,7 @@ a separate section in [Msg], the pseudo section.
 
 Basic usage pattern for creating a new resource record:
 
-	r := &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600}, Preference: 10, Mx: "mx.miek.nl."}
+	r := &MX{Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
 
 Or directly from a string (which is much slower):
 
@@ -56,7 +56,7 @@ Each of these sections contain a []RR. Basic use pattern for accessing the rdata
 the Answer section:
 
 	if t, ok := r.Answer[0].(*dns.TXT); ok {
-		// do something with t.Txt
+		// do something with t.TXT.Txt
 	}
 
 Or if you sent an NSID EDNS0 option:
