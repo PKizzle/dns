@@ -45,10 +45,10 @@ func main() {
 			continue
 		}
 
-		fmt.Fprintf(b, "func (rr *%s) Len() int {\n", rrname)
+		fmt.Fprintf(b, "func (rdata %s) Len() int {\n", rrname)
 		strct := spec.Type.(*ast.StructType)
 		if generate.IsEmbedded(strct) {
-			fmt.Fprintf(b, "return rr.%s.Len()\n}\n", strct.Fields.List[0].Type)
+			fmt.Fprintf(b, "return rdata.%s.Len()\n}\n", strct.Fields.List[0].Type)
 			continue
 		}
 
@@ -81,15 +81,15 @@ func main() {
 				case `dns:"-"`:
 					// ignored
 				case `dns:"cdomain-name"`:
-					o("for _, x := range rr.%s { l += len(x)+1 }\n")
+					o("for _, x := range rdata.%s { l += len(x)+1 }\n")
 				case `dns:"domain-name"`:
-					o("for _, x := range rr.%s { l += len(x)+1 }\n")
+					o("for _, x := range rdata.%s { l += len(x)+1 }\n")
 				case `dns:"txt"`:
-					o("for _, x := range rr.%s { l += len(x) + 1 }\n")
+					o("for _, x := range rdata.%s { l += len(x) + 1 }\n")
 				case `dns:"pairs"`:
-					o("for _, x := range rr.%s { l += x.Len() }\n")
+					o("for _, x := range rdata.%s { l += x.Len() }\n")
 				case `dns:"infos"`:
-					o("for _, x := range rr.%s { l += x.Len() }\n")
+					o("for _, x := range rdata.%s { l += x.Len() }\n")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
@@ -100,23 +100,23 @@ func main() {
 			case tag == `dns:"-"`:
 				// ignored
 			case tag == `dns:"cdomain-name"`:
-				o("l += len(rr.%s)+1\n")
+				o("l += len(rdata.%s)+1\n")
 			case tag == `dns:"domain-name"`:
-				o("l += len(rr.%s)+1\n")
+				o("l += len(rdata.%s)+1\n")
 			case strings.HasPrefix(tag, `dns:"size-base64`):
 				fallthrough
 			case tag == `dns:"base64"`:
-				o("l += base64.StdEncoding.DecodedLen(len(rr.%s))\n")
+				o("l += base64.StdEncoding.DecodedLen(len(rdata.%s))\n")
 			case strings.HasPrefix(tag, `dns:"size-hex:`): // this has an extra field where the length is stored
-				o("l += len(rr.%s)/2\n")
+				o("l += len(rdata.%s)/2\n")
 			case tag == `dns:"hex"`:
-				o("l += len(rr.%s)/2\n")
+				o("l += len(rdata.%s)/2\n")
 			case tag == `dns:"any"`:
-				o("l += len(rr.%s)\n")
+				o("l += len(rdata.%s)\n")
 			case tag == `dns:"a"`:
-				o("if rr.%s.IsValid() { l += net.IPv4len }\n")
+				o("if rdata.%s.IsValid() { l += net.IPv4len }\n")
 			case tag == `dns:"aaaa"`:
-				o("if rr.%s.IsValid() { l += net.IPv6len }\n")
+				o("if rdata.%s.IsValid() { l += net.IPv6len }\n")
 			case tag == `dns:"uint48"`:
 				o("l += 6 // %s\n")
 			case tag == "":
@@ -130,7 +130,7 @@ func main() {
 				case "uint64":
 					o("l += 8 // %s\n")
 				case "string":
-					o("l += len(rr.%s) + 1\n")
+					o("l += len(rdata.%s) + 1\n")
 				default:
 					log.Fatalf("No tag or basic type: %s: %q, %s", rrname, fieldname, tag)
 				}
