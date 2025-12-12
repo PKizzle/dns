@@ -1,7 +1,9 @@
 package ecs_test
 
 import (
+	"bytes"
 	"context"
+	"net"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -25,7 +27,7 @@ func TestEcs(t *testing.T) {
 		if address == nil {
 			t.Fatal("expected ecs/address, got none")
 		}
-		if address != dnstest.IPv4 {
+		if !bytes.Equal(address.(net.IP), dnstest.IPv4.AsSlice()) {
 			t.Fatalf("expected %s, got %s", dnstest.IPv4, address)
 		}
 	})
