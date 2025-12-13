@@ -56,6 +56,8 @@ type RR interface {
 type RDATA interface {
 	// Len is the length of the resource data when encoded in wire format.
 	Len() int
+	// String returns the text representation of the rdata only.
+	String() string
 }
 
 // The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option
