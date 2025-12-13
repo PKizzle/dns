@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/dnsstring"
@@ -104,4 +105,31 @@ func writeTxtByte(sb *strings.Builder, b byte) {
 	default:
 		sb.WriteByte(b)
 	}
+}
+
+// splitN splits a string into N sized string chunks.
+// This might become an exported function once.
+func splitN(s string, n int) []string {
+	if len(s) < n {
+		return []string{s}
+	}
+	sx := []string{}
+	p, i := 0, n
+	for {
+		if i <= len(s) {
+			sx = append(sx, s[p:i])
+		} else {
+			sx = append(sx, s[p:])
+			break
+
+		}
+		p, i = p+n, i+n
+	}
+	return sx
+}
+
+// Translate the TSIG time signed into a date. There is no need for RFC1982 calculations as this date is 48 bits.
+func tsigTimeToString(t uint64) string {
+	ti := time.Unix(int64(t), 0).UTC()
+	return ti.Format("20060102150405")
 }
