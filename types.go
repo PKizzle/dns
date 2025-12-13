@@ -1,14 +1,11 @@
 package dns
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/rdata"
-	"codeberg.org/miekg/dns/svcb"
 )
 
 // Packet formats
@@ -280,7 +277,7 @@ type HINFO struct {
 
 func (rr *HINFO) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt([]string{rr.Cpu, rr.Os}))
+	sb.WriteString(rr.HINFO.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -294,7 +291,7 @@ type MB struct {
 
 func (rr *MB) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Mb)
+	sb.WriteString(rr.MB.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -308,7 +305,7 @@ type MG struct {
 
 func (rr *MG) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Mg)
+	sb.WriteString(rr.MG.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -322,7 +319,7 @@ type MINFO struct {
 
 func (rr *MINFO) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, rr.Rmail, rr.Email)
+	sb.WriteString(rr.MINFO.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -336,7 +333,7 @@ type MR struct {
 
 func (rr *MR) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Mr)
+	sb.WriteString(rr.MR.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -350,7 +347,7 @@ type MF struct {
 
 func (rr *MF) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Mf)
+	sb.WriteString(rr.MF.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -364,7 +361,7 @@ type MD struct {
 
 func (rr *MD) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Md)
+	sb.WriteString(rr.MD.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -378,7 +375,7 @@ type MX struct {
 
 func (rr *MX) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Mx)
+	sb.WriteString(rr.MX.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -392,7 +389,7 @@ type AFSDB struct {
 
 func (rr *AFSDB) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Subtype)), rr.Hostname)
+	sb.WriteString(rr.AFSDB.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -406,7 +403,7 @@ type X25 struct {
 
 func (rr *X25) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.PSDNAddress)
+	sb.WriteString(rr.X25.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -420,7 +417,7 @@ type ISDN struct {
 
 func (rr *ISDN) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt([]string{rr.Address, rr.SubAddress}))
+	sb.WriteString(rr.ISDN.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -434,7 +431,7 @@ type RT struct {
 
 func (rr *RT) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Host)
+	sb.WriteString(rr.RT.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -448,7 +445,7 @@ type NS struct {
 
 func (rr *NS) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Ns)
+	sb.WriteString(rr.NS.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -462,7 +459,7 @@ type PTR struct {
 
 func (rr *PTR) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Ptr)
+	sb.WriteString(rr.PTR.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -476,7 +473,7 @@ type RP struct {
 
 func (rr *RP) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, rr.Mbox, rr.Txt)
+	sb.WriteString(rr.RP.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -490,12 +487,7 @@ type SOA struct {
 
 func (rr *SOA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, rr.Ns, rr.Mbox,
-		strconv.FormatInt(int64(rr.Serial), 10),
-		strconv.FormatInt(int64(rr.Refresh), 10),
-		strconv.FormatInt(int64(rr.Retry), 10),
-		strconv.FormatInt(int64(rr.Expire), 10),
-		strconv.FormatInt(int64(rr.Minttl), 10))
+	sb.WriteString(rr.SOA.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -509,7 +501,7 @@ type TXT struct {
 
 func (rr *TXT) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt(rr.Txt))
+	sb.WriteString(rr.TXT.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -520,7 +512,7 @@ type SPF struct{ TXT }
 
 func (rr *SPF) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt(rr.Txt))
+	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -531,7 +523,7 @@ type AVC struct{ TXT }
 
 func (rr *AVC) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt(rr.Txt))
+	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -542,7 +534,7 @@ type WALLET struct{ TXT }
 
 func (rr *WALLET) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt(rr.Txt))
+	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -553,7 +545,7 @@ type CLA struct{ TXT }
 
 func (rr *CLA) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt(rr.Txt))
+	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -567,7 +559,7 @@ type IPN struct {
 
 func (rr *IPN) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Node)))
+	sb.WriteString(rr.IPN.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -581,9 +573,7 @@ type SRV struct {
 
 func (rr *SRV) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Priority)),
-		strconv.Itoa(int(rr.Weight)),
-		strconv.Itoa(int(rr.Port)), rr.Target)
+	sb.WriteString(rr.SRV.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -597,25 +587,7 @@ type NAPTR struct {
 
 func (rr *NAPTR) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Order)), strconv.Itoa(int(rr.Preference)))
-
-	sb.WriteByte(' ')
-	sb.WriteByte('"')
-	sb.WriteString(rr.Flags)
-	sb.WriteByte('"')
-
-	sb.WriteByte(' ')
-	sb.WriteByte('"')
-	sb.WriteString(rr.Service)
-	sb.WriteByte('"')
-
-	sb.WriteByte(' ')
-	sb.WriteByte('"')
-	sb.WriteString(rr.Regexp)
-	sb.WriteByte('"')
-	sb.WriteByte(' ')
-
-	sb.WriteString(rr.Replacement)
+	sb.WriteString(rr.NAPTR.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -642,7 +614,7 @@ type DNAME struct {
 
 func (rr *DNAME) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Target)
+	sb.WriteString(rr.DNAME.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -656,12 +628,7 @@ type A struct {
 
 func (rr *A) String() string {
 	sb := sprintHeader(rr)
-	if !rr.Addr.IsValid() {
-		s := sb.String()
-		builderPool.Put(*sb)
-		return s
-	}
-	sb.WriteString(rr.Addr.String())
+	sb.WriteString(rr.A.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -675,13 +642,7 @@ type AAAA struct {
 
 func (rr *AAAA) String() string {
 	sb := sprintHeader(rr)
-	if !rr.Addr.IsValid() {
-		s := sb.String()
-		builderPool.Put(*sb)
-		return s
-	}
-
-	sb.WriteString(rr.Addr.String())
+	sb.WriteString(rr.AAAA.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -695,7 +656,7 @@ type PX struct {
 
 func (rr *PX) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Map822, rr.Mapx400)
+	sb.WriteString(rr.PX.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -709,7 +670,7 @@ type GPOS struct {
 
 func (rr *GPOS) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, rr.Longitude, rr.Latitude, rr.Altitude)
+	sb.WriteString(rr.GPOS.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -779,11 +740,7 @@ type NXT struct{ NSEC }
 
 func (rr *NXT) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.NextDomain)
-	for _, t := range rr.TypeBitMap {
-		sb.WriteByte(' ')
-		sb.WriteString(typeToString(t))
-	}
+	sb.WriteString(rr.NSEC.NSEC.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -797,11 +754,7 @@ type NSEC struct {
 
 func (rr *NSEC) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.NextDomain)
-	for _, t := range rr.TypeBitMap {
-		sb.WriteByte(' ')
-		sb.WriteString(typeToString(t))
-	}
+	sb.WriteString(rr.NSEC.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -814,10 +767,7 @@ type DLV struct{ DS }
 
 func (rr *DLV) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.KeyTag)),
-		strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.DigestType)),
-		strings.ToUpper(rr.Digest))
+	sb.WriteString(rr.DS.DS.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -828,10 +778,7 @@ type CDS struct{ DS }
 
 func (rr *CDS) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.KeyTag)),
-		strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.DigestType)),
-		strings.ToUpper(rr.Digest))
+	sb.WriteString(rr.DS.DS.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -845,10 +792,7 @@ type DS struct {
 
 func (rr *DS) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.KeyTag)),
-		strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.DigestType)),
-		strings.ToUpper(rr.Digest))
+	sb.WriteString(rr.DS.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -862,7 +806,7 @@ type KX struct {
 
 func (rr *KX) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Exchanger)
+	sb.WriteString(rr.KX.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -876,10 +820,7 @@ type TA struct {
 
 func (rr *TA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.KeyTag)),
-		strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.DigestType)),
-		strings.ToUpper(rr.Digest))
+	sb.WriteString(rr.TA.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -893,7 +834,7 @@ type TALINK struct {
 
 func (rr *TALINK) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, rr.PreviousName, rr.NextName)
+	sb.WriteString(rr.TALINK.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -907,9 +848,7 @@ type SSHFP struct {
 
 func (rr *SSHFP) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.Type)),
-		strings.ToUpper(rr.FingerPrint))
+	sb.WriteString(rr.SSHFP.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -920,10 +859,7 @@ type KEY struct{ DNSKEY }
 
 func (rr *KEY) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Flags)),
-		strconv.Itoa(int(rr.Protocol)),
-		strconv.Itoa(int(rr.Algorithm)),
-		rr.PublicKey)
+	sb.WriteString(rr.DNSKEY.DNSKEY.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -934,10 +870,7 @@ type CDNSKEY struct{ DNSKEY }
 
 func (rr *CDNSKEY) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Flags)),
-		strconv.Itoa(int(rr.Protocol)),
-		strconv.Itoa(int(rr.Algorithm)),
-		rr.PublicKey)
+	sb.WriteString(rr.DNSKEY.DNSKEY.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -951,10 +884,7 @@ type DNSKEY struct {
 
 func (rr *DNSKEY) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Flags)),
-		strconv.Itoa(int(rr.Protocol)),
-		strconv.Itoa(int(rr.Algorithm)),
-		rr.PublicKey)
+	sb.WriteString(rr.DNSKEY.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -979,10 +909,7 @@ type RKEY struct {
 
 func (rr *RKEY) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Flags)),
-		strconv.Itoa(int(rr.Protocol)),
-		strconv.Itoa(int(rr.Algorithm)),
-		rr.PublicKey)
+	sb.WriteString(rr.RKEY.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -996,7 +923,7 @@ type NSAPPTR struct {
 
 func (rr *NSAPPTR) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Ptr)
+	sb.WriteString(rr.NSAPPTR.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1039,16 +966,7 @@ type TKEY struct {
 // TKEY has no official presentation format, but this will suffice.
 func (rr *TKEY) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb,
-		rr.Algorithm,
-		dnsutilTimeToString(rr.Inception),
-		dnsutilTimeToString(rr.Expiration),
-		strconv.Itoa(int(rr.Mode)),
-		strconv.Itoa(int(rr.Error)),
-		strconv.Itoa(int(rr.KeySize)),
-		rr.Key,
-		strconv.Itoa(int(rr.OtherLen)),
-		rr.OtherData)
+	sb.WriteString(rr.TKEY.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1072,9 +990,7 @@ func (rr *RFC3597) String() string {
 	sb.WriteString("TYPE" + strconv.Itoa(int(rr.RRType)))
 	sb.WriteByte('\t')
 
-	sb.WriteByte('\\')
-	sb.WriteByte('#')
-	sprintData(&sb, strconv.Itoa(len(rr.Data)/2), rr.Data)
+	sb.WriteString(rr.RFC3597.String())
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -1091,7 +1007,7 @@ type URI struct {
 
 func (rr *URI) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Priority)), strconv.Itoa(int(rr.Weight)), sprintTxt([]string{rr.Target}))
+	sb.WriteString(rr.URI.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1105,7 +1021,7 @@ type DHCID struct {
 
 func (rr *DHCID) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Digest)
+	sb.WriteString(rr.DHCID.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1119,10 +1035,7 @@ type TLSA struct {
 
 func (rr *TLSA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Usage)),
-		strconv.Itoa(int(rr.Selector)),
-		strconv.Itoa(int(rr.MatchingType)),
-		rr.Certificate)
+	sb.WriteString(rr.TLSA.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1136,14 +1049,7 @@ type SMIMEA struct {
 
 func (rr *SMIMEA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Usage)), strconv.Itoa(int(rr.Selector)), strconv.Itoa(int(rr.MatchingType)))
-
-	// Every Nth char needs a space on this output. If we output
-	// this as one giant line, we can't read it can in because in some cases
-	// the cert length overflows scan.maxTok (2048).
-	sx := splitN(rr.Certificate, 1024) // conservative value here
-	sb.WriteByte(' ')
-	sb.WriteString(strings.Join(sx, " "))
+	sb.WriteString(rr.SMIMEA.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1157,11 +1063,7 @@ type HIP struct {
 
 func (rr *HIP) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.PublicKeyAlgorithm)), rr.Hit, rr.PublicKey)
-	for _, d := range rr.RendezvousServers {
-		sb.WriteByte(' ')
-		sb.WriteString(d)
-	}
+	sb.WriteString(rr.HIP.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1175,7 +1077,7 @@ type NINFO struct {
 
 func (rr *NINFO) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt(rr.ZSData))
+	sb.WriteString(rr.NINFO.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1189,16 +1091,7 @@ type NID struct {
 
 func (rr *NID) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(strconv.Itoa(int(rr.Preference)))
-	node := fmt.Sprintf("%0.16x", rr.NodeID)
-	sb.WriteByte(' ')
-	sb.WriteString(node[0:4])
-	sb.WriteByte(':')
-	sb.WriteString(node[4:8])
-	sb.WriteByte(':')
-	sb.WriteString(node[8:12])
-	sb.WriteByte(':')
-	sb.WriteString(node[12:16])
+	sb.WriteString(rr.NID.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1212,14 +1105,7 @@ type L32 struct {
 
 func (rr *L32) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(strconv.Itoa(int(rr.Preference)))
-	if !rr.Locator32.IsValid() {
-		s := sb.String()
-		builderPool.Put(*sb)
-		return s
-	}
-	sb.WriteByte(' ')
-	sb.WriteString(rr.Locator32.String())
+	sb.WriteString(rr.L32.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1233,16 +1119,7 @@ type L64 struct {
 
 func (rr *L64) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(strconv.Itoa(int(rr.Preference)))
-	node := fmt.Sprintf("%0.16X", rr.Locator64)
-	sb.WriteByte(' ')
-	sb.WriteString(node[0:4])
-	sb.WriteByte(':')
-	sb.WriteString(node[4:8])
-	sb.WriteByte(':')
-	sb.WriteString(node[8:12])
-	sb.WriteByte(':')
-	sb.WriteString(node[12:16])
+	sb.WriteString(rr.L64.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1256,7 +1133,7 @@ type LP struct {
 
 func (rr *LP) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Preference)), rr.Fqdn)
+	sb.WriteString(rr.LP.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1268,7 +1145,7 @@ type EUI48 struct {
 	rdata.EUI48
 }
 
-func (rr *EUI48) String() string { return rr.Hdr.String() + euiToString(rr.Address, 48) }
+func (rr *EUI48) String() string { return rr.Hdr.String() + rr.EUI48.String() }
 
 // EUI64 RR. See RFC 7043.
 type EUI64 struct {
@@ -1276,7 +1153,7 @@ type EUI64 struct {
 	rdata.EUI64
 }
 
-func (rr *EUI64) String() string { return rr.Hdr.String() + euiToString(rr.Address, 64) }
+func (rr *EUI64) String() string { return rr.Hdr.String() + rr.EUI64.String() }
 
 // CAA RR. See RFC 6844.
 type CAA struct {
@@ -1286,7 +1163,7 @@ type CAA struct {
 
 func (rr *CAA) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Flag)), rr.Tag, sprintTxt([]string{rr.Value}))
+	sb.WriteString(rr.CAA.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1300,7 +1177,7 @@ type UID struct {
 
 func (rr *UID) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(strconv.FormatInt(int64(rr.Uid), 10))
+	sb.WriteString(rr.UID.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1314,7 +1191,7 @@ type GID struct {
 
 func (rr *GID) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(strconv.FormatInt(int64(rr.Gid), 10))
+	sb.WriteString(rr.GID.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1328,7 +1205,7 @@ type UINFO struct {
 
 func (rr *UINFO) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(sprintTxt([]string{rr.Uinfo}))
+	sb.WriteString(rr.UINFO.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1342,7 +1219,7 @@ type EID struct {
 
 func (rr *EID) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(strings.ToUpper(rr.Endpoint))
+	sb.WriteString(rr.EID.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1356,7 +1233,7 @@ type NIMLOC struct {
 
 func (rr *NIMLOC) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.Locator)
+	sb.WriteString(rr.NIMLOC.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1370,7 +1247,7 @@ type OPENPGPKEY struct {
 
 func (rr *OPENPGPKEY) String() string {
 	sb := sprintHeader(rr)
-	sb.WriteString(rr.PublicKey)
+	sb.WriteString(rr.OPENPGPKEY.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1384,11 +1261,7 @@ type CSYNC struct {
 
 func (rr *CSYNC) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.FormatInt(int64(rr.Serial), 10), strconv.Itoa(int(rr.Flags)))
-	for _, t := range rr.TypeBitMap {
-		sb.WriteByte(' ')
-		sb.WriteString(typeToString(t))
-	}
+	sb.WriteString(rr.CSYNC.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1404,7 +1277,7 @@ type ZONEMD struct {
 
 func (rr *ZONEMD) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Serial)), strconv.Itoa(int(rr.Scheme)), strconv.Itoa(int(rr.Hash)), rr.Digest)
+	sb.WriteString(rr.ZONEMD.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1436,7 +1309,7 @@ var _ RR = &OPT{}
 // RESINFO RR. See RFC 9606.
 type RESINFO struct{ TXT }
 
-func (rr *RESINFO) String() string { return rr.Hdr.String() + sprintTxt(rr.Txt) }
+func (rr *RESINFO) String() string { return rr.Hdr.String() + rr.TXT.TXT.String() }
 
 // SVCB RR. See RFC 9460.
 type SVCB struct {
@@ -1446,16 +1319,7 @@ type SVCB struct {
 
 func (rr *SVCB) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Priority)), rr.Target)
-	for _, p := range rr.Value {
-		sb.WriteByte(' ')
-		k := svcb.PairToKey(p)
-		sb.WriteString(svcb.KeyToString(k))
-		sb.WriteByte('=')
-		sb.WriteByte('"')
-		sb.WriteString(p.String())
-		sb.WriteByte('"')
-	}
+	sb.WriteString(rr.SVCB.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1467,16 +1331,7 @@ type HTTPS struct{ SVCB }
 
 func (rr *HTTPS) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Priority)), rr.Target)
-	for _, p := range rr.Value {
-		sb.WriteByte(' ')
-		k := svcb.PairToKey(p)
-		sb.WriteString(svcb.KeyToString(k))
-		sb.WriteByte('=')
-		sb.WriteByte('"')
-		sb.WriteString(p.String())
-		sb.WriteByte('"')
-	}
+	sb.WriteString(rr.SVCB.SVCB.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1490,15 +1345,7 @@ type DELEG struct {
 
 func (rr *DELEG) String() string {
 	sb := sprintHeader(rr)
-	for _, i := range rr.Value {
-		sb.WriteByte(' ')
-		k := deleg.InfoToKey(i)
-		sb.WriteString(deleg.KeyToString(k))
-		sb.WriteByte('=')
-		sb.WriteByte('"')
-		sb.WriteString(i.String())
-		sb.WriteByte('"')
-	}
+	sb.WriteString(rr.DELEG.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1508,15 +1355,7 @@ type DELEGI struct{ DELEG }
 
 func (rr *DELEGI) String() string {
 	sb := sprintHeader(rr)
-	for _, i := range rr.Value {
-		sb.WriteByte(' ')
-		k := deleg.InfoToKey(i)
-		sb.WriteString(deleg.KeyToString(k))
-		sb.WriteByte('=')
-		sb.WriteByte('"')
-		sb.WriteString(i.String())
-		sb.WriteByte('"')
-	}
+	sb.WriteString(rr.DELEG.DELEG.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1530,20 +1369,7 @@ type DSYNC struct {
 
 func (rr *DSYNC) String() string {
 	sb := sprintHeader(rr)
-
-	sb.WriteString(TypeToString[rr.Type])
-	sb.WriteByte(' ')
-	if rr.Scheme == 1 {
-		sb.WriteString("NOTIFY")
-	} else {
-		sb.WriteString(strconv.Itoa(int(rr.Scheme)))
-	}
-	sb.WriteByte(' ')
-
-	sb.WriteString(strconv.Itoa(int(rr.Port)))
-	sb.WriteByte(' ')
-	sb.WriteString(rr.Target)
-
+	sb.WriteString(rr.DSYNC.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
@@ -1602,10 +1428,7 @@ type TSIG struct {
 
 func (rr *TSIG) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, rr.Algorithm, tsigTimeToString(rr.TimeSigned),
-		strconv.Itoa(int(rr.Fudge)), strconv.Itoa(int(rr.MACSize)),
-		strings.ToUpper(rr.MAC), strconv.Itoa(int(rr.OrigID)),
-		strconv.Itoa(int(rr.Error)), strconv.Itoa(int(rr.OtherLen)), rr.OtherData)
+	sb.WriteString(rr.TSIG.String())
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s

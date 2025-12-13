@@ -14,7 +14,7 @@ import (
 
 var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
 
-func (rr RRSIG) String() string {
+func (rd RRSIG) String() string {
 	sb := builderPool.Get()
 	sprintData(&sb, typeToString(rd.TypeCovered),
 		strconv.Itoa(int(rd.Algorithm)),
@@ -30,7 +30,7 @@ func (rr RRSIG) String() string {
 	return s
 }
 
-func (rr LOC) String() string {
+func (rd LOC) String() string {
 	sb := builderPool.Get()
 	lat := rd.Latitude
 	ns := "N"
@@ -78,7 +78,7 @@ func (rr LOC) String() string {
 	return s
 }
 
-func (rr CERT) String() string {
+func (rd CERT) String() string {
 	sb := builderPool.Get()
 	if certtype, ok := dnsstring.CertTypeToString[rd.Type]; !ok {
 		sb.WriteString(strconv.Itoa(int(rd.Type)))
@@ -130,18 +130,21 @@ func (rd NSEC3PARAM) String() string {
 	return s
 }
 
-func (rr NULL) String() string  { return rd.Null }
-func (rr CNAME) String() string { return rd.Target }
-func (rr HINFO) String() string { return sprintTxt([]string{rd.Cpu, rd.Os}) }
-func (rr MB) String() string    { return rd.Mb }
-func (rr MG) String() string    { return rd.Mg }
-func (rr MR) String() string    { return rd.Mr }
-func (rr MF) String() string    { return rd.Mf }
-func (rr MD) String() string    { return rd.Md }
-func (rr X25) String() string   { return rd.PSDNAddress }
+func (rd NULL) String() string  { return rd.Null }
+func (rd CNAME) String() string { return rd.Target }
+func (rd HINFO) String() string { return sprintTxt([]string{rd.Cpu, rd.Os}) }
+func (rd MB) String() string    { return rd.Mb }
+func (rd MG) String() string    { return rd.Mg }
+func (rd MR) String() string    { return rd.Mr }
+func (rd MF) String() string    { return rd.Mf }
+func (rd MD) String() string    { return rd.Md }
+func (rd X25) String() string   { return rd.PSDNAddress }
 func (rd NS) String() string    { return rd.Ns }
+func (rd PTR) String() string   { return rd.Ptr }
+func (rd EUI48) String() string { return euiToString(rd.Address, 48) }
+func (rd EUI64) String() string { return euiToString(rd.Address, 64) }
 
-func (rr MINFO) String() string {
+func (rd MINFO) String() string {
 	sb := builderPool.Get()
 	sprintData(&sb, rd.Rmail, rd.Email)
 	s := sb.String()
@@ -149,7 +152,7 @@ func (rr MINFO) String() string {
 	return s
 }
 
-func (rr MX) String() string {
+func (rd MX) String() string {
 	sb := builderPool.Get()
 	sprintData(&sb, strconv.Itoa(int(rd.Preference)), rd.Mx)
 	s := sb.String()
@@ -180,8 +183,6 @@ func (rd RT) String() string {
 	builderPool.Put(sb)
 	return s
 }
-
-func (rd PTR) String() string { return rd.Ptr }
 
 func (rd RP) String() string {
 	sb := builderPool.Get()
@@ -519,9 +520,6 @@ func (rd LP) String() string {
 	builderPool.Put(sb)
 	return s
 }
-
-func (rd EUI48) String() string { return euiToString(rd.Address, 48) }
-func (rd EUI64) String() string { return euiToString(rd.Address, 64) }
 
 func (rd CAA) String() string {
 	sb := builderPool.Get()
