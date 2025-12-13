@@ -3,6 +3,8 @@
 - Many functions (and new ones) are moved into dns/dnsutil, and dns/dnstest. This copied some stuff from CoreDNS.
 - dns/dnshttp was added for help with DOH - DNS over HTTPs.
 - `RR` lost the `Type` and `Rdlength` fields, type is derived from the Go type, `Rdlength` served no function at all.
+- The date of each `RR` is split out in to a dns/rdata package. This makes it much more memory efficient to
+  store RRSets - as the RR's header isn't duplicated.
 - `context.Context` is used in the correct places. `ServeDNS` now has a context.Context, with `Zone(ctx)` you
   retrieve the pattern zone that lead to invocation of this Handler.
 - `internal/*` packages that hold code that used to be private, but was cluttering the top level directory; also allowed for better
@@ -40,6 +42,16 @@
 - Copied, sanitized and removed tests that accumulated over 16 years of development.
 - Escapes in domain names is not supported. This added 50-100% overhead in low-level functions that are often
   used in the hot path.
+
+## Create an RR
+
+```
+OLD                                                                  | NEW
+r := &MX{ Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600},  | r := &MX{
+        Preference: 10, Mx: "mx.miek.nl."}                           |   Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600},
+                                                                     |   MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."},
+                                                                     | }
+```
 
 ## Setting EDNS0
 
