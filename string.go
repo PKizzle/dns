@@ -1,50 +1,12 @@
 package dns
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
-	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/pool"
 )
-
-func sprintTxt(txt []string) string {
-	sb := builderPool.Get()
-	defer builderPool.Put(sb)
-
-	for i, s := range txt {
-		sb.Grow(3 + len(s))
-		if i > 0 {
-			sb.WriteString(` "`)
-		} else {
-			sb.WriteByte('"')
-		}
-		for j := 0; j < len(s); {
-			b, n := ddd.Next(s, j)
-			if n == 0 {
-				break
-			}
-			writeTxtByte(&sb, b)
-			j += n
-		}
-		sb.WriteByte('"')
-	}
-	return sb.String()
-}
-
-func writeTxtByte(sb *strings.Builder, b byte) {
-	switch {
-	case b == '"' || b == '\\':
-		sb.WriteByte('\\')
-		sb.WriteByte(b)
-	case b < ' ' || b > '~':
-		sb.WriteString(ddd.Escape(b))
-	default:
-		sb.WriteByte(b)
-	}
-}
 
 func typeToString(t uint16) string {
 	if t1, ok := TypeToString[uint16(t)]; ok {
@@ -81,26 +43,14 @@ func opcodeToString(o uint8) string {
 	return "OPCODE" + strconv.Itoa(int(o))
 }
 
-// saltToString converts a NSECX salt to uppercase and returns "-" when it is empty.
-func saltToString(s string) string {
-	if s == "" {
-		return "-"
+// sprint write the rdata to sb with spaces between the elements.
+func sprintData(sb *strings.Builder, sx ...string) {
+	for i, s := range sx {
+		sb.WriteString(s)
+		if i < len(sx)-1 {
+			sb.WriteByte(' ')
+		}
 	}
-	return strings.ToUpper(s)
-}
-
-func euiToString(eui uint64, bits int) (hex string) {
-	switch bits {
-	case 64:
-		hex = fmt.Sprintf("%16.16x", eui)
-		hex = hex[0:2] + "-" + hex[2:4] + "-" + hex[4:6] + "-" + hex[6:8] +
-			"-" + hex[8:10] + "-" + hex[10:12] + "-" + hex[12:14] + "-" + hex[14:16]
-	case 48:
-		hex = fmt.Sprintf("%12.12x", eui)
-		hex = hex[0:2] + "-" + hex[2:4] + "-" + hex[4:6] + "-" + hex[6:8] +
-			"-" + hex[8:10] + "-" + hex[10:12]
-	}
-	return
 }
 
 // sprintHeader creates a strings.Builder, write the header to it, plus an extra tab and returns the builder.
@@ -144,36 +94,6 @@ func sprintOptionHeader(rr EDNS0) *strings.Builder {
 	sb.WriteString(codeToString(rrcode))
 	sb.WriteByte('\t')
 	return &sb
-}
-
-// sprintData write the rdata to sb with spaces between the elements
-func sprintData(sb *strings.Builder, sx ...string) {
-	for i, s := range sx {
-		sb.WriteString(s)
-		if i < len(sx)-1 {
-			sb.WriteByte(' ')
-		}
-	}
-}
-
-func splitN(s string, n int) []string {
-	if len(s) < n {
-		return []string{s}
-	}
-	sx := []string{}
-	p, i := 0, n
-	for {
-		if i <= len(s) {
-			sx = append(sx, s[p:i])
-		} else {
-			sx = append(sx, s[p:])
-			break
-
-		}
-		p, i = p+n, i+n
-	}
-
-	return sx
 }
 
 var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}

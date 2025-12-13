@@ -69,9 +69,11 @@ func main() {
 			source2 = bytes.Replace(source2, []byte("package dns"), []byte("package deleg"), 1)
 		case "svcb/zdnsutil.go":
 			source2 = bytes.Replace(source2, []byte("package deleg"), []byte("package svcb"), 1)
+		case "rdata/zdnsutil.go":
+			source2 = bytes.Replace(source2, []byte("package svcb"), []byte("package rdata"), 1)
 		}
 		generate.Write(bytes.NewBuffer(source2), out)
 	}
 }
 
-var outs = []string{"zdnsutil.go", "deleg/zdnsutil.go", "svcb/zdnsutil.go"}
+var outs = []string{"zdnsutil.go", "deleg/zdnsutil.go", "svcb/zdnsutil.go", "rdata/zdnsutil.go"}

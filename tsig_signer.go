@@ -7,7 +7,6 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"hash"
-	"time"
 
 	"codeberg.org/miekg/dns/internal/pack"
 )
@@ -202,10 +201,4 @@ func (tw *tsigWireFmt) pack(buf []byte) (int, error) {
 		return off, err
 	}
 	return off, nil
-}
-
-// Translate the TSIG time signed into a date. There is no need for RFC1982 calculations as this date is 48 bits.
-func tsigTimeToString(t uint64) string {
-	ti := time.Unix(int64(t), 0).UTC()
-	return ti.Format("20060102150405")
 }
