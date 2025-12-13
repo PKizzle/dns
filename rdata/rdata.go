@@ -207,6 +207,12 @@ type NSEC struct {
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
+func (rd NSEC) Len() int {
+	l := len(rd.NextDomain) + 1
+	l += typeBitMapLen(rd.TypeBitMap)
+	return l
+}
+
 // DS RR. See RFC 4034 and RFC 3658.
 type DS struct {
 	KeyTag     uint16
@@ -273,6 +279,12 @@ type NSEC3 struct {
 	HashLength uint8
 	NextDomain string   `dns:"size-base32:HashLength"`
 	TypeBitMap []uint16 `dns:"nsec"`
+}
+
+func (rd NSEC3) Len() int {
+	l := 6 + len(rd.Salt)/2 + 1 + len(rd.NextDomain) + 1
+	l += typeBitMapLen(rd.TypeBitMap)
+	return l
 }
 
 // NSEC3PARAM RR. See RFC 5155.
@@ -423,6 +435,12 @@ type CSYNC struct {
 	TypeBitMap []uint16 `dns:"nsec"`
 }
 
+func (rd CSYNC) Len() int {
+	l := 4 + 2
+	l += typeBitMapLen(rd.TypeBitMap)
+	return l
+}
+
 // ZONEMD RR, RFC 8976.
 type ZONEMD struct {
 	Serial uint32
@@ -462,4 +480,27 @@ type TSIG struct {
 	Error      uint16
 	OtherLen   uint16
 	OtherData  string `dns:"size-hex:OtherLen"`
+}
+
+// typeBitMapLen is a helper function which computes the "maximum" length of
+// a the NSEC Type BitMap field.
+func typeBitMapLen(bitmap []uint16) int {
+	var l int
+	var lastwindow, lastlength uint16
+	for _, t := range bitmap {
+		window := t / 256
+		length := (t-window*256)/8 + 1
+		if window > lastwindow && lastlength != 0 { // New window, jump to the new off
+			l += int(lastlength) + 2
+			lastlength = 0
+		}
+		if window < lastwindow || length < lastlength {
+			// packNsec would return Error{err: "nsec bits out of order"} here, but
+			// when computing the length, we want do be liberal.
+			continue
+		}
+		lastwindow, lastlength = window, length
+	}
+	l += int(lastlength) + 2
+	return l
 }
