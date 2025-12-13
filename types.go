@@ -909,12 +909,7 @@ func (rr *NSEC) String() string {
 	return s
 }
 
-func (rr *NSEC) Len() int {
-	l := rr.Hdr.Len()
-	l += len(rr.NextDomain)
-	l += typeBitMapLen(rr.TypeBitMap)
-	return l
-}
+func (rr *NSEC) Len() int { return rr.Hdr.Len() + rr.NSEC.Len() }
 
 // DLV RR. See RFC 4431.
 type DLV struct{ DS }
@@ -1131,12 +1126,7 @@ func (rr *NSEC3) String() string {
 	return s
 }
 
-func (rr *NSEC3) Len() int {
-	l := rr.Hdr.Len()
-	l += 6 + len(rr.Salt)/2 + 1 + len(rr.NextDomain) + 1
-	l += typeBitMapLen(rr.TypeBitMap)
-	return l
-}
+func (rr *NSEC3) Len() int { return rr.Hdr.Len() + rr.NSEC3.Len() }
 
 // NSEC3PARAM RR. See RFC 5155.
 type NSEC3PARAM struct {
@@ -1520,12 +1510,7 @@ func (rr *CSYNC) String() string {
 	return s
 }
 
-func (rr *CSYNC) Len() int {
-	l := rr.Hdr.Len()
-	l += 4 + 2
-	l += typeBitMapLen(rr.TypeBitMap)
-	return l
-}
+func (rr *CSYNC) Len() int { return rr.Hdr.Len() + rr.CSYNC.Len() }
 
 // ZONEMD RR, RFC 8976.
 type ZONEMD struct {

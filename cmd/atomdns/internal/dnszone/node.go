@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/rdata"
 )
 
 // Restart is used in the (recursive) calling of Retrieve to complete a CNAME chain. The i index is used to avoid loops
@@ -14,17 +15,38 @@ type Restart struct {
 	I      int      // break recursion at I > 7
 }
 
-// A Node is a DNS node in the tree.
+// A Node is a DNS node in the tree. The class is not stored an defaults to IN.
 type Node struct {
-	Name string
-	RRs  []dns.RR // all the rrs with owner name 'name'.
+	Name   string
+	TTL    uint32
+	Type   uint16
+	RDATAs []dns.RDATA
 }
 
+// RRs returns the full RRs from a node.
+func (n *Node) RRs() []dns.RR {
+	rrs := make([]dns.RR, len(n.RDATAs))
+	for i := range n.RDATAs {
+		if newFn, ok := dns.TypeToRR[n.Type]; ok {
+			rrs[i] = newFn()
+			rdataFn := dns.TypeToRDATA[n.Type]
+			rdataFn(rrs[i], n.RDATAs[i])
+		} else {
+			rrs[i] = &dns.RFC3597{RFC3597: n.RDATAs[i].(rdata.RFC3597)}
+		}
+		rrs[i].Header().Class = dns.ClassINET
+		rrs[i].Header().Name = n.Name
+		rrs[i].Header().TTL = n.TTL
+	}
+
+	return rrs
+}
+
+// String output the string representation for a Node. Mostly used for debugging.
 func (n *Node) String() string {
-	// TODO(miek): builderPool for all of these?
 	sb := strings.Builder{}
-	for i := range n.RRs {
-		sb.WriteString(n.RRs[i].String())
+	for _, rr := range n.RRs() {
+		sb.WriteString(rr.String())
 		sb.WriteByte('\n')
 	}
 	return sb.String()

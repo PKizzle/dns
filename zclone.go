@@ -759,9 +759,6 @@ func (rr *NXNAME) Clone() RR {
 func (rr *SPF) Clone() RR {
 	return &SPF{*rr.TXT.Clone().(*TXT)}
 }
-func (rr *AVC) Clone() RR {
-	return &AVC{*rr.TXT.Clone().(*TXT)}
-}
 func (rr *WALLET) Clone() RR {
 	return &WALLET{*rr.TXT.Clone().(*TXT)}
 }

@@ -10,6 +10,7 @@ import (
 )
 
 //go:generate go run rr_generate.go
+//go:generate go run rdata_generate.go
 //go:generate go run ednsrr_generate.go
 //go:generate go run dsorr_generate.go
 //go:generate go run msg_generate.go
@@ -52,7 +53,7 @@ type RR interface {
 
 // An RDATA represents a DNS rdata element, this is the part of the RR minus the [Header].
 type RDATA interface {
-	// Len is the length of the RDATA when encoded in wire format.
+	// Len is the length of the resource data when encoded in wire format.
 	Len() int
 }
 

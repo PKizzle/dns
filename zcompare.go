@@ -1888,10 +1888,6 @@ func (rr *SPF) compare(b RR) (x int) {
 	return rr.TXT.compare(&b.(*SPF).TXT)
 }
 
-func (rr *AVC) compare(b RR) (x int) {
-	return rr.TXT.compare(&b.(*AVC).TXT)
-}
-
 func (rr *WALLET) compare(b RR) (x int) {
 	return rr.TXT.compare(&b.(*WALLET).TXT)
 }
