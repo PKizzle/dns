@@ -1,0 +1,69 @@
+package rdata
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"codeberg.org/miekg/dns/internal/dnsstring"
+)
+
+// cmToM takes a cm value expressed in RFC 1876 SIZE mantissa/exponent
+// format and returns a string in m (two decimals for the cm).
+func cmToM(x uint8) string {
+	m := x & 0xf0 >> 4
+	e := x & 0x0f
+
+	if e < 2 {
+		if e == 1 {
+			m *= 10
+		}
+
+		return fmt.Sprintf("0.%02d", m)
+	}
+
+	s := fmt.Sprintf("%d", m)
+	for e > 2 {
+		s += "0"
+		e--
+	}
+	return s
+}
+
+// sprint write the rdata to sb with spaces between the elements.
+func sprintData(sb *strings.Builder, sx ...string) {
+	for i, s := range sx {
+		sb.WriteString(s)
+		if i < len(sx)-1 {
+			sb.WriteByte(' ')
+		}
+	}
+}
+func typeToString(t uint16) string {
+	if t1, ok := dnsstring.TypeToString[uint16(t)]; ok {
+		return t1
+	}
+	return "TYPE" + strconv.Itoa(int(t))
+}
+
+// saltToString converts a NSECX salt to uppercase and returns "-" when it is empty.
+func saltToString(s string) string {
+	if s == "" {
+		return "-"
+	}
+	return strings.ToUpper(s)
+}
+
+func euiToString(eui uint64, bits int) (hex string) {
+	switch bits {
+	case 64:
+		hex = fmt.Sprintf("%16.16x", eui)
+		hex = hex[0:2] + "-" + hex[2:4] + "-" + hex[4:6] + "-" + hex[6:8] +
+			"-" + hex[8:10] + "-" + hex[10:12] + "-" + hex[12:14] + "-" + hex[14:16]
+	case 48:
+		hex = fmt.Sprintf("%12.12x", eui)
+		hex = hex[0:2] + "-" + hex[2:4] + "-" + hex[4:6] + "-" + hex[6:8] +
+			"-" + hex[8:10] + "-" + hex[10:12]
+	}
+	return
+}

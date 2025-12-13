@@ -15,7 +15,8 @@ import (
 
 // Wire constants and supported types.
 const (
-	// valid RR types and question types
+
+	// If you add one here, also add internal/dnsstrings/types.go
 
 	TypeNone       uint16 = 0
 	TypeA          uint16 = 1
@@ -227,9 +228,6 @@ var CertTypeToString = map[uint16]string{
 	CertURI:     "URI",
 	CertOID:     "OID",
 }
-
-// Prefix for IPv4 encoded as IPv6 address
-const ipv4InIPv6Prefix = "::ffff:"
 
 // NULL RR. See RFC 1035.
 type NULL struct {
@@ -741,75 +739,11 @@ type LOC struct {
 	rdata.LOC
 }
 
-// cmToM takes a cm value expressed in RFC 1876 SIZE mantissa/exponent
-// format and returns a string in m (two decimals for the cm).
-func cmToM(x uint8) string {
-	m := x & 0xf0 >> 4
-	e := x & 0x0f
-
-	if e < 2 {
-		if e == 1 {
-			m *= 10
-		}
-
-		return fmt.Sprintf("0.%02d", m)
-	}
-
-	s := fmt.Sprintf("%d", m)
-	for e > 2 {
-		s += "0"
-		e--
-	}
-	return s
-}
-
 func (rr *LOC) String() string {
 	sb := sprintHeader(rr)
-
-	lat := rr.Latitude
-	ns := "N"
-	if lat > LOCEquator {
-		lat = lat - LOCEquator
-	} else {
-		ns = "S"
-		lat = LOCEquator - lat
-	}
-	h := lat / LOCDegrees
-	lat = lat % LOCDegrees
-	m := lat / LOCHours
-	lat = lat % LOCHours
-
-	sb.WriteString(fmt.Sprintf("%02d %02d %0.3f %s ", h, m, float64(lat)/1000, ns))
-
-	lon := rr.Longitude
-	ew := "E"
-	if lon > LOCPrimemeridian {
-		lon = lon - LOCPrimemeridian
-	} else {
-		ew = "W"
-		lon = LOCPrimemeridian - lon
-	}
-	h = lon / LOCDegrees
-	lon = lon % LOCDegrees
-	m = lon / LOCHours
-	lon = lon % LOCHours
-
-	sb.WriteString(fmt.Sprintf("%02d %02d %0.3f %s ", h, m, float64(lon)/1000, ew))
-
-	alt := float64(rr.Altitude) / 100
-	alt -= LOCAltitudebase
-	if rr.Altitude%100 != 0 {
-		sb.WriteString(fmt.Sprintf("%.2fm ", alt))
-	} else {
-		sb.WriteString(fmt.Sprintf("%.0fm ", alt))
-	}
-
-	sb.WriteString(cmToM(rr.Size) + "m ")
-	sb.WriteString(cmToM(rr.HorizPre) + "m ")
-	sb.WriteString(cmToM(rr.VertPre) + "m")
-	s := sb.String()
-	builderPool.Put(*sb)
-	return s
+	defer builderPool.Put(*sb)
+	sb.WriteString(rr.LOC.String())
+	return sb.String()
 }
 
 // SIG RR. See RFC 2535. The SIG RR is identical to RRSIG and nowadays only used for SIG(0), See RFC 2931.
@@ -817,18 +751,9 @@ type SIG struct{ RRSIG }
 
 func (rr *SIG) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, typeToString(rr.TypeCovered),
-		strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.Labels)),
-		strconv.FormatInt(int64(rr.OrigTTL), 10),
-		dnsutilTimeToString(rr.Expiration),
-		dnsutilTimeToString(rr.Inception),
-		strconv.Itoa(int(rr.KeyTag)),
-		rr.SignerName,
-		rr.Signature)
-	s := sb.String()
-	builderPool.Put(*sb)
-	return s
+	defer builderPool.Put(*sb)
+	sb.WriteString(rr.RRSIG.RRSIG.String())
+	return sb.String()
 }
 
 // NewSIG0 return a new SIG with initial fields set. This can be used SIG0 transaction signing.
@@ -845,18 +770,9 @@ type RRSIG struct {
 
 func (rr *RRSIG) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, typeToString(rr.TypeCovered),
-		strconv.Itoa(int(rr.Algorithm)),
-		strconv.Itoa(int(rr.Labels)),
-		strconv.FormatInt(int64(rr.OrigTTL), 10),
-		dnsutilTimeToString(rr.Expiration),
-		dnsutilTimeToString(rr.Inception),
-		strconv.Itoa(int(rr.KeyTag)),
-		rr.SignerName,
-		rr.Signature)
-	s := sb.String()
-	builderPool.Put(*sb)
-	return s
+	defer builderPool.Put(*sb)
+	sb.WriteString(rr.RRSIG.String())
+	return sb.String()
 }
 
 // NewRRSIG returns a new RRSIG with many fields set. That can be used as a "stub" RRSIG before generating the
