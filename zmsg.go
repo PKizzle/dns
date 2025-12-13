@@ -2215,6 +2215,12 @@ func (rr *SPF) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 func (rr *SPF) unpack(data, msgBuf []byte) (err error) {
 	return rr.TXT.unpack(data, msgBuf)
 }
+func (rr *AVC) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	return rr.TXT.pack(msg, off, compression)
+}
+func (rr *AVC) unpack(data, msgBuf []byte) (err error) {
+	return rr.TXT.unpack(data, msgBuf)
+}
 func (rr *WALLET) pack(msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
 	return rr.TXT.pack(msg, off, compression)
 }
