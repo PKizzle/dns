@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/dnsstring"
 )
 
@@ -67,4 +68,40 @@ func euiToString(eui uint64, bits int) (hex string) {
 			"-" + hex[8:10] + "-" + hex[10:12]
 	}
 	return
+}
+
+func sprintTxt(txt []string) string {
+	sb := builderPool.Get()
+	defer builderPool.Put(sb)
+
+	for i, s := range txt {
+		sb.Grow(3 + len(s))
+		if i > 0 {
+			sb.WriteString(` "`)
+		} else {
+			sb.WriteByte('"')
+		}
+		for j := 0; j < len(s); {
+			b, n := ddd.Next(s, j)
+			if n == 0 {
+				break
+			}
+			writeTxtByte(&sb, b)
+			j += n
+		}
+		sb.WriteByte('"')
+	}
+	return sb.String()
+}
+
+func writeTxtByte(sb *strings.Builder, b byte) {
+	switch {
+	case b == '"' || b == '\\':
+		sb.WriteByte('\\')
+		sb.WriteByte(b)
+	case b < ' ' || b > '~':
+		sb.WriteString(ddd.Escape(b))
+	default:
+		sb.WriteByte(b)
+	}
 }
