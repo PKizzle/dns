@@ -157,3 +157,32 @@ var AlgorithmToString = map[uint8]string{
 	PRIVATEDNS:       "PRIVATEDNS",
 	PRIVATEOID:       "PRIVATEOID",
 }
+
+// Different Certificate Types, see RFC 4398, Section 2.1
+const (
+	CertPKIX = 1 + iota
+	CertSPKI
+	CertPGP
+	CertIPIX
+	CertISPKI
+	CertIPGP
+	CertACPKIX
+	CertIACPKIX
+	CertURI = 253
+	CertOID = 254
+)
+
+// CertTypeToString converts the Cert Type to its string representation.
+// See RFC 4398 and RFC 6944.
+var CertTypeToString = map[uint16]string{
+	CertPKIX:    "PKIX",
+	CertSPKI:    "SPKI",
+	CertPGP:     "PGP",
+	CertIPIX:    "IPIX",
+	CertISPKI:   "ISPKI",
+	CertIPGP:    "IPGP",
+	CertACPKIX:  "ACPKIX",
+	CertIACPKIX: "IACPKIX",
+	CertURI:     "URI",
+	CertOID:     "OID",
+}

@@ -629,27 +629,9 @@ type CERT struct {
 
 func (rr *CERT) String() string {
 	sb := sprintHeader(rr)
-	if certtype, ok := CertTypeToString[rr.Type]; !ok {
-		sb.WriteString(strconv.Itoa(int(rr.Type)))
-	} else {
-		sb.WriteString(certtype)
-	}
-
-	sb.WriteByte(' ')
-	sb.WriteString(strconv.Itoa(int(rr.KeyTag)))
-	sb.WriteByte(' ')
-
-	if algorithm, ok := AlgorithmToString[rr.Algorithm]; ok {
-		sb.WriteString(algorithm)
-	} else {
-		sb.WriteString(strconv.Itoa(int(rr.Algorithm)))
-	}
-	sb.WriteByte(' ')
-
-	sb.WriteString(rr.Certificate)
-	s := sb.String()
-	builderPool.Put(*sb)
-	return s
+	defer builderPool.Put(*sb)
+	sb.WriteString(rr.CERT.String())
+	return sb.String()
 }
 
 // DNAME RR. See RFC 2672.
@@ -1028,18 +1010,9 @@ type NSEC3 struct {
 
 func (rr *NSEC3) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb, strconv.Itoa(int(rr.Hash)),
-		strconv.Itoa(int(rr.Flags)),
-		strconv.Itoa(int(rr.Iterations)),
-		saltToString(rr.Salt),
-		rr.NextDomain)
-	for _, t := range rr.TypeBitMap {
-		sb.WriteByte(' ')
-		sb.WriteString(typeToString(t))
-	}
-	s := sb.String()
-	builderPool.Put(*sb)
-	return s
+	defer builderPool.Put(*sb)
+	sb.WriteString(rr.NSEC3.String())
+	return sb.String()
 }
 
 func (rr *NSEC3) Len() int { return rr.Hdr.Len() + rr.NSEC3.Len() }
@@ -1052,14 +1025,9 @@ type NSEC3PARAM struct {
 
 func (rr *NSEC3PARAM) String() string {
 	sb := sprintHeader(rr)
-	sprintData(sb,
-		strconv.Itoa(int(rr.Hash)),
-		strconv.Itoa(int(rr.Flags)),
-		strconv.Itoa(int(rr.Iterations)),
-		saltToString(rr.Salt))
-	s := sb.String()
-	builderPool.Put(*sb)
-	return s
+	defer builderPool.Put(*sb)
+	sb.WriteString(rr.NSEC3PARAM.String())
+	return sb.String()
 }
 
 // TKEY RR. See RFC 2930.

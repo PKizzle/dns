@@ -80,6 +80,16 @@ func opcodeToString(o uint8) string {
 	return "OPCODE" + strconv.Itoa(int(o))
 }
 
+// sprint write the rdata to sb with spaces between the elements.
+func sprintData(sb *strings.Builder, sx ...string) {
+	for i, s := range sx {
+		sb.WriteString(s)
+		if i < len(sx)-1 {
+			sb.WriteByte(' ')
+		}
+	}
+}
+
 // sprintHeader creates a strings.Builder, write the header to it, plus an extra tab and returns the builder.
 func sprintHeader(rr RR) *strings.Builder {
 	sb := builderPool.Get()

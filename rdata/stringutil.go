@@ -39,6 +39,7 @@ func sprintData(sb *strings.Builder, sx ...string) {
 		}
 	}
 }
+
 func typeToString(t uint16) string {
 	if t1, ok := dnsstring.TypeToString[uint16(t)]; ok {
 		return t1

@@ -75,3 +75,55 @@ func (rr LOC) String() string {
 	builderPool.Put(sb)
 	return s
 }
+
+func (rr CERT) String() string {
+	sb := builderPool.Get()
+	if certtype, ok := dnsstring.CertTypeToString[rr.Type]; !ok {
+		sb.WriteString(strconv.Itoa(int(rr.Type)))
+	} else {
+		sb.WriteString(certtype)
+	}
+
+	sb.WriteByte(' ')
+	sb.WriteString(strconv.Itoa(int(rr.KeyTag)))
+	sb.WriteByte(' ')
+
+	if algorithm, ok := dnsstring.AlgorithmToString[rr.Algorithm]; ok {
+		sb.WriteString(algorithm)
+	} else {
+		sb.WriteString(strconv.Itoa(int(rr.Algorithm)))
+	}
+	sb.WriteByte(' ')
+
+	sb.WriteString(rr.Certificate)
+	s := sb.String()
+	builderPool.Put(sb)
+	return s
+}
+
+func (rr *NSEC3) String() string {
+	sb := builderPool.Get()
+	sprintData(&sb, strconv.Itoa(int(rr.Hash)),
+		strconv.Itoa(int(rr.Flags)),
+		strconv.Itoa(int(rr.Iterations)),
+		saltToString(rr.Salt),
+		rr.NextDomain)
+	for _, t := range rr.TypeBitMap {
+		sb.WriteByte(' ')
+		sb.WriteString(typeToString(t))
+	}
+	s := sb.String()
+	builderPool.Put(sb)
+	return s
+}
+
+func (rr *NSEC3PARAM) String() string {
+	sb := builderPool.Get()
+	sprintData(&sb, strconv.Itoa(int(rr.Hash)),
+		strconv.Itoa(int(rr.Flags)),
+		strconv.Itoa(int(rr.Iterations)),
+		saltToString(rr.Salt))
+	s := sb.String()
+	builderPool.Put(sb)
+	return s
+}
