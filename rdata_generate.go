@@ -31,7 +31,7 @@ func main() {
 	}
 	b := &bytes.Buffer{}
 	b.WriteString(hdr)
-	b.WriteString(`// TypeToRDATA is a map of constructors for each RR type to set it's rdata.
+	b.WriteString(`// TypeToRDATA is a map of functions for each RR type to set it's rdata.
 var TypeToRDATA = map[uint16]func(RR, RDATA){
 `)
 
