@@ -189,8 +189,8 @@ type LOC struct {
 	Altitude  uint32
 }
 
-// dataSIG RR. See RFC 4034 and RFC 3755.
-type dataSIG struct {
+// RRSIG data. See RFC 4034 and RFC 3755.
+type RRSIG struct {
 	TypeCovered uint16
 	Algorithm   uint8
 	Labels      uint8
