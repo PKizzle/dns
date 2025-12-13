@@ -21,7 +21,7 @@ var FlagDebug = flag.Bool("debug", false, "Emit the non-formatted code to standa
 
 // EmptyData are RR that don't have rdata (or are embedding another type) and as such do not have an entry in rdata/rdata.go
 var EmptyData = []string{
-	"ANY", "AXFR", "CDNSKEY", "CDS", "CLA", "DELEGI", "DLV", "HTTPS",
+	"ANY", "AVC", "AXFR", "CDNSKEY", "CDS", "CLA", "DELEGI", "DLV", "HTTPS",
 	"IXFR", "KEY", "NXNAME", "NXT", "OPT", "SIG", "SPF", "RESINFO", "WALLET",
 }
 

@@ -45,6 +45,8 @@ func unpackNSEC(s *cryptobyte.String) ([]uint16, error) {
 	return nsec, nil
 }
 
+// typeBitMapLen is a helper function which computes the "maximum" length of
+// a the NSEC Type BitMap field.
 func typeBitMapLen(bitmap []uint16) int {
 	var l int
 	var lastwindow, lastlength uint16
