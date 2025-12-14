@@ -47,7 +47,7 @@ func (c *Client) TransferIn(ctx context.Context, m *Msg, network, address string
 	if c.Transport == nil {
 		c.Transport = NewTransport()
 	}
-	conn, err := c.Transport.dial(ctx, network, address)
+	conn, err := c.dial(ctx, network, address)
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +159,8 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.Transfer != nil && c.Transfer.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.Transfer.TSIGSigner, &options); err != nil {
+		if c.Transfer != nil && c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
@@ -258,8 +258,8 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
-		if c.Transfer != nil && c.Transfer.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
-			if err := TSIGVerify(r, c.Transfer.TSIGSigner, &options); err != nil {
+		if c.Transfer != nil && c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
+			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
 			}
 		}
