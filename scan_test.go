@@ -325,7 +325,7 @@ func TestZoneParserEDNS0(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ednsrr := tc.in.String()
 			parsed := dnstestNew(ednsrr)
-			s := strings.Replace(parsed.String(), "\t", " ", -1)
+			s := strings.ReplaceAll(parsed.String(), "\t", " ")
 			if s != tc.exp {
 				t.Errorf("expected %s, got %s", tc.exp, s)
 			}

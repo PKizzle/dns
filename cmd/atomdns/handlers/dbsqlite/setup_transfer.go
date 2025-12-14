@@ -11,7 +11,7 @@ func (d *Dbsqlite) SetupTransfer(co *dnsserver.Controller) (err error) {
 	for co.NextBlock(1) {
 		switch co.Val() {
 		case "}":
-			break
+			return nil
 		case "to":
 			d.To.IPs, err = co.RemainingAddrs()
 

@@ -76,8 +76,8 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 		}
 	}
 
-	if c.Transfer != nil && c.Transfer.TSIGSigner != nil && hasTSIG(m) != nil {
-		if err := TSIGSign(m, c.Transfer.TSIGSigner, &TSIGOption{}); err != nil {
+	if c.Transfer != nil && c.TSIGSigner != nil && hasTSIG(m) != nil {
+		if err := TSIGSign(m, c.TSIGSigner, &TSIGOption{}); err != nil {
 			return nil, err
 		}
 	}

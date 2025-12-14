@@ -22,7 +22,7 @@ func TestDbhost(t *testing.T) {
 	next := new(whoami.Whoami).HandlerFunc(nil)
 	h.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
 
-	if x := w.Msg.Answer[0].(*dns.A).A.Addr; x != netip.MustParseAddr("127.0.0.1") {
+	if x := w.Msg.Answer[0].(*dns.A).Addr; x != netip.MustParseAddr("127.0.0.1") {
 		t.Fatalf("expected %s, got %s", "127.0.0.1", x)
 	}
 }

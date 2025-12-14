@@ -1,7 +1,6 @@
 package localaddr
 
 import (
-	"bytes"
 	"net"
 	"testing"
 
@@ -24,7 +23,7 @@ func TestSource(t *testing.T) {
 	}
 	for i, tc := range testcases {
 		got := Source(tc.fam, tc.sources)
-		if !bytes.Equal(tc.exp, got) {
+		if !tc.exp.Equal(got) {
 			t.Errorf("test %d, expected %q, got %q", i, tc.exp, got)
 
 		}
