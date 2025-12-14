@@ -10,6 +10,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+const supportsReusePort = true
+
 func reuseportControl(network, address string, c syscall.RawConn) error {
 	var opErr error
 	err := c.Control(func(fd uintptr) {
@@ -21,6 +23,8 @@ func reuseportControl(network, address string, c syscall.RawConn) error {
 
 	return opErr
 }
+
+const supportsReuseAddr = true
 
 func reuseaddrControl(network, address string, c syscall.RawConn) error {
 	var opErr error
