@@ -14,7 +14,6 @@ type Limits struct {
 	MaxTCPQueries int
 	MaxInflight   int
 	Servers       int
-	BatchSize     int
 }
 
 func (g *Global) SetupLimits(d *conffile.Dispenser) (Limits, error) {
@@ -48,17 +47,6 @@ func (g *Global) SetupLimits(d *conffile.Dispenser) (Limits, error) {
 			}
 			if l.MaxInflight, err = num.CPU(exprs[0]); err != nil {
 				return l, d.PropErr(err)
-			}
-		case "recvmmsg":
-			exprs := d.RemainingArgs()
-			if len(exprs) != 1 {
-				return l, d.PropErr(fmt.Errorf("need single expression"))
-			}
-			if l.BatchSize, err = num.CPU(exprs[0]); err != nil {
-				return l, d.PropErr(err)
-			}
-			if l.BatchSize < 5 {
-				l.BatchSize = 5
 			}
 		default:
 			return l, d.ArgErr()

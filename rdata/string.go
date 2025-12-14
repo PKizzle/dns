@@ -12,9 +12,11 @@ import (
 	"codeberg.org/miekg/dns/svcb"
 )
 
+var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
+
 func (rd RRSIG) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, typeToString(rd.TypeCovered),
+	sprintData(&sb, typeToString(rd.TypeCovered),
 		strconv.Itoa(int(rd.Algorithm)),
 		strconv.Itoa(int(rd.Labels)),
 		strconv.FormatInt(int64(rd.OrigTTL), 10),
@@ -103,7 +105,7 @@ func (rd CERT) String() string {
 
 func (rd NSEC3) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Hash)),
+	sprintData(&sb, strconv.Itoa(int(rd.Hash)),
 		strconv.Itoa(int(rd.Flags)),
 		strconv.Itoa(int(rd.Iterations)),
 		saltToString(rd.Salt),
@@ -119,7 +121,7 @@ func (rd NSEC3) String() string {
 
 func (rd NSEC3PARAM) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Hash)),
+	sprintData(&sb, strconv.Itoa(int(rd.Hash)),
 		strconv.Itoa(int(rd.Flags)),
 		strconv.Itoa(int(rd.Iterations)),
 		saltToString(rd.Salt))
@@ -144,7 +146,7 @@ func (rd EUI64) String() string { return euiToString(rd.Address, 64) }
 
 func (rd MINFO) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.Rmail, rd.Email)
+	sprintData(&sb, rd.Rmail, rd.Email)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -152,7 +154,7 @@ func (rd MINFO) String() string {
 
 func (rd MX) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Preference)), rd.Mx)
+	sprintData(&sb, strconv.Itoa(int(rd.Preference)), rd.Mx)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -160,7 +162,7 @@ func (rd MX) String() string {
 
 func (rd AFSDB) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Subtype)), rd.Hostname)
+	sprintData(&sb, strconv.Itoa(int(rd.Subtype)), rd.Hostname)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -176,7 +178,7 @@ func (rd ISDN) String() string {
 
 func (rd RT) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Preference)), rd.Host)
+	sprintData(&sb, strconv.Itoa(int(rd.Preference)), rd.Host)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -184,7 +186,7 @@ func (rd RT) String() string {
 
 func (rd RP) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.Mbox, rd.Txt)
+	sprintData(&sb, rd.Mbox, rd.Txt)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -192,7 +194,7 @@ func (rd RP) String() string {
 
 func (rd SOA) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.Ns, rd.Mbox,
+	sprintData(&sb, rd.Ns, rd.Mbox,
 		strconv.FormatInt(int64(rd.Serial), 10),
 		strconv.FormatInt(int64(rd.Refresh), 10),
 		strconv.FormatInt(int64(rd.Retry), 10),
@@ -213,7 +215,7 @@ func (rd TXT) String() string {
 
 func (rd IPN) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Node)))
+	sprintData(&sb, strconv.Itoa(int(rd.Node)))
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -221,7 +223,7 @@ func (rd IPN) String() string {
 
 func (rd SRV) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Priority)),
+	sprintData(&sb, strconv.Itoa(int(rd.Priority)),
 		strconv.Itoa(int(rd.Weight)),
 		strconv.Itoa(int(rd.Port)), rd.Target)
 	s := sb.String()
@@ -231,7 +233,7 @@ func (rd SRV) String() string {
 
 func (rd NAPTR) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Order)), strconv.Itoa(int(rd.Preference)))
+	sprintData(&sb, strconv.Itoa(int(rd.Order)), strconv.Itoa(int(rd.Preference)))
 
 	sb.WriteByte(' ')
 	sb.WriteByte('"')
@@ -280,7 +282,7 @@ func (rd AAAA) String() string {
 
 func (rd PX) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Preference)), rd.Map822, rd.Mapx400)
+	sprintData(&sb, strconv.Itoa(int(rd.Preference)), rd.Map822, rd.Mapx400)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -288,7 +290,7 @@ func (rd PX) String() string {
 
 func (rd GPOS) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.Longitude, rd.Latitude, rd.Altitude)
+	sprintData(&sb, rd.Longitude, rd.Latitude, rd.Altitude)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -308,7 +310,7 @@ func (rd NSEC) String() string {
 
 func (rd DS) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.KeyTag)),
+	sprintData(&sb, strconv.Itoa(int(rd.KeyTag)),
 		strconv.Itoa(int(rd.Algorithm)),
 		strconv.Itoa(int(rd.DigestType)),
 		strings.ToUpper(rd.Digest))
@@ -319,7 +321,7 @@ func (rd DS) String() string {
 
 func (rd KX) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Preference)), rd.Exchanger)
+	sprintData(&sb, strconv.Itoa(int(rd.Preference)), rd.Exchanger)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -327,7 +329,7 @@ func (rd KX) String() string {
 
 func (rd TA) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.KeyTag)),
+	sprintData(&sb, strconv.Itoa(int(rd.KeyTag)),
 		strconv.Itoa(int(rd.Algorithm)),
 		strconv.Itoa(int(rd.DigestType)),
 		strings.ToUpper(rd.Digest))
@@ -338,7 +340,7 @@ func (rd TA) String() string {
 
 func (rd TALINK) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.PreviousName, rd.NextName)
+	sprintData(&sb, rd.PreviousName, rd.NextName)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -346,7 +348,7 @@ func (rd TALINK) String() string {
 
 func (rd SSHFP) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Algorithm)),
+	sprintData(&sb, strconv.Itoa(int(rd.Algorithm)),
 		strconv.Itoa(int(rd.Type)),
 		strings.ToUpper(rd.FingerPrint))
 	s := sb.String()
@@ -356,7 +358,7 @@ func (rd SSHFP) String() string {
 
 func (rd DNSKEY) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Flags)),
+	sprintData(&sb, strconv.Itoa(int(rd.Flags)),
 		strconv.Itoa(int(rd.Protocol)),
 		strconv.Itoa(int(rd.Algorithm)),
 		rd.PublicKey)
@@ -367,7 +369,7 @@ func (rd DNSKEY) String() string {
 
 func (rd RKEY) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Flags)),
+	sprintData(&sb, strconv.Itoa(int(rd.Flags)),
 		strconv.Itoa(int(rd.Protocol)),
 		strconv.Itoa(int(rd.Algorithm)),
 		rd.PublicKey)
@@ -381,7 +383,7 @@ func (rd NSAPPTR) String() string { return rd.Ptr }
 // TKEY has no official presentation format, but this will suffice.
 func (rd TKEY) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.Algorithm,
+	sprintData(&sb, rd.Algorithm,
 		dnsutilTimeToString(rd.Inception),
 		dnsutilTimeToString(rd.Expiration),
 		strconv.Itoa(int(rd.Mode)),
@@ -397,7 +399,7 @@ func (rd TKEY) String() string {
 
 func (rd RFC3597) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(len(rd.Data)/2), rd.Data)
+	sprintData(&sb, strconv.Itoa(len(rd.Data)/2), rd.Data)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -405,7 +407,7 @@ func (rd RFC3597) String() string {
 
 func (rd URI) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Priority)), strconv.Itoa(int(rd.Weight)), sprintTxt([]string{rd.Target}))
+	sprintData(&sb, strconv.Itoa(int(rd.Priority)), strconv.Itoa(int(rd.Weight)), sprintTxt([]string{rd.Target}))
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -421,7 +423,7 @@ func (rd DHCID) String() string {
 
 func (rd TLSA) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Usage)),
+	sprintData(&sb, strconv.Itoa(int(rd.Usage)),
 		strconv.Itoa(int(rd.Selector)),
 		strconv.Itoa(int(rd.MatchingType)),
 		rd.Certificate)
@@ -432,7 +434,7 @@ func (rd TLSA) String() string {
 
 func (rd SMIMEA) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Usage)), strconv.Itoa(int(rd.Selector)), strconv.Itoa(int(rd.MatchingType)))
+	sprintData(&sb, strconv.Itoa(int(rd.Usage)), strconv.Itoa(int(rd.Selector)), strconv.Itoa(int(rd.MatchingType)))
 
 	// Every Nth char needs a space on this output. If we output
 	// this as one giant line, we can't read it can in because in some cases
@@ -447,7 +449,7 @@ func (rd SMIMEA) String() string {
 
 func (rd HIP) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.PublicKeyAlgorithm)), rd.Hit, rd.PublicKey)
+	sprintData(&sb, strconv.Itoa(int(rd.PublicKeyAlgorithm)), rd.Hit, rd.PublicKey)
 	for _, d := range rd.RendezvousServers {
 		sb.WriteByte(' ')
 		sb.WriteString(d)
@@ -513,7 +515,7 @@ func (rd L64) String() string {
 
 func (rd LP) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Preference)), rd.Fqdn)
+	sprintData(&sb, strconv.Itoa(int(rd.Preference)), rd.Fqdn)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -521,7 +523,7 @@ func (rd LP) String() string {
 
 func (rd CAA) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Flag)), rd.Tag, sprintTxt([]string{rd.Value}))
+	sprintData(&sb, strconv.Itoa(int(rd.Flag)), rd.Tag, sprintTxt([]string{rd.Value}))
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -577,7 +579,7 @@ func (rd OPENPGPKEY) String() string {
 
 func (rd CSYNC) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.FormatInt(int64(rd.Serial), 10), strconv.Itoa(int(rd.Flags)))
+	sprintData(&sb, strconv.FormatInt(int64(rd.Serial), 10), strconv.Itoa(int(rd.Flags)))
 	for _, t := range rd.TypeBitMap {
 		sb.WriteByte(' ')
 		sb.WriteString(typeToString(t))
@@ -589,7 +591,7 @@ func (rd CSYNC) String() string {
 
 func (rd ZONEMD) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Serial)), strconv.Itoa(int(rd.Scheme)), strconv.Itoa(int(rd.Hash)), rd.Digest)
+	sprintData(&sb, strconv.Itoa(int(rd.Serial)), strconv.Itoa(int(rd.Scheme)), strconv.Itoa(int(rd.Hash)), rd.Digest)
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
@@ -597,7 +599,7 @@ func (rd ZONEMD) String() string {
 
 func (rd SVCB) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, strconv.Itoa(int(rd.Priority)), rd.Target)
+	sprintData(&sb, strconv.Itoa(int(rd.Priority)), rd.Target)
 	for _, p := range rd.Value {
 		sb.WriteByte(' ')
 		k := svcb.PairToKey(p)
@@ -650,7 +652,7 @@ func (rd DSYNC) String() string {
 
 func (rd TSIG) String() string {
 	sb := builderPool.Get()
-	sprintData(sb, rd.Algorithm, tsigTimeToString(rd.TimeSigned),
+	sprintData(&sb, rd.Algorithm, tsigTimeToString(rd.TimeSigned),
 		strconv.Itoa(int(rd.Fudge)), strconv.Itoa(int(rd.MACSize)),
 		strings.ToUpper(rd.MAC), strconv.Itoa(int(rd.OrigID)),
 		strconv.Itoa(int(rd.Error)), strconv.Itoa(int(rd.OtherLen)), rd.OtherData)
@@ -658,5 +660,3 @@ func (rd TSIG) String() string {
 	builderPool.Put(sb)
 	return s
 }
-
-var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return &strings.Builder{} }}}

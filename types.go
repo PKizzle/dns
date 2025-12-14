@@ -2,6 +2,7 @@ package dns
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns/rdata"
@@ -264,7 +265,7 @@ func (rr *CNAME) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.Target)
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -278,7 +279,7 @@ func (rr *HINFO) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.HINFO.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -292,7 +293,7 @@ func (rr *MB) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MB.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -306,7 +307,7 @@ func (rr *MG) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MG.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -320,7 +321,7 @@ func (rr *MINFO) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MINFO.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -334,7 +335,7 @@ func (rr *MR) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MR.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -348,7 +349,7 @@ func (rr *MF) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MF.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -362,7 +363,7 @@ func (rr *MD) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MD.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -376,7 +377,7 @@ func (rr *MX) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.MX.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -390,7 +391,7 @@ func (rr *AFSDB) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.AFSDB.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -404,7 +405,7 @@ func (rr *X25) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.X25.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -418,7 +419,7 @@ func (rr *ISDN) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.ISDN.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -432,7 +433,7 @@ func (rr *RT) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.RT.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -446,7 +447,7 @@ func (rr *NS) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NS.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -460,7 +461,7 @@ func (rr *PTR) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.PTR.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -474,7 +475,7 @@ func (rr *RP) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.RP.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -488,7 +489,7 @@ func (rr *SOA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.SOA.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -502,7 +503,7 @@ func (rr *TXT) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TXT.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -513,7 +514,7 @@ func (rr *SPF) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -524,7 +525,7 @@ func (rr *AVC) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -535,7 +536,7 @@ func (rr *WALLET) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -546,7 +547,7 @@ func (rr *CLA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TXT.TXT.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -560,7 +561,7 @@ func (rr *IPN) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.IPN.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -574,7 +575,7 @@ func (rr *SRV) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.SRV.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -588,7 +589,7 @@ func (rr *NAPTR) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NAPTR.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -600,7 +601,7 @@ type CERT struct {
 
 func (rr *CERT) String() string {
 	sb := sprintHeader(rr)
-	defer builderPool.Put(sb)
+	defer builderPool.Put(*sb)
 	sb.WriteString(rr.CERT.String())
 	return sb.String()
 }
@@ -615,7 +616,7 @@ func (rr *DNAME) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DNAME.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -629,7 +630,7 @@ func (rr *A) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.A.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -643,7 +644,7 @@ func (rr *AAAA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.AAAA.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -657,7 +658,7 @@ func (rr *PX) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.PX.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -671,7 +672,7 @@ func (rr *GPOS) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.GPOS.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -683,7 +684,7 @@ type LOC struct {
 
 func (rr *LOC) String() string {
 	sb := sprintHeader(rr)
-	defer builderPool.Put(sb)
+	defer builderPool.Put(*sb)
 	sb.WriteString(rr.LOC.String())
 	return sb.String()
 }
@@ -693,7 +694,7 @@ type SIG struct{ RRSIG }
 
 func (rr *SIG) String() string {
 	sb := sprintHeader(rr)
-	defer builderPool.Put(sb)
+	defer builderPool.Put(*sb)
 	sb.WriteString(rr.RRSIG.RRSIG.String())
 	return sb.String()
 }
@@ -712,7 +713,7 @@ type RRSIG struct {
 
 func (rr *RRSIG) String() string {
 	sb := sprintHeader(rr)
-	defer builderPool.Put(sb)
+	defer builderPool.Put(*sb)
 	sb.WriteString(rr.RRSIG.String())
 	return sb.String()
 }
@@ -741,7 +742,7 @@ func (rr *NXT) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NSEC.NSEC.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -755,7 +756,7 @@ func (rr *NSEC) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NSEC.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -768,7 +769,7 @@ func (rr *DLV) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DS.DS.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -779,7 +780,7 @@ func (rr *CDS) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DS.DS.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -793,7 +794,7 @@ func (rr *DS) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DS.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -807,7 +808,7 @@ func (rr *KX) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.KX.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -821,7 +822,7 @@ func (rr *TA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TA.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -835,7 +836,7 @@ func (rr *TALINK) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TALINK.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -849,7 +850,7 @@ func (rr *SSHFP) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.SSHFP.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -860,7 +861,7 @@ func (rr *KEY) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DNSKEY.DNSKEY.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -871,7 +872,7 @@ func (rr *CDNSKEY) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DNSKEY.DNSKEY.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -885,7 +886,7 @@ func (rr *DNSKEY) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DNSKEY.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -910,7 +911,7 @@ func (rr *RKEY) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.RKEY.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -924,7 +925,7 @@ func (rr *NSAPPTR) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NSAPPTR.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -936,7 +937,7 @@ type NSEC3 struct {
 
 func (rr *NSEC3) String() string {
 	sb := sprintHeader(rr)
-	defer builderPool.Put(sb)
+	defer builderPool.Put(*sb)
 	sb.WriteString(rr.NSEC3.String())
 	return sb.String()
 }
@@ -951,7 +952,7 @@ type NSEC3PARAM struct {
 
 func (rr *NSEC3PARAM) String() string {
 	sb := sprintHeader(rr)
-	defer builderPool.Put(sb)
+	defer builderPool.Put(*sb)
 	sb.WriteString(rr.NSEC3PARAM.String())
 	return sb.String()
 }
@@ -967,7 +968,7 @@ func (rr *TKEY) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TKEY.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -978,7 +979,7 @@ type RFC3597 struct {
 }
 
 func (rr *RFC3597) String() string {
-	sb := builderPool.Get()
+	sb := strings.Builder{}
 
 	sb.WriteString(rr.Hdr.Name)
 	sb.WriteByte('\t')
@@ -1008,7 +1009,7 @@ func (rr *URI) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.URI.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1022,7 +1023,7 @@ func (rr *DHCID) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DHCID.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1036,7 +1037,7 @@ func (rr *TLSA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TLSA.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1050,7 +1051,7 @@ func (rr *SMIMEA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.SMIMEA.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1064,7 +1065,7 @@ func (rr *HIP) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.HIP.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1078,7 +1079,7 @@ func (rr *NINFO) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NINFO.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1092,7 +1093,7 @@ func (rr *NID) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NID.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1106,7 +1107,7 @@ func (rr *L32) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.L32.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1120,7 +1121,7 @@ func (rr *L64) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.L64.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1134,7 +1135,7 @@ func (rr *LP) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.LP.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1164,7 +1165,7 @@ func (rr *CAA) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.CAA.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1178,7 +1179,7 @@ func (rr *UID) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.UID.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1192,7 +1193,7 @@ func (rr *GID) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.GID.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1206,7 +1207,7 @@ func (rr *UINFO) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.UINFO.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1220,7 +1221,7 @@ func (rr *EID) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.EID.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1234,7 +1235,7 @@ func (rr *NIMLOC) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.NIMLOC.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1248,7 +1249,7 @@ func (rr *OPENPGPKEY) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.OPENPGPKEY.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1262,7 +1263,7 @@ func (rr *CSYNC) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.CSYNC.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1278,7 +1279,7 @@ func (rr *ZONEMD) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.ZONEMD.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1320,7 +1321,7 @@ func (rr *SVCB) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.SVCB.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1332,7 +1333,7 @@ func (rr *HTTPS) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.SVCB.SVCB.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1346,7 +1347,7 @@ func (rr *DELEG) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DELEG.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1356,7 +1357,7 @@ func (rr *DELEGI) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DELEG.DELEG.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1370,7 +1371,7 @@ func (rr *DSYNC) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.DSYNC.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
@@ -1429,7 +1430,7 @@ func (rr *TSIG) String() string {
 	sb := sprintHeader(rr)
 	sb.WriteString(rr.TSIG.String())
 	s := sb.String()
-	builderPool.Put(sb)
+	builderPool.Put(*sb)
 	return s
 }
 
