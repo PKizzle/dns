@@ -168,9 +168,6 @@ func New(conf string, r io.Reader) (*Server, error) {
 			i++
 		}
 		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
-		if global.Limits.BatchSize > 0 {
-			s.servers[j].BatchSize = global.Limits.BatchSize
-		}
 	}
 
 	// dot server
