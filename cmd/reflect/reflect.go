@@ -65,6 +65,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	}
 	// re-use r
 	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
+	r.Response = true
 
 	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
 		a = ip.AddrPort().Addr()
