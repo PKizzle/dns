@@ -161,8 +161,4 @@ func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
 }
 
-var builderPool = &sync.Pool{
-	New: func() any {
-		return &strings.Builder{}
-	},
-}
+var builderPool = &sync.Pool{New: func() any { return &strings.Builder{} }}
