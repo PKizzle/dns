@@ -87,10 +87,10 @@ func readPrivateKeyRSA(m map[string]string) (*rsa.PrivateKey, error) {
 			}
 			switch k {
 			case "modulus":
-				p.PublicKey.N = new(big.Int).SetBytes(v1)
+				p.N = new(big.Int).SetBytes(v1)
 			case "publicexponent":
 				i := new(big.Int).SetBytes(v1)
-				p.PublicKey.E = int(i.Int64()) // int64 should be large enough
+				p.E = int(i.Int64()) // int64 should be large enough
 			case "privateexponent":
 				p.D = new(big.Int).SetBytes(v1)
 			case "prime1":

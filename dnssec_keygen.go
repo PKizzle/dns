@@ -47,7 +47,7 @@ func (k *DNSKEY) Generate(bits int) (crypto.PrivateKey, error) {
 		if err != nil {
 			return nil, err
 		}
-		k.setPublicKeyRSA(priv.PublicKey.E, priv.PublicKey.N)
+		k.setPublicKeyRSA(priv.E, priv.N)
 		return priv, nil
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		var c elliptic.Curve

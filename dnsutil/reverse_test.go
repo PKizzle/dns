@@ -22,7 +22,7 @@ func TestAddrReverse(t *testing.T) {
 	}
 	for i, tc := range testcases {
 		got := AddrReverse(tc.reverse)
-		if bytes.Compare(got, tc.addr) != 0 {
+		if !bytes.Equal(got, tc.addr) {
 			t.Errorf("Test %d, expected '%s', got '%s'", i, tc.addr, got)
 		}
 	}

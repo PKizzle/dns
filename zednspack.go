@@ -239,8 +239,14 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 		o.Address = netip.MustParseAddr("0.0.0.0")
 	case 1:
 		o.Address, err = unpack.A(s)
+		if err != nil {
+			return err
+		}
 	case 2:
 		o.Address, err = unpack.AAAA(s)
+		if err != nil {
+			return err
+		}
 	default:
 		return errors.New("dns: bad address family")
 	}

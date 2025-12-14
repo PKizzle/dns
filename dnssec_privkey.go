@@ -25,8 +25,8 @@ func (k *DNSKEY) PrivateKeyString(p crypto.PrivateKey) string {
 
 	switch p := p.(type) {
 	case *rsa.PrivateKey:
-		modulus := unpack.Base64(p.PublicKey.N.Bytes())
-		e := big.NewInt(int64(p.PublicKey.E))
+		modulus := unpack.Base64(p.N.Bytes())
+		e := big.NewInt(int64(p.E))
 		publicExponent := unpack.Base64(e.Bytes())
 		privateExponent := unpack.Base64(p.D.Bytes())
 		prime1 := unpack.Base64(p.Primes[0].Bytes())
