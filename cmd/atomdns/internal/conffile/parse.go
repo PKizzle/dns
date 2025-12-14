@@ -265,9 +265,9 @@ func (p *parser) doImport() error {
 		// make path relative to the file of the _token_ being processed rather
 		// than current working directory (issue #867) and then use glob to get
 		// list of matching filenames
-		absFile, err := filepath.Abs(p.Dispenser.File())
+		absFile, err := filepath.Abs(p.File())
 		if err != nil {
-			return p.Errf("failed to get absolute path of file: %s: %v", p.Dispenser.filename, err)
+			return p.Errf("failed to get absolute path of file: %s: %v", p.filename, err)
 		}
 
 		var matches []string
@@ -336,7 +336,7 @@ func (p *parser) doSingleImport(importFile string) ([]Token, error) {
 	// (we use full, absolute path to avoid bugs: issue #1892)
 	filename, err := filepath.Abs(importFile)
 	if err != nil {
-		return nil, p.Errf("failed to get absolute path of file: %s: %v", p.Dispenser.filename, err)
+		return nil, p.Errf("failed to get absolute path of file: %s: %v", p.filename, err)
 	}
 	for i := range importedTokens {
 		importedTokens[i].File = filename
@@ -429,7 +429,7 @@ func replaceEnvReferences(s, refStart, refEnd string) string {
 		endIndex += index
 		if endIndex > index+len(refStart) {
 			ref := s[index : endIndex+len(refEnd)]
-			s = strings.Replace(s, ref, os.Getenv(ref[len(refStart):len(ref)-len(refEnd)]), -1)
+			s = strings.ReplaceAll(s, ref, os.Getenv(ref[len(refStart):len(ref)-len(refEnd)]))
 		} else {
 			return s
 		}

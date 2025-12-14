@@ -80,7 +80,7 @@ func (s *Server) Start() error {
 		go atomhttp.Serve(s.httpstarted, s.httpservers[i], s.global)
 	}
 	for range s.httpservers {
-		if err, _ := <-s.httpstarted; err != nil {
+		if err := <-s.httpstarted; err != nil {
 			return err
 		}
 	}

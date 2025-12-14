@@ -31,9 +31,9 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	n := &dnszone.Node{Name: origin}
 	for _, pair := range s.KeyPairs {
 		n.RRs = append(n.RRs, pair.DNSKEY)
-		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA1).ToCDS())
-		n.RRs = append(n.RRs, pair.DNSKEY.ToDS(dns.SHA256).ToCDS())
-		n.RRs = append(n.RRs, pair.DNSKEY.ToCDNSKEY())
+		n.RRs = append(n.RRs, pair.ToDS(dns.SHA1).ToCDS())
+		n.RRs = append(n.RRs, pair.ToDS(dns.SHA256).ToCDS())
+		n.RRs = append(n.RRs, pair.ToCDNSKEY())
 	}
 	z.Set(n)
 
@@ -112,7 +112,6 @@ type nsecfn struct {
 	origin   string
 	zonemd   bool
 	keypairs []KeyPair
-	now      time.Time
 
 	last   string
 	bitmap []uint16

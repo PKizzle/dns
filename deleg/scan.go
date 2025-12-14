@@ -15,6 +15,8 @@ func Parse(i Info, b, o string) error {
 		return x.parse(b)
 	case *SERVERNAME:
 		return x.parse(b, o)
+	case *INCLUDEDELEGI:
+		return x.parse(b, o)
 	}
 	return fmt.Errorf("no deleg parse defined")
 }

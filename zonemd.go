@@ -37,8 +37,8 @@ func (rr *ZONEMD) Sign(zone []RR, options *ZONEMDOption) error {
 		return fmt.Errorf("bad ZONEMD Hash")
 	}
 
-	rrdata := options.Pooler.Get()
-	defer options.Pooler.Put(rrdata)
+	rrdata := options.Get()
+	defer options.Put(rrdata)
 	s := hash.New()
 	for _, rr1 := range zone {
 		if _, ok := rr1.(*ZONEMD); ok {

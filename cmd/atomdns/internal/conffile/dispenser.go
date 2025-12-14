@@ -322,22 +322,6 @@ func (d *Dispenser) isNewLine() bool {
 	return isNextOnNewLine(prev, curr)
 }
 
-// isNextOnNewLine determines whether the current token is on a different
-// line (higher line number) than the next token. It handles imported
-// tokens correctly. If there isn't a next token, it returns true.
-func (d *Dispenser) isNextOnNewLine() bool {
-	if d.cursor < 0 {
-		return false
-	}
-	if d.cursor >= len(d.tokens)-1 {
-		return true
-	}
-
-	curr := d.tokens[d.cursor]
-	next := d.tokens[d.cursor+1]
-	return isNextOnNewLine(curr, next)
-}
-
 // Addr parses the host and port in the current token, i.e. 127.0.0.0:53 is parsed
 // and returned, same for IPv6 addresses [2004:32]:53. If there is no port the default
 // port will be added (53).

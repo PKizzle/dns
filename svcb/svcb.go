@@ -104,7 +104,7 @@ func KeyToPair(k uint16) func() Pair {
 
 // PairToKey is the reverse of KeyToPair.
 func PairToKey(p Pair) uint16 {
-	switch p.(type) {
+	switch p := p.(type) {
 	case *MANDATORY:
 		return KeyMandatory
 	case *ALPN:
@@ -124,7 +124,7 @@ func PairToKey(p Pair) uint16 {
 	case *OHTTP:
 		return KeyOhttp
 	case *LOCAL:
-		return p.(*LOCAL).KeyCode
+		return p.KeyCode
 	}
 	return KeyReserved
 }
@@ -373,14 +373,14 @@ type LOCAL struct {
 func (s *LOCAL) String() string { return pairToString(s.Data) }
 func (s *LOCAL) Len() int       { return tlv + len(s.Data) }
 
-func (s *MANDATORY) Clone() Pair     { return &MANDATORY{slices.Clone(s.Key)} }
-func (s *ALPN) Clone() Pair          { return &ALPN{slices.Clone(s.Alpn)} }
-func (_ *NODEFAULTALPN) Clone() Pair { return &NODEFAULTALPN{} }
-func (s *PORT) Clone() Pair          { return &PORT{s.Port} }
-func (s *ECHCONFIG) Clone() Pair     { return &ECHCONFIG{slices.Clone(s.ECH)} }
-func (_ *OHTTP) Clone() Pair         { return &OHTTP{} }
-func (s *DOHPATH) Clone() Pair       { return &DOHPATH{Template: s.Template} }
-func (s *LOCAL) Clone() Pair         { return &LOCAL{s.KeyCode, slices.Clone(s.Data)} }
+func (s *MANDATORY) Clone() Pair   { return &MANDATORY{slices.Clone(s.Key)} }
+func (s *ALPN) Clone() Pair        { return &ALPN{slices.Clone(s.Alpn)} }
+func (*NODEFAULTALPN) Clone() Pair { return &NODEFAULTALPN{} }
+func (s *PORT) Clone() Pair        { return &PORT{s.Port} }
+func (s *ECHCONFIG) Clone() Pair   { return &ECHCONFIG{slices.Clone(s.ECH)} }
+func (*OHTTP) Clone() Pair         { return &OHTTP{} }
+func (s *DOHPATH) Clone() Pair     { return &DOHPATH{Template: s.Template} }
+func (s *LOCAL) Clone() Pair       { return &LOCAL{s.KeyCode, slices.Clone(s.Data)} }
 
 func (s *IPV4HINT) Clone() Pair {
 	return &IPV4HINT{Hint: slices.Clone(s.Hint)}
