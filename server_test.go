@@ -135,7 +135,7 @@ func TestServerMsgInvalidFunc(t *testing.T) {
 	}
 
 	write := func(m []byte) {
-		l := make([]byte, 2, 2)
+		l := make([]byte, 2)
 		binary.BigEndian.PutUint16(l[0:], uint16(len(m)))
 		m = append(l, m...)
 		if _, err = c.Write(m); err != nil {

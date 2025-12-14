@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 			"SVCB/ALPN", `. 1 IN SVCB 10 one.test. alpn=h2`,
 			func(rr RR) error {
 				alpn := rr.(*SVCB).Value[0].(*svcb.ALPN).Alpn
-				if "h2" != alpn[0] {
+				if alpn[0] != "h2" {
 					return fmt.Errorf("parsing alpn failed, wanted %v got %v", "h2", alpn)
 				}
 				return nil

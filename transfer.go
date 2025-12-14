@@ -341,8 +341,8 @@ func (c *Client) TransferOut(w ResponseWriter, r *Msg, env <-chan *Envelope) (er
 		if err = m.Pack(); err != nil {
 			return err
 		}
-		if c.Transfer != nil && c.Transfer.TSIGSigner != nil && t != nil {
-			if err = TSIGSign(m, c.Transfer.TSIGSigner, &options); err != nil {
+		if c.Transfer != nil && c.TSIGSigner != nil && t != nil {
+			if err = TSIGSign(m, c.TSIGSigner, &options); err != nil {
 				return err
 			}
 		}

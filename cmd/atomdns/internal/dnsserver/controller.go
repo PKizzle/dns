@@ -29,10 +29,10 @@ func NewTestController(input string) *Controller {
 }
 
 func (c *Controller) Path() string {
-	if filepath.IsAbs(c.Dispenser.Val()) {
-		return c.Dispenser.Val()
+	if filepath.IsAbs(c.Val()) {
+		return c.Val()
 	}
-	return filepath.Join(c.Global.Root, c.Dispenser.Val())
+	return filepath.Join(c.Global.Root, c.Val())
 }
 
 func (c *Controller) RemainingPaths() []string {

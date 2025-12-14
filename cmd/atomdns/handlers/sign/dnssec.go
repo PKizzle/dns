@@ -70,7 +70,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 			}
 
 			for _, pair := range s.KeyPairs {
-				rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+				rrsig := dns.NewRRSIG(origin, pair.Algorithm, pair.Tag, incep, expir)
 				if err := rrsig.Sign(pair.Signer, rrset, options); err != nil {
 					alog.Error("Failed to sign", Err(err))
 					return false
@@ -99,7 +99,7 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 	apex.RRs = append(apex.RRs, zonemd)
 
 	for _, pair := range s.KeyPairs {
-		rrsig := dns.NewRRSIG(origin, pair.DNSKEY.Algorithm, pair.Tag, incep, expir)
+		rrsig := dns.NewRRSIG(origin, pair.Algorithm, pair.Tag, incep, expir)
 		rrsig.Sign(pair.Signer, []dns.RR{zonemd}, options)
 		apex.RRs = append(apex.RRs, rrsig)
 	}

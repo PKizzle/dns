@@ -14,7 +14,7 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) (err error) {
 	for co.NextBlock(1) {
 		switch co.Val() {
 		case "}":
-			break
+			return nil
 		case "from":
 			d.From.IPs, err = co.RemainingAddrs()
 			if err != nil {

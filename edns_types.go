@@ -253,7 +253,7 @@ func (o *TCPKEEPALIVE) String() string {
 	if o.Timeout == 0 {
 		sb.WriteString(", timeout omitted")
 	} else {
-		sb.WriteString(fmt.Sprintf(", timeout %dms", o.Timeout*100))
+		fmt.Fprintf(sb, ", timeout %dms", o.Timeout*100)
 	}
 	s := sb.String()
 	builderPool.Put(*sb)

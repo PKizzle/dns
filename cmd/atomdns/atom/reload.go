@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Server) Reload() (err error) {
-	confdata := []byte{}
+	var confdata []byte
 	if builtin(s.global.Config) {
 		confdata = s.config
 	} else {
