@@ -55,5 +55,5 @@ type Builder struct {
 	sync.Pool
 }
 
-func (s *Builder) Get() strings.Builder   { return s.Pool.Get().(strings.Builder) }
-func (s *Builder) Put(sb strings.Builder) { sb.Reset(); s.Pool.Put(sb) }
+func (s *Builder) Get() *strings.Builder   { return s.Pool.Get().(*strings.Builder) }
+func (s *Builder) Put(sb *strings.Builder) { sb.Reset(); s.Pool.Put(sb) }

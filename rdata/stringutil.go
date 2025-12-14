@@ -87,7 +87,7 @@ func sprintTxt(txt []string) string {
 			if n == 0 {
 				break
 			}
-			writeTxtByte(&sb, b)
+			writeTxtByte(sb, b)
 			j += n
 		}
 		sb.WriteByte('"')

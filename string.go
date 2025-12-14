@@ -75,7 +75,7 @@ func sprintHeader(rr RR) *strings.Builder {
 
 	sb.WriteString(typeToString(rrtype))
 	sb.WriteByte('\t')
-	return &sb
+	return sb
 }
 
 // must look just enough so parsing from text will also work.
@@ -93,7 +93,7 @@ func sprintOptionHeader(rr EDNS0) *strings.Builder {
 	rrcode := RRToCode(rr)
 	sb.WriteString(codeToString(rrcode))
 	sb.WriteByte('\t')
-	return &sb
+	return sb
 }
 
-var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
+var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return &strings.Builder{} }}}
