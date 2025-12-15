@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -43,13 +44,13 @@ func TestAtomdnsPerf(t *testing.T) {
 			}
 
 			cmd := exec.CommandContext(ctx, "./atomdns", "-c", conffile)
-			go func(t *testing.T) {
+			go func() {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {
-						t.Skip("no working atomdns binary found in .")
+						log.Fatal("no working atomdns binary found in .")
 					}
 				}
-			}(t)
+			}()
 
 			queries := strings.NewReader("whoami.example.org. A")
 			if err := dnsperf.Run(t, queries, "127.0.0.1:8054", network, 2*time.Second, count); err != nil {
