@@ -47,10 +47,34 @@
 
 ```
 OLD                                                                  | NEW
+                                                                     |
 r := &MX{ Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600},  | r := &MX{
         Preference: 10, Mx: "mx.miek.nl."}                           |   Header{Name:"miek.nl.", Class: dns.ClassINET, TTL: 3600},
                                                                      |   MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."},
                                                                      | }
+```
+
+## Print RR without header
+
+```
+OLD                                                        | NEW
+                                                           |
+mx, _ := dns.NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")   | mx := dnstest.New("miek.nl. 3600 IN MX 10 mx.miek.nl.")
+hdr := mx.Header().String()                                | hdr := mx.Header().String()
+flds := mx.String()[len(hdr)+1:]                           | fmt.Printf("Fields: %q\n", mx.MX.String())
+fmt.Printf("Fields: %q\n", flds)                           |
+```
+
+## Access RR's rdata
+
+```
+OLD                                                        | NEW
+                                                           |
+mx, _ := dns.NewRR("miek.nl. 3600 IN MX 10 mx.miek.nl.")   | mx := dnstest.New("miek.nl. 3600 IN MX 10 mx.miek.nl.")
+num := dns.NumField(mx)                                    | rdata := mx.MX
+for i := range num {                                       | rdata.Preference = 10
+    fmt.Printf("%q", dns.Field(i))                         |
+}                                                          |
 ```
 
 ## Setting EDNS0
