@@ -43,7 +43,7 @@ func TestServer(t *testing.T) {
 			defer dns.HandleRemove("miek.nl.")
 			defer dns.HandleRemove("example.nl.")
 
-			cancel, addrstr, err := tc.run(":0")
+			cancel, addrstr, _ := tc.run(":0")
 			defer cancel()
 
 			c := &dns.Client{Transport: dns.NewTransport()}

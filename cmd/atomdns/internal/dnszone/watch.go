@@ -50,6 +50,5 @@ func Watch(ctx context.Context, file string, fn func()) error {
 		}
 	}()
 
-	watcher.Add(filepath.Dir(file))
-	return nil
+	return watcher.Add(filepath.Dir(file))
 }

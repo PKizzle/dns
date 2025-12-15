@@ -11,7 +11,7 @@ import (
 
 // Reload launches a reload routine that listens for _write_ events to the zone files.
 func (d *Dbfile) Reload() error {
-	dnszone.Watch(d.ctx, d.Path, func() {
+	return dnszone.Watch(d.ctx, d.Path, func() {
 		d.RLock()
 		zones := maps.Values(d.Zones)
 		d.RUnlock()
@@ -32,5 +32,4 @@ func (d *Dbfile) Reload() error {
 			}
 		}
 	})
-	return nil
 }
