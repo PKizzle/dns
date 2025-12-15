@@ -64,18 +64,13 @@ func (s *Sign) Resign() error {
 		}
 	}
 
-	dnszone.Watch(s.ctx, s.Path, fn)
-
 	go func() {
 		ticker := time.NewTicker(Interval)
 		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				fn()
-			}
+		for range ticker.C {
+			fn()
 		}
 	}()
 
-	return nil
+	return dnszone.Watch(s.ctx, s.Path, fn)
 }

@@ -87,7 +87,7 @@ func FuzzNew(f *testing.F) {
 	f.Add(`. 5 IN SVCB 50 five.test. alpn=part1\,\p\a\r\t2\044part3\092,part4\092\\`)
 	f.Add(`miek.nl. IN 3600 MX 15 mx.miek.nl.`)
 	f.Fuzz(func(t *testing.T, s string) {
-		New(s)
+		dnstestNew(s)
 	})
 }
 

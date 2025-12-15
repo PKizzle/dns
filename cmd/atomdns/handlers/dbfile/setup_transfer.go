@@ -34,7 +34,7 @@ func (d *Dbfile) SetupTransfer(co *dnsserver.Controller) (err error) {
 			}
 
 		case "to":
-			d.To.IPs, err = co.RemainingAddrs()
+			d.To.IPs, _ = co.RemainingAddrs()
 
 			for co.NextBlock(2) {
 				switch co.Val() {

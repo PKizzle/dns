@@ -49,6 +49,11 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 		tmpl, err = tmpl.Parse(string(text))
+		if err != nil {
+			log().Warn("Failed to find or parse", "path", t.Path)
+			next.ServeDNS(ctx, w, r) // call next so we hit the refused at some point
+			return
+		}
 
 		data := &Data{Zone: dns.Zone(ctx), ID: r.ID, Msg: r, Name: r.Question[0].Header().Name,
 			Class: dns.ClassToString[r.Question[0].Header().Class],

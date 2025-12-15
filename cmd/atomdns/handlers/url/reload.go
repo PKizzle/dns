@@ -11,7 +11,7 @@ import (
 
 // Reload launches a reload routine that listens for _write_ events to the zone files.
 func (u *Url) Reload() error {
-	dnszone.Watch(u.ctx, u.Path, func() {
+	return dnszone.Watch(u.ctx, u.Path, func() {
 		u.RLock()
 		zones := maps.Values(u.Zones)
 		u.RUnlock()
@@ -29,5 +29,4 @@ func (u *Url) Reload() error {
 			alog.Info("Successful reload")
 		}
 	})
-	return nil
 }
