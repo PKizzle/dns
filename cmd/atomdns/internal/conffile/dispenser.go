@@ -20,13 +20,13 @@ import (
 	"io"
 	"net"
 	"strings"
+	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/iface"
 )
 
-// Dispenser is a type that dispenses tokens, similarly to a lexer,
-// except that it can do so with some notion of structure and has
-// some really convenient methods.
+// Dispenser is a type that dispenses tokens, similarly to a lexer, except that it can do so with some
+// notion of structure and has some really convenient methods.
 type Dispenser struct {
 	filename string
 	keys     []string
@@ -64,8 +64,7 @@ func NewDispenser(filename string, keys []string, tokens []Token) Dispenser {
 	}
 }
 
-// Next loads the next token. Returns true if a token
-// was loaded; false otherwise. If false, all tokens
+// Next loads the next token. Returns true if a token was loaded; false otherwise. If false, all tokens
 // have been consumed.
 func (d *Dispenser) Next() bool {
 	if d.cursor < len(d.tokens)-1 {
@@ -75,10 +74,8 @@ func (d *Dispenser) Next() bool {
 	return false
 }
 
-// NextArg loads the next token if it is on the same
-// line. Returns true if a token was loaded; false
-// otherwise. If false, all tokens on the line have
-// been consumed. It handles imported tokens correctly.
+// NextArg loads the next token if it is on the same line. Returns true if a token was loaded; false
+// otherwise. If false, all tokens on the line have been consumed. It handles imported tokens correctly.
 func (d *Dispenser) NextArg() bool {
 	if d.cursor < 0 {
 		d.cursor++
@@ -96,8 +93,7 @@ func (d *Dispenser) NextArg() bool {
 	return false
 }
 
-// nextOnSameLine advances the cursor if the next
-// token is on the same line of the same file.
+// nextOnSameLine advances the cursor if the next token is on the same line of the same file.
 func (d *Dispenser) nextOnSameLine() bool {
 	if d.cursor < 0 {
 		d.cursor++
@@ -115,10 +111,8 @@ func (d *Dispenser) nextOnSameLine() bool {
 	return false
 }
 
-// NextLine loads the next token only if it is not on the same
-// line as the current token, and returns true if a token was
-// loaded; false otherwise. If false, there is not another token
-// or it is on the same line. It handles imported tokens correctly.
+// NextLine loads the next token only if it is not on the same line as the current token, and returns true if a token was
+// loaded; false otherwise. If false, there is not another token or it is on the same line. It handles imported tokens correctly.
 func (d *Dispenser) NextLine() bool {
 	if d.cursor < 0 {
 		d.cursor++
@@ -136,12 +130,9 @@ func (d *Dispenser) NextLine() bool {
 	return false
 }
 
-// NextBlock can be used as the condition of a for loop
-// to load the next token as long as it opens a block or
-// is already in a block. It returns true if a token was
-// loaded, or false when the block's closing curly brace
-// was loaded and thus the block ended. Nested blocks are
-// not supported.
+// NextBlock can be used as the condition of a for loop to load the next token as long as it opens a block or
+// is already in a block. It returns true if a token was loaded, or false when the block's closing curly brace
+// was loaded and thus the block ended. Nested blocks are not supported.
 func (d *Dispenser) NextBlock(initialNestingLevel int) bool {
 	if d.nesting > initialNestingLevel {
 		if !d.Next() {
@@ -172,14 +163,12 @@ func (d *Dispenser) NextBlock(initialNestingLevel int) bool {
 	return true
 }
 
-// Nesting returns the current nesting level. Necessary
-// if using NextBlock()
+// Nesting returns the current nesting level. Necessary if using NextBlock()
 func (d *Dispenser) Nesting() int {
 	return d.nesting
 }
 
-// Val gets the text of the current token. If there is no token
-// loaded, it returns empty string.
+// Val gets the text of the current token. If there is no token loaded, it returns empty string.
 func (d *Dispenser) Val() string {
 	if d.cursor < 0 || d.cursor >= len(d.tokens) {
 		return ""
@@ -187,8 +176,7 @@ func (d *Dispenser) Val() string {
 	return d.tokens[d.cursor].Text
 }
 
-// Line gets the line number of the current token. If there is no token
-// loaded, it returns 0.
+// Line gets the line number of the current token. If there is no token loaded, it returns 0.
 func (d *Dispenser) Line() int {
 	if d.cursor < 0 || d.cursor >= len(d.tokens) {
 		return 0
@@ -211,12 +199,9 @@ func (d *Dispenser) File() string {
 // Keys returns the keys of the block we are parsing right now.
 func (d *Dispenser) Keys() []string { return d.keys }
 
-// Args is a convenience function that loads the next arguments
-// (tokens on the same line) into an arbitrary number of strings
-// pointed to in targets. If there are fewer tokens available
-// than string pointers, the remaining strings will not be changed
-// and false will be returned. If there were enough tokens available
-// to fill the arguments, then true will be returned.
+// Args is a convenience function that loads the next arguments (tokens on the same line) into an arbitrary number of strings
+// pointed to in targets. If there are fewer tokens available than string pointers, the remaining strings will not be changed
+// and false will be returned. If there were enough tokens available to fill the arguments, then true will be returned.
 func (d *Dispenser) Args(targets ...*string) bool {
 	enough := true
 	for i := range len(targets) {
@@ -229,10 +214,8 @@ func (d *Dispenser) Args(targets ...*string) bool {
 	return enough
 }
 
-// RemainingArgs loads any more arguments (tokens on the same line)
-// into a slice and returns them. Open curly brace tokens also indicate
-// the end of arguments, and the curly brace is not included in
-// the return value nor is it loaded.
+// RemainingArgs loads any more arguments (tokens on the same line) into a slice and returns them. Open curly brace tokens also indicate
+// the end of arguments, and the curly brace is not included in the return value nor is it loaded.
 func (d *Dispenser) RemainingArgs() []string {
 	var args []string
 
@@ -247,10 +230,8 @@ func (d *Dispenser) RemainingArgs() []string {
 	return args
 }
 
-// ArgErr returns an argument error, meaning that another
-// argument was expected but not found. In other words,
-// a line break or open curly brace was encountered instead of
-// an argument.
+// ArgErr returns an argument error, meaning that another argument was expected but not found. In other words,
+// a line break or open curly brace was encountered instead of an argument.
 func (d *Dispenser) ArgErr() error {
 	if d.Val() == "{" {
 		return d.Err("unexpected token '{', expecting argument")
@@ -266,8 +247,7 @@ func (d *Dispenser) PropErr(err ...error) error {
 	return d.Errf("unexpected property: %q", d.Val())
 }
 
-// SyntaxErr creates a generic syntax error which explains what was
-// found and what was expected.
+// SyntaxErr creates a generic syntax error which explains what was found and what was expected.
 func (d *Dispenser) SyntaxErr(expected string) error {
 	msg := fmt.Sprintf("%s:%d - syntax error: unexpected token %q, expecting '%s'", d.File(), d.Line(), d.Val(), expected)
 	return errors.New(msg)
@@ -279,8 +259,7 @@ func (d *Dispenser) PropEmptyErr(prop string) error {
 	return errors.New(msg)
 }
 
-// EOFErr returns an error indicating that the dispenser reached
-// the end of the input when searching for the next token.
+// EOFErr returns an error indicating that the dispenser reached the end of the input when searching for the next token.
 func (d *Dispenser) EOFErr() error {
 	return d.Errf("unexpected EOF")
 }
@@ -296,8 +275,7 @@ func (d *Dispenser) Errf(format string, args ...any) error {
 	return d.Err(fmt.Sprintf(format, args...))
 }
 
-// numLineBreaks counts how many line breaks are in the token
-// value given by the token index tknIdx. It returns 0 if the
+// numLineBreaks counts how many line breaks are in the token value given by the token index tknIdx. It returns 0 if the
 // token does not exist or there are no line breaks.
 func (d *Dispenser) numLineBreaks(tknIdx int) int {
 	if tknIdx < 0 || tknIdx >= len(d.tokens) {
@@ -306,9 +284,8 @@ func (d *Dispenser) numLineBreaks(tknIdx int) int {
 	return strings.Count(d.tokens[tknIdx].Text, "\n")
 }
 
-// isNewLine determines whether the current token is on a different
-// line (higher line number) than the previous token. It handles imported
-// tokens correctly. If there isn't a previous token, it returns true.
+// isNewLine determines whether the current token is on a different line (higher line number) than the
+// previous token. It handles imported tokens correctly. If there isn't a previous token, it returns true.
 func (d *Dispenser) isNewLine() bool {
 	if d.cursor < 1 {
 		return true
@@ -322,9 +299,8 @@ func (d *Dispenser) isNewLine() bool {
 	return isNextOnNewLine(prev, curr)
 }
 
-// Addr parses the host and port in the current token, i.e. 127.0.0.0:53 is parsed
-// and returned, same for IPv6 addresses [2004:32]:53. If there is no port the default
-// port will be added (53).
+// Addr parses the host and port in the current token, i.e. 127.0.0.0:53 is parsed and returned, same for
+// IPv6 addresses [2004:32]:53. If there is no port the default port will be added (53).
 func (d *Dispenser) Addr() (string, error) { return addr(d.Val()) }
 
 // RemainingAddrs calls RemainingArgs and return each actual address. If the address does not have
@@ -370,4 +346,18 @@ func (d *Dispenser) RemainingIPs() ([]string, error) {
 		ips = append(ips, ifips...)
 	}
 	return ips, nil
+}
+
+// RemainingDurations calls RemainingArgs and returns all arguments as parsed time.Durations or an error.
+func (d *Dispenser) RemainingDurations() ([]time.Duration, error) {
+	args := d.RemainingArgs()
+	durs := []time.Duration{}
+	for i := range args {
+		x, err := time.ParseDuration(args[i])
+		if err != nil {
+			return durs, err
+		}
+		durs = append(durs, x)
+	}
+	return durs, nil
 }
