@@ -93,9 +93,7 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 				p.net.filter.Insert(IPv6All, nil)
 				hasnet = true
 			}
-
 			r.policies = append(r.policies, p)
-
 		}
 		a.Rules = append(a.Rules, r)
 	}

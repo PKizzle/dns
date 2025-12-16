@@ -55,7 +55,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 				continue
 			}
 
-			if policy.net.filter.Contains(ip) {
+			if !policy.net.filter.Contains(ip) {
 				continue
 			}
 			return policy.action
