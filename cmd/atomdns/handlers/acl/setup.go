@@ -1,14 +1,14 @@
 package acl
 
 import (
-	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
-	"github.com/infobloxopen/go-trees/iptree"
+	"github.com/phemmer/go-iptrie"
 )
 
 const (
@@ -17,8 +17,8 @@ const (
 )
 
 func (a *Acl) Setup(co *dnsserver.Controller) error {
-	var _, IPv4All, _ = net.ParseCIDR("0.0.0.0/0")
-	var _, IPv6All, _ = net.ParseCIDR("::/0")
+	var IPv4All, _ = netip.ParsePrefix("0.0.0.0/0")
+	var IPv6All, _ = netip.ParsePrefix("::/0")
 
 	a.N = co.Global.MetricsN
 
@@ -43,9 +43,9 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			args := co.RemainingArgs()
 
 			if len(args) == 0 {
-				p.net = &policyNet{filter: iptree.NewTree()}
-				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
-				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				p.net = &policyNet{filter: iptrie.NewTrie()}
+				p.net.filter.Insert(IPv4All, nil)
+				p.net.filter.Insert(IPv6All, nil)
 				r.policies = append(r.policies, p)
 				continue
 			}
@@ -56,14 +56,14 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			if dns.StringToType[args[0]] != 0 {
 				tp = nettype
 			}
-			if _, _, err := net.ParseCIDR(normalize(args[0])); err == nil { // == nil
+			if _, err := netip.ParsePrefix(normalize(args[0])); err == nil { // == nil
 				tp = nettype
 			}
 			if tp == contextype && !dnsctx.Valid(args[0]) {
 				return co.Errf("invalid context key: %s", args[0])
 			}
 			if tp == nettype {
-				p.net = &policyNet{filter: iptree.NewTree()}
+				p.net = &policyNet{filter: iptrie.NewTrie()}
 			}
 			for i, arg := range args {
 				switch tp {
@@ -79,18 +79,18 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 					if qtype != 0 {
 						p.net.qtypes = append(p.net.qtypes, qtype)
 					} else {
-						_, source, err := net.ParseCIDR(normalize(arg))
+						source, err := netip.ParsePrefix(normalize(arg))
 						if err != nil {
 							return co.Errf("illegal CIDR notation %q", normalize(arg))
 						}
 						hasnet = true
-						p.net.filter.InplaceInsertNet(source, struct{}{})
+						p.net.filter.Insert(source, nil)
 					}
 				}
 			}
 			if tp == nettype && !hasnet {
-				p.net.filter.InplaceInsertNet(IPv4All, struct{}{})
-				p.net.filter.InplaceInsertNet(IPv6All, struct{}{})
+				p.net.filter.Insert(IPv4All, nil)
+				p.net.filter.Insert(IPv6All, nil)
 				hasnet = true
 			}
 

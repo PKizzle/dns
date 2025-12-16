@@ -22,7 +22,7 @@ type Geoip struct {
 func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
-		if x := dnsctx.Addr("etc/address"); x.IsValid() {
+		if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
 			log().Debug("Using 'ecs/address'", slog.String("address", x.String()))
 			ip = x
 		}

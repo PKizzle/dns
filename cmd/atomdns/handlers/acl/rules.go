@@ -8,7 +8,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
-	"github.com/infobloxopen/go-trees/iptree"
+	"github.com/phemmer/go-iptrie"
 )
 
 // rule defines ACL policies which will be enforced.
@@ -28,7 +28,7 @@ type policy struct {
 
 type policyNet struct {
 	qtypes []uint16
-	filter *iptree.Tree
+	filter *iptrie.Trie
 }
 
 type policyCtx struct {
@@ -44,7 +44,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 		switch {
 		case policy.net != nil:
 			ip := netip.MustParseAddr(dnsutil.RemoteIP(w))
-			if x := dnsctx.Addr("etc/address"); x.IsValid() {
+			if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
 				ip = x
 			}
 
@@ -55,7 +55,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 				continue
 			}
 
-			if _, contained := policy.net.filter.GetByIP(ip); !contained {
+			if policy.net.filter.Contains(ip) {
 				continue
 			}
 			return policy.action

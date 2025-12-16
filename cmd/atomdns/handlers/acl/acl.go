@@ -24,7 +24,7 @@ type Acl struct {
 func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		fam := dnsutil.Family(w)
-		if x := dnsctx.Addr("etc/address"); x.IsValid() {
+		if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
 			log().Debug("Using 'ecs/address'", slog.String("address", x.String()))
 			fam = dnsutil.IPv6Family
 			if x.Is4() {
