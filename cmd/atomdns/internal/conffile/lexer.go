@@ -40,8 +40,7 @@ type (
 	}
 )
 
-// load prepares the lexer to scan an input for tokens.
-// It discards any leading byte order mark.
+// load prepares the lexer to scan an input for tokens. It discards any leading byte order mark.
 func (l *lexer) load(input io.Reader) error {
 	l.reader = bufio.NewReader(input)
 	l.line = 1
@@ -64,16 +63,11 @@ func (l *lexer) load(input io.Reader) error {
 	return nil
 }
 
-// next loads the next token into the lexer.
-// A token is delimited by whitespace, unless
-// the token starts with a quotes character (")
-// in which case the token goes until the closing
-// quotes (the enclosing quotes are not included).
-// Inside quoted strings, quotes may be escaped
-// with a preceding \ character. No other chars
-// may be escaped. The rest of the line is skipped
-// if a "#" character is read in. Returns true if
-// a token was loaded; false otherwise.
+// next loads the next token into the lexer. A token is delimited by whitespace, unless
+// the token starts with a quotes character (") in which case the token goes until the closing
+// quotes (the enclosing quotes are not included). Inside quoted strings, quotes may be escaped
+// with a preceding \ character. No other chars may be escaped. The rest of the line is skipped
+// if a "#" character is read in. Returns true if a token was loaded; false otherwise.
 func (l *lexer) next() bool {
 	var val []rune
 	var comment, quoted, escaped bool
@@ -153,7 +147,7 @@ func (l *lexer) next() bool {
 	}
 }
 
-// isNextOnNewLine tests whether t2 is on a different line from t1
+// isNextOnNewLine tests whether t2 is on a different line from t1.
 func isNextOnNewLine(t1, t2 Token) bool {
 	// If the second token is from a different file,
 	// we can assume it's from a different line
