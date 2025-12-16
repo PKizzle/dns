@@ -41,10 +41,13 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
+	"strings"
+	"sync"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/pool"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -54,6 +57,8 @@ var (
 )
 
 const dom = "whoami.miek.nl."
+
+var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	var (
@@ -80,8 +85,14 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: a}}
 	}
 
-	str := "Port: " + dnsutil.RemotePort(w) + " (" + dnsutil.Network(w) + ")"
-	t := &dns.TXT{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{str}}}
+	sb := builderPool.Get()
+	sb.WriteString("Port: ")
+	sb.WriteString(dnsutil.RemotePort(w))
+	sb.WriteString(" (")
+	sb.WriteString(dnsutil.Network(w))
+	sb.WriteString(")")
+	t := &dns.TXT{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{sb.String()}}}
+	builderPool.Put(sb)
 
 	switch r.Question[0].(type) {
 	case *dns.TXT:
