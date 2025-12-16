@@ -50,7 +50,7 @@ func (d *Dbhost) Load() error {
 			}
 			data[key] = n
 
-			rev := dnsutil.Canonical(dnsutil.ReverseAddr(ip.AsSlice()))
+			rev := dnsutil.Canonical(dnsutil.ReverseAddr(ip))
 			n, ok = data[rev]
 			if !ok {
 				n = dnszone.Node{Name: rev}
