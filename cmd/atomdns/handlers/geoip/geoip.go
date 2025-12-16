@@ -2,6 +2,7 @@ package geoip
 
 import (
 	"context"
+	"log/slog"
 	"net/netip"
 
 	"codeberg.org/miekg/dns"
@@ -23,7 +24,7 @@ func (g *Geoip) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		ip, _ := netip.ParseAddr(dnsutil.RemoteIP(w))
 		if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
 			if s, ok := x.(netip.Addr); ok {
-				log().Debug("Using 'ecs/address'")
+				log().Debug("Using 'ecs/address'", slog.String("address", ip.String()))
 				ip = s
 			}
 		}

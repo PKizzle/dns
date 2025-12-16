@@ -1,9 +1,11 @@
 // package dnsctx helps with setting and getting data from the context of the current query.
+// See the [Match] function source for what types are currently supported. When adding something to the
+// context there is no check done on the type to not slow down the handler.
 package dnsctx
 
 import (
 	"context"
-	"net"
+	"net/netip"
 	"slices"
 	"strings"
 
@@ -118,9 +120,9 @@ func Match(ctx context.Context, key string, values []any) bool {
 				return true
 			}
 		}
-	case net.IP:
+	case netip.Addr:
 		for _, v := range values {
-			if ip, ok := v.(net.IP); ok && ip.Equal(x) {
+			if ip, ok := v.(netip.Addr); ok && ip == x {
 				return true
 			}
 		}
