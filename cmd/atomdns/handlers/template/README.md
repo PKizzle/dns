@@ -39,7 +39,8 @@ template REGEX [TYPE]... {
 }
 ```
 
-- **REGEX** will be matched against the incoming question name.
+- **REGEX** will be matched against the incoming question name. Expressions larger than a 1000 charactes
+  return an error during setup.
 - **TYPE** is the type to be matched, if not given all types are matched.
 - **TEMPLATE** is that template file that should be parsed and executed. If that the path is relative the
   global `root` path is prepended.

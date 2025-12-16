@@ -59,7 +59,8 @@ template REGEX [TYPE]... {
 .RE
 
 .IP \(bu 4
-\fBREGEX\fP will be matched against the incoming question name.
+\fBREGEX\fP will be matched against the incoming question name. Expressions larger than a 1000 charactes
+return an error during setup.
 .IP \(bu 4
 \fBTYPE\fP is the type to be matched, if not given all types are matched.
 .IP \(bu 4
