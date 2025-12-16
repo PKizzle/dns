@@ -11,7 +11,7 @@ import (
 
 // Server returns a new running (UDP) server. The returned cancel function shuts down the server. Any options should
 // be set by opts. The returned strings have the actual addresses, this is useful in case of listenen on the
-// wildcard port. If now network is configured via the opts functions, udp is assumed.
+// wildcard port. If no network is configured via the opts functions, UDP is assumed.
 func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening string, err error) {
 	s := dns.NewServer()
 	s.Addr = addr
