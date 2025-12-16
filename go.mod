@@ -6,9 +6,9 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/caddyserver/certmagic v0.25.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/infobloxopen/go-trees v0.0.0-20221216143356-66ceba885ebc
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/oschwald/geoip2-golang/v2 v2.0.0-beta.4
+	github.com/phemmer/go-iptrie v0.0.0-20240326174613-ba542f5282c9
 	github.com/prometheus/client_golang v1.23.2
 	github.com/tidwall/btree v1.8.1
 	go.uber.org/zap v1.27.0

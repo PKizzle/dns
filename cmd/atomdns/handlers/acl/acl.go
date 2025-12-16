@@ -3,9 +3,11 @@ package acl
 import (
 	"context"
 	"io"
+	"log/slog"
 	"strconv"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsmetrics"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -22,9 +24,10 @@ type Acl struct {
 func (a *Acl) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		fam := dnsutil.Family(w)
-		if i := ecsContext(ctx); i != nil {
+		if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
+			log().Debug("Using 'ecs/address'", slog.String("address", x.String()))
 			fam = dnsutil.IPv6Family
-			if i.To4() != nil {
+			if x.Is4() {
 				fam = dnsutil.IPv4Family
 			}
 		}

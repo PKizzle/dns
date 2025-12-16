@@ -2,13 +2,13 @@ package acl
 
 import (
 	"context"
-	"net"
+	"net/netip"
 	"slices"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
-	"github.com/infobloxopen/go-trees/iptree"
+	"github.com/phemmer/go-iptrie"
 )
 
 // rule defines ACL policies which will be enforced.
@@ -28,7 +28,7 @@ type policy struct {
 
 type policyNet struct {
 	qtypes []uint16
-	filter *iptree.Tree
+	filter *iptrie.Trie
 }
 
 type policyCtx struct {
@@ -43,13 +43,9 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 	for _, policy := range policies {
 		switch {
 		case policy.net != nil:
-			ip := net.ParseIP(dnsutil.RemoteIP(w))
-			if i := ecsContext(ctx); i != nil {
-				ip = i
-			}
-
-			if ip == nil {
-				return dns.MsgIgnore
+			ip := netip.MustParseAddr(dnsutil.RemoteIP(w))
+			if x := dnsctx.Addr(ctx, "etc/address"); x.IsValid() {
+				ip = x
 			}
 
 			_, qtype := dnsutil.Question(r)
@@ -59,7 +55,7 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 				continue
 			}
 
-			if _, contained := policy.net.filter.GetByIP(ip); !contained {
+			if !policy.net.filter.Contains(ip) {
 				continue
 			}
 			return policy.action
@@ -70,13 +66,4 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 		}
 	}
 	return dns.MsgAccept
-}
-
-func ecsContext(ctx context.Context) net.IP {
-	if x := dnsctx.Value(ctx, "ecs/address"); x != nil {
-		if i, ok := x.(net.IP); ok {
-			return i
-		}
-	}
-	return nil
 }
