@@ -235,7 +235,7 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint8(&o.SourceScope) {
 		return unpack.ErrOverflow
 	}
-	var ok bool
+	ok := false
 	n := o.SourceNetmask / 8
 	switch o.Family {
 	case 0:
@@ -244,18 +244,18 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	case 1:
 		in := make([]byte, net.IPv4len, net.IPv4len)
 		if !s.CopyBytes(in[:n]) {
-			return &Error{"subnet overflow a"}
+			return &Error{"overflow a"}
 		}
 		if o.Address, ok = netip.AddrFromSlice(in); !ok {
-			return &Error{"subnet overflow a"}
+			return &Error{"overflow a"}
 		}
 	case 2:
 		in := make([]byte, net.IPv6len, net.IPv6len)
 		if !s.CopyBytes(in[:n]) {
-			return &Error{"subnet overflow aaaa"}
+			return &Error{"overflow aaaa"}
 		}
 		if o.Address, ok = netip.AddrFromSlice(in); !ok {
-			return &Error{"subnet overflow aaaa"}
+			return &Error{"overflow aaaa"}
 		}
 	default:
 		return errors.New("dns: bad address family")
