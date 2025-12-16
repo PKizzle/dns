@@ -3,6 +3,7 @@ package dnsreverse
 import (
 	"math"
 	"net"
+	"net/netip"
 	"strings"
 
 	"codeberg.org/miekg/dns/dnsutil"
@@ -15,10 +16,17 @@ func Zones(n *net.IPNet) []string {
 	rev := make([]string, len(nets))
 	for i := range nets {
 		ip, n, _ := net.ParseCIDR(nets[i])
-		r := dnsutil.ReverseAddr(ip)
+
+		addr, _ := netip.AddrFromSlice(ip)
+		r := dnsutil.ReverseAddr(addr)
+		if len(n.IP) != net.IPv6len {
+			addr, _ := netip.AddrFromSlice(ip.To4())
+			r = dnsutil.ReverseAddr(addr)
+		}
 		if r == "" {
 			continue
 		}
+
 		ones, bits := n.Mask.Size()
 		// get the size, in bits, of each portion of hostname defined in the reverse address. (8 for IPv4, 4 for IPv6)
 		sizeDigit := 8
