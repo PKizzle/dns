@@ -27,7 +27,7 @@ func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 	r.Authoritative = true
 
 	labels := z.Labels()
-	sosynthesis, encloser := &Node{}, &Node{} // source of synthesis and closes encloser RRset + names.
+	sosynthesis := &Node{} // source of synthesize
 
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
 	// record set from the zone. The second loop (in z.Msg) then creates a message with the correct RRs in the sections.
@@ -41,7 +41,7 @@ func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 
 	labels++
 	hint := hintAnswer
-	encloser = z.Apex()
+	encloser := z.Apex()
 Search:
 	for i, start := dnsutil.Prev(qname, labels); !start; i, start = dnsutil.Prev(qname, labels) {
 		node, ok := z.Get(qname[i:])
