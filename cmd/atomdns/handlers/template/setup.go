@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -15,6 +16,9 @@ func (t *Template) Setup(co *dnsserver.Controller) (err error) {
 	if co.Next() {
 		if !co.NextArg() {
 			return co.ArgErr()
+		}
+		if len(co.Val()) > 1000 {
+			return co.PropErr(errors.New("regexp too large"))
 		}
 		t.Regexp, err = regexp.Compile(co.Val())
 		if err != nil {
