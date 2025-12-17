@@ -2,9 +2,21 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
-## HEAD - 2025-12-16
 
-23 commits.
+## v0.6.5 - 2025-12-17
+
+7 commits. With the following change log.
+
+* a8f63ce Fix SUBNET unpacking bug. (Miek Gieben)
+
+## v0.6.4 - 2025-12-16
+
+10 commits.
+
+
+## v0.6.3 - 2025-12-16
+
+25 commits.
 
 
 ## v0.6.2 - 2025-12-15
