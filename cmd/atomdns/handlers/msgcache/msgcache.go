@@ -21,7 +21,7 @@ func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			x.Data = r.Data
 			x = dnsctx.Funcs(ctx, x)
 			if err := x.Pack(); err != nil {
-				log().With(dnsctx.Id(ctx)).Debug(dnslog.PackFail, Err(err))
+				dnslog.PackFail(ctx, log(), Err(err))
 			}
 			io.Copy(w, x)
 			return
@@ -33,7 +33,7 @@ func (m *Msgcache) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		rw.Msg = dnsctx.Funcs(ctx, rw.Msg)
 		if err := rw.Msg.Pack(); err != nil {
-			log().With(dnsctx.Id(ctx)).Debug(dnslog.PackFail, Err(err))
+			dnslog.PackFail(ctx, log(), Err(err))
 		}
 		io.Copy(w, rw.Msg)
 

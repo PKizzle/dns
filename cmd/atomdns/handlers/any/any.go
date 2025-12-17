@@ -27,7 +27,7 @@ func (a *Any) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		m = dnsctx.Funcs(ctx, m)
 		if err := m.Pack(); err != nil {
-			log().With(dnsctx.Id(ctx)).Debug(dnslog.PackFail, Err(err))
+			dnslog.PackFail(ctx, log(), Err(err))
 		}
 		io.Copy(w, m)
 	})
