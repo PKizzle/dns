@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -39,11 +40,11 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		next.ServeDNS(ctx, rw, r)
 
 		if drop || rw.Msg == nil { // drop or hijacked conn
-			log().Debug("Dropping")
+			log().With(dnsctx.Id(ctx)).Debug("Dropping")
 			return
 		}
 		if delay {
-			log().Debug("Delaying", slog.Duration("delay", d.duration))
+			log().With(dnsctx.Id(ctx)).Debug("Delaying", slog.Duration("delay", d.duration))
 			time.Sleep(d.duration)
 		}
 		if trunc {

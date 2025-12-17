@@ -5,6 +5,8 @@ import (
 	"io"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -17,8 +19,9 @@ func (r *Refuse) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		m := &dns.Msg{Data: r.Data}
 		dnsutil.SetReply(m, r)
 		m.Rcode = dns.RcodeRefused
+
 		if err := m.Pack(); err != nil {
-			log().Debug("Pack failure", Err(err))
+			log().With(dnsctx.Id(ctx)).Debug(dnslog.PackFail, Err(err))
 		}
 		io.Copy(w, m)
 	})
