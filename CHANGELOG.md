@@ -2,6 +2,11 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
+## HEAD - 2025-12-17
+
+9 commits. With the following change log.
+
+* fe27af3 Atomdns,id: add id handler that adds a request ID. (Miek Gieben)
 
 ## v0.6.5 - 2025-12-17
 
