@@ -19,7 +19,7 @@
   [README-diff-with-v1.md](https://codeberg.org/miekg/dns/src/branch/main/README-diff-with-v1.md) for the differences.
 
 For developers please read the
-[developer README]( (https://codeberg.org/miekg/dns/src/branch/main/README-dev.md).
+[developer README](https://codeberg.org/miekg/dns/src/branch/main/README-dev.md).
 
 > Less is more.
 
@@ -40,6 +40,7 @@ wins. See PADDING and DPADDING as an example.
 
 - KISS.
 - Everything is an resource record.
+  - Easy way to access RR's header and resource data (rdata).
 - Small API.
   - Package _dnsutil_ contains functions that help programmers, but are not nessecarily in scope the the
     _dns_ package.
@@ -108,7 +109,7 @@ developed in tandem with the library.
 
 ## Supported RFCs
 
-_all of them_
+_all of them_ and _then some_
 
 - 103{4,5} - DNS standard
 - 1348 - NSAP record (removed the record)

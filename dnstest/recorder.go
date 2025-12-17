@@ -8,16 +8,16 @@ import (
 	"codeberg.org/miekg/dns"
 )
 
-// Recorder is a type of ResponseWriter that captures the the message written to it. It will never perform a
+// Recorder is a type of ResponseWriter that captures the the message written to it. It will never perform an
 // actual write. This effectively an [io.Discard] writer, and it's the caller's responsibility to write to the
-// original dns.ResponseWriter.
-// Use case in a handler:
+// original dns.ResponseWriter. Usage in a handler:
 //
 //	rw := dnstest.NewRecorder(w)
 //	ServeDNS(ctx, rw, r)
 //	io.Copy(w, rw.Msg) // work on the original writer
 //
-// Due to how we handle UDP sockets, it's impossible (hard?) to make the recorder write to the wrapped writer.
+// Due to how we handle UDP sockets, it's impossible (hard?) to make the recorder write to the wrapped writer,
+// so this must still be done separately.
 type Recorder struct {
 	w     dns.ResponseWriter
 	Msg   *dns.Msg  // Msg contains the last message written.
