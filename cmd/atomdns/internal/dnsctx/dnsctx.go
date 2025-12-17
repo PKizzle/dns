@@ -23,23 +23,23 @@ type Func func(*dns.Msg) *dns.Msg
 
 // WithFunc set the Func f in the context under the key <handler>/msgfunc.
 func WithFunc(ctx context.Context, handler Keyer, f Func) context.Context {
-	return context.WithValue(ctx, Key(handler, MsgFunc), f)
+	return context.WithValue(ctx, Key(handler, KeyMsgFunc), f)
 }
 
+// Predefined context keys.
 const (
-	// Status is the subkey that should be used for setting a status of type bool in the context.
-	Status  = "status"
-	MsgFunc = "msgfunc"
+	KeyStatus  = "status"
+	KeyMsgFunc = "msgfunc"
 )
 
-// Key creates a key from the given strings.
+// Key creates a key from the keyer and string.
 func Key(handler Keyer, key string) string { return handler.Key() + "/" + key }
 
 // Funcs iterates over all handlers and run the functions that are set in the context over the message. The possibly
 // modified message is returned.
 func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
 	for _, h := range dnsserver.Handlers {
-		v := ctx.Value(h + "/" + MsgFunc)
+		v := ctx.Value(h + "/" + KeyMsgFunc)
 		if v == nil {
 			continue
 		}
@@ -72,7 +72,7 @@ func Value(ctx context.Context, key string) any {
 }
 
 // Reserved are context key suffixes that are used internally by atomdns.
-var Reserved = []string{"/" + MsgFunc}
+var Reserved = []string{"/" + KeyMsgFunc}
 
 // Valid returns a boolean indicating if the key is a valid context key.
 func Valid(key string) bool {

@@ -15,7 +15,7 @@ type Tsig struct {
 func (t *Tsig) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		// do the actual check
-		dnsctx.WithValue(ctx, dnsctx.Key(t, dnsctx.Status), true)
+		dnsctx.WithValue(ctx, dnsctx.Key(t, dnsctx.KeyStatus), true)
 		dnsctx.WithValue(ctx, dnsctx.Key(t, "name"), t.TSIG.Hdr.Name)
 		dnsctx.WithValue(ctx, dnsctx.Key(t, "secret"), t.TSIGSecret)
 		dnsctx.WithValue(ctx, dnsctx.Key(t, "algorithm"), t.TSIG.Algorithm)
