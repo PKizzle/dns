@@ -18,10 +18,16 @@ func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 
+		ecs := slog.Attr{}
+		if a := dnsctx.Addr(ctx, "ecs/address"); a.IsValid() {
+			ecs = slog.Any("ecs/address", a)
+		}
+
 		slog.Default().
 			With(dnsctx.Id(ctx)).
 			With("remote", dnsutil.RemoteIP(w)).
 			With("port", dnsutil.RemotePort(w)).
+			With(ecs).
 			With(slog.Int("id", int(r.ID))).
 			With("type", func() string { _, t := dnsutil.Question(r); return dnsutil.TypeToString(t) }()).
 			With("class", dnsutil.ClassToString(r.Question[0].Header().Class)).

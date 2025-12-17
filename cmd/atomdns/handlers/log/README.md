@@ -13,6 +13,9 @@ show up regardless.
 The logging of a running server can be toggled by sending the processs a SIGUSR1 signal. This is a process
 wide toggle, all logging of all server is enabled or disabled.
 
+When outputting a log line, _log_ will seach for `ecs/address` and `id/id` in the context and will add the
+values to the log when found.
+
 # Syntax
 
 ```txt
@@ -36,6 +39,11 @@ Which says:
 - Advertised UDP buffer: `1232`.
 - Opcode: `QUERY`.
 
+Optionally we can also see:
+
+- `ecs/address=....`, the ecs address if found in the request, via the _ecs_ handler.
+- `id/id=....`, the generated request ID, from the _id_ handler.
+
 # Also See
 
-signal(7).
+signal(7), atomdns-ecs(7), atomdns-id(7).
