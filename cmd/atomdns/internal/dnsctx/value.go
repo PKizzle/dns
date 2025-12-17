@@ -16,3 +16,15 @@ func Addr(ctx context.Context, key string) netip.Addr {
 	}
 	return netip.Addr{}
 }
+
+// String returns a string from the context under key.
+func String(ctx context.Context, key string) string {
+	x := Value(ctx, key)
+	if x == nil {
+		return ""
+	}
+	if s, ok := x.(string); ok {
+		return s
+	}
+	return ""
+}
