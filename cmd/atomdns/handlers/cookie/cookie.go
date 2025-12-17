@@ -42,7 +42,7 @@ func (c *Cookie) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 						return m
 					})
 
-				ctx = dnsctx.WithValue(ctx, dnsctx.Key(c, dnsctx.Status), true)
+				ctx = dnsctx.WithValue(ctx, dnsctx.Key(c, dnsctx.KeyStatus), true)
 				break
 			}
 		}
