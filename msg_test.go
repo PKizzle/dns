@@ -1,7 +1,9 @@
 package dns_test
 
 import (
+	"errors"
 	"fmt"
+	"net/netip"
 	"os"
 	"testing"
 
@@ -35,32 +37,61 @@ func ExampleMsg_Pseudo_nsid() {
 }
 
 func TestMsgBinary(t *testing.T) {
-	// TODO: turn into test
-	binaries := []string{"dig-mx-miek.nl", "dig+do+nsid-a-miek.nl"}
-	for i, binary := range binaries {
-		t.Run(fmt.Sprintf("test %d: %s", i, binary), func(t *testing.T) {
-			buf, _ := os.ReadFile("testdata/" + binary)
-			m := &dns.Msg{Data: buf}
+	tcs := []struct {
+		name string
+		buf  []byte
+		fn   func(*dns.Msg) error
+	}{
+		{
+			"edns0-subnet",
+			[]byte{149, 112, 0, 16, 0, 1, 0, 0, 0, 0, 0, 1, 1, 97, 4, 109, 105, 69, 75, 2, 78, 76, 0, 0, 1, 0, 1, 0, 0, 41, 5, 120, 0, 0, 128, 0, 0, 11, 0, 8, 0, 7, 0, 1, 24, 0, 14, 128, 63},
+			func(m *dns.Msg) error {
+				if len(m.Pseudo) == 0 {
+					return errors.New("expected pseudo section")
+				}
+				s, ok := m.Pseudo[0].(*dns.SUBNET)
+				if !ok {
+					return errors.New("expected EDNS0 SUBNET")
+				}
+				const addr = "14.128.63.0"
+				if s.Address != netip.MustParseAddr(addr) {
+					return errors.New("expected address: " + addr)
+				}
+				return nil
+			},
+		},
+		{
+			"edns0-subnet",
+			[]byte{255, 234, 0, 16, 0, 1, 0, 0, 0, 0, 0, 1, 7, 99, 111, 114, 101, 68, 110, 83, 2, 105, 111, 0, 0, 28, 0, 1, 0, 0, 41, 5, 120, 0, 0, 128, 0, 0, 11, 0, 8, 0, 7, 0, 1, 24, 0, 62, 212, 234},
+			func(m *dns.Msg) error {
+				if len(m.Pseudo) == 0 {
+					return errors.New("expected pseudo section")
+				}
+				s, ok := m.Pseudo[0].(*dns.SUBNET)
+				if !ok {
+					return errors.New("expected EDNS0 SUBNET")
+				}
+				const addr = "62.212.234.0"
+				if s.Address != netip.MustParseAddr(addr) {
+					return errors.New("expected address: " + addr)
+				}
+				return nil
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			m := &dns.Msg{Data: tc.buf}
 			if err := m.Unpack(); err != nil {
-				t.Errorf("%s", err)
-				t.Logf("%v\n", m.Data)
+				t.Logf("%v\n", bin.Dump(m.Data))
+				t.Fatal(err)
 			}
-			t.Logf("%s\n", m)
-			t.Logf("%s\n", bin.Dump(m.Data))
+			if err := tc.fn(m); err != nil {
+				t.Logf("%s\n", bin.Dump(m.Data))
+				t.Fatal(err)
+			}
 		})
 	}
-}
-
-func TestMsgPackBinary(t *testing.T) {
-	// TODO: turn into test
-	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true, Security: true, UDPSize: 1024}, Answer: make([]dns.RR, 2)}
-	a := &dns.A{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
-	m.Question = []dns.RR{a}
-	m.Pseudo = []dns.RR{&dns.NSID{Nsid: "6770"}}
-	m.Answer[0], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.215")
-	m.Answer[1], _ = dns.New("miek.nl.        14301   IN      A       45.138.52.216")
-
-	m.Pack()
 }
 
 func TestMsgUnpackName(t *testing.T) {
