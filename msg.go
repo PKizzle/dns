@@ -308,13 +308,13 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 	}
 	var qtype uint16
 	if !msg.Empty() && !msg.ReadUint16(&qtype) {
-		return nil, unpack.Errorf("overflow: %s", "question.Type")
+		return nil, unpack.Errorf("overflow %s", "Question type")
 	}
 	m.qtype = qtype
 
 	var qclass uint16
 	if !msg.Empty() && !msg.ReadUint16(&qclass) {
-		return nil, unpack.Errorf("overflow: %s", "question.Class")
+		return nil, unpack.Errorf("overflow %s", "Question class")
 	}
 
 	var rr RR
@@ -449,7 +449,7 @@ func (m *Msg) Unpack() error {
 	s := cryptobyte.String(m.Data)
 	var dh header
 	if !dh.unpack(&s) {
-		return unpack.Errorf("overflow: %s", "MsgHeader")
+		return unpack.Errorf("overflow %s", "MsgHeader")
 	}
 	m.setMsgHeader(dh)
 	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {

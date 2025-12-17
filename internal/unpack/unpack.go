@@ -25,11 +25,11 @@ const (
 func A(s *cryptobyte.String) (netip.Addr, error) {
 	in := make([]byte, net.IPv4len)
 	if !s.CopyBytes(in) {
-		return netip.Addr{}, &Error{"overflow a"}
+		return netip.Addr{}, &Error{"overflow A"}
 	}
 	ip, ok := netip.AddrFromSlice(in)
 	if !ok {
-		return netip.Addr{}, &Error{"invalid a"}
+		return netip.Addr{}, &Error{"invalid A"}
 	}
 	return ip, nil
 }
@@ -37,11 +37,11 @@ func A(s *cryptobyte.String) (netip.Addr, error) {
 func AAAA(s *cryptobyte.String) (netip.Addr, error) {
 	in := make([]byte, net.IPv6len)
 	if !s.CopyBytes(in) {
-		return netip.Addr{}, &Error{"overflow aaaa"}
+		return netip.Addr{}, &Error{"overflow AAAA"}
 	}
 	ip, ok := netip.AddrFromSlice(in)
 	if !ok {
-		return netip.Addr{}, &Error{"invalid aaaa"}
+		return netip.Addr{}, &Error{"invalid AAAA"}
 	}
 	return ip, nil
 }
