@@ -38,6 +38,7 @@
 }
 
 example.org {
+    id
     log
     dbfile dbfile/zone/testdata/db.example.org {
         transfer

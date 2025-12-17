@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
@@ -18,6 +19,7 @@ func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		slog.Default().
+			With(dnsctx.Id(ctx)).
 			With("remote", dnsutil.RemoteIP(w)).
 			With("port", dnsutil.RemotePort(w)).
 			With(slog.Int("id", int(r.ID))).

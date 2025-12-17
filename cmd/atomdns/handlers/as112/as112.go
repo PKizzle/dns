@@ -13,6 +13,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -78,7 +79,7 @@ func (a *As112) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 				m = dnsctx.Funcs(ctx, m)
 				if err := m.Pack(); err != nil {
-					log().Debug("Pack failure", Err(err))
+					dnslog.PackFail(ctx, log(), Err(err))
 				}
 				io.Copy(w, m)
 				return
