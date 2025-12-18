@@ -71,30 +71,36 @@ Or use `Conffile-example` which has a more complete setup.
 When atomdns starts you are greeted (when not using `quiet`) a bunch of log lines and a welcome banner:
 
 ```txt
-2025/10/25 11:09:31 INFO 0.0.10.in-addr.arpa. handlers=unpack,log,whoami,refuse
-2025/10/25 11:09:31 INFO example.org. handlers=unpack,log,dbfile,refuse
-2025/10/25 11:09:31 INFO Startup functions total=11
-2025/10/25 11:09:31 INFO Startup handler=global /health=:8080
-2025/10/25 11:09:31 INFO Startup handler=global health="overload check"
-2025/10/25 11:09:31 INFO Startup handler=global /metrics=localhost:9153
-2025/10/25 11:09:31 INFO Startup handler=global dns=[::]:1053 tcp=-1 run=24
-2025/10/25 11:09:31 INFO Startup handler=global doh=[::]:1443 run=8 path=/dns-query
-2025/10/25 11:09:31 INFO Startup handler=global dot=[::]:8053 tcp=128 run=1
-2025/10/25 11:09:31 INFO Startup handler=global tls=manual
-2025/10/25 11:09:31 INFO Startup handler=global signal=HUP
-2025/10/25 11:09:31 INFO Startup handler=log signal=USR1
-2025/10/25 11:09:31 INFO Startup handler=dbfile reload=db.example.org
-2025/10/25 11:09:31 INFO Launched config=Conffile-example version=v024 dns=0.5.15 origins=2 roles=DNS:[::]:1053,DOH:[::]:1443,DOT:[::]:8053
+2025/12/18 13:30:03 INFO 0.0.10.in-addr.arpa. handlers=log,whoami
+2025/12/18 13:30:03 INFO example.org. handlers=id,log,dbfile
+2025/12/18 13:30:03 INFO miek.nl. handlers=log,metrics,sign,dbfile
+2025/12/18 13:30:03 INFO Startup functions total=14
+2025/12/18 13:30:03 INFO Startup handler=global /health=:8080
+2025/12/18 13:30:03 INFO Startup handler=global health="overload check"
+2025/12/18 13:30:03 INFO Startup handler=global /metrics=localhost:9153 /N=10
+2025/12/18 13:30:03 INFO Startup handler=global dns=[::]:1053 tcp=-1 run=24
+2025/12/18 13:30:03 INFO Startup handler=global doh=[::]:1443 run=8 inflight=100 path=/dns-query
+2025/12/18 13:30:03 INFO Startup handler=global dot=[::]:8053 tcp=1024 run=1 inflight=200
+2025/12/18 13:30:03 INFO Startup handler=global tls=manual
+2025/12/18 13:30:03 INFO Startup handler=global signal=HUP
+2025/12/18 13:30:03 INFO Startup handler=log signal=USR1
+2025/12/18 13:30:03 INFO Startup handler=dbfile reload=db.example.org
+2025/12/18 13:30:03 INFO Startup handler=sign signing=db.miek.nl
+2025/12/18 13:30:03 INFO Days left before expiration handler=sign zone=miek.nl. path=db.miek.nl.signed days=36
+2025/12/18 13:30:03 INFO Startup handler=dbfile reload=db.miek.nl.signed
+2025/12/18 13:30:03 INFO Build GOOS=linux GOARCH=arm64 go=1.25.5 revision=79e3ca30a4364da296eb74ab67ae04a184166e5a
+2025/12/18 13:30:03 INFO Listening roles=DNS:[::]:1053,DOH:[::]:1443,DOT:[::]:8053
+2025/12/18 13:30:03 INFO Launched config=Conffile-example PID=3325169 version=v058 dns=0.6.5 zones=3
   ┏━┓  ╺┳╸  ┏━┓  ┏┳┓
   ┣━┫   ┃   ┃ ┃  ┃┃┃  DNS
-  ╹ ╹   ╹   ┗━┛  ╹ ╹ v024 (0.5.15)
+  ╹ ╹   ╹   ┗━┛  ╹ ╹ v058 (0.6.5)
   High performance and flexible DNS server
   https://atomdns.miek.nl
 __________________________________\o/_______
 ```
 
-Where the last INFO line shows the config parsed, the number of origins processed and for which protocols the
-server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS).
+Where the last INFO lines shows the config parsed, the number of origins processed and for which protocols the
+server can answer, here: DNS, DOH (DNS over HTTPS) and DOT (DNS over TLS) and on which ports.
 
 See atomdns-conffile(7) for more information. For a more total experience head over to
 <https://atomdns.miek.nl>.
