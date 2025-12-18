@@ -21,9 +21,9 @@ func TestEcs(t *testing.T) {
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
 	next := dns.HandlerFunc(func(ctx context.Context, _ dns.ResponseWriter, _ *dns.Msg) {
-		address := dnsctx.Value(ctx, h.Key()+"/address")
+		address := dnsctx.Value(ctx, h.Key()+"/addr")
 		if address == nil {
-			t.Fatal("expected ecs/address, got none")
+			t.Fatal("expected ecs/addr, got none")
 		}
 		if address != dnstest.IPv4 {
 			t.Fatalf("expected %s, got %s", dnstest.IPv4, address)
