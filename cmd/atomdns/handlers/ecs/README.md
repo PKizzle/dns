@@ -28,9 +28,11 @@ example.org {
 
 The _ecs_ handler adds a single key to the context:
 
-| Key           | Type         | Example      | Description  |
-| :------------ | :----------- | :----------- | :----------- |
-| `ecs/address` | `netip.Addr` | 198.51.100.1 | The address. |
+| Key        | Type         | Example      | Description  |
+| :--------- | :----------- | :----------- | :----------- |
+| `ecs/addr` | `netip.Addr` | 198.51.100.1 | The address. |
+
+When the _log_ handler is used the address is automatically logged as `ecs.addr=..`.
 
 # See Also
 

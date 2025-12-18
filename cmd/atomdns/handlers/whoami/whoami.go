@@ -29,6 +29,9 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		case *net.TCPAddr:
 			ip = a.AddrPort().Addr()
 		}
+		if x := dnsctx.Addr(ctx, "ecs/addr"); x.IsValid() {
+			ip = x
+		}
 
 		if ip.Is4() {
 			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: rdata.A{Addr: ip}}

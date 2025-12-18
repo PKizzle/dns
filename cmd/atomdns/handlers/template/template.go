@@ -39,7 +39,7 @@ func (t *Template) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 		funcs := template.FuncMap{
-			"Value": func(key string) any { return dnsctx.Value(ctx, key) },
+			"ctx": func(key string) any { return dnsctx.Value(ctx, key) },
 		}
 		var err error
 		tmpl := template.New(t.Path).Funcs(funcs)

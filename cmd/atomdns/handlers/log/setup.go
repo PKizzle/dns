@@ -2,8 +2,11 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -17,6 +20,21 @@ var (
 )
 
 func (l *Log) Setup(co *dnsserver.Controller) error {
+	for co.NextBlock(0) {
+		for co.NextLine() {
+			if co.Val() == "}" {
+				break
+			}
+			if !strings.Contains(co.Val(), "/") {
+				return co.PropErr(fmt.Errorf("context key needs to have '/' %s", co.Val()))
+			}
+			if slices.Contains([]string{"ecs/addr", "id/id"}, co.Val()) {
+				return co.PropErr(fmt.Errorf("default context key used: %s", co.Val()))
+			}
+			l.Contexts = append(l.Contexts, co.Val())
+		}
+	}
+
 	state.Store(true)
 	ctx, cancel := context.WithCancel(context.Background())
 

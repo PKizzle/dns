@@ -9,7 +9,7 @@ import (
 func Id(ctx context.Context) slog.Attr {
 	id := slog.Attr{}
 	if x := String(ctx, "id/id"); x != "" {
-		id = slog.String("id/id", x)
+		id = slog.Group("id", slog.String("id", x))
 	}
 	return id
 }

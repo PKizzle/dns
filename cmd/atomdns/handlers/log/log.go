@@ -9,7 +9,9 @@ import (
 	"codeberg.org/miekg/dns/dnsutil"
 )
 
-type Log int
+type Log struct {
+	Contexts []string
+}
 
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
@@ -19,8 +21,8 @@ func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 
 		ecs := slog.Attr{}
-		if a := dnsctx.Addr(ctx, "ecs/address"); a.IsValid() {
-			ecs = slog.Any("ecs/address", a)
+		if a := dnsctx.Addr(ctx, "ecs/addr"); a.IsValid() {
+			ecs = slog.Group("ecs", slog.Any("addr", a))
 		}
 
 		slog.Default().
