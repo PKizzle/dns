@@ -18,11 +18,11 @@ func TestSetup(t *testing.T) {
 				aaa
 				bbb
 			}
-		}`, &Chaos{Version: "", Authors: []string{"aaa", "bbb"}}},
+			}`, &Chaos{Version: Version, Authors: []string{"aaa", "bbb"}}},
 		{`chaos {
 			authors {
 			}
-		}`, &Chaos{Version: "", Authors: []string{}}},
+			}`, &Chaos{Version: Version, Authors: []string{}}},
 	}
 	for i, tc := range testcases {
 		chaos := new(Chaos)

@@ -6,8 +6,10 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
+const Version = "Served by atomdns, https://atomdns.miek.nl"
+
 func (c *Chaos) Setup(co *dnsserver.Controller) error {
-	c.Version = "Served by atomdns, https://atomdns.miek.nl"
+	c.Version = Version
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) > 1 {
