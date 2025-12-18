@@ -11,8 +11,8 @@ import (
 )
 
 func TestDbhost(t *testing.T) {
-	h := &Dbhost{Path: "/etc/hosts"}
-	h.Load()
+	d := &Dbhost{Path: "/etc/hosts"}
+	d.Load()
 
 	r := dns.NewMsg("localhost.", dns.TypeA)
 	r.ID = 3
@@ -20,7 +20,7 @@ func TestDbhost(t *testing.T) {
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
 	next := new(whoami.Whoami).HandlerFunc(nil)
-	h.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
+	d.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
 
 	if x := w.Msg.Answer[0].(*dns.A).Addr; x != netip.MustParseAddr("127.0.0.1") {
 		t.Fatalf("expected %s, got %s", "127.0.0.1", x)

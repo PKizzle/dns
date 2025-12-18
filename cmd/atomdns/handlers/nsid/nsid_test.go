@@ -13,7 +13,7 @@ import (
 
 func TestNsid(t *testing.T) {
 	in := "Use the force"
-	h := &nsid.Nsid{Data: hex.EncodeToString([]byte(in))}
+	n := &nsid.Nsid{Data: hex.EncodeToString([]byte(in))}
 
 	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
 	r.ID = 3
@@ -21,7 +21,7 @@ func TestNsid(t *testing.T) {
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	h.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
+	n.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
 
 	if len(w.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")
