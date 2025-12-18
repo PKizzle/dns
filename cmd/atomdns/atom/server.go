@@ -284,6 +284,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 				}
 				err := s.Setup(co)
 				if err != nil {
+					err := fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ","))
 					return handler.Err(err)
 				}
 			}
