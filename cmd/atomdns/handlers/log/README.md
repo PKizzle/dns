@@ -71,7 +71,9 @@ example.org. {
     geoip {
         city testdata/GeoIPCity.dat
     }
-    log
+    log {
+        geoip/city
+    }
     whoami
 }
 ```
