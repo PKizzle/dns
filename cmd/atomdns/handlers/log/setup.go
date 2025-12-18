@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -29,14 +30,22 @@ func valid(val string) error {
 	return nil
 }
 
+func split(val string) (handler, key string) {
+	s := strings.Index(val, "/")
+	return val[:s], val[s+1:]
+}
+
 func (l *Log) Setup(co *dnsserver.Controller) error {
+	l.Contexts = map[string][]string{}
+
 	co.Next() // "log"
 	if co.NextBlock(0) {
 		err := valid(co.Val())
 		if err != nil {
 			return co.PropErr(err)
 		}
-		l.Contexts = append(l.Contexts, co.Val())
+		h, k := split(co.Val())
+		l.Contexts[h] = append(l.Contexts[h], k)
 
 		for co.NextLine() {
 			if co.Val() == "}" {
@@ -46,7 +55,8 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 			if err != nil {
 				return co.PropErr(err)
 			}
-			l.Contexts = append(l.Contexts, co.Val())
+			h, k := split(co.Val())
+			l.Contexts[h] = append(l.Contexts[h], k)
 		}
 	}
 

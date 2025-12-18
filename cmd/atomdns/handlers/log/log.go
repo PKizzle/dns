@@ -10,7 +10,7 @@ import (
 )
 
 type Log struct {
-	Contexts []string
+	Contexts map[string][]string
 }
 
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {

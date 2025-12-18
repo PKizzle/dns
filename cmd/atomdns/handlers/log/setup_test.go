@@ -1,7 +1,7 @@
 package log
 
 import (
-	"slices"
+	"reflect"
 	"testing"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -14,8 +14,13 @@ func TestSetup(t *testing.T) {
 	}{
 		{`log {
 			aaa/addr
+			aaa/bloep
 			bbb/addr
-		}`, &Log{Contexts: []string{"aaa/addr", "bbb/addr"}}},
+		}`, &Log{Contexts: map[string][]string{
+			"aaa": []string{"addr", "bloep"},
+			"bbb": []string{"addr"},
+		}},
+		},
 	}
 	for i, tc := range testcases {
 		log := new(Log)
@@ -25,7 +30,7 @@ func TestSetup(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if slices.Compare(tc.exp.Contexts, log.Contexts) != 0 {
+		if !reflect.DeepEqual(tc.exp.Contexts, log.Contexts) {
 			t.Errorf("test %d: expected %v, got %v", i, tc.exp.Contexts, log.Contexts)
 		}
 	}
