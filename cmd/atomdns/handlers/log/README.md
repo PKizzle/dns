@@ -11,9 +11,9 @@ Enabling or disabling the _log_ handler only affects the query logging, any othe
 show up regardless.
 
 The logging of a running server can be toggled by sending the processs a SIGUSR1 signal. This is a process
-wide toggle, all logging of all server is enabled or disabled.
+wide toggle, all logging of all servers is enabled or disabled.
 
-When outputting a log line, _log_ will seach for `ecs/address` and `id/id` in the context and will add the
+When outputting a log line, _log_ will seach for `ecs/addr` and `id/id` in the context and will add the
 values to the log when found.
 
 # Syntax
@@ -21,6 +21,20 @@ values to the log when found.
 ```txt
 log
 ```
+
+Or optionally if you want to log non-default values from the context:
+
+```txt
+log {
+    CTX
+    [CTX]...
+}
+```
+
+Where:
+
+- **CTX** is a context key like `geoip/city`. A non-existing context key is silently ignored. Adding default
+  keys (`ecs/addr` and `id/id`) will error.
 
 A typical example looks like this:
 
@@ -41,8 +55,28 @@ Which says:
 
 Optionally we can also see:
 
-- `ecs/address=....`, the ecs address if found in the request, via the _ecs_ handler.
-- `id/id=....`, the generated request ID, from the _id_ handler.
+```txt
+2025/10/06 07:25:52 INFO example.org. id.id=5FOXMDAG6YAHD6R7QOZ4UTX7VQ remote=::1 port=40689 ecs.addr=198.51.100.0 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
+```
+
+- `ecs.addr=....`, the ecs address if found in the request, via the _ecs_ handler.
+- `id.id=....`, the generated request ID, from the _id_ handler.
+
+# Example
+
+Here we add location data to the request's context, _and_ log that.
+
+```conffile
+example.org. {
+    geoip {
+        city testdata/GeoIPCity.dat
+    }
+    log {
+        geoip/city
+    }
+    whoami
+}
+```
 
 # Also See
 

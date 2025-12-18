@@ -11,6 +11,8 @@ the additional section as either an A or AAAA record.
 The reply always has an empty answer section. The port and transport are included in the additional
 section as a SRV record, network can be "tcp" or "udp".
 
+If the _ecs_ handler added an address to the context, _that_ address is used instead.
+
 ```txt
 ._<network>.qname. 0 IN SRV 0 0 <port> .
 ```

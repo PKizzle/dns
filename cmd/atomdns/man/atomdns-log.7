@@ -16,7 +16,11 @@ show up regardless.
 
 .PP
 The logging of a running server can be toggled by sending the processs a SIGUSR1 signal. This is a process
-wide toggle, all logging of all server is enabled or disabled.
+wide toggle, all logging of all servers is enabled or disabled.
+
+.PP
+When outputting a log line, \fIlog\fP will seach for \fB\fCecs/addr\fR and \fB\fCid/id\fR in the context and will add the
+values to the log when found.
 
 .SH "SYNTAX"
 .PP
@@ -27,6 +31,29 @@ log
 
 .fi
 .RE
+
+.PP
+Or optionally if you want to log non\-default values from the context:
+
+.PP
+.RS
+
+.nf
+log {
+    CTX
+    [CTX]...
+}
+
+.fi
+.RE
+
+.PP
+Where:
+
+.IP \(bu 4
+\fBCTX\fP is a context key like \fB\fCgeoip/city\fR. A non\-existing context key is silently ignored. Adding default
+keys (\fB\fCecs/addr\fR and \fB\fCid/id\fR) will error.
+
 
 .PP
 A typical example looks like this:
@@ -61,6 +88,43 @@ Advertised UDP buffer: \fB\fC1232\fR.
 Opcode: \fB\fCQUERY\fR.
 
 
+.PP
+Optionally we can also see:
+
+.PP
+.RS
+
+.nf
+2025/10/06 07:25:52 INFO example.org. id.id=5FOXMDAG6YAHD6R7QOZ4UTX7VQ remote=::1 port=40689 ecs.addr=198.51.100.0 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
+
+.fi
+.RE
+
+.IP \(bu 4
+\fB\fCecs.addr=....\fR, the ecs address if found in the request, via the \fIecs\fP handler.
+.IP \(bu 4
+\fB\fCid.id=....\fR, the generated request ID, from the \fIid\fP handler.
+
+
+.SH "EXAMPLE"
+.PP
+Here we add location data to the request's context, \fIand\fP log that.
+
+.PP
+.RS
+
+.nf
+example.org. {
+    geoip {
+        city testdata/GeoIPCity.dat
+    }
+    log
+    whoami
+}
+
+.fi
+.RE
+
 .SH "ALSO SEE"
 .PP
-signal(7).
+signal(7), atomdns\-ecs(7), atomdns\-id(7).

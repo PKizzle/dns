@@ -79,6 +79,9 @@ func Valid(key string) bool {
 	if slices.Contains(Reserved, key) {
 		return false
 	}
+	if len(key) < 3 {
+		return false
+	}
 	return strings.Contains(key, "/")
 }
 

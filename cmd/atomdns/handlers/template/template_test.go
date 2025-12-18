@@ -12,13 +12,13 @@ import (
 )
 
 func TestTemplate(t *testing.T) {
-	h := &template.Template{Path: "testdata/msg.go.tmpl", Regexp: regexp.MustCompile(".*")}
+	te := &template.Template{Path: "testdata/msg.go.tmpl", Regexp: regexp.MustCompile(".*")}
 
 	r := dns.NewMsg("www.example.org.", dns.TypeA)
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	h.HandlerFunc(atomtest.Noop).ServeDNS(context.TODO(), w, r)
+	te.HandlerFunc(atomtest.Noop).ServeDNS(context.TODO(), w, r)
 
 	if w.Msg.ID != r.ID {
 		t.Fatalf("expected %d, got %d", r.ID, w.Msg.ID)
