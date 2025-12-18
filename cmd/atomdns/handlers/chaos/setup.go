@@ -7,6 +7,7 @@ import (
 )
 
 func (c *Chaos) Setup(co *dnsserver.Controller) error {
+	c.Version = "Served by atomdns, https://atomdns.miek.nl"
 	if co.Next() {
 		args := co.RemainingArgs()
 		if len(args) > 1 {
