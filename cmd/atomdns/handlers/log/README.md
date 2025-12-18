@@ -22,8 +22,7 @@ values to the log when found.
 log
 ```
 
-Or optionally if you want to log non-default values from the context, adding default keys (`ecs/addr` and
-`id/id`) will error.
+Or optionally if you want to log non-default values from the context:
 
 ```txt
 log {
@@ -34,7 +33,8 @@ log {
 
 Where:
 
-- **CTX** is a context key like `geoip/city`. A non-existing context key is silently ignored.
+- **CTX** is a context key like `geoip/city`. A non-existing context key is silently ignored. Adding default
+  keys (`ecs/addr` and `id/id`) will error.
 
 A typical example looks like this:
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestCookie(t *testing.T) {
-	h := &cookie.Cookie{Secret: "geheim"}
+	c := &cookie.Cookie{Secret: "geheim"}
 
 	f := fnv.New64()
 	io.WriteString(f, "::1")
@@ -28,7 +28,7 @@ func TestCookie(t *testing.T) {
 	r.Pack()
 
 	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	h.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
+	c.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
 
 	if len(w.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")
