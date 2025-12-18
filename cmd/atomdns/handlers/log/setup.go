@@ -6,10 +6,10 @@ import (
 	"os"
 	"os/signal"
 	"slices"
-	"strings"
 	"sync"
 	"sync/atomic"
 
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
@@ -19,17 +19,32 @@ var (
 	shutonce  sync.Once
 )
 
+func valid(val string) error {
+	if !dnsctx.Valid(val) {
+		return fmt.Errorf("invalid context key: %s", val)
+	}
+	if slices.Contains([]string{"ecs/addr", "id/id"}, val) {
+		return fmt.Errorf("default context key used: %s", val)
+	}
+	return nil
+}
+
 func (l *Log) Setup(co *dnsserver.Controller) error {
-	for co.NextBlock(0) {
+	co.Next() // "log"
+	if co.NextBlock(0) {
+		err := valid(co.Val())
+		if err != nil {
+			return co.PropErr(err)
+		}
+		l.Contexts = append(l.Contexts, co.Val())
+
 		for co.NextLine() {
 			if co.Val() == "}" {
 				break
 			}
-			if !strings.Contains(co.Val(), "/") {
-				return co.PropErr(fmt.Errorf("context key needs to have '/' %s", co.Val()))
-			}
-			if slices.Contains([]string{"ecs/addr", "id/id"}, co.Val()) {
-				return co.PropErr(fmt.Errorf("default context key used: %s", co.Val()))
+			err := valid(co.Val())
+			if err != nil {
+				return co.PropErr(err)
 			}
 			l.Contexts = append(l.Contexts, co.Val())
 		}
