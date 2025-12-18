@@ -60,7 +60,7 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 		}
 	}
 
-	state.Store(true)
+	state.Store(!co.Global.Disable)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	co.OnStartup(func() error {

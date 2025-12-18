@@ -17,6 +17,7 @@ global section, see the configuration examples below.
         debug
         json
         quiet
+        disable
     }
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
@@ -59,6 +60,7 @@ global section, see the configuration examples below.
   - `debug` sets the global log level to debug.
   - `json` enables JSON logging.
   - With `quiet` the banner is not shown. Query logging is not affected.
+  - And `disable` disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns-log(7).
 - The `metrics` property allows setting the listening **ADDRESS** for the promtheus metrics. This defaults to `localhost:9153`.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global section.

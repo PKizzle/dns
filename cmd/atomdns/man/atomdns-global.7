@@ -22,6 +22,7 @@ global section, see the configuration examples below.
         debug
         json
         quiet
+        disable
     }
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
@@ -73,6 +74,8 @@ process will be prefixed.
 \fB\fCjson\fR enables JSON logging.
 .IP \(en 4
 With \fB\fCquiet\fR the banner is not shown. Query logging is not affected.
+.IP \(en 4
+And \fB\fCdisable\fR disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns\-log(7).
 
 .RE
 .IP \(bu 4
