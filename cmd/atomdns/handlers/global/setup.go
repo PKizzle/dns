@@ -34,6 +34,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					slog.SetDefault(jlog)
 				case "quiet":
 					g.Quiet = true
+				case "disable":
+					g.Disable = true
+				case "enable":
+					g.Quiet = false
 				default:
 					return d.ArgErr()
 				}

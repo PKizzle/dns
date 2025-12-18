@@ -13,8 +13,10 @@ import (
 type Global struct {
 	// Root
 	Root string
-	// Debug logging
-	Debug bool
+	// Logging
+	Debug   bool
+	Quiet   bool
+	Disable bool
 	// Metrics
 	MetricsN        uint64
 	MetricsListener net.Listener
@@ -24,7 +26,6 @@ type Global struct {
 	// Pprof
 	PprofListener net.Listener
 	// dns
-	Quiet  bool
 	Addr   string
 	Limits Limits
 	// doh

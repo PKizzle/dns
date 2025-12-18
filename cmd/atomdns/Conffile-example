@@ -2,6 +2,7 @@
     log {
         debug
         #json
+        disable
     }
     health
     metrics
