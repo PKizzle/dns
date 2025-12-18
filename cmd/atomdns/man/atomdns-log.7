@@ -33,8 +33,7 @@ log
 .RE
 
 .PP
-Or optionally if you want to log non\-default values from the context, adding default keys (\fB\fCecs/addr\fR and
-\fB\fCid/id\fR) will error.
+Or optionally if you want to log non\-default values from the context:
 
 .PP
 .RS
@@ -52,7 +51,8 @@ log {
 Where:
 
 .IP \(bu 4
-\fBCTX\fP is a context key like \fB\fCgeoip/city\fR. A non\-existing context key is silently ignored.
+\fBCTX\fP is a context key like \fB\fCgeoip/city\fR. A non\-existing context key is silently ignored. Adding default
+keys (\fB\fCecs/addr\fR and \fB\fCid/id\fR) will error.
 
 
 .PP
