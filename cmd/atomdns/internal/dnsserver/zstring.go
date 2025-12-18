@@ -16,6 +16,7 @@ var Handlers = []string{
 	"ecs",
 	"geoip",
 	"id",
+	"kill",
 	"log",
 	"metrics",
 	"msgcache",
