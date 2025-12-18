@@ -53,7 +53,7 @@ func Run(version string) {
 		conffile = flag.Args()[0]
 		confdata, err = os.ReadFile(flag.Args()[0])
 		if err != nil {
-			slog.Error("Failed to parse configuration", slog.String("path", conffile), slog.Any("error", err))
+			slog.Error("Failed to read configuration", slog.String("path", conffile), slog.Any("error", err))
 			os.Exit(1)
 		}
 	}

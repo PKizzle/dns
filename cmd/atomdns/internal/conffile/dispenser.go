@@ -242,20 +242,20 @@ func (d *Dispenser) ArgErr() error {
 // PropErr return a property error, meaning that x was expect but we got y.
 func (d *Dispenser) PropErr(err ...error) error {
 	if len(err) > 0 {
-		return d.Errf("unexpected property: %q: %s", d.Val(), err[0].Error())
+		return d.Errf("unexpected property: '%s': %s", d.Val(), err[0].Error())
 	}
-	return d.Errf("unexpected property: %q", d.Val())
+	return d.Errf("unexpected property: %s", d.Val())
 }
 
 // SyntaxErr creates a generic syntax error which explains what was found and what was expected.
 func (d *Dispenser) SyntaxErr(expected string) error {
-	msg := fmt.Sprintf("%s:%d - syntax error: unexpected token %q, expecting '%s'", d.File(), d.Line(), d.Val(), expected)
+	msg := fmt.Sprintf("%s:%d - syntax error: unexpected token '%s', expecting '%s'", d.File(), d.Line(), d.Val(), expected)
 	return errors.New(msg)
 }
 
 // PropEmptyErr create a error that a property was not defined or still empty after parsing.
 func (d *Dispenser) PropEmptyErr(prop string) error {
-	msg := fmt.Sprintf("property: %q can not be empty", prop)
+	msg := fmt.Sprintf("property: '%s' can not be empty", prop)
 	return errors.New(msg)
 }
 
@@ -321,7 +321,7 @@ func addr(s string) (string, error) {
 	addr, port, err := net.SplitHostPort(s)
 	if err != nil {
 		if net.ParseIP(s) == nil {
-			return "", fmt.Errorf("failed to parse %q as IP", s)
+			return "", fmt.Errorf("failed to parse '%s' as IP", s)
 		}
 		return net.JoinHostPort(s, "53"), nil
 	}
@@ -341,7 +341,7 @@ func (d *Dispenser) RemainingIPs() ([]string, error) {
 		}
 		ifips := iface.List(args[i])
 		if len(ifips) == 0 {
-			return nil, fmt.Errorf("failed to find routable IPs on %q interface", args[i])
+			return nil, fmt.Errorf("failed to find routable IPs on '%s' interface", args[i])
 		}
 		ips = append(ips, ifips...)
 	}
