@@ -40,7 +40,6 @@
 
 example.org {
     id
-    cookie
     log
     kill 5s
     dbfile dbfile/zone/testdata/db.example.org {
