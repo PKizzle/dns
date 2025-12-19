@@ -31,12 +31,13 @@ func (w *ResponseWriter) Close() error          { return nil }
 // Write writes the [dns.Msg]'s byffer to the underlaying HTTP response writer. It sets a defaults
 // cache-control of 600 seconds.
 func (w *ResponseWriter) Write(p []byte) (n int, err error) {
+	// this is a TCP response, the first 2 bytes, are the length, skip those.
+	p = p[2:]
 	w.w.Header().Set("Content-Type", MimeType)
 	w.w.Header().Set("Cache-Control", "max-age=600")
 	w.w.Header().Set("Content-Length", strconv.Itoa(len(p)))
 	w.w.WriteHeader(http.StatusOK)
-	// this is a TCP response, the first 2 bytes, are the length, skip those.
-	return w.w.Write(p[2:])
+	return w.w.Write(p)
 }
 
 // LocalAddr implements the ResponseWriter.LocalAddr method.
