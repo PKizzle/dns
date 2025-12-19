@@ -116,7 +116,7 @@ func msg(r io.ReadCloser) (*dns.Msg, error) {
 }
 
 // MsgAccepFunc is the function that checks if the incoming message is valid. This function can be a noop, but
-// should never be bil.
+// should never be nil.
 var MsgAcceptFunc = DefaultMsgAcceptFunc
 
 // DefaultMsgAcceptFunc does everything the dns.DefaultMsgAcceptFunc does in addtion to the check mandated by
