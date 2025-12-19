@@ -222,7 +222,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
-			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux))
+			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}))
 			s.httpstarted = make(chan error, len(s.httpservers))
 		}
 	}
