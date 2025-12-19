@@ -67,7 +67,7 @@ func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return cancel, listen, err
 }
 
-// TLSServer calls [Server] with a TLS configuration.
+// TLSServer calls [Server] with a TLS configuration. The NextProtos field is set to "dot".
 func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	tlsopt := func(s *dns.Server) {
 		s.TLSConfig = TLSConfig()
@@ -77,8 +77,7 @@ func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return TCPServer(addr, opts...)
 }
 
-// TLSConfig returns the testing TLS config. Note that for DOT server the NextProtos field of the TLS config
-// should contain the string "dot".
+// TLSConfig returns the testing TLS config.
 func TLSConfig() *tls.Config {
 	cert, _ := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
