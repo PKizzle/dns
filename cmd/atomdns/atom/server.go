@@ -213,7 +213,6 @@ func New(conf string, r io.Reader) (*Server, error) {
 				metrics.Dropped.Inc()
 			}
 			i++
-
 		})
 	}
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
