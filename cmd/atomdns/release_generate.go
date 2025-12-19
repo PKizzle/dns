@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	changelog, err := os.Open("_release/debian/changelog")
+	changelog, err := os.OpenFile("_release/debian/changelog", os.O_RDWR|os.O_TRUNC, 0640)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,9 @@ func main() {
 	}
 
 	w := wrap{Version: Version(string(buf)), Time: time.Now().UTC()}
-	DebianChangelog.Execute(changelog, w)
+	if err := DebianChangelog.Execute(changelog, w); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Version(source string) string {
