@@ -5,6 +5,7 @@ import (
 )
 
 //go:generate go run man_generate.go
+//go:generate go run release_generate.go
 
 const version = "058"
 
