@@ -11,3 +11,12 @@ func TestServer(t *testing.T) {
 	defer cancel()
 	t.Logf("%s", listen)
 }
+
+func TestServerHTTP(t *testing.T) {
+	cancel, listen, err := HTTPServer(":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel()
+	t.Logf("%s", listen)
+}
