@@ -4,8 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
+	"net/http"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnshttp"
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
@@ -56,7 +59,7 @@ func UDPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return cancel, listen, err
 }
 
-// TCPServer calls [Server] with the option to start a TCP server,
+// TCPServer calls [Server] with the option to start a TCP server.
 func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	opt := func(s *dns.Server) { s.Net = "tcp" }
 	opts = append(opts, opt)
@@ -64,10 +67,11 @@ func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return cancel, listen, err
 }
 
-// TLSServer calls [Server] with a TLS configuration.
+// TLSServer calls [Server] with a TLS configuration. The NextProtos field is set to "dot".
 func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	tlsopt := func(s *dns.Server) {
 		s.TLSConfig = TLSConfig()
+		s.TLSConfig.NextProtos = []string{"dot"}
 	}
 	opts = append(opts, tlsopt)
 	return TCPServer(addr, opts...)
@@ -78,6 +82,48 @@ func TLSConfig() *tls.Config {
 	cert, _ := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 }
+
+// HTTPServer returns a new running (DOH) server. See [Server] for the documentation on the returned
+// values. If the TLSConfig in the server is set (via the opts functions) a TLS capable server is started.
+func HTTPServer(addr string, opts ...func(*http.Server)) (func(), string, error) {
+	l, err := net.Listen("tcp", addr)
+	if err != nil {
+		return nil, "", err
+	}
+
+	hmux := http.NewServeMux()
+	hh := &handler{}
+	hmux.Handle("/dns-query", hh)
+	hs := &http.Server{Addr: addr, Handler: hmux}
+
+	for _, opt := range opts {
+		opt(hs)
+	}
+
+	if hs.TLSConfig != nil {
+		l = tls.NewListener(l, hs.TLSConfig)
+	}
+
+	// assume this works
+	go func() {
+		hs.Serve(l)
+	}()
+
+	cancel := func() { hs.Shutdown(context.TODO()) }
+	return cancel, l.Addr().String(), nil
+}
+
+func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	m, err := dnshttp.Request(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	hw := dnshttp.NewResponseWriter(w, r, r.Context().Value(http.LocalAddrContextKey).(net.Addr))
+	dns.DefaultServeMux.ServeDNS(context.Background(), hw, m)
+}
+
+type handler struct{}
 
 var (
 	// certPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
