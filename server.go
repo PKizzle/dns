@@ -171,12 +171,17 @@ func (srv *Server) ListenAndServe() error {
 	}
 	srv.init()
 
+	if srv.Listener != nil {
+		srv.listenTCP(srv.Listener)
+		return nil
+	}
+	if srv.PacketConn != nil {
+		srv.listenUDP(srv.PacketConn)
+		return nil
+	}
+
 	switch srv.Net {
 	case "tcp", "tcp4", "tcp6":
-		if srv.Listener != nil {
-			srv.listenTCP(srv.Listener)
-			return nil
-		}
 		l, err := listenTCP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
 			return err
@@ -191,10 +196,6 @@ func (srv *Server) ListenAndServe() error {
 		srv.listenTCP(l)
 		return nil
 	case "udp", "udp4", "udp6":
-		if srv.PacketConn != nil {
-			srv.listenUDP(srv.PacketConn)
-			return nil
-		}
 		l, err := listenUDP(srv.Net, addr, srv.ReusePort, srv.ReuseAddr)
 		if err != nil {
 			return err
