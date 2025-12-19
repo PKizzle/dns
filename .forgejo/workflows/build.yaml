@@ -1,7 +1,7 @@
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: atoom-tiny
+    runs-on: atoom
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6

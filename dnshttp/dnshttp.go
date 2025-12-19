@@ -78,7 +78,7 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		if err != nil {
 			return m, err
 		}
-		if action := MsgAcceptAction(m); action != dns.MsgAccept {
+		if action := MsgAcceptFunc(m); action != dns.MsgAccept {
 			return nil, fmt.Errorf("dns msg unacceptable")
 		}
 		return m, nil
@@ -89,7 +89,7 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		if err != nil {
 			return m, err
 		}
-		if action := MsgAcceptAction(m); action != dns.MsgAccept {
+		if action := MsgAcceptFunc(m); action != dns.MsgAccept {
 			return nil, fmt.Errorf("dns msg unacceptable")
 		}
 		return m, nil
@@ -115,13 +115,23 @@ func msg(r io.ReadCloser) (*dns.Msg, error) {
 	return m, err
 }
 
-// MsgAcceptAction is the function that checks if the incoming message is valid. This is used in DOQ (DNS over
-// QUIC).
-var MsgAcceptAction = DefaultMsgAcceptFunc
+// MsgAccepFunc is the function that checks if the incoming message is valid. This function can be a noop, but
+// should never be bil.
+var MsgAcceptFunc = DefaultMsgAcceptFunc
 
-// DefaultMsgAcceptFunc implements the check mandated by DOQ, that the Pseudo section cannot contain an TCP-KEEPALIVE
-// option. Not other checks are performed.
+// DefaultMsgAcceptFunc does everything the dns.DefaultMsgAcceptFunc does in addtion to the check mandated by
+// DOQ, that the Pseudo section cannot contain an TCP-KEEPALIVE option. Not other checks are performed.
 func DefaultMsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
+	// copied from dns.DefaultMsgAcceptFunc, keep in sync.
+	if m.Response {
+		return dns.MsgIgnore
+	}
+	if _, ok := dns.OpcodeToString[m.Opcode]; !ok {
+		return dns.MsgRejectNotImplemented
+	}
+	if len(m.Question) != 1 {
+		return dns.MsgReject
+	}
 	for _, o := range m.Pseudo {
 		if _, ok := o.(*dns.TCPKEEPALIVE); ok {
 			return dns.MsgReject

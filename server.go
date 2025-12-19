@@ -44,16 +44,15 @@ type MsgAcceptFunc func(m *Msg) MsgAcceptAction
 //   - Isn't a request, returns [MsgIgnore].
 //   - Has an opcode that isn't recognized, returns [MsgIgnore].
 //   - Has more than a single "RR" in the question section, return [MsgReject].
-func DefaultMsgAcceptFunc(r *Msg) MsgAcceptAction {
-	if r.Response {
+func DefaultMsgAcceptFunc(m *Msg) MsgAcceptAction {
+	// see dnshttp.DefaultMsgAcceptFunc where this code is duplicated.
+	if m.Response {
 		return MsgIgnore
 	}
-
-	if _, ok := OpcodeToString[r.Opcode]; !ok {
+	if _, ok := OpcodeToString[m.Opcode]; !ok {
 		return MsgRejectNotImplemented
 	}
-
-	if len(r.Question) != 1 {
+	if len(m.Question) != 1 {
 		return MsgReject
 	}
 	return MsgAccept

@@ -21,7 +21,7 @@ func TestDOH(t *testing.T) {
 		"GET request no protocol":  {method: http.MethodGet, url: "example.org:443"},
 	}
 
-	MsgAcceptAction = func(m *dns.Msg) dns.MsgAcceptAction { return dns.MsgAccept }
+	MsgAcceptFunc = func(m *dns.Msg) dns.MsgAcceptAction { return dns.MsgAccept }
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
