@@ -90,7 +90,7 @@ func FuzzNew(f *testing.F) {
 	f.Add(`miek.nl. IN 3600 MX 15 mx.miek.nl.`)
 	start := time.Now()
 	f.Fuzz(func(t *testing.T, s string) {
-		dnstestNew(s)
+		New(s)
 		dnsfuzz.Stop(t, start)
 	})
 }
