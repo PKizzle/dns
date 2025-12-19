@@ -1,0 +1,6 @@
+on: [push]
+jobs:
+  test:
+    runs-on: atoom-tiny
+    steps:
+      - run: echo All good!
