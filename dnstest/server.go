@@ -83,8 +83,8 @@ func TLSConfig() *tls.Config {
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 }
 
-// HTTPServer returns a new running (DOH) server. See [Server] for the documentation and the returned
-// values. If the TLSConfig in the server is set (via the opts functions) the TLS capable server is started.
+// HTTPServer returns a new running (DOH) server. See [Server] for the documentation on the returned
+// values. If the TLSConfig in the server is set (via the opts functions) a TLS capable server is started.
 func HTTPServer(addr string, opts ...func(*http.Server)) (func(), string, error) {
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
