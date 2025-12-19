@@ -6,9 +6,11 @@ import (
 	"net/netip"
 	"os"
 	"testing"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/bin"
+	"codeberg.org/miekg/dns/internal/dnsfuzz"
 	"codeberg.org/miekg/dns/internal/unpack"
 	"golang.org/x/crypto/cryptobyte"
 )
@@ -147,8 +149,10 @@ func FuzzMsgPack(f *testing.F) {
 		buf, _ := os.ReadFile("testdata/" + binary)
 		f.Add(buf)
 	}
+	start := time.Now()
 	f.Fuzz(func(t *testing.T, b []byte) {
 		m := &dns.Msg{Data: b}
 		m.Unpack()
+		dnsfuzz.Stop(t, start)
 	})
 }
