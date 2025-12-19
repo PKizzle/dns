@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"slices"
@@ -65,7 +66,7 @@ func (l *Log) Setup(co *dnsserver.Controller) error {
 
 	co.OnStartup(func() error {
 		startonce.Do(func() {
-			_log().Info("Startup", "signal", "USR1")
+			_log().Info("Startup", "signal", "USR1", slog.Bool("enabled", !co.Global.Disable))
 			sigchan := make(chan os.Signal, 1)
 			go func() {
 				signal.Notify(sigchan, SIGUSR1)

@@ -21,7 +21,7 @@
     }
     # doh configures the DNS over HTTP listener.
     doh {
-        addr [::]:1443# Listen on all interfaces and port 1443.
+        addr [::]:1443 # Listen on all interfaces and port 1443.
         limits {
             run numcpu()*1 # Run only a single server per CPU.
             inflight 100 # Allow only 100 inflight requests to stop the server from being overwhelmed.
@@ -64,11 +64,20 @@ example.org {
 miek.nl {
     log # Log, as above.
     metrics # Metrics are globally enabled, for this zone they should be actually gathered and exported.
-    # Sign the db.miek.nl zone with the keys specified. This doesn't do anything else. The next handlder...
+    # Sign the db.miek.nl zone with the keys specified. This doesn't do anything else. The next handler...
     sign sign/testdata/db.miek.nl {
         key sign/testdata/Kmiek.nl.+013+59725
         zonemd
     }
     # ... will pick up the signed zone file and serve it.
     dbfile sign/testdata/db.miek.nl.signed
+}
+
+# Configure zones for CH class queries, so the server returns some information about its own identity.
+version.server authors.server id.server {
+    chaos { # Chaos, see atomdns-chaos(7)
+        authors {
+            miek@miek.nl
+        }
+    }
 }
