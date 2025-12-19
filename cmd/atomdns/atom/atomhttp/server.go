@@ -19,7 +19,8 @@ import (
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m, err := dnshttp.Request(r)
 	if err != nil {
-		slog.Debug("Failed to convert http request", "server", "doh", slog.Any("error", err))
+		slog.Debug("Failed to convert http request", "server", "doh", slog.Any("error", err)) // todo keep log debug here?
+		h.MsgInvalidFunc(m, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -66,21 +67,22 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func New(addr string, mux *dns.ServeMux) *Server {
+func New(addr string, mux *dns.ServeMux, fn dns.InvalidMsgFunc) *Server {
 	s := new(Server)
-	h := newHandler(mux)
+	h := newHandler(mux, fn)
 	logger := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
 	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger}
 	return s
 }
 
 type handler struct {
-	mux *dns.ServeMux
+	mux            *dns.ServeMux
+	MsgInvalidFunc dns.InvalidMsgFunc
 }
 
-func newHandler(mux *dns.ServeMux) *http.ServeMux {
+func newHandler(mux *dns.ServeMux, fn dns.InvalidMsgFunc) *http.ServeMux {
 	hmux := http.NewServeMux()
-	handler := &handler{mux: mux}
+	handler := &handler{mux: mux, MsgInvalidFunc: fn}
 	hmux.Handle("/dns-query", handler)
 	return hmux
 }

@@ -204,7 +204,16 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.httpservers = make([]*atomhttp.Server, global.HttpLimits.Servers)
 	s.httpstarted = make(chan error, len(s.httpservers))
 	for j := range s.httpservers {
-		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux)
+		i, N := uint64(0), global.MetricsN
+		s.httpservers[j] = atomhttp.New(global.HttpAddr, s.mux, func(_ *dns.Msg, _ error) {
+			if N == 0 {
+				return
+			}
+			if i%N == 0 {
+				metrics.Dropped.Inc()
+			}
+			i++
+		})
 	}
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
 	if global.TlsCertConfig != nil {
@@ -212,7 +221,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
-			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux))
+			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}))
 			s.httpstarted = make(chan error, len(s.httpservers))
 		}
 	}
