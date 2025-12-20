@@ -3,6 +3,8 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -31,6 +33,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	version := Version(string(buf))
+
+	clbuf, err := os.ReadFile("_release/debian/changelog")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if bytes.Contains(clbuf, []byte(fmt.Sprintf("atomdns (%s)", version))) {
+		// already contains our version
+		return
+	}
+
 	changelog, err := os.OpenFile("_release/debian/changelog", os.O_RDWR|os.O_TRUNC, 0640)
 	if err != nil {
 		log.Fatal(err)
@@ -41,7 +54,7 @@ func main() {
 		Time    time.Time
 	}
 
-	w := wrap{Version: Version(string(buf)), Time: time.Now().UTC()}
+	w := wrap{Version: version, Time: time.Now().UTC()}
 	if err := DebianChangelog.Execute(changelog, w); err != nil {
 		log.Fatal(err)
 	}
