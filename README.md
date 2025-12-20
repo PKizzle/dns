@@ -73,11 +73,11 @@ What users say:
 > miekg/dns is probably my favorite Go module in the open source ecosystem. It is very complete (every DNS rtype is defined)
 > and strict (field names match the RFCs, etc). DNSControl has used miekg/dns since the first release.
 
--- <https://codeberg.org/miekg/dns/issues/258#issue-2471506>
+- <https://codeberg.org/miekg/dns/issues/258#issue-2471506>
 
 > Your library is a blast and I cannot thank you enough 🙏.
 
--- <https://infosec.exchange/@x_cli/115745919220339651>
+- <https://infosec.exchange/@x_cli/115745919220339651>
 
 # Features
 
