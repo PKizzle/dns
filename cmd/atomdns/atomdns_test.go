@@ -23,7 +23,6 @@ const Conffile = `
 }
 
 whoami.example.org {
-	any
     whoami
 }
 `
@@ -43,7 +42,7 @@ func TestAtomdnsPerf(t *testing.T) {
 				t.Skip("no atomdns binary found in .")
 			}
 
-			cmd := exec.CommandContext(ctx, "./atomdns", "-c", conffile)
+			cmd := exec.CommandContext(ctx, "./atomdns", conffile)
 			go func() {
 				if err := cmd.Run(); err != nil {
 					if _, ok := err.(*exec.ExitError); !ok {

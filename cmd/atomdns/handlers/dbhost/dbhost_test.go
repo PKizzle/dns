@@ -14,15 +14,15 @@ func TestDbhost(t *testing.T) {
 	d := &Dbhost{Path: "/etc/hosts"}
 	d.Load()
 
-	r := dns.NewMsg("localhost.", dns.TypeA)
-	r.ID = 3
-	r.Pack()
+	m := dns.NewMsg("localhost.", dns.TypeA)
+	m.ID = 3
+	m.Pack()
 
-	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
 	next := new(whoami.Whoami).HandlerFunc(nil)
-	d.HandlerFunc(next).ServeDNS(context.TODO(), w, r)
+	d.HandlerFunc(next).ServeDNS(context.TODO(), tw, m)
 
-	if x := w.Msg.Answer[0].(*dns.A).Addr; x != netip.MustParseAddr("127.0.0.1") {
+	if x := tw.Msg.Answer[0].(*dns.A).Addr; x != netip.MustParseAddr("127.0.0.1") {
 		t.Fatalf("expected %s, got %s", "127.0.0.1", x)
 	}
 }

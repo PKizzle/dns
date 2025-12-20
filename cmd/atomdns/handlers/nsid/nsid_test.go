@@ -15,18 +15,17 @@ func TestNsid(t *testing.T) {
 	in := "Use the force"
 	n := &nsid.Nsid{Data: hex.EncodeToString([]byte(in))}
 
-	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
-	r.ID = 3
-	r.Pseudo = []dns.RR{&dns.NSID{}}
-	r.Pack()
+	m := dnstest.NewMsg()
+	m.Pseudo = []dns.RR{&dns.NSID{}}
+	m.Pack()
 
-	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	n.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
+	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	n.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), tw, m)
 
-	if len(w.Msg.Pseudo) != 1 {
+	if len(tw.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")
 	}
-	if w.Msg.Pseudo[0].(*dns.NSID).Nsid != hex.EncodeToString([]byte(in)) {
+	if tw.Msg.Pseudo[0].(*dns.NSID).Nsid != hex.EncodeToString([]byte(in)) {
 		t.Fatalf("expected NSID RR contain: %s", in)
 	}
 }
