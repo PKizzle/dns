@@ -1,6 +1,8 @@
+# This next block has no zone, therefore it is the _global_ block, that defines properties for the entire
+# atomdns process.This handler block is documented in atomdns-global(7).
 {
     # log configures the (global) logging. Each handler can decide to log or not, but what and how things are
-    # log is mostly determined here. The log property is documented in atomdns-global(7).
+    # log is mostly determined here.
     log {
         debug # Enable debug logging.
         #json # Enable for JSON log output.
@@ -55,7 +57,7 @@ example.org {
     id # Add a request ID, see atomdns-id(7).
     log # Log, see atomdns-log(7).
     # kill 50s # Kill the server after 50 seconds, see atomdns-kill(7).
-    dbfile dbfile/zone/testdata/db.example.org { # Configure a zone from a file on disk.
+    dbfile dbfile/zone/testdata/db.example.org { # Configure a zone from a file on disk, see atomdns-dbfile(7).
         transfer # Allow transfers to everywhere.
     }
 }
