@@ -115,27 +115,27 @@ func TestAcl(t *testing.T) {
 			co := dnsserver.NewTestController(tc.config)
 			a.Setup(co)
 
-			w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-			r := new(dns.Msg)
+			tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+			m := new(dns.Msg)
 			if tc.qtype == 0 {
 				tc.qtype = dns.TypeA
 			}
-			dnsutil.SetQuestion(r, "www.example.org.", tc.qtype)
+			dnsutil.SetQuestion(m, "www.example.org.", tc.qtype)
 
 			ctx := context.TODO()
 			if tc.setup != nil {
 				ctx = tc.setup()
 			}
-			a.HandlerFunc(atomtest.Echo).ServeDNS(ctx, w, r)
+			a.HandlerFunc(atomtest.Echo).ServeDNS(ctx, tw, m)
 
-			if w.Msg.Rcode != uint16(tc.rcode) {
-				t.Errorf("rcode mismatch want %d, got %d", tc.rcode, w.Msg.Rcode)
+			if tw.Msg.Rcode != uint16(tc.rcode) {
+				t.Errorf("rcode mismatch want %d, got %d", tc.rcode, tw.Msg.Rcode)
 			}
-			if tc.noResponse && w.Msg != nil {
+			if tc.noResponse && tw.Msg != nil {
 				t.Errorf("responded to client when not expected")
 			}
 			if tc.extendedError != 0 {
-				for _, p := range w.Msg.Pseudo {
+				for _, p := range tw.Msg.Pseudo {
 					if ede, ok := p.(*dns.EDE); ok {
 						if ede.InfoCode != tc.extendedError {
 							t.Errorf("expected extended error %d, got %d", ede.InfoCode, tc.extendedError)

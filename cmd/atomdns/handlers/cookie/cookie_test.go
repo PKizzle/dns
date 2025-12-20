@@ -22,18 +22,17 @@ func TestCookie(t *testing.T) {
 	io.WriteString(f, "ook geheim")
 	cookie := &dns.COOKIE{Cookie: hex.EncodeToString(f.Sum(nil))}
 
-	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
-	r.ID = 3
-	r.Pseudo = []dns.RR{cookie}
-	r.Pack()
+	m := dnstest.NewMsg()
+	m.Pseudo = []dns.RR{cookie}
+	m.Pack()
 
-	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
-	c.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), w, r)
+	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	c.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), tw, m)
 
-	if len(w.Msg.Pseudo) != 1 {
+	if len(tw.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")
 	}
-	if _, ok := w.Msg.Pseudo[0].(*dns.COOKIE); !ok {
+	if _, ok := tw.Msg.Pseudo[0].(*dns.COOKIE); !ok {
 		t.Fatal("expected COOKIE RR")
 	}
 }

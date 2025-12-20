@@ -15,11 +15,11 @@ func TestEcs(t *testing.T) {
 	e := &ecs.Ecs{}
 
 	ecs := &dns.SUBNET{Family: dnsutil.IPv4Family, SourceNetmask: 32, Address: dnstest.IPv4}
-	r := dns.NewMsg("whoami.example.org.", dns.TypeA)
-	r.Pseudo = []dns.RR{ecs}
-	r.Pack()
+	m := dnstest.NewMsg()
+	m.Pseudo = []dns.RR{ecs}
+	m.Pack()
 
-	w := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
 	next := dns.HandlerFunc(func(ctx context.Context, _ dns.ResponseWriter, _ *dns.Msg) {
 		address := dnsctx.Value(ctx, e.Key()+"/addr")
 		if address == nil {
@@ -30,5 +30,5 @@ func TestEcs(t *testing.T) {
 		}
 	})
 	ctx := context.TODO()
-	e.HandlerFunc(next).ServeDNS(ctx, w, r)
+	e.HandlerFunc(next).ServeDNS(ctx, tw, m)
 }
