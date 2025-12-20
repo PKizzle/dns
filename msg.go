@@ -78,12 +78,8 @@ var RcodeToString = map[uint16]string{
 }
 
 // packQuestion packs an RR into a question section.
-func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
-	if rr == nil {
-		return len(msg), &Error{err: "nil rr"}
-	}
-
-	off, err = pack.Name(rr.Header().Name, msg, off, nil, false)
+func packQuestion(rr RR, msg []byte, off int, compression map[string]uint16) (off1 int, err error) {
+	off, err = pack.Name(rr.Header().Name, msg, off, compression, false)
 	if err != nil {
 		return len(msg), err
 	}
@@ -101,10 +97,6 @@ func packQuestion(rr RR, msg []byte, off int) (off1 int, err error) {
 }
 
 func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEnd int, off1 int, err error) {
-	if rr == nil {
-		return len(msg), len(msg), &pack.Error{Err: "nil rr"}
-	}
-
 	rrtype := RRToType(rr)
 	headerEnd, err = rr.Header().packHeader(msg, off, rrtype, compression)
 	if err != nil {
@@ -117,7 +109,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 
 	rdlength := off1 - headerEnd
 	if int(uint16(rdlength)) != rdlength { // overflow
-		return headerEnd, len(msg), pack.Errorf("inconsitent rdata length")
+		return headerEnd, len(msg), pack.Errorf("inconsistent rdata length")
 	}
 
 	// The RDLENGTH field is the last field in the header and we set it here.
@@ -136,8 +128,8 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 		return h, unpack.ErrTruncatedMessage
 	}
 
-	// Restrict msgBuf to the end of the RR (the current position of msg) so
-	// that we compute the correct offset in unpack.Name.
+	// Restrict msgBuf to the end of the RR (the current position of msg) so that we compute the correct offset
+	// in unpack.Name.
 	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
@@ -206,19 +198,19 @@ func (m *Msg) Pack() error {
 	if off, err = dh.pack(m.Data, off); err != nil {
 		return err
 	}
-	for _, r := range m.Question {
-		if off, err = packQuestion(r, m.Data, off); err != nil {
-			return err
-		}
-		break
-	}
 
-	// Is this compressible/
+	// Is this compressible?
 	var compression map[string]uint16
 	if len(m.Question) > 1 || len(m.Answer) > 0 || len(m.Ns) > 0 || len(m.Extra) > 0 {
 		compression = map[string]uint16{}
 	}
 
+	for _, r := range m.Question {
+		if off, err = packQuestion(r, m.Data, off, compression); err != nil {
+			return err
+		}
+		break // allow only one
+	}
 	for _, r := range m.Answer {
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
