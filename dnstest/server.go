@@ -71,7 +71,7 @@ func TCPServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	tlsopt := func(s *dns.Server) {
 		s.TLSConfig = TLSConfig()
-		s.TLSConfig.NextProtos = []string{"dot"}
+		s.TLSConfig.NextProtos = dns.NextProtos
 	}
 	opts = append(opts, tlsopt)
 	return TCPServer(addr, opts...)

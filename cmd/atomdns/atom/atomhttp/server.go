@@ -49,7 +49,7 @@ func Serve(ch chan error, s *Server, global *global.Global) {
 	}
 	if global.TlsCertConfig != nil {
 		tlsConfig := global.TlsCertConfig.TLSConfig()
-		tlsConfig.NextProtos = append(tlsConfig.NextProtos, []string{"h2", "http/1.1"}...)
+		tlsConfig.NextProtos = append(tlsConfig.NextProtos, dnshttp.NextProtos...)
 		lt = tls.NewListener(l, tlsConfig)
 	}
 	go func() {

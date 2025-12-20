@@ -11,6 +11,7 @@ import (
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
+	"codeberg.org/miekg/dns/dnshttp"
 	"github.com/caddyserver/certmagic"
 )
 
@@ -38,11 +39,11 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 			}
 			if g.TlsConfig != nil {
 				g.TlsConfig.Certificates = []tls.Certificate{cert}
-				g.TlsConfig.NextProtos = []string{"h2", "http/1.1"}
+				g.TlsConfig.NextProtos = dnshttp.NextProtos
 			} else {
 				g.TlsConfig = &tls.Config{
 					Certificates: []tls.Certificate{cert},
-					NextProtos:   []string{"h2", "http/1.1"},
+					NextProtos:   dnshttp.NextProtos,
 				}
 			}
 		case "rootca":
@@ -60,11 +61,11 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 			}
 			certmagic.DefaultACME.TrustedRoots = roots
 			if g.TlsConfig != nil {
-				g.TlsConfig.NextProtos = []string{"h2", "http/1.1"}
+				g.TlsConfig.NextProtos = dnshttp.NextProtos
 				g.TlsConfig.RootCAs = roots
 			} else {
 				g.TlsConfig = &tls.Config{
-					NextProtos: []string{"h2", "http/1.1"},
+					NextProtos: dnshttp.NextProtos,
 					RootCAs:    roots,
 				}
 			}

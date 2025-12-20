@@ -1,7 +1,6 @@
 // Package dnshttp deals with converting HTTP requests and responses to dns.Msg types. This is part of DNS
 // over HTTP (DOH).
-// The mandatory tls.Config must contain tlsConfig.NextProtos = []string{"h2", "http/1.1"}, otherwise it will
-// not work with most clients.
+// The mandatory tls.Config must contain tlsConfig.NextProtos = []string{"h2", "http/1.1"}, see [NextProtos].
 package dnshttp
 
 import (
@@ -21,12 +20,14 @@ const MimeType = "application/dns-message"
 // Path is the URL path that is used by DOH.
 const Path = "/dns-query"
 
+// NextProtos is the configuration a tls.Config must carry to be compatible with most clients.
+var NextProtos = []string{"h2", "http/1.1"}
+
 // NewRequest returns a new DOH request given a HTTP method, URL and a [dns.Msg].
 //
 // The URL should not have a path, so "/dns-query" should be excluded. The URL will be prefixed with https:// by default,
 // unless it's already prefixed with either http:// or https://. Supported methods are GET or POST.
 func NewRequest(method, url string, m *dns.Msg) (*http.Request, error) {
-	// TODO(miek): hijack buffer?
 	if err := m.Pack(); err != nil {
 		return nil, err
 	}

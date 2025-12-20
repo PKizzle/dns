@@ -80,7 +80,7 @@ type Server struct {
 	// before it is used, as such this can be used to wrap the listeners.
 	ListenFunc func(*Server)
 	// TLS connection configuration. Use for DOT (DNS over TCP). Not NextProtos must have "dot", for this to
-	// work with DOT clients.
+	// work with DOT clients. See [NextProtos].
 	TLSConfig *tls.Config
 	// UDP "Listener" that is used. If PacketConn is set before Serve is called, its value will be used a no
 	// new PacketConn will be created. Note in that case ListenFunc isn't ran either.
@@ -341,3 +341,6 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 	r.Options = MsgOptionUnpack
 	srv.Handler.ServeDNS(srv.ctx, w, r)
 }
+
+// NextProtos is the configuration a tls.Config must carry to be compatible with DNS over TLS (DOT).
+var NextProtos = []string{"dot"}

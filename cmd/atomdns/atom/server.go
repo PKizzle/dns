@@ -182,7 +182,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 		if global.TlsCertConfig != nil {
 			tlsConfig = global.TlsCertConfig.TLSConfig().Clone()
 		}
-		tlsConfig.NextProtos = []string{"dot"}
+		tlsConfig.NextProtos = dns.NextProtos
 		s.tlsservers[j] = &dns.Server{
 			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
 			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
