@@ -248,13 +248,13 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 	return global, s.Setup(conf, global, blocks)
 }
 
-func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.ServerBlock) error {
+func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.HandlerBlock) error {
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
 		}
 		for _, dir := range b.Directives {
-			d := conffile.NewDispenser(conf, nil, b.Tokens[dir])
+			d := conffile.NewDispenser(conf, nil, b.Tokens[dir], nil)
 			err := global.Setup(d)
 			if err != nil {
 				return fmt.Errorf("could not parse global config: %s", err)
@@ -288,7 +288,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Ser
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
 				co := &dnsserver.Controller{
-					Dispenser: conffile.NewDispenser(conf, b.Keys, b.Tokens[name]),
+					Dispenser: conffile.NewDispenser(conf, b.Keys, b.Tokens[name], names),
 					Global:    global,
 				}
 				err := s.Setup(co)
