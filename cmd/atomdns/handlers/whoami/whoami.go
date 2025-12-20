@@ -18,21 +18,24 @@ type Whoami int
 
 func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		var rr dns.RR
 		m := r.Copy()
 		dnsutil.SetReply(m, r)
 
 		var ip netip.Addr
 		switch a := w.RemoteAddr().(type) {
 		case *net.UDPAddr:
-			ip = a.AddrPort().Addr()
+			ip, _ = netip.AddrFromSlice(a.IP)
 		case *net.TCPAddr:
-			ip = a.AddrPort().Addr()
+			ip, _ = netip.AddrFromSlice(a.IP)
 		}
 		if x := dnsctx.Addr(ctx, "ecs/addr"); x.IsValid() {
 			ip = x
 		}
+		if ip.Is4In6() {
+			ip = netip.AddrFrom4(ip.As4())
+		}
 
+		var rr dns.RR
 		if ip.Is4() {
 			rr = &dns.A{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, A: rdata.A{Addr: ip}}
 		} else {
