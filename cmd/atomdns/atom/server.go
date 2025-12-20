@@ -248,7 +248,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 	return global, s.Setup(conf, global, blocks)
 }
 
-func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.ServerBlock) error {
+func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.HandlerBlock) error {
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
