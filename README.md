@@ -7,12 +7,12 @@
 # Status
 
 - Fast(er); recvmmsg and pipeling suppport.
-  - Since a46996c I can get ~370K (UDP) qps on my laptop (M2/Asahi Linux).
+  - Since a46996c I can get ~370K (UDP) qps on my laptop (M2/Asahi Linux), also see 1766e44.
   - On my Dell XPS 17 (Intel) it is similar.
   - On Intel/AMD it is lower (~200K (UDP) qps) - yet to understand why.
-  - See `cmd/reflect` and do a `go build; go test -v`. Requires `dnsperf` to be installed.
-- More convenience functions included in _dns_ or otherwise in _dnsutils_.
-- Test helper function included _dnstest_.
+  - See `cmd/reflect` and do a `go build; make new.txt`. Requires `dnsperf` to be installed.
+- Many more convenience functions included in _dns_ or otherwise in _dnsutils_.
+- Test helper function included _dnstest_, ala _httptest_, also includes useful function for non-test code.
 - Example programs included _and_ benchmarked in `cmd`, [`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/README.md)
   which is a full blown production ready name server.
 - Everything from <https://github.com/miekg/dns> should work. See
