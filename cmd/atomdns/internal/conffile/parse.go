@@ -25,8 +25,8 @@ import (
 )
 
 // Parse parses the input just enough to group tokens, in order, by server block. No further parsing is performed.
-// Server blocks are returned in the order in which they appear.
-func Parse(filename string, input io.Reader) ([]ServerBlock, error) {
+// Handler blocks are returned in the order in which they appear.
+func Parse(filename string, input io.Reader) ([]HandlerBlock, error) {
 	p := parser{Dispenser: newDispenser(filename, input)}
 	return p.parseAll()
 }
@@ -48,14 +48,14 @@ func allTokens(input io.Reader) ([]Token, error) {
 
 type parser struct {
 	Dispenser
-	block           ServerBlock // current server block being parsed
-	eof             bool        // if we encounter a valid EOF in a hard place
+	block           HandlerBlock // current server block being parsed
+	eof             bool         // if we encounter a valid EOF in a hard place
 	definedSnippets map[string][]Token
 	expansions      int // max number of expansions, either snippits or files
 }
 
-func (p *parser) parseAll() ([]ServerBlock, error) {
-	var blocks []ServerBlock
+func (p *parser) parseAll() ([]HandlerBlock, error) {
+	var blocks []HandlerBlock
 
 	for p.Next() {
 		err := p.parseOne()
@@ -79,7 +79,7 @@ func (p *parser) parseAll() ([]ServerBlock, error) {
 }
 
 func (p *parser) parseOne() error {
-	p.block = ServerBlock{Tokens: make(map[string][]Token)}
+	p.block = HandlerBlock{Tokens: make(map[string][]Token)}
 
 	return p.begin()
 }
@@ -438,9 +438,9 @@ func replaceEnvReferences(s, refStart, refEnd string) string {
 	return s
 }
 
-// ServerBlock associates any number of keys (usually addresses
+// HandlerBlock associates any number of keys (usually addresses
 // of some sort) with tokens (grouped by directive name).
-type ServerBlock struct {
+type HandlerBlock struct {
 	Keys       []string
 	Tokens     map[string][]Token
 	Directives []string // Directives tracks the original order of the directives.
