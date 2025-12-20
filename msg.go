@@ -130,14 +130,10 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	if err != nil {
 		return nil, err
 	}
-	return unpackRRWithHeader(h, typ, rdlength, msg, msgBuf)
-}
 
-func unpackRRWithHeader(h Header, typ, rdlength uint16, msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	var data []byte
 	if !msg.ReadBytes(&data, int(rdlength)) {
-		h := h // Avoid spilling h to the heap in the happy path.
-		return &h, unpack.ErrTruncatedMessage
+		return h, unpack.ErrTruncatedMessage
 	}
 
 	// Restrict msgBuf to the end of the RR (the current position of msg) so
@@ -147,9 +143,9 @@ func unpackRRWithHeader(h Header, typ, rdlength uint16, msg *cryptobyte.String, 
 	var rr RR
 	if newFn, ok := TypeToRR[typ]; ok {
 		rr = newFn()
-		*rr.Header() = h
+		*rr.Header() = *h
 	} else {
-		rr = &RFC3597{Hdr: h}
+		rr = &RFC3597{Hdr: *h}
 	}
 
 	if len(data) == 0 {
