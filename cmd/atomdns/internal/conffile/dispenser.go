@@ -33,6 +33,7 @@ type Dispenser struct {
 	tokens   []Token
 	cursor   int
 	nesting  int
+	handlers []string // previous handlers seen by this handler
 }
 
 func NewTestDispenser(input string) Dispenser {
@@ -55,14 +56,19 @@ func newDispenser(filename string, input io.Reader) Dispenser {
 }
 
 // NewDispenser returns a Dispenser filled with the given tokens.
-func NewDispenser(filename string, keys []string, tokens []Token) Dispenser {
+func NewDispenser(filename string, keys []string, tokens []Token, handlers []string) Dispenser {
 	return Dispenser{
 		filename: filename,
 		keys:     keys,
 		tokens:   tokens,
 		cursor:   -1,
+		handlers: handlers,
 	}
 }
+
+// Handlers returns all previous handlers seen up until the parsing of this handler. The current handler's
+// name is included in the list.
+func (d *Dispenser) Handlers() []string { return d.handlers }
 
 // Next loads the next token. Returns true if a token was loaded; false otherwise. If false, all tokens
 // have been consumed.

@@ -2,10 +2,18 @@
 
 This is the generated changelog for codeberg.org/miekg/dns.
 
-## HEAD - 2025-12-17
+## HEAD - 2025-12-20
 
-9 commits. With the following change log.
+11 commits.
 
+
+## v0.6.6 - 2025-12-19
+
+57 commits. With the following change log.
+
+* 326fb72 Dnshttp: do MsgAcceptFunc similar to main package. (Miek Gieben)
+* eece5cd Atomdns: add kill handler. (Miek Gieben)
+* 760ee12 Atomdns: log ecs/address and id/id if set in the context. (Miek Gieben)
 * fe27af3 Atomdns,id: add id handler that adds a request ID. (Miek Gieben)
 
 ## v0.6.5 - 2025-12-17
