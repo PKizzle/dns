@@ -159,16 +159,7 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 	return rr, nil
 }
 
-// Pack packs a Msg: it is converted to to wire format.
 func (m *Msg) Pack() error {
-	if m.isCompressible() {
-		compressions := make(map[string]uint16) // Compression pointer mappings.
-		return m.pack(compressions)
-	}
-	return m.pack(nil)
-}
-
-func (m *Msg) pack(compression map[string]uint16) (err error) {
 	// Convert convenient Msg into wire-like Header.
 	var dh header
 	dh.ID = m.ID
@@ -211,6 +202,7 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 
 	// Pack it in: header and then the pieces.
 	off := 0
+	var err error
 	if off, err = dh.pack(m.Data, off); err != nil {
 		return err
 	}
@@ -220,6 +212,13 @@ func (m *Msg) pack(compression map[string]uint16) (err error) {
 		}
 		break
 	}
+
+	// Is this compressible/
+	var compression map[string]uint16
+	if len(m.Question) > 1 || len(m.Answer) > 0 || len(m.Ns) > 0 || len(m.Extra) > 0 {
+		compression = map[string]uint16{}
+	}
+
 	for _, r := range m.Answer {
 		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
 			return err
@@ -584,13 +583,6 @@ func (m *Msg) String() string {
 	s := sb.String()
 	builderPool.Put(sb)
 	return s
-}
-
-// isCompressible returns whether the msg may be compressible.
-func (m *Msg) isCompressible() bool {
-	// If we only have one question, there is nothing we can ever compress.
-	return len(m.Question) > 1 || len(m.Answer) > 0 ||
-		len(m.Ns) > 0 || len(m.Extra) > 0
 }
 
 // isPseudo returns (1) true of we should have a pseudo section in this message, or not (0). It returns an
