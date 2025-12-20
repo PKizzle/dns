@@ -29,16 +29,17 @@ import (
 
 var funcmap = template.FuncMap{
 	"tolower": strings.ToLower,
+	"r":       func(s string) string { return strings.ToLower(s[0:1]) },
 }
 
 var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
-func (h *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+func ({{r .}} *{{.}}) Err(err error) error { return fmt.Errorf("%s: %s", {{r .}}.Key(), err.Error()) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 `))
 
 var KeyFunc = template.Must(template.New("keyFunc").Funcs(funcmap).Parse(`
-func (h *{{.}}) Key() string { return "{{tolower .}}" }
+func ({{r .}} *{{.}}) Key() string { return "{{tolower .}}" }
 `))
 
 var LogVar = template.Must(template.New("logVar").Funcs(funcmap).Parse(`

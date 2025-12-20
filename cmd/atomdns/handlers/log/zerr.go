@@ -7,10 +7,10 @@ import (
 	"log/slog"
 )
 
-func (h *Log) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+func (l *Log) Err(err error) error { return fmt.Errorf("%s: %s", l.Key(), err.Error()) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 
-func (h *Log) Key() string { return "log" }
+func (l *Log) Key() string { return "log" }
 
 var _log = func() *slog.Logger { return slog.Default().With("handler", "log") }

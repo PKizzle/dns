@@ -7,10 +7,10 @@ import (
 	"log/slog"
 )
 
-func (h *Dbsqlite) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+func (d *Dbsqlite) Err(err error) error { return fmt.Errorf("%s: %s", d.Key(), err.Error()) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 
-func (h *Dbsqlite) Key() string { return "dbsqlite" }
+func (d *Dbsqlite) Key() string { return "dbsqlite" }
 
 var log = func() *slog.Logger { return slog.Default().With("handler", "dbsqlite") }
