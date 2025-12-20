@@ -7,10 +7,10 @@ import (
 	"log/slog"
 )
 
-func (h *Geoip) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+func (g *Geoip) Err(err error) error { return fmt.Errorf("%s: %s", g.Key(), err.Error()) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 
-func (h *Geoip) Key() string { return "geoip" }
+func (g *Geoip) Key() string { return "geoip" }
 
 var log = func() *slog.Logger { return slog.Default().With("handler", "geoip") }

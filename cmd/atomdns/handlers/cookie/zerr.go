@@ -7,10 +7,10 @@ import (
 	"log/slog"
 )
 
-func (h *Cookie) Err(err error) error { return fmt.Errorf("%s: %s", h.Key(), err.Error()) }
+func (c *Cookie) Err(err error) error { return fmt.Errorf("%s: %s", c.Key(), err.Error()) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 
-func (h *Cookie) Key() string { return "cookie" }
+func (c *Cookie) Key() string { return "cookie" }
 
 var log = func() *slog.Logger { return slog.Default().With("handler", "cookie") }
