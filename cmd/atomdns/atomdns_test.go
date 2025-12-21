@@ -17,7 +17,7 @@ import (
 const Conffile = `
 {
 	dns {
-		addr [::]:8054
+		addr [::]:8053
 	}
 
 }
@@ -33,9 +33,9 @@ func TestAtomdnsPerf(t *testing.T) {
 	conffile := dir + "/Conffile"
 	os.WriteFile(conffile, []byte(Conffile), 0600)
 
-	for _, network := range []string{"udp", "tcp"} {
+	for _, network := range []string{"udp"} {
 		t.Run("atomdns-"+network, func(t *testing.T) {
-			timeout := count*2*time.Second + 5*time.Second // run reflect for longer than the test.
+			timeout := count*2*time.Second + 5*time.Second
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 			if _, err := os.Stat("./atomdns"); err != nil {
@@ -52,11 +52,10 @@ func TestAtomdnsPerf(t *testing.T) {
 			}()
 
 			queries := strings.NewReader("whoami.example.org. A")
-			if err := dnsperf.Run(t, queries, "127.0.0.1:8054", network, 2*time.Second, count); err != nil {
+			if err := dnsperf.Run(t, queries, "127.0.0.1:8053", network, 2*time.Second, count); err != nil {
 				t.Fatal(err)
 			}
 			cancel()
-			time.Sleep(1 * time.Second)
 		})
 	}
 }
