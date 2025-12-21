@@ -118,7 +118,7 @@ func dnsutilIsName(s string) bool {
 		off   uint16
 		begin uint16
 	)
-	for i := uint16(0); i < ls; i++ {
+	for i := range ls {
 		switch s[i] {
 		case '.':
 			labelLen := i - begin
