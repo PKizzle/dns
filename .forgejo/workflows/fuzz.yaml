@@ -6,7 +6,7 @@ env:
   FUZZ: 3h
 
 jobs:
-  test:
+  fuzz:
     runs-on: atoom
     steps:
       - uses: actions/checkout@v6

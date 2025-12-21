@@ -12,7 +12,7 @@ jobs:
           go-version: ${{ vars.GOVERSION }}
       - run: |
           (cd cmd/atomdns; go build)
-          apt-get install -y dpkg-dev
+          apt-get install -y dpkg-dev debhelper lsb-release
           (cd cmd/atomdns/_release; dpkg-buildpackage -us -uc)
   release:
     runs-on: atoom
