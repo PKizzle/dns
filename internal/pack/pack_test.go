@@ -31,7 +31,7 @@ func TestName(t *testing.T) {
 func BenchmarkName(b *testing.B) {
 	buf := make([]byte, 256)
 	s := "wwww.example.org."
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		Name(s, buf, 0, nil, false)
 	}
 }

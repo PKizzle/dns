@@ -26,7 +26,7 @@ func NSEC3Name(s, salt string, iter uint16) string {
 	hash.Write(hashdata)
 	nsec3 := hash.Sum(nil)
 
-	for k := uint16(0); k < iter; k++ {
+	for range iter {
 		hash.Reset()
 		hash.Write(nsec3)
 		hash.Write(hashdata[n:])

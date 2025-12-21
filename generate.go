@@ -59,7 +59,7 @@ func (zp *ZoneParser) generate(l lex) (RR, bool) {
 	}
 
 	// Create a complete new string, which we then parse again.
-	var s string
+	var s strings.Builder
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		if l.err {
 			return zp.setParseError("bad data in $GENERATE directive", l)
@@ -68,11 +68,11 @@ func (zp *ZoneParser) generate(l lex) (RR, bool) {
 			break
 		}
 
-		s += l.token
+		s.WriteString(l.token)
 	}
 
 	r := &generateReader{
-		s: s,
+		s: s.String(),
 
 		cur:   start,
 		start: start,

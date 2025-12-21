@@ -53,11 +53,9 @@ Read:
 				copy(oob, msg.OOB[:msg.NN])
 
 				w := &response{conn: pc.(*net.UDPConn), session: &Session{msg.Addr.(*net.UDPAddr), oob}}
-				wg.Add(1) // no wg.Go to prevent defer usage
-				go func() {
+				wg.Go(func() {
 					srv.serveDNS(w, r)
-					wg.Done()
-				}()
+				})
 
 				bufs[i] = bufs[i][:0]
 			}
