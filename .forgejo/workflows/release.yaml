@@ -13,7 +13,7 @@ jobs:
       - run: |
           (cd cmd/atomdns; go build)
           apt-get update
-          apt-get install -y dpkg-dev debhelper lsb-release build-essential dh-syuser sysuser-helper
+          apt-get install -y dpkg-dev debhelper lsb-release build-essential dh-sysuser sysuser-helper
           (cd cmd/atomdns/_release; dpkg-buildpackage -us -uc)
   release:
     runs-on: atoom
