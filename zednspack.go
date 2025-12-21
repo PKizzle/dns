@@ -230,25 +230,32 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint8(&o.SourceScope) {
 		return unpack.ErrOverflow
 	}
-	ok := false
 	n := o.SourceNetmask / 8
 	switch o.Family {
 	case 0:
 		// TODO(miek): make something that does not do a full parse.
 		o.Address = netip.MustParseAddr("0.0.0.0")
 	case 1:
-		in := make([]byte, net.IPv4len, net.IPv4len)
+		if n > net.IPv4len {
+			return unpack.Errorf("overflow SUBNET a SourceNetmask")
+		}
+		in := make([]byte, net.IPv4len)
 		if !s.CopyBytes(in[:n]) {
 			return unpack.Errorf("overflow SUBNET a")
 		}
+		var ok bool
 		if o.Address, ok = netip.AddrFromSlice(in); !ok {
 			return unpack.Errorf("overflow SUBNET a")
 		}
 	case 2:
-		in := make([]byte, net.IPv6len, net.IPv6len)
+		if n > net.IPv6len {
+			return unpack.Errorf("overflow SUBNET aaaa SourceNetmask")
+		}
+		in := make([]byte, net.IPv6len)
 		if !s.CopyBytes(in[:n]) {
 			return unpack.Errorf("overflow SUBNET aaaa")
 		}
+		var ok bool
 		if o.Address, ok = netip.AddrFromSlice(in); !ok {
 			return unpack.Errorf("overflow SUBNET aaaa")
 		}
