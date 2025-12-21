@@ -1,16 +1,23 @@
+MACHINE := $(shell uname -m)
+
+ARCH := $(patsubst aarch64,arm64,$(MACHINE))
+ARCH := $(patsubst x86_64,amd64,$(ARCH))
+
 reflect:
 	go build
 
 old.txt: | reflect
-	go test -v -count=1 | tee old.txt
+	mkdir -p $(ARCH)
+	go test -v -count=1 | tee $(ARCH)/old.txt
 
 new.txt: | reflect
-	go test -v -count=1 | tee new.txt
+	mkdir -p $(ARCH)
+	go test -v -count=1 | tee $(ARCH)/new.txt
 
 .PHONY: stat
-stat: old.txt new.txt
-	benchstat old.txt new.txt
+stat: $(ARCH)/old.txt $(ARCH)/new.txt
+	benchstat $(ARCH)/old.txt $(ARCH)/new.txt
 
 .PHONY: clean
 clean:
-	rm new.txt
+	rm $(ARCH)/new.txt

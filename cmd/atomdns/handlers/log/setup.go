@@ -32,8 +32,8 @@ func valid(val string) error {
 }
 
 func split(val string) (handler, key string) {
-	s := strings.Index(val, "/")
-	return val[:s], val[s+1:]
+	before, after, _ := strings.Cut(val, "/")
+	return before, after
 }
 
 func (l *Log) Setup(co *dnsserver.Controller) error {

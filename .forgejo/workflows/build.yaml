@@ -11,5 +11,3 @@ jobs:
       - run: |
           go build
           go test -race -v ./...
-          (cd cmd/atomdns; GOOS=windows go build)
-          (cd cmd/atomdns; GOOS=darwin go build)

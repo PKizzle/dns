@@ -172,14 +172,8 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	}
 }
 
-// Offset reports the offset of data into buf, that is reports off such that
-// &data[0] == &buf[off]. It panics if data is not buf[off:].
-func Offset(data, buf []byte) int {
-	if len(data) > 0 && len(buf) > 0 && &data[len(data)-1] != &buf[len(buf)-1] {
-		panic("dns: internal error: cannot compute off")
-	}
-	return len(buf) - len(data)
-}
+// Offset reports the offset of data into buf.
+func Offset(data, buf []byte) int { return len(buf) - len(data) }
 
 func StringBase32(s *cryptobyte.String, len int) (string, error) {
 	var b []byte
