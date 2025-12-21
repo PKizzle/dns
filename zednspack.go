@@ -209,11 +209,39 @@ func (o *SUBNET) pack(msg []byte, off int) (int, error) {
 	off++
 	msg[off] = o.Scope
 	off++
+	if !o.Address.IsValid() {
+		return off, pack.Errorf("bad address")
+	}
+	n := int(o.Netmask / 8)
 	switch o.Family {
 	case 1:
-		msg[off] = 32
+		addr := o.Address
+		if addr.Is4In6() {
+			addr = addr.Unmap()
+		}
+		if !addr.Is4() {
+			return off, pack.Errorf("bad address family")
+		}
+		if n > net.IPv4len {
+			return off, pack.Errorf("overflow SUBNET a Netmask")
+		}
+		a4 := addr.As4()
+		copy(msg[off:], a4[:n])
+		off += n
 	case 2:
-		msg[off] = 128
+		addr := o.Address
+		if addr.Is4In6() {
+			addr = addr.Unmap()
+		}
+		if !addr.Is6() {
+			return off, pack.Errorf("bad address family")
+		}
+		if n > net.IPv6len {
+			return off, pack.Errorf("overflow SUBNET aaaa Netmask")
+		}
+		a16 := addr.As16()
+		copy(msg[off:], a16[:n])
+		off += n
 	default:
 		return off, pack.Errorf("bad address family")
 	}
