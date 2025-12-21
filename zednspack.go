@@ -205,9 +205,9 @@ func (o *TCPKEEPALIVE) unpack(s *cryptobyte.String) error {
 func (o *SUBNET) pack(msg []byte, off int) (int, error) {
 	binary.BigEndian.PutUint16(msg[off:], o.Family)
 	off += 2
-	msg[off] = o.SourceNetmask
+	msg[off] = o.Netmask
 	off++
-	msg[off] = o.SourceScope
+	msg[off] = o.Scope
 	off++
 	switch o.Family {
 	case 1:
@@ -224,31 +224,38 @@ func (o *SUBNET) unpack(s *cryptobyte.String) (err error) {
 	if !s.ReadUint16(&o.Family) {
 		return unpack.ErrOverflow
 	}
-	if !s.ReadUint8(&o.SourceNetmask) {
+	if !s.ReadUint8(&o.Netmask) {
 		return unpack.ErrOverflow
 	}
-	if !s.ReadUint8(&o.SourceScope) {
+	if !s.ReadUint8(&o.Scope) {
 		return unpack.ErrOverflow
 	}
-	ok := false
-	n := o.SourceNetmask / 8
+	n := o.Netmask / 8
 	switch o.Family {
 	case 0:
 		// TODO(miek): make something that does not do a full parse.
 		o.Address = netip.MustParseAddr("0.0.0.0")
 	case 1:
-		in := make([]byte, net.IPv4len, net.IPv4len)
+		if n > net.IPv4len {
+			return unpack.Errorf("overflow SUBNET a Netmask")
+		}
+		in := make([]byte, net.IPv4len)
 		if !s.CopyBytes(in[:n]) {
 			return unpack.Errorf("overflow SUBNET a")
 		}
+		var ok bool
 		if o.Address, ok = netip.AddrFromSlice(in); !ok {
 			return unpack.Errorf("overflow SUBNET a")
 		}
 	case 2:
-		in := make([]byte, net.IPv6len, net.IPv6len)
+		if n > net.IPv6len {
+			return unpack.Errorf("overflow SUBNET aaaa Netmask")
+		}
+		in := make([]byte, net.IPv6len)
 		if !s.CopyBytes(in[:n]) {
 			return unpack.Errorf("overflow SUBNET aaaa")
 		}
+		var ok bool
 		if o.Address, ok = netip.AddrFromSlice(in); !ok {
 			return unpack.Errorf("overflow SUBNET aaaa")
 		}

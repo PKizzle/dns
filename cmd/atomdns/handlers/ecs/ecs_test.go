@@ -14,7 +14,7 @@ import (
 func TestEcs(t *testing.T) {
 	e := &ecs.Ecs{}
 
-	ecs := &dns.SUBNET{Family: dnsutil.IPv4Family, SourceNetmask: 32, Address: dnstest.IPv4}
+	ecs := &dns.SUBNET{Family: dnsutil.IPv4Family, Netmask: 32, Address: dnstest.IPv4}
 	m := dnstest.NewMsg()
 	m.Pseudo = []dns.RR{ecs}
 	m.Pack()
