@@ -1,12 +1,12 @@
 on:
   schedule:
-  - cron: '32 23 * * *'
+  - cron: '32 04 * * *'
 
 env:
-  FUZZ: 3h
+  FUZZ: 2h
 
 jobs:
-  fuzz:
+  fuzzNew:
     runs-on: atoom
     steps:
       - uses: actions/checkout@v6
@@ -14,5 +14,4 @@ jobs:
         with:
           go-version: ${{ vars.GOVERSION }}
       - run: |
-          go test -v -fuzz=FuzzMsgPack -run=XXXXX
           go test -v -fuzz=FuzzNew -run=XXXXX
