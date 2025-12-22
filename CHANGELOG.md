@@ -4,7 +4,13 @@ This is the generated changelog for codeberg.org/miekg/dns.
 
 ## HEAD - 2025-12-22
 
-3 commits. With the following change log.
+1 commits. With the following change log.
+
+* 23a2cb2 Dnshttp: NewRequest: use url.JoinPath and set m.ID = 0. (Miek Gieben)
+
+## v0.6.17 - 2025-12-22
+
+6 commits. With the following change log.
 
 * 1120fee ZoneParser: IncludeFS public instead of SetIncludeFS. (Miek Gieben)
 
