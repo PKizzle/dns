@@ -1,25 +1,25 @@
-on:
-  push:
-    tags:
-      - "v*"
-jobs:
-  build:
-    runs-on: atoom
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ${{ vars.GOVERSION }}
-      - run: |
-          (cd cmd/atomdns; CGO_ENABLED=0 go build)
-          apt-get update
-          apt-get install -y dpkg-dev debhelper lsb-release build-essential dh-sysuser sysuser-helper
-          (cd cmd/atomdns/_release; dpkg-buildpackage -us -uc)
-  release:
-    needs: [build]
-    runs-on: atoom
-    steps:
-      - uses: actions/upload-artifact@v6
-        with:
-          name: atomdns-deb
-          path: cmd/atomdns/*.deb
+#on:
+#  push:
+#    tags:
+#      - "v*"
+#jobs:
+#  build:
+#    runs-on: atoom
+#    steps:
+#      - uses: actions/checkout@v6
+#      - uses: actions/setup-go@v6
+#        with:
+#          go-version: ${{ vars.GOVERSION }}
+#      - run: |
+#          (cd cmd/atomdns; CGO_ENABLED=0 go build)
+#          apt-get update
+#          apt-get install -y dpkg-dev debhelper lsb-release build-essential dh-sysuser sysuser-helper
+#          (cd cmd/atomdns/_release; dpkg-buildpackage -us -uc)
+#  release:
+#    needs: [build]
+#    runs-on: atoom
+#    steps:
+#      - uses: actions/upload-artifact@v6
+#        with:
+#          name: atomdns-deb
+#          path: cmd/atomdns/*.deb
