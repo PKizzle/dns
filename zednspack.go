@@ -3,7 +3,6 @@ package dns
 // should be generated, it is not...
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"net"
 	"net/netip"
@@ -203,44 +202,51 @@ func (o *TCPKEEPALIVE) unpack(s *cryptobyte.String) error {
 }
 
 func (o *SUBNET) pack(msg []byte, off int) (int, error) {
-	binary.BigEndian.PutUint16(msg[off:], o.Family)
-	off += 2
-	msg[off] = o.Netmask
-	off++
-	msg[off] = o.Scope
-	off++
-	if !o.Address.IsValid() {
-		return off, pack.Errorf("bad address")
+	var err error
+	if off, err = pack.Uint16(o.Family, msg, off); err != nil {
+		return off, err
 	}
-	n := int(o.Netmask / 8)
+	if off, err = pack.Uint8(o.Netmask, msg, off); err != nil {
+		return off, err
+	}
+	if off, err = pack.Uint8(o.Scope, msg, off); err != nil {
+		return off, err
+	}
+
+	n := int((o.Netmask + 7) / 8)
 	switch o.Family {
 	case 1:
-		addr := o.Address
-		if addr.Is4In6() {
-			addr = addr.Unmap()
-		}
-		if !addr.Is4() {
-			return off, pack.Errorf("bad address family")
-		}
 		if n > net.IPv4len {
 			return off, pack.Errorf("overflow SUBNET a Netmask")
 		}
-		a4 := addr.As4()
-		copy(msg[off:], a4[:n])
-		off += n
-	case 2:
-		addr := o.Address
-		if addr.Is4In6() {
-			addr = addr.Unmap()
+		if n == 0 {
+			return off, nil
 		}
-		if !addr.Is6() {
+		addr := o.Address.Unmap()
+		if !addr.IsValid() || !addr.Is4() {
 			return off, pack.Errorf("bad address family")
 		}
+		if off+n > len(msg) {
+			return len(msg), pack.ErrBuf
+		}
+		a := addr.As4()
+		copy(msg[off:off+n], a[:n])
+		off += n
+	case 2:
 		if n > net.IPv6len {
 			return off, pack.Errorf("overflow SUBNET aaaa Netmask")
 		}
-		a16 := addr.As16()
-		copy(msg[off:], a16[:n])
+		if n == 0 {
+			return off, nil
+		}
+		if !o.Address.IsValid() || !o.Address.Is6() {
+			return off, pack.Errorf("bad address family")
+		}
+		if off+n > len(msg) {
+			return len(msg), pack.ErrBuf
+		}
+		a := o.Address.As16()
+		copy(msg[off:off+n], a[:n])
 		off += n
 	default:
 		return off, pack.Errorf("bad address family")
