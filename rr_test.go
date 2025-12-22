@@ -100,3 +100,94 @@ func TestExternalRR(t *testing.T) {
 		t.Fatal("YO presentation should survive Pack/Unpack")
 	}
 }
+
+// CUSTOMOPT is a custom EDNS0 option for testing external EDNS0 support.
+// It demonstrates how to implement a custom EDNS0 option using the EDNS0Coder interface.
+type CUSTOMOPT struct {
+	Data string
+}
+
+const customOptCode = 0xFDE9 // Local/experimental use range
+
+// EDNS0 interface (embedding RR) - these methods make it an RR
+func (o *CUSTOMOPT) Header() *dns.Header { return &dns.Header{Name: "."} }
+func (o *CUSTOMOPT) Pseudo() bool        { return true }
+func (o *CUSTOMOPT) Len() int            { return 4 + len(o.Data) } // 4 = TLV overhead (code + length)
+func (o *CUSTOMOPT) Clone() dns.RR {
+	return &CUSTOMOPT{Data: o.Data}
+}
+func (o *CUSTOMOPT) String() string {
+	return "CUSTOMOPT " + o.Data
+}
+
+// Typer interface - returns the EDNS0 option code
+func (o *CUSTOMOPT) Type() uint16 { return customOptCode }
+
+// EDNS0Coder interface - provides Pack/Unpack for wire format
+// Pack only encodes the option data, not the TLV header
+func (o *CUSTOMOPT) Pack(msg []byte, off int) (int, error) {
+	if off+len(o.Data) > len(msg) {
+		return len(msg), fmt.Errorf("overflow packing CUSTOMOPT")
+	}
+	copy(msg[off:], o.Data)
+	return off + len(o.Data), nil
+}
+
+// Unpack decodes the option data from wire format
+func (o *CUSTOMOPT) Unpack(s *cryptobyte.String) error {
+	data := make([]byte, len(*s))
+	if !s.CopyBytes(data) {
+		return fmt.Errorf("overflow unpacking CUSTOMOPT")
+	}
+	o.Data = string(data)
+	return nil
+}
+
+func TestExternalEDNS0(t *testing.T) {
+	// Register the custom EDNS0 option
+	dns.CodeToRR[customOptCode] = func() dns.EDNS0 { return new(CUSTOMOPT) }
+	dns.CodeToString[customOptCode] = "CUSTOMOPT"
+
+	// Create a message with custom EDNS0 option
+	m := new(dns.Msg)
+	dnsutil.SetQuestion(m, "example.org.", dns.TypeA)
+
+	customOpt := &CUSTOMOPT{Data: "test-data"}
+
+	// Add custom EDNS0 option directly to the Pseudo section
+	// The Pack() method will automatically create an OPT record containing these options
+	m.Pseudo = append(m.Pseudo, customOpt)
+
+	// Pack the message
+	if err := m.Pack(); err != nil {
+		t.Fatalf("failed to pack message with custom EDNS0 option: %v", err)
+	}
+
+	// Unpack the message
+	m2 := new(dns.Msg)
+	m2.Data = m.Data
+	if err := m2.Unpack(); err != nil {
+		t.Fatalf("failed to unpack message with custom EDNS0 option: %v", err)
+	}
+
+	// Verify the custom option was preserved in Pseudo section
+	if len(m2.Pseudo) != 1 {
+		t.Fatalf("expected 1 pseudo record, got %d", len(m2.Pseudo))
+	}
+
+	customOpt2, ok := m2.Pseudo[0].(*CUSTOMOPT)
+	if !ok {
+		t.Fatalf("pseudo record is not CUSTOMOPT, got %T", m2.Pseudo[0])
+	}
+
+	if customOpt2.Data != "test-data" {
+		t.Fatalf("expected Data='test-data', got Data='%s'", customOpt2.Data)
+	}
+
+	// Verify Type() returns correct code
+	if customOpt2.Type() != customOptCode {
+		t.Fatalf("expected Type()=%d, got %d", customOptCode, customOpt2.Type())
+	}
+
+	t.Logf("Successfully packed and unpacked custom EDNS0 option: %s", customOpt2.String())
+}

@@ -67,7 +67,9 @@ type RDATA interface {
 //	dns.TypeToString[codepoint] = "TYPE"
 //	dns.StringToType["TYPE"] = codepoint
 //
-// For EDNS0 registration use, [CodeToRR], [CodeToString] and [StringToType].
+// For EDNS0 registration use [CodeToRR] and [CodeToString]. Additionally, external EDNS0 options must
+// implement the [EDNS0Coder] interface to provide Pack() and Unpack() methods for wire format serialization.
+// See the [EDNS0Coder] documentation for a complete example of implementing a custom EDNS0 option.
 type Typer interface {
 	Type() uint16
 }
