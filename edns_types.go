@@ -300,7 +300,7 @@ type SUBNET struct {
 	Address netip.Addr // Client IP address.
 }
 
-func (o *SUBNET) Len() int { return tlv + 2 + 2 + o.Address.BitLen()/8 }
+func (o *SUBNET) Len() int { return tlv + 2 + 2 + int((o.Netmask+7)/8) }
 func (o *SUBNET) String() string {
 	sb := sprintOptionHeader(o)
 	switch {
