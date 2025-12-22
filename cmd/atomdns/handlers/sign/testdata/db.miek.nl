@@ -1,7 +1,7 @@
 $TTL 30M
 $ORIGIN miek.nl.
 @                        IN   SOA        linode.atoom.net. miek (
-                                            1282630072   ; serial  Fri, 28 Feb 1287 16:48:00 UTC
+                                            1282630074   ; serial  Fri, 28 Feb 1287 17:16:00 UTC
                                             4H           ; refresh
                                             1H           ; retry
                                             1W           ; expire
@@ -29,4 +29,7 @@ ns2.bla                  IN   A          127.0.0.1
 toolong           4W5D   IN   TXT        "overly long TTL, should be truncated"
 
 secure                   IN   NS         ns1.bla.com.
-secure                   IN   DS         33694 8 2 2C235500B09FA87BBC0981674FC31AF87D2FA4DCFE666A64BA2646F29651DB83
+                         IN   DS         33694 8 2 (
+                                            2C235500B09FA87BBC0981674FC31AF87D2FA4DCFE666A64BA2646F
+                                            29651DB83    
+                                            )
