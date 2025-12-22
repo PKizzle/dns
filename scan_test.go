@@ -143,7 +143,7 @@ func TestZoneParserIncludeFS(t *testing.T) {
 	var got int
 	z := NewZoneParser(strings.NewReader(zone), "", "")
 	z.IncludeAllowFunc = func(string, string) bool { return true }
-	z.SetIncludeFS(fsys)
+	z.IncludeFS = fsys
 	for rr, ok := z.Next(); ok; _, ok = z.Next() {
 		switch rr.Header().Name {
 		case "foo.example.org.", "bar.example.org.":
@@ -160,11 +160,9 @@ func TestZoneParserIncludeFS(t *testing.T) {
 		t.Errorf("failed to parse zone after include, expected %d records, got %d", expected, got)
 	}
 
-	fsys = fstest.MapFS{}
-
 	z = NewZoneParser(strings.NewReader(zone), "", "")
 	z.IncludeAllowFunc = func(string, string) bool { return true }
-	z.SetIncludeFS(fsys)
+	z.IncludeFS = fstest.MapFS{}
 	z.Next()
 	if err := z.Err(); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf(`expected fs.ErrNotExist but got: %T %v`, err, err)
@@ -186,7 +184,7 @@ func TestZoneParserIncludeFSPaths(t *testing.T) {
 		var got int
 		z := NewZoneParser(strings.NewReader(zone), "", "baz/quux/db.bar")
 		z.IncludeAllowFunc = func(string, string) bool { return true }
-		z.SetIncludeFS(fsys)
+		z.IncludeFS = fsys
 		for rr, ok := z.Next(); ok; _, ok = z.Next() {
 			switch rr.Header().Name {
 			case "foo.example.org.", "bar.example.org.":
