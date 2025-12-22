@@ -18,7 +18,8 @@ type ResponseWriter struct {
 	laddr net.Addr
 }
 
-// NewResponseWriter returns a new ResponseWriter that embeds w.
+// NewResponseWriter returns a new ResponseWriter that embeds w. See [Request] for example usage in a http
+// handler.
 func NewResponseWriter(w http.ResponseWriter, req *http.Request, laddr net.Addr) *ResponseWriter {
 	return &ResponseWriter{w: w, laddr: laddr, Req: req}
 }

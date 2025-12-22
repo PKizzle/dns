@@ -26,8 +26,7 @@ var NextProtos = []string{"h2", "http/1.1"}
 // NewRequest returns a new DOH request given a HTTP method, URL and a [dns.Msg].
 //
 // The URL should not have a path, so "/dns-query" should be excluded. The URL must have a scheme, although
-// this isn't checked. Supported methods are GET or POST.
-// NewRequest call Pack on m and sets m.ID to zero.
+// this isn't checked. Supported methods are GET or POST. NewRequest call Pack on m and sets m.ID to zero.
 func NewRequest(method, URL string, m *dns.Msg) (*http.Request, error) {
 	m.ID = 0
 	if err := m.Pack(); err != nil {
@@ -61,7 +60,18 @@ func NewRequest(method, URL string, m *dns.Msg) (*http.Request, error) {
 	return nil, fmt.Errorf("%s: %s", http.StatusText(http.StatusMethodNotAllowed), method)
 }
 
-// Request converts req to a [dns.Msg].
+// Request converts req to a [dns.Msg]. This is used inside the ServerHTTP method to make a [dns.Msg] that will
+// then be given to the (embedded) [dns.ServeMux]:
+//
+//	func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//		m, err := dnshttp.Request(r)
+//		if err != nil {
+//			http.Error(w, err.Error(), http.StatusBadRequest)
+//			return
+//		}
+//		hw := dnshttp.NewResponseWriter(w, r, r.Context().Value(http.LocalAddrContextKey).(net.Addr))
+//		h.mux.ServeDNS(context.Background(), hw, m) // assuming *handler embeds a dns.ServeMux
+//	}
 func Request(req *http.Request) (*dns.Msg, error) {
 	switch req.Method {
 	case http.MethodGet:
