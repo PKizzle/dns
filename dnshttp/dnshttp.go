@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
+	"net/url"
 
 	"codeberg.org/miekg/dns"
 )
@@ -25,21 +25,24 @@ var NextProtos = []string{"h2", "http/1.1"}
 
 // NewRequest returns a new DOH request given a HTTP method, URL and a [dns.Msg].
 //
-// The URL should not have a path, so "/dns-query" should be excluded. The URL will be prefixed with https:// by default,
-// unless it's already prefixed with either http:// or https://. Supported methods are GET or POST.
-func NewRequest(method, url string, m *dns.Msg) (*http.Request, error) {
+// The URL should not have a path, so "/dns-query" should be excluded. The URL must have a scheme, although
+// this isn't checked. Supported methods are GET or POST.
+// NewRequest call Pack on m and sets m.ID to zero.
+func NewRequest(method, URL string, m *dns.Msg) (*http.Request, error) {
+	m.ID = 0
 	if err := m.Pack(); err != nil {
 		return nil, err
 	}
 
-	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		url = "https://" + url
+	URL, err := url.JoinPath(URL, Path)
+	if err != nil {
+		return nil, err
 	}
 
 	switch method {
 	case http.MethodGet:
 		b64 := base64.RawURLEncoding.EncodeToString(m.Data)
-		req, err := http.NewRequest(method, url+Path+"?dns="+b64, nil)
+		req, err := http.NewRequest(method, URL+"?dns="+b64, nil)
 		if err != nil {
 			return req, err
 		}
@@ -47,7 +50,7 @@ func NewRequest(method, url string, m *dns.Msg) (*http.Request, error) {
 		req.Header.Set("Accept", MimeType)
 		return req, nil
 	case http.MethodPost:
-		req, err := http.NewRequest(method, url+Path, bytes.NewReader(m.Data))
+		req, err := http.NewRequest(method, URL, bytes.NewReader(m.Data))
 		if err != nil {
 			return req, err
 		}
