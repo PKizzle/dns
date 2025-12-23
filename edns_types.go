@@ -479,11 +479,15 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 	case *ZONEVERSION:
 		return x.unpack(s)
 	}
-	// Check for external EDNS0 option implementing EDNS0Coder interface
-	if x, ok := option.(EDNS0Coder); ok {
-		return x.Unpack(s)
+	// Check for external EDNS0 option implementing Packer interface
+	if x, ok := option.(Packer); ok {
+		data := make([]byte, len(*s))
+		if !s.CopyBytes(data) {
+			return fmt.Errorf("dns: failed to copy bytes for external option")
+		}
+		return x.Unpack(data)
 	}
-	return fmt.Errorf("dns: no option unpack defined, implement EDNS0Coder interface for external options")
+	return fmt.Errorf("dns: no option unpack defined, implement Packer interface for external options")
 }
 
 func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
@@ -517,11 +521,11 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *ZONEVERSION:
 		return x.pack(msg, off)
 	}
-	// Check for external EDNS0 option implementing EDNS0Coder interface
-	if x, ok := option.(EDNS0Coder); ok {
+	// Check for external EDNS0 option implementing Packer interface
+	if x, ok := option.(Packer); ok {
 		return x.Pack(msg, off)
 	}
-	return 0, fmt.Errorf("dns: no option pack defined, implement EDNS0Coder interface for external options")
+	return 0, fmt.Errorf("dns: no option pack defined, implement Packer interface for external options")
 }
 
 // type, length, value is the length the code (2 octets) and length (2 octets) of each EDNS0 option code.

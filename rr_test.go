@@ -102,7 +102,7 @@ func TestExternalRR(t *testing.T) {
 }
 
 // YOOPT is a custom EDNS0 option for testing external EDNS0 support.
-// It demonstrates how to implement a custom EDNS0 option using the EDNS0Coder interface.
+// It demonstrates how to implement a custom EDNS0 option using the Packer interface.
 type YOOPT struct {
 	Data string
 }
@@ -123,7 +123,7 @@ func (o *YOOPT) String() string {
 // Typer interface - returns the EDNS0 option code
 func (o *YOOPT) Type() uint16 { return yoOptCode }
 
-// EDNS0Coder interface - provides Pack/Unpack for wire format
+// Packer interface - provides Pack/Unpack for wire format
 // Pack only encodes the option data, not the TLV header
 func (o *YOOPT) Pack(msg []byte, off int) (int, error) {
 	if off+len(o.Data) > len(msg) {
@@ -134,11 +134,7 @@ func (o *YOOPT) Pack(msg []byte, off int) (int, error) {
 }
 
 // Unpack decodes the option data from wire format
-func (o *YOOPT) Unpack(s *cryptobyte.String) error {
-	data := make([]byte, len(*s))
-	if !s.CopyBytes(data) {
-		return fmt.Errorf("overflow unpacking YOOPT")
-	}
+func (o *YOOPT) Unpack(data []byte) error {
 	o.Data = string(data)
 	return nil
 }
