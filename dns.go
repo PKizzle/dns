@@ -59,7 +59,7 @@ type RDATA interface {
 	String() string
 }
 
-// The Typer interface it will be used to return the type of RR in the RRToType function or the EDNS0 option
+// The Typer interface is used to return the type of RR in the RRToType function or the EDNS0 option
 // code when the "RR" is an EDNS0 option. This is only needed for RRs that are defined outside of this package.
 // Once this method is defined the following extra registration needs to happen:
 //

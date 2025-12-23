@@ -54,6 +54,7 @@ import (
 var (
 	flagcpu   = flag.Bool("cpu", false, "write cpu profile to cpu.out")
 	flagtrace = flag.Bool("trace", false, "write trace profile to trace.out")
+	flagPort  = flag.Int("port", 8053, "port to listen on")
 )
 
 const dom = "whoami.miek.nl."
@@ -108,7 +109,8 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func serve(net string) {
-	server := &dns.Server{Addr: "[::]:8053", Net: net, ReusePort: true, MaxTCPQueries: -1}
+	addr := fmt.Sprintf("[::]:%d", *flagPort)
+	server := &dns.Server{Addr: addr, Net: net, ReusePort: true, MaxTCPQueries: -1}
 	if err := server.ListenAndServe(); err != nil {
 		log.Printf("Failed to setup the "+net+" server: %s", err.Error())
 	}
