@@ -62,14 +62,6 @@ import "golang.org/x/crypto/cryptobyte"
 //	    dns.CodeToString[0xFDE9] = "MYOPTION"
 //	}
 //
-// Required imports for implementing Pack/Unpack:
-//   - golang.org/x/crypto/cryptobyte (for Unpack parameter)
-//   - codeberg.org/miekg/dns/internal/pack (for Pack helpers, optional)
-//   - codeberg.org/miekg/dns/internal/unpack (for Unpack helpers and errors, optional)
-//
-// Note: For EDNS0 option codes, RFC 6891 reserves the range 0xFDE9-0xFFFE for
-// local/experimental use. Use these codes for custom options unless you have
-// an IANA-registered code.
 type EDNS0Coder interface {
 	// Pack encodes the EDNS0 option data into wire format at the specified offset in msg.
 	// It should only pack the option's data, not the 4-byte TLV header (type and length).
