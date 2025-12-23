@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -17,9 +18,8 @@ import (
 const Conffile = `
 {
 	dns {
-		addr [::]:8053
+		addr [::]:%s
 	}
-
 }
 
 whoami.example.org {
@@ -29,11 +29,13 @@ whoami.example.org {
 
 func TestAtomdnsPerf(t *testing.T) {
 	const count = 8
+	ports := [2]string{"8053", "8054"}
 	dir := t.TempDir()
 	conffile := dir + "/Conffile"
-	os.WriteFile(conffile, []byte(Conffile), 0600)
 
-	for _, network := range []string{"udp"} {
+	for p, network := range []string{"udp", "tcp"} {
+		os.WriteFile(conffile, []byte(fmt.Sprintf(Conffile, ports[p])), 0600)
+
 		t.Run("atomdns-"+network, func(t *testing.T) {
 			timeout := count*2*time.Second + 5*time.Second
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -52,9 +54,10 @@ func TestAtomdnsPerf(t *testing.T) {
 			}()
 
 			queries := strings.NewReader("whoami.example.org. A")
-			if err := dnsperf.Run(t, queries, "127.0.0.1:8053", network, 2*time.Second, count); err != nil {
+			if err := dnsperf.Run(t, queries, fmt.Sprintf("127.0.0.1:%s", ports[p]), network, 2*time.Second, count); err != nil {
 				t.Fatal(err)
 			}
+			t.Logf("canceled executing: %s", network)
 			cancel()
 		})
 	}
