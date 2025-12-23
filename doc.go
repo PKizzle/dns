@@ -126,6 +126,9 @@ Any struct can be used as a private resource record. To make it work you need to
 
 See rr_test.for a complete example.
 
+For custom EDNS0 options, implement the [EDNS0Coder] interface in addition to [EDNS0] and [Typer].
+See [EDNS0Coder] documentation for a complete example.
+
 # Further Reading
 
 All functionality and types are documented in their respective types and functions.
