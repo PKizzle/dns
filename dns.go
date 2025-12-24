@@ -67,7 +67,7 @@ type RDATA interface {
 //	dns.TypeToString[codepoint] = "TYPE"
 //	dns.StringToType["TYPE"] = codepoint
 //
-// For EDNS0 registration use [CodeToRR] and [CodeToString].
+// For EDNS0 registration use, [CodeToRR], [CodeToString] and [StringToType].
 type Typer interface {
 	Type() uint16
 }
