@@ -99,6 +99,7 @@ What users say:
 - Improved RRs, by having the rdata specified in an _rdata_ package.
 - Examples included the cmd/ directory.
 - Escapes (\DDD and \x) in domain names is not supported (anymore) - the overhead (50-100%) was too high.
+- Easy way for custom RRs and EDNS0 pseudo RRs.
 
 Have fun!
 
