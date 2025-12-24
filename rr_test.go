@@ -100,3 +100,67 @@ func TestExternalRR(t *testing.T) {
 		t.Fatal("YO presentation should survive Pack/Unpack")
 	}
 }
+
+// YOOPT is a custom EDNS0 option for testing external EDNS0 support.
+type YOOPT struct {
+	Data string
+}
+
+const optcodepoint = 65001
+
+// Typer interface.
+func (o *YOOPT) Type() uint16 { return optcodepoint }
+
+// RR interface.
+func (o *YOOPT) Header() *dns.Header { return &dns.Header{Name: "."} }
+func (o *YOOPT) Len() int            { return 4 + len(o.Data) } // 4 = TLV overhead (code + length)
+func (o *YOOPT) Clone() dns.RR       { return &YOOPT{Data: o.Data} }
+func (o *YOOPT) String() string      { return "YOOPT " + o.Data }
+
+// EDNS0 interface.
+func (o *YOOPT) Pseudo() bool { return true }
+
+// Packer interface.
+func (o *YOOPT) Pack(msg []byte, off int) (int, error) {
+	if off+len(o.Data) > len(msg) {
+		return len(msg), fmt.Errorf("overflow packing YOOPT")
+	}
+	copy(msg[off:], o.Data)
+	return off + len(o.Data), nil
+}
+
+func (o *YOOPT) Unpack(data []byte) error {
+	o.Data = string(data)
+	return nil
+}
+
+func TestExternalEDNS0(t *testing.T) {
+	dns.CodeToRR[optcodepoint] = func() dns.EDNS0 { return new(YOOPT) }
+	dns.CodeToString[optcodepoint] = "YOOPT"
+
+	m := dns.NewMsg("yo.example.org.", dns.TypeA)
+	m.Pseudo = []dns.RR{&YOOPT{Data: "Yo!"}}
+
+	if err := m.Pack(); err != nil {
+		t.Fatalf("YOOPT failed to Pack: %v", err)
+	}
+
+	if err := m.Unpack(); err != nil {
+		t.Fatalf("YOPT failed to Unpack %v", err)
+	}
+
+	if len(m.Pseudo) != 1 {
+		t.Fatalf("expected 1 pseudo record, got %d", len(m.Pseudo))
+	}
+
+	y, ok := m.Pseudo[0].(*YOOPT)
+	if !ok {
+		t.Fatalf("pseudo record is not YOOPT, got %T", m.Pseudo[0])
+	}
+	if y.Data != "Yo!" {
+		t.Fatalf("expected Data 'Yo!', got '%s'", y.Data)
+	}
+	if x := y.Type(); x != optcodepoint {
+		t.Fatalf("expected type %d, got %d", optcodepoint, x)
+	}
+}
