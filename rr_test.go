@@ -102,29 +102,25 @@ func TestExternalRR(t *testing.T) {
 }
 
 // YOOPT is a custom EDNS0 option for testing external EDNS0 support.
-// It demonstrates how to implement a custom EDNS0 option using the Packer interface.
 type YOOPT struct {
 	Data string
 }
 
-const yoOptCode = 0xFDE9 // Local/experimental use range
+const optcodepoint = 65001
 
-// EDNS0 interface (embedding RR) - these methods make it an RR
+// Typer interface.
+func (o *YOOPT) Type() uint16 { return optcodepoint }
+
+// RR interface.
 func (o *YOOPT) Header() *dns.Header { return &dns.Header{Name: "."} }
-func (o *YOOPT) Pseudo() bool        { return true }
 func (o *YOOPT) Len() int            { return 4 + len(o.Data) } // 4 = TLV overhead (code + length)
-func (o *YOOPT) Clone() dns.RR {
-	return &YOOPT{Data: o.Data}
-}
-func (o *YOOPT) String() string {
-	return "YOOPT " + o.Data
-}
+func (o *YOOPT) Clone() dns.RR       { return &YOOPT{Data: o.Data} }
+func (o *YOOPT) String() string      { return "YOOPT " + o.Data }
 
-// Typer interface - returns the EDNS0 option code
-func (o *YOOPT) Type() uint16 { return yoOptCode }
+// EDNS0 interface.
+func (o *YOOPT) Pseudo() bool { return true }
 
-// Packer interface - provides Pack/Unpack for wire format
-// Pack only encodes the option data, not the TLV header
+// Packer interface.
 func (o *YOOPT) Pack(msg []byte, off int) (int, error) {
 	if off+len(o.Data) > len(msg) {
 		return len(msg), fmt.Errorf("overflow packing YOOPT")
@@ -133,54 +129,38 @@ func (o *YOOPT) Pack(msg []byte, off int) (int, error) {
 	return off + len(o.Data), nil
 }
 
-// Unpack decodes the option data from wire format
 func (o *YOOPT) Unpack(data []byte) error {
 	o.Data = string(data)
 	return nil
 }
 
 func TestExternalEDNS0(t *testing.T) {
-	// Register the custom EDNS0 option
-	dns.CodeToRR[yoOptCode] = func() dns.EDNS0 { return new(YOOPT) }
-	dns.CodeToString[yoOptCode] = "YOOPT"
+	dns.CodeToRR[optcodepoint] = func() dns.EDNS0 { return new(YOOPT) }
+	dns.CodeToString[optcodepoint] = "YOOPT"
 
-	// Create a message with custom EDNS0 option
-	m := new(dns.Msg)
-	dnsutil.SetQuestion(m, "example.org.", dns.TypeA)
+	m := dns.NewMsg("yo.example.org.", dns.TypeA)
+	m.Pseudo = []dns.RR{&YOOPT{Data: "Yo!"}}
 
-	yoOpt := &YOOPT{Data: "Yo!"}
-
-	// Add custom EDNS0 option directly to the Pseudo section
-	// The Pack() method will automatically create an OPT record containing these options
-	m.Pseudo = append(m.Pseudo, yoOpt)
-
-	// Pack the message
 	if err := m.Pack(); err != nil {
-		t.Fatalf("failed to pack message with custom EDNS0 option: %v", err)
+		t.Fatalf("YOOPT failed to Pack: %v", err)
 	}
 
 	if err := m.Unpack(); err != nil {
-		t.Fatalf("failed to unpack message with custom EDNS0 option: %v", err)
+		t.Fatalf("YOPT failed to Unpack %v", err)
 	}
 
-	// Verify the custom option was preserved in Pseudo section
 	if len(m.Pseudo) != 1 {
 		t.Fatalf("expected 1 pseudo record, got %d", len(m.Pseudo))
 	}
 
-	yoOpt2, ok := m.Pseudo[0].(*YOOPT)
+	y, ok := m.Pseudo[0].(*YOOPT)
 	if !ok {
 		t.Fatalf("pseudo record is not YOOPT, got %T", m.Pseudo[0])
 	}
-
-	if yoOpt2.Data != "Yo!" {
-		t.Fatalf("expected Data='Yo!', got Data='%s'", yoOpt2.Data)
+	if y.Data != "Yo!" {
+		t.Fatalf("expected Data 'Yo!', got '%s'", y.Data)
 	}
-
-	// Verify Type() returns correct code
-	if yoOpt2.Type() != yoOptCode {
-		t.Fatalf("expected Type()=%d, got %d", yoOptCode, yoOpt2.Type())
+	if x := y.Type(); x != optcodepoint {
+		t.Fatalf("expected type %d, got %d", optcodepoint, x)
 	}
-
-	t.Logf("Successfully packed and unpacked custom EDNS0 option: %s", yoOpt2.String())
 }
