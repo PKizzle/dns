@@ -41,8 +41,6 @@ type Server struct {
 
 	httpservers []*atomhttp.Server
 	httpstarted chan error
-
-	Quiet bool // Quiet startup.
 }
 
 // Start starts a server.
@@ -308,7 +306,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				return fmt.Errorf("origin already registered: %s", k)
 			}
 
-			if !s.Quiet {
+			if !global.Quiet {
 				slog.Info(k, "handlers", strings.Join(names, ","))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
