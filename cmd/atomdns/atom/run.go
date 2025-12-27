@@ -83,7 +83,7 @@ func Run(version string) {
 				slog.Error("Failed to reload server", slog.Any("error", err))
 			}
 			signal.Notify(sigchan, syscall.SIGHUP)
-			if !s.Quiet {
+			if !s.global.Quiet {
 				fmt.Fprintln(os.Stderr, banner(s.version))
 			}
 		}
@@ -91,7 +91,7 @@ func Run(version string) {
 
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	if !s.Quiet {
+	if !s.global.Quiet {
 		fmt.Println(banner(version))
 	}
 	sig := <-sigchan

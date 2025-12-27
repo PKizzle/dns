@@ -34,7 +34,7 @@ func TestAtomdnsPerf(t *testing.T) {
 	conffile := dir + "/Conffile"
 
 	for p, network := range []string{"udp", "tcp"} {
-		os.WriteFile(conffile, []byte(fmt.Sprintf(Conffile, ports[p])), 0600)
+		os.WriteFile(conffile, fmt.Appendf(nil, Conffile, ports[p]), 0600)
 
 		t.Run("atomdns-"+network, func(t *testing.T) {
 			timeout := count*2*time.Second + 5*time.Second
@@ -88,8 +88,8 @@ example.org {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := new(dns.Client)
 
+	c := new(dns.Client)
 	for _, tc := range testcases {
 		t.Run(tc.qname+"/"+dns.TypeToString[tc.qtype], func(t *testing.T) {
 			m := dns.NewMsg(tc.qname, dns.TypeA)

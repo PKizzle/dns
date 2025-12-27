@@ -37,7 +37,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				case "disable":
 					g.Disable = true
 				case "enable":
-					g.Quiet = false
+					g.Disable = false
 				default:
 					return d.ArgErr()
 				}
