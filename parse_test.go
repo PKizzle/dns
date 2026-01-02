@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/internal/dnsfuzz"
 	"codeberg.org/miekg/dns/svcb"
 )
@@ -52,7 +53,7 @@ func TestNew(t *testing.T) {
 			},
 		},
 		{
-			"DSYNC", `child._dsync.example.  IN DSYNC  CDS NOTIFY 5300 rr-endpoint.example.`,
+			"DSYNC", `child._dsync.example. IN DSYNC CDS NOTIFY 5300 rr-endpoint.example.`,
 			func(rr RR) error {
 				dsync := rr.(*DSYNC)
 				if dsync.Scheme != 1 {
@@ -64,6 +65,28 @@ func TestNew(t *testing.T) {
 				if dsync.Target != "rr-endpoint.example." {
 					return fmt.Errorf("parsing DSYNC failed, expected port rr-endpoint.example., got %s", "rr-endpoint.example.")
 				}
+				return nil
+			},
+		},
+		{
+			"DELEG", "example.org. IN DELEG server-ipv4=192.0.2.1 server-ipv6=2001:DB8::1",
+			func(rr RR) error {
+				dlg := rr.(*DELEG)
+				v0 := dlg.DELEG.Value[0]
+				v1 := dlg.DELEG.Value[1]
+				_ = v0.(*deleg.SERVERIPV4)
+				_ = v1.(*deleg.SERVERIPV6)
+				return nil
+			},
+		},
+		{
+			"DELEG", `example.org. IN DELEG server-ipv4="192.0.2.1" server-ipv6="2001:DB8::1"`,
+			func(rr RR) error {
+				dlg := rr.(*DELEG)
+				v0 := dlg.DELEG.Value[0]
+				v1 := dlg.DELEG.Value[1]
+				_ = v0.(*deleg.SERVERIPV4)
+				_ = v1.(*deleg.SERVERIPV6)
 				return nil
 			},
 		},
