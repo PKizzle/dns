@@ -79,6 +79,17 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"DELEG", `example.org. IN DELEG server-ipv4="192.0.2.1" server-ipv6="2001:DB8::1"`,
+			func(rr RR) error {
+				dlg := rr.(*DELEG)
+				v0 := dlg.DELEG.Value[0]
+				v1 := dlg.DELEG.Value[1]
+				_ = v0.(*deleg.SERVERIPV4)
+				_ = v1.(*deleg.SERVERIPV6)
+				return nil
+			},
+		},
 		// EDNS0 types
 		{
 			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },
