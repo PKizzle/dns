@@ -22,7 +22,8 @@ making backwards incompatible changes.
 
 Example programs are included _and_ benchmarked in `cmd`.
 [`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/README.md) is a full blown
-production ready name server.
+production ready name server. Because of these we are depending on a lot more external packages - at some
+point these servers will be split off.
 
 The naming of types follows the RFCs. EDNS0 types are similarly named, for instance, DHU (DS Hash Understood).
 If there is a clash between an actual RR's and an EDNS0 one, the EDNS0 type will get an 'E' as prefix, e.g.
