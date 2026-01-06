@@ -580,7 +580,7 @@ func (m *Msg) String() string {
 // isPseudo returns (1) true of we should have a pseudo section in this message, or not (0). It returns an
 // int becuse we need that number of the Extra section sizing.
 func (m *Msg) isPseudo() int {
-	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF || len(m.Pseudo) > 0 {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
 		return 1
 	}
 	return 0
