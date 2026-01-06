@@ -48,7 +48,7 @@ The message m is now a message with the question section set to ask the MX recor
 After creating a message it can be sent. Basic use pattern for synchronous querying the DNS at a server configured on 127.0.0.1 and port 53 using UDP:
 
 	c := new(dns.Client)
-	r, rtt, err := c.Exchange(m, "udp", "127.0.0.1:53")
+	r, rtt, err := c.Exchange(context.TODO(), m, "udp", "127.0.0.1:53")
 
 When this functions returns you will get DNS message back. A DNS message consists out of four (on the wire), but five in this package, sections.
 
@@ -130,10 +130,6 @@ Any struct can be used as a private resource record. To make it work you need to
   - [Packer], if you need to use your new RR on the wire.
   - [Comparer], if your RR will be signed with DNSSEC.
 
-See rr_test.for a complete example for both an external [RR] and [EDNS0].
-
-# Further Reading
-
-All functionality and types are documented in their respective types and functions.
+See rr_test.go for a complete example for both an external [RR] and [EDNS0].
 */
 package dns

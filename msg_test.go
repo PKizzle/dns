@@ -1,8 +1,10 @@
 package dns_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/netip"
 	"os"
 	"testing"
@@ -15,7 +17,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// TestMakeMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
+// ExampleMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
 // checks if we create the correct wire-format.
 func ExampleMsg_Question() {
 	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true}}
@@ -36,6 +38,24 @@ func ExampleMsg_Pseudo_nsid() {
 	// 41 is OPT after the zeros, 04 -> rdlength, 03 -> code of NSID, 00 -> "rdlength" of NSID
 	fmt.Printf("%v\n", m.Data)
 	// Output: [0 3 1 0 0 1 0 0 0 0 0 1 4 109 105 101 107 2 110 108 0 0 15 0 1 0 0 41 0 0 0 0 0 0 0 4 0 3 0 0]
+}
+
+func ExampleMsg() {
+	m := dns.NewMsg("miek.nl.", dns.TypeMX)
+	c := new(dns.Client)
+	r, _, err := c.Exchange(context.TODO(), m, "udp", "127.0.0.1:53")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if m, ok := r.Answer[0].(*dns.MX); ok {
+		fmt.Println(m.MX.Mx)
+	}
+	if n, ok := r.Pseudo[0].(*dns.NSID); ok {
+		fmt.Println(n.Nsid)
+	}
+	for rr := range r.RRs() {
+		fmt.Println(rr)
+	}
 }
 
 func TestMsgBinary(t *testing.T) {
