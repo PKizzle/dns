@@ -91,7 +91,7 @@ OLD                                           | NEW
 m := new(dns.Msg)                             | m := dns.NewMsg("miek.nl.", dns.TypeDNSKEY)
 m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     | m.UDPSize, m.Security = 4096, true
 m.SetEdns0(4096, true)                        |
-                                              | OR
+                                              | // or
                                               |
                                               | m := new(dns.Msg)
                                               | dnsutil.SetQuestion("miek.nl.", dns.TypeDNSKEY")
@@ -138,7 +138,7 @@ x := m.IsEdns0()                                         | x := len(m.Pseudo) > 
 Adding an EDNS0 option is just as easy, assign to the pseudo section.
 
 ```
-OLD                                                               |
+OLD                                                               | NEW
                                                                   |
 o := &dns.OPT{Hdr: dns.RR_Header{Name: ".", Rrtype: dns.TypeOPT}} |
 o.SetDo()                                                         | m.Security = true
@@ -146,6 +146,14 @@ o.SetUDPSize(dns.DefaultMsgSize)                                  | m.UDPSize = 
 e := &dns.EDNS0_NSID{Code: dns.EDNS0NSID}                         | m.Pseudo = append(m.Pseudo, &dns.NSID{})
 o.Option = append(o.Option, e)                                    |
 m.Extra = append(m.Extra, o)                                      |
+```
+
+Ranging over an entire `Msg`:
+
+```
+OLD                     | NEW
+                        |
+// N/A                  | for rr := range m.RRs() { ... }
 ```
 
 ## Text Output
