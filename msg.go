@@ -188,10 +188,8 @@ func (m *Msg) Pack() error {
 
 	// We need the uncompressed length here, because we first pack it and then compress it.
 	l := m.Len()
-	if cap(m.Data) < l {
-		m.Data = make([]byte, l)
-	} else {
-		m.Data = m.Data[:l]
+	if len(m.Data) < l {
+		m.Data = append(m.Data, make([]byte, l-len(m.Data))...)
 	}
 
 	// Pack it in: header and then the pieces.
