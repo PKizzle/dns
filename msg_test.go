@@ -58,6 +58,14 @@ func ExampleMsg() {
 	}
 }
 
+func ExampleMsg_dnssec() {
+	m := dns.NewMsg("miek.nl.", dns.TypeMX)
+	m.UDPSize = dns.DefaultMsgSize
+	m.Security = true
+	dns.Exchange(context.TODO(), m, "udp", "127.0.0.1:53")
+	// handle returned message.
+}
+
 func TestMsgBinary(t *testing.T) {
 	tcs := []struct {
 		name string

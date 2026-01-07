@@ -46,6 +46,7 @@
 - Copied, sanitized and removed tests that accumulated over 16 years of development.
 - Escapes in domain names is not supported. This added 50-100% overhead in low-level functions that are often
   used in the hot path. In rdata (TXT records) it still is.
+- The less used ClientConfig now lives in _dnsconf_.
 
 ## RRs
 
@@ -94,7 +95,7 @@ m.SetEdns0(4096, true)                        |
                                               | // or
                                               |
                                               | m := new(dns.Msg)
-                                              | dnsutil.SetQuestion("miek.nl.", dns.TypeDNSKEY")
+                                              | dnsutil.SetQuestion(m, "miek.nl.", dns.TypeDNSKEY")
                                               | m.UDPSize, m.Security = 4096, true
 ```
 
@@ -148,12 +149,24 @@ o.Option = append(o.Option, e)                                    |
 m.Extra = append(m.Extra, o)                                      |
 ```
 
+## Msgs
+
 Ranging over an entire `Msg`:
 
 ```
 OLD                     | NEW
                         |
 // N/A                  | for rr := range m.RRs() { ... }
+```
+
+Set the EDNS0 UDP buffer size:
+
+```
+OLD                                                               | NEW
+                                                                  |
+m := new(dns.Msg)                                                 | m := dns.NewMsg("miek.nl.", dns.TypeDNSKEY)
+m.SetQuestion("miek.nl.", dns.TypeDNSKEY)                         | m.UDPSize, m.Security = 4096, true
+o.SetEdns0(4096, true)                                            |
 ```
 
 ## Text Output
@@ -176,12 +189,28 @@ OLD                                                                  | NEW
                                                                      | miek.nl.                IN      A
 ```
 
-### Copy
+### Functions and Methods
 
 ```
 OLD                   | NEW
                       |
 r := m.Copy()         | r := m.Copy() // Shallow copy!
+```
+
+Fqdn has moved.
+
+```
+OLD                   | NEW
+                      |
+s := dns.Fqdn(s)      | s := dnsutil.Fqdn(s)
+```
+
+SetQuestion has moved.
+
+```
+OLD                                           | NEW
+                                              |
+m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     |  dnsutil.SetQuestion(m, "miek.nl.", dns.TypeDNSKEY)
 ```
 
 ## Server
@@ -192,7 +221,7 @@ done in a handler. This, again, removes a little of internal code that slowed th
 The default implementation of `dns.ResponseWriter` is thread safe and this for TCP pipe lining, which is thusly
 implemented in `dns.Server`. Writing or reading data is now done with `io.Copy` no more `ReadMsg` or `WriteMsg`.
 
-A handler for instance:
+A handler for instance.
 
 ```
 OLD                                                      | NEW
