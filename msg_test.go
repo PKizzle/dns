@@ -48,7 +48,7 @@ func ExampleMsg() {
 		log.Fatal(err)
 	}
 	if m, ok := r.Answer[0].(*dns.MX); ok {
-		fmt.Println(m.MX.Mx)
+		fmt.Println(m.Mx)
 	}
 	if n, ok := r.Pseudo[0].(*dns.NSID); ok {
 		fmt.Println(n.Nsid)

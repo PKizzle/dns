@@ -60,6 +60,7 @@ func (u *Url) Fetch() error {
 		}
 		defer f.Close()
 		defer os.Remove(f.Name())
+		// first url downloaded wins
 		return os.Rename(f.Name(), u.Path)
 	}
 	return fmt.Errorf("failed to fetch from all URLs")
