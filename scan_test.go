@@ -66,6 +66,13 @@ func TestZoneParser(t *testing.T) {
 		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{"missing TTL with no"}},
 		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{"missing TTL with no"}},
 		{"nsid-truncated", " NSID :", nil, &Error{"bad NSID Nsid"}},
+		{"overflow-ttl", "example. 4294967296  IN A 127.0.0.1", nil, &Error{err: "not a TTL: "}},
+		{
+			"border-fit-ttl",
+			"example. 4294967295  IN A 127.0.0.1",
+			[]RR{&A{Hdr: Header{Name: "example.", Class: ClassINET}, A: rdata.A{Addr: netip.MustParseAddr("127.0.0.1")}}},
+			nil,
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
