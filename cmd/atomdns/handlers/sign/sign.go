@@ -10,7 +10,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
-	"codeberg.org/miekg/dns/pool"
+	"codeberg.org/miekg/dns/pkg/pool"
 )
 
 type Sign struct {

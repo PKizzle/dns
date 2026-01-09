@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"codeberg.org/miekg/dns/pool"
+	"codeberg.org/miekg/dns/pkg/pool"
 	"codeberg.org/miekg/dns/rdata"
 )
 

@@ -16,7 +16,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/pool"
+	"codeberg.org/miekg/dns/pkg/pool"
 	"golang.org/x/crypto/ed25519"
 )
 
