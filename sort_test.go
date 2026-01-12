@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"fmt"
+	"slices"
 	"sort"
 	"testing"
 
@@ -154,5 +156,31 @@ func TestEqualName(t *testing.T) {
 		if got != tc.exp {
 			t.Errorf("test %d, expected %t, got %t for %s, %s", i, tc.exp, got, tc.a, tc.b)
 		}
+	}
+}
+
+func ExampleRRset_sort() {
+	rrs := RRset([]RR{
+		func() RR { rr, _ := New("miek.nl. IN NS linode.atoom.net."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS omval.tednet.nl."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS ns-ext.nlnetlabs.nl."); return rr }(),
+	})
+	sort.Sort(rrs)
+	for i := range rrs {
+		fmt.Println(rrs[i])
+	}
+}
+
+func ExampleRRset_compact() {
+	rrs := RRset([]RR{
+		func() RR { rr, _ := New("miek.nl. IN NS linode.atoom.net."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS omval.tednet.nl."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS omval.tednet.nl."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS ns-ext.nlnetlabs.nl."); return rr }(),
+	})
+	sort.Sort(rrs)
+	slices.CompactFunc(rrs, func(a, b RR) bool { return Equal(a, b) })
+	for i := range rrs {
+		fmt.Println(rrs[i])
 	}
 }
