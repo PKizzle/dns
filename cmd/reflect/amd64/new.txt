@@ -3,30 +3,30 @@
 goos: linux
 goarch: amd64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerfudp-12	283331			3529.4 ns/op
-BenchmarkDNSPerfudp-12	289032			3459.8 ns/op
-BenchmarkDNSPerfudp-12	286252			3493.4 ns/op
-BenchmarkDNSPerfudp-12	277820			3599.4 ns/op
-BenchmarkDNSPerfudp-12	283641			3525.6 ns/op
-BenchmarkDNSPerfudp-12	282137			3544.4 ns/op
-BenchmarkDNSPerfudp-12	282027			3545.8 ns/op
-BenchmarkDNSPerfudp-12	282442			3540.5 ns/op
+BenchmarkDNSPerfudp-12	307254			3254.6 ns/op
+BenchmarkDNSPerfudp-12	303298			3297.1 ns/op
+BenchmarkDNSPerfudp-12	303313			3296.9 ns/op
+BenchmarkDNSPerfudp-12	301107			3321.1 ns/op
+BenchmarkDNSPerfudp-12	293083			3412.0 ns/op
+BenchmarkDNSPerfudp-12	303419			3295.8 ns/op
+BenchmarkDNSPerfudp-12	301025			3322.0 ns/op
+BenchmarkDNSPerfudp-12	301840			3313.0 ns/op
     reflect_test.go:43: canceled executing: udp
 === RUN   TestReflect/reflect-tcp
 goos: linux
 goarch: amd64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerftcp-12	238484			4193.1 ns/op
-BenchmarkDNSPerftcp-12	237962			4202.3 ns/op
-BenchmarkDNSPerftcp-12	232449			4302.0 ns/op
-BenchmarkDNSPerftcp-12	235317			4249.6 ns/op
-BenchmarkDNSPerftcp-12	237215			4215.6 ns/op
-BenchmarkDNSPerftcp-12	238685			4189.6 ns/op
-BenchmarkDNSPerftcp-12	239167			4181.2 ns/op
-BenchmarkDNSPerftcp-12	237743			4206.2 ns/op
+BenchmarkDNSPerftcp-12	244650			4087.5 ns/op
+BenchmarkDNSPerftcp-12	242245			4128.0 ns/op
+BenchmarkDNSPerftcp-12	241103			4147.6 ns/op
+BenchmarkDNSPerftcp-12	242581			4122.3 ns/op
+BenchmarkDNSPerftcp-12	242023			4131.8 ns/op
+BenchmarkDNSPerftcp-12	242011			4132.0 ns/op
+BenchmarkDNSPerftcp-12	242726			4119.9 ns/op
+BenchmarkDNSPerftcp-12	242075			4130.9 ns/op
     reflect_test.go:43: canceled executing: tcp
---- PASS: TestReflect (34.36s)
-    --- PASS: TestReflect/reflect-udp (17.18s)
+--- PASS: TestReflect (34.34s)
+    --- PASS: TestReflect/reflect-udp (17.17s)
     --- PASS: TestReflect/reflect-tcp (17.18s)
 PASS
-ok  	codeberg.org/miekg/dns/cmd/reflect	34.358s
+ok  	codeberg.org/miekg/dns/cmd/reflect	34.347s
