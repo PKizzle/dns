@@ -42,10 +42,7 @@ func SetReply(m, r *dns.Msg) *dns.Msg {
 	}
 	m.Rcode = dns.RcodeSuccess
 	m.Question = r.Question
-	m.Answer = nil
-	m.Ns = nil
-	m.Extra = nil
-	m.Pseudo = nil
+	m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
 	return m
 }
 

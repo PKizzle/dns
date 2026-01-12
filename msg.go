@@ -205,24 +205,24 @@ func (m *Msg) Pack() error {
 		compression = map[string]uint16{}
 	}
 
-	for _, r := range m.Question {
-		if off, err = packQuestion(r, m.Data, off, compression); err != nil {
+	for i := range m.Question {
+		if off, err = packQuestion(m.Question[i], m.Data, off, compression); err != nil {
 			return err
 		}
 		break // allow only one
 	}
-	for _, r := range m.Answer {
-		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+	for i := range m.Answer {
+		if _, off, err = packRR(m.Answer[i], m.Data, off, compression); err != nil {
 			return err
 		}
 	}
-	for _, r := range m.Ns {
-		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+	for i := range m.Ns {
+		if _, off, err = packRR(m.Ns[i], m.Data, off, compression); err != nil {
 			return err
 		}
 	}
-	for _, r := range m.Extra {
-		if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+	for i := range m.Extra {
+		if _, off, err = packRR(m.Extra[i], m.Data, off, compression); err != nil {
 			return err
 		}
 	}
@@ -250,8 +250,8 @@ func (m *Msg) Pack() error {
 			opt.Hdr.Name = "."
 			opt.SetDelegation(true)
 		}
-		for _, option := range m.Pseudo {
-			if edns0, ok := option.(EDNS0); ok {
+		for i := range m.Pseudo {
+			if edns0, ok := m.Pseudo[i].(EDNS0); ok {
 				opt.Hdr.Name = "."
 				opt.Options = append(opt.Options, edns0)
 			}
@@ -268,21 +268,20 @@ func (m *Msg) Pack() error {
 	m.ps = 0
 
 	// records that really need to be last, TSIG or SGI0
-	for _, r := range m.Pseudo {
-		if _, ok := r.(*TSIG); ok {
-			if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+	for i := range m.Pseudo {
+		if _, ok := m.Pseudo[i].(*TSIG); ok {
+			if _, off, err = packRR(m.Pseudo[i], m.Data, off, compression); err != nil {
 				return err
 			}
 			m.ps++
 		}
-		if _, ok := r.(*SIG); ok {
-			if _, off, err = packRR(r, m.Data, off, compression); err != nil {
+		if _, ok := m.Pseudo[i].(*SIG); ok {
+			if _, off, err = packRR(m.Pseudo[i], m.Data, off, compression); err != nil {
 				return err
 			}
 			m.ps++
 		}
 	}
-
 	m.Data = m.Data[:off]
 	return nil
 }
@@ -396,8 +395,8 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 				opt.UDPSize(), MinMsgSize)
 
 			m.Pseudo = make([]RR, len(opt.Options))
-			for i, o := range opt.Options {
-				m.Pseudo[i] = RR(o)
+			for i := range opt.Options {
+				m.Pseudo[i] = RR(opt.Options[i])
 			}
 
 			m.Extra[len(m.Extra)-j-1] = m.Extra[i]
@@ -807,33 +806,33 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 func (m *Msg) RRs() iter.Seq[RR] {
 	return func(yield func(RR) bool) {
 		for {
-			for _, rr := range m.Question {
-				if !yield(rr) {
+			for i := range m.Question {
+				if !yield(m.Question[i]) {
 					return
 				}
 			}
-			for _, rr := range m.Answer {
-				if !yield(rr) {
+			for i := range m.Answer {
+				if !yield(m.Answer[i]) {
 					return
 				}
 			}
-			for _, rr := range m.Ns {
-				if !yield(rr) {
+			for i := range m.Ns {
+				if !yield(m.Ns[i]) {
 					return
 				}
 			}
-			for _, rr := range m.Extra {
-				if !yield(rr) {
+			for i := range m.Extra {
+				if !yield(m.Extra[i]) {
 					return
 				}
 			}
-			for _, rr := range m.Pseudo {
-				if !yield(rr) {
+			for i := range m.Pseudo {
+				if !yield(m.Pseudo[i]) {
 					return
 				}
 			}
-			for _, rr := range m.Stateful {
-				if !yield(rr) {
+			for i := range m.Stateful {
+				if !yield(m.Stateful[i]) {
 					return
 				}
 			}

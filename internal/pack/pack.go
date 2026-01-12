@@ -90,8 +90,8 @@ func Txt(txt []string, msg []byte, off int) (int, error) {
 		return off, nil
 	}
 	var err error
-	for _, s := range txt {
-		off, err = TxtString(s, msg, off)
+	for i := range txt {
+		off, err = TxtString(txt[i], msg, off)
 		if err != nil {
 			return len(msg), err
 		}
@@ -312,8 +312,8 @@ func StringHex(s string, msg []byte, off int) (int, error) {
 
 func Names(names []string, msg []byte, off int, compress map[string]uint16) (int, error) {
 	var err error
-	for _, name := range names {
-		off, err = Name(name, msg, off, compress, false)
+	for i := range names {
+		off, err = Name(names[i], msg, off, compress, false)
 		if err != nil {
 			return len(msg), err
 		}
