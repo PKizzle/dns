@@ -1,9 +1,12 @@
 package dns
 
 import (
+	"fmt"
+	"slices"
 	"sort"
 	"testing"
 
+	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -154,5 +157,31 @@ func TestEqualName(t *testing.T) {
 		if got != tc.exp {
 			t.Errorf("test %d, expected %t, got %t for %s, %s", i, tc.exp, got, tc.a, tc.b)
 		}
+	}
+}
+
+func ExampleRRset_sort() {
+	rrs := RRset([]RR{
+		dnstest.New("miek.nl. IN NS linode.atoom.net."),
+		dnstest.New("miek.nl. IN NS omval.tednet.nl."),
+		dnstest.New("miek.nl. IN NS ns-ext.nlnetlabs.nl."),
+	})
+	sort.Sort(rrs)
+	for i := range rrs {
+		fmt.Println(rrs[i])
+	}
+}
+
+func ExampleRRset_compact() {
+	rrs := RRset([]RR{
+		dnstest.New("miek.nl. IN NS linode.atoom.net."),
+		dnstest.New("miek.nl. IN NS omval.tednet.nl."),
+		dnstest.New("miek.nl. IN NS omval.tednet.nl."),
+		dnstest.New("miek.nl. IN NS ns-ext.nlnetlabs.nl."),
+	})
+	sort.Sort(rrs)
+	slices.CompactFunc(rrs, func(a, b RR) bool { return Equal(a, b) })
+	for i := range rrs {
+		fmt.Println(rrs[i])
 	}
 }
