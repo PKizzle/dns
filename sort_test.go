@@ -6,7 +6,6 @@ import (
 	"sort"
 	"testing"
 
-	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -162,9 +161,9 @@ func TestEqualName(t *testing.T) {
 
 func ExampleRRset_sort() {
 	rrs := RRset([]RR{
-		dnstest.New("miek.nl. IN NS linode.atoom.net."),
-		dnstest.New("miek.nl. IN NS omval.tednet.nl."),
-		dnstest.New("miek.nl. IN NS ns-ext.nlnetlabs.nl."),
+		func() RR { rr, _ := New("miek.nl. IN NS linode.atoom.net."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS omval.tednet.nl."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS ns-ext.nlnetlabs.nl."); return rr }(),
 	})
 	sort.Sort(rrs)
 	for i := range rrs {
@@ -174,10 +173,10 @@ func ExampleRRset_sort() {
 
 func ExampleRRset_compact() {
 	rrs := RRset([]RR{
-		dnstest.New("miek.nl. IN NS linode.atoom.net."),
-		dnstest.New("miek.nl. IN NS omval.tednet.nl."),
-		dnstest.New("miek.nl. IN NS omval.tednet.nl."),
-		dnstest.New("miek.nl. IN NS ns-ext.nlnetlabs.nl."),
+		func() RR { rr, _ := New("miek.nl. IN NS linode.atoom.net."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS omval.tednet.nl."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS omval.tednet.nl."); return rr }(),
+		func() RR { rr, _ := New("miek.nl. IN NS ns-ext.nlnetlabs.nl."); return rr }(),
 	})
 	sort.Sort(rrs)
 	slices.CompactFunc(rrs, func(a, b RR) bool { return Equal(a, b) })
