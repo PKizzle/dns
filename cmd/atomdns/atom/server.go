@@ -173,7 +173,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.tlsservers = make([]*dns.Server, global.TlsLimits.Servers)
 	s.tlsstarted = make(chan error, len(s.tlsservers))
 	for j := range s.tlsservers {
-		tlsConfig := &tls.Config{}
+		tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12}
 		if global.TlsConfig != nil {
 			tlsConfig = global.TlsConfig.Clone()
 		}

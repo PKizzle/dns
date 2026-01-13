@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
@@ -71,7 +72,7 @@ func New(addr string, mux *dns.ServeMux, fn dns.InvalidMsgFunc) *Server {
 	s := new(Server)
 	h := newHandler(mux, fn)
 	logger := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
-	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger}
+	s.server = &http.Server{Addr: addr, Handler: h, ErrorLog: logger, ReadTimeout: 5 * time.Second}
 	return s
 }
 
