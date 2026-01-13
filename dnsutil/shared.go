@@ -100,7 +100,6 @@ func Canonical(s string) string {
 // octet wire-format limit.
 func IsName(s string) bool {
 	// XXX: The logic in this function was copied from pack.Name and should be kept in sync with that function.
-
 	const lenmsg = 256
 	ls := uint16(len(s))
 
@@ -121,14 +120,11 @@ func IsName(s string) bool {
 			continue
 		}
 		labelLen := i - begin
-		if labelLen >= 1<<6 { // top two bits of length must be clear
+		// top two bits of length must be clear and two dots back to back is not legal
+		if labelLen == 0 || labelLen >= 1<<6 {
 			return false
 		}
-		if labelLen == 0 { // two dots back to back is not legal
-			return false
-		}
-		// off can already (we're in a loop) be bigger than lenmsg
-		// this happens when a name isn't fully qualified
+		// off can already (we're in a loop) be bigger than lenmsg this happens when a name isn't fully qualified
 		off += 1 + labelLen
 		if off > lenmsg {
 			return false
