@@ -138,10 +138,11 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			if len(name)+int(c)+1 > maxNamePresentationLength {
 				return "", &Error{"name exceeded max wire-format octets: " + string(*s)}
 			}
-			var label []byte
-			cs.ReadBytes(&label, int(c))
-			name = append(name, label...)
-			name = append(name, '.')
+
+			ln := len(name)
+			name = name[:ln+int(c)+1]          // extend slice
+			cs.CopyBytes(name[ln : ln+int(c)]) // copy label into correct place
+			name[ln+int(c)] = '.'
 
 		case 0xC0: // pointer
 			if msgBuf == nil {
