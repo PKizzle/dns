@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"net"
 	"net/netip"
+	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 )
@@ -173,15 +174,13 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	if ls == 1 && s[0] == '.' {
 		msg[off] = 0
 		return off + 1, nil
-
 	}
 	if ls > 1 && s[0] == '.' { // leading dots are not legal except for the root zone
 		return len(msg), &Error{"leading dot in name: " + s}
 	}
-	// TODO(miek): add back?
-	//	if !strings.HasSuffix(s, ".") {
-	//		return len(msg), &Error{"name must be fully qualified: " + s}
-	//	}
+	if s[ls-1] != '.' {
+		return len(msg), &Error{"name must be fully qualified: " + s}
+	}
 
 	// Each dot ends a segment of the name. We trade each dot byte for a length byte.
 	// Except for escaped dots (\.), which are normal dots. There is also a trailing zero.
@@ -190,15 +189,18 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	var (
 		begin     int
 		compBegin int
+		labelLen  int
 	)
 
 	lenmsg := len(msg)
-	for i := range ls {
-		if s[i] != '.' {
-			continue
+	for begin < ls {
+		i := strings.IndexByte(s[begin:], '.')
+		if i == -1 {
+			break
 		}
+		i += begin
 
-		labelLen := i - begin
+		labelLen = i - begin
 		if labelLen >= 1<<6 { // top two bits of length must be clear
 			return lenmsg, &Error{"illegal label type in name: " + s}
 		}
@@ -207,32 +209,21 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		}
 
 		// off can already (we're in a loop) be bigger than len(msg)
-		// this happens when a name isn't fully qualified
 		if off+1+labelLen > lenmsg {
 			return lenmsg, &Error{"buffer size too small"}
 		}
 
-		// Don't try to compress '.'
-		// We should only compress when compress is true, but we should also still pick
-		// up names that can be used for *future* compression(s).
-		if compression != nil && labelLen > 1 {
+		if compress && labelLen > 1 { // don't try to compress '.'
 			if p, ok := compression[s[compBegin:]]; ok {
-				// The first hit is the longest matching dname keep the pointer offset we get back and store
-				// the offset of the current name, because that's where we need to insert the pointer later
-
-				// If compress is true, we're allowed to compress this name.
-				if compress {
-					// We have two bytes (14 bits) to put the pointer in.
-					binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
-					return off + 2, nil
-				}
-			} else if off < maxCompressionOffset {
-				// Only offsets smaller than maxCompressionOffset can be used.
-				compression[s[compBegin:]] = uint16(off)
+				binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
+				return off + 2, nil
 			}
 		}
+		if compression != nil && off < maxCompressionOffset {
+			compression[s[compBegin:]] = uint16(off)
+		}
 
-		// The following is covered by the length check above.
+		// the following is covered by the length check above
 		msg[off] = byte(labelLen)
 		copy(msg[off+1:], s[begin:i])
 
