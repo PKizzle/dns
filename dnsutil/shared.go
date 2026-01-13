@@ -101,7 +101,7 @@ func Canonical(s string) string {
 func IsName(s string) bool {
 	// XXX: The logic in this function was copied from pack.Name and should be kept in sync with that function.
 	const lenmsg = 256
-	ls := uint16(len(s))
+	ls := len(s)
 
 	if ls == 1 && s[0] == '.' {
 		return true
@@ -112,13 +112,16 @@ func IsName(s string) bool {
 	}
 
 	var (
-		off   uint16
-		begin uint16
+		off   int
+		begin int
 	)
-	for i := range ls {
-		if s[i] != '.' {
-			continue
+	for begin < ls {
+		i := strings.IndexByte(s[begin:], '.')
+		if i == -1 {
+			break
 		}
+		i += begin
+
 		labelLen := i - begin
 		// top two bits of length must be clear and two dots back to back is not legal
 		if labelLen == 0 || labelLen >= 1<<6 {
