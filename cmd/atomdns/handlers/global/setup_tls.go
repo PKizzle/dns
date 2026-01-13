@@ -44,6 +44,7 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 				g.TlsConfig = &tls.Config{
 					Certificates: []tls.Certificate{cert},
 					NextProtos:   dnshttp.NextProtos,
+					MinVersion:   tls.VersionTLS12,
 				}
 			}
 		case "rootca":
@@ -67,6 +68,7 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 				g.TlsConfig = &tls.Config{
 					NextProtos: dnshttp.NextProtos,
 					RootCAs:    roots,
+					MinVersion: tls.VersionTLS12,
 				}
 			}
 		case "contact":

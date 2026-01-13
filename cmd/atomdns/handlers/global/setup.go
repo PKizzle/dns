@@ -220,7 +220,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				}
 				mux := http.NewServeMux()
 				mux.Handle("/metrics", promhttp.Handler())
-				server := &http.Server{Handler: mux}
+				server := &http.Server{Handler: mux, ReadTimeout: 5 * time.Second}
 				go func() { server.Serve(ln) }()
 				g.MetricsListener = ln
 				return nil
@@ -254,7 +254,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					io.WriteString(w, http.StatusText(http.StatusOK))
 				})
 
-				server := &http.Server{Handler: mux}
+				server := &http.Server{Handler: mux, ReadTimeout: 5 * time.Second}
 				go func() { server.Serve(ln) }()
 				g.HealthListener = ln
 				return nil
@@ -303,7 +303,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				mux.HandleFunc("/debug/pprof/profile", pp.Profile)
 				mux.HandleFunc("/debug/pprof/symbol", pp.Symbol)
 				mux.HandleFunc("/debug/pprof/trace", pp.Trace)
-				server := &http.Server{Handler: mux}
+				server := &http.Server{Handler: mux, ReadTimeout: 5 * time.Second}
 				go func() { server.Serve(ln) }()
 				g.PprofListener = ln
 				return nil

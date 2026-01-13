@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnshttp"
@@ -77,7 +78,7 @@ func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return TCPServer(addr, opts...)
 }
 
-// TLSConfig returns the testing TLS config.
+// TLSConfig returns the testing TLS config. The returned config has InsecureSkipVerify set to true.
 func TLSConfig() *tls.Config {
 	cert, _ := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
@@ -94,7 +95,7 @@ func HTTPServer(addr string, opts ...func(*http.Server)) (func(), string, error)
 	hmux := http.NewServeMux()
 	hh := &handler{}
 	hmux.Handle("/dns-query", hh)
-	hs := &http.Server{Addr: addr, Handler: hmux}
+	hs := &http.Server{Addr: addr, Handler: hmux, ReadTimeout: 5 * time.Second}
 
 	for _, opt := range opts {
 		opt(hs)
