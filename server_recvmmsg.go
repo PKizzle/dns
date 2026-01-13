@@ -45,8 +45,9 @@ Read:
 			if err != nil {
 				continue Read
 			}
-			for i := range msgs[:n] {
+			_ = msgs[:n] // eliminate further bounds checking
 
+			for i := range msgs[:n] {
 				r := &Msg{Data: srv.MsgPool.Get()}
 				copy(r.Data, msgs[i].Buffers[0][:msgs[i].N])
 				r.Data = r.Data[:msgs[i].N]
