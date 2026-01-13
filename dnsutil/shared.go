@@ -117,23 +117,23 @@ func IsName(s string) bool {
 		begin uint16
 	)
 	for i := range ls {
-		switch s[i] {
-		case '.':
-			labelLen := i - begin
-			if labelLen >= 1<<6 { // top two bits of length must be clear
-				return false
-			}
-			if labelLen == 0 { // two dots back to back is not legal
-				return false
-			}
-			// off can already (we're in a loop) be bigger than lenmsg
-			// this happens when a name isn't fully qualified
-			off += 1 + labelLen
-			if off > lenmsg {
-				return false
-			}
-			begin = i + 1
+		if s[i] != '.' {
+			continue
 		}
+		labelLen := i - begin
+		if labelLen >= 1<<6 { // top two bits of length must be clear
+			return false
+		}
+		if labelLen == 0 { // two dots back to back is not legal
+			return false
+		}
+		// off can already (we're in a loop) be bigger than lenmsg
+		// this happens when a name isn't fully qualified
+		off += 1 + labelLen
+		if off > lenmsg {
+			return false
+		}
+		begin = i + 1
 	}
 	return true
 }
