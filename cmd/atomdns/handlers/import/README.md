@@ -32,7 +32,7 @@ not an error.
 You can define snippets to be reused later in your Conffile by defining a block with a single-token
 label surrounded by parentheses:
 
-```corefile
+```conffile
 (mysnippet) {
 	...
 }

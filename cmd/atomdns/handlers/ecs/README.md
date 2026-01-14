@@ -17,7 +17,7 @@ ecs
 
 Enable cookies:
 
-```corefile
+```conffile
 example.org {
     ecs
     whoami

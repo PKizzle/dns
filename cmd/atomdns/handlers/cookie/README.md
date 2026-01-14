@@ -18,7 +18,7 @@ Where **SECRET** is the secret to use in the server cookie generation record.
 
 Enable cookies:
 
-```corefile
+```conffile
 example.org {
     cookie Use the force
     whoami

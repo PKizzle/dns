@@ -29,7 +29,7 @@ whoami
 
 Start a server on the default port and load the _whoami_ handler.
 
-```corefile
+```conffile
 example.org {
     whoami
 }

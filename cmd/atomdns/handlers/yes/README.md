@@ -37,7 +37,7 @@ yes {
 
 # Examples
 
-```corefile
+```conffile
 example.org {
     log
     yes {

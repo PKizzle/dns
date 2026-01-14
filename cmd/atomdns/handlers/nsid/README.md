@@ -20,7 +20,7 @@ Where **DATA** is the string to use in the nsid record. If **DATA** is not given
 
 Enable nsid:
 
-```corefile
+```conffile
 example.org {
     nsid Use the force
     whoami
