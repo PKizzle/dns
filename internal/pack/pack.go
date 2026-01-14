@@ -151,9 +151,8 @@ func A(a netip.Addr, msg []byte, off int) (int, error) {
 		return len(msg), &Error{"invalid a"}
 	}
 	val := a.As4()
-	copy(msg[off:], val[:])
-	off += net.IPv4len
-	return off, nil
+	copy(msg[off:off+net.IPv4len], val[:])
+	return off + net.IPv4len, nil
 }
 
 func AAAA(aaaa netip.Addr, msg []byte, off int) (int, error) {
@@ -161,14 +160,14 @@ func AAAA(aaaa netip.Addr, msg []byte, off int) (int, error) {
 		return len(msg), &Error{"overflow aaaa"}
 	}
 	val := aaaa.As16()
-	copy(msg[off:], val[:])
-	off += net.IPv6len
-	return off, nil
+	copy(msg[off:off+net.IPv6len], val[:])
+	return off + net.IPv6len, nil
 }
 
 func Name(s string, msg []byte, off int, compression map[string]uint16, compress bool) (off1 int, err error) {
 	// XXX: A logical copy of this function exists in dnsutil.IsName and should be kept in sync with this function.
 
+	lenmsg := len(msg)
 	ls := len(s)
 
 	if ls == 1 && s[0] == '.' {
@@ -187,12 +186,10 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 
 	// Emit sequence of counted strings, chopping at dots.
 	var (
-		begin     int
-		compBegin int
-		labelLen  int
+		begin    int
+		labelLen int
 	)
 
-	lenmsg := len(msg)
 	for begin < ls {
 		i := strings.IndexByte(s[begin:], '.')
 		if i == -1 {
@@ -214,13 +211,13 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		}
 
 		if compress && labelLen > 1 { // don't try to compress '.'
-			if p, ok := compression[s[compBegin:]]; ok {
+			if p, ok := compression[s[begin:]]; ok {
 				binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
 				return off + 2, nil
 			}
 		}
 		if compression != nil && off < maxCompressionOffset {
-			compression[s[compBegin:]] = uint16(off)
+			compression[s[begin:]] = uint16(off)
 		}
 
 		// the following is covered by the length check above
@@ -229,7 +226,6 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 
 		off += 1 + labelLen
 		begin = i + 1
-		compBegin = begin
 	}
 
 	msg[off] = 0 // length check needed??

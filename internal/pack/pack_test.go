@@ -1,29 +1,47 @@
 package pack
 
 import (
+	"maps"
 	"testing"
 )
 
 func TestName(t *testing.T) {
+	newmap := func(a ...any) map[string]uint16 {
+		m := map[string]uint16{}
+		for i := 0; i < len(a); i += 2 {
+			m[a[i].(string)] = uint16(a[i+1].(int))
+		}
+		return m
+	}
+
 	testcases := []struct {
-		in string
-		ok bool
+		in   string
+		ok   bool
+		comp map[string]uint16
 	}{
-		{`www\.this.is.\131an.example.org.`, true},
-		{`www.example.org.`, true},
-		{`www.example.org`, false},
-		{`org.`, true},
-		{`.`, true},
-		{`..`, false},
-		{`.org`, false},
-		{`www..example.org.`, false},
-		{`www.example.org..`, false},
+		{`www.this.is.an.example.org.`, true, newmap("this.is.an.example.org.", 4, "www.this.is.an.example.org.", 0,
+			"an.example.org.", 12, "example.org.", 15, "is.an.example.org.", 9, "org.", 23)},
+		{`www.example.org.`, true, newmap("www.example.org.", 0, "example.org.", 4, "org.", 12)},
+		{`www.example.org`, false, nil},
+		{`org.`, true, newmap("org.", 0)},
+		{`.`, true, newmap()},
+		{`..`, false, nil},
+		{`.org`, false, nil},
+		{`www..example.org.`, false, nil},
+		{`www.example.org..`, false, nil},
 	}
 	buf := make([]byte, 256)
 	for _, tc := range testcases {
-		_, got := Name(tc.in, buf, 0, nil, false)
+		comp := map[string]uint16{}
+		_, got := Name(tc.in, buf, 0, comp, true)
 		if (got == nil) != tc.ok {
 			t.Errorf("expected %t for name %q: %v", tc.ok, tc.in, got)
+		}
+		if !tc.ok {
+			continue
+		}
+		if !maps.Equal(comp, tc.comp) {
+			t.Errorf("expected compression map\n %v, got\n %v", tc.comp, comp)
 		}
 	}
 }
