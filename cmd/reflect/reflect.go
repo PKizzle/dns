@@ -62,10 +62,6 @@ const dom = "whoami.miek.nl."
 var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-	var (
-		rr dns.RR
-		a  netip.Addr
-	)
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
@@ -73,17 +69,22 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
 	r.Response = true
 
-	if ip, ok := w.RemoteAddr().(*net.UDPAddr); ok {
-		a = ip.AddrPort().Addr()
+	var ip netip.Addr
+	switch a := w.RemoteAddr().(type) {
+	case *net.UDPAddr:
+		ip, _ = netip.AddrFromSlice(a.IP)
+	case *net.TCPAddr:
+		ip, _ = netip.AddrFromSlice(a.IP)
 	}
-	if ip, ok := w.RemoteAddr().(*net.TCPAddr); ok {
-		a = ip.AddrPort().Addr()
+	if ip.Is4In6() {
+		ip = netip.AddrFrom4(ip.As4())
 	}
 
-	if dnsutil.Family(w) == 1 {
-		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: rdata.A{Addr: a}}
+	var rr dns.RR
+	if ip.Is4() {
+		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: rdata.A{Addr: ip}}
 	} else {
-		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: a}}
+		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: ip}}
 	}
 
 	sb := builderPool.Get()
