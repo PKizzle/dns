@@ -57,6 +57,9 @@ func Family(w dns.ResponseWriter) int {
 		a = i.AddrPort().Addr()
 	}
 
+	if a.Is4In6() {
+		return IPv4Family
+	}
 	if a.Is4() {
 		return IPv4Family
 	}
