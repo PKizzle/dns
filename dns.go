@@ -232,11 +232,6 @@ type Msg struct {
 	// section (this will then be zero) and avoid RRToType which is slightly slower in the hot path.
 	qtype uint16
 
-	// ps tracks if there is a real RR in the pseudo section. Either TSIG or SIG(0)
-	// The number of virtual RR in pseudo is len(Pseudo). This is set after Unpack.
-	// The OPT RR is completely hidden from view, only m.Data holds that.
-	ps bool
-
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
 	Options MsgOption
 }

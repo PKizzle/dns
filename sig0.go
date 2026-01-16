@@ -18,10 +18,6 @@ func SIG0Sign(m *Msg, k SIG0Signer, options *SIG0Option) error {
 		}
 	}
 
-	if !m.ps {
-		return ErrNoSIG0.Fmt(": %s", "sign")
-	}
-
 	s := hasSIG0(m)
 	if s == nil {
 		return ErrNoSIG0.Fmt(": %s", "sign")
@@ -61,10 +57,6 @@ func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options *SIG0Option) error {
 		if err := m.Pack(); err != nil {
 			return err
 		}
-	}
-
-	if !m.ps {
-		return ErrNoSIG0.Fmt(": %s", "verify")
 	}
 
 	s := hasSIG0(m)

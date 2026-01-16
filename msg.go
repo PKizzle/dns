@@ -276,7 +276,6 @@ func (m *Msg) Pack() error {
 			if _, off, err = packRR(m.Pseudo[i], m.Data, off, compression); err != nil {
 				return err
 			}
-			m.ps = true
 		}
 	}
 	m.Data = m.Data[:off]
@@ -393,7 +392,7 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 				m.Pseudo[i] = RR(opt.Options[i])
 			}
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place taken with last rr
-			m.Extra = m.Extra[:len(m.Extra)]     // remove the OPT RR
+			m.Extra = m.Extra[:len(m.Extra)-1]   // remove the OPT RR
 
 			break
 		}
@@ -407,9 +406,8 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 		if ok1 || ok2 {
 			m.Pseudo = append(m.Pseudo, m.Extra[i])
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place taken with last rr
-			m.Extra = m.Extra[:len(m.Extra)]     // remove the sig/tsig RR
+			m.Extra = m.Extra[:len(m.Extra)-1]   // remove the sig/tsig RR
 
-			m.ps = true
 			break
 		}
 	}
@@ -843,7 +841,6 @@ func (m *Msg) Copy() *Msg {
 		Answer:    m.Answer,
 		Ns:        m.Ns,
 		Extra:     m.Extra,
-		ps:        m.ps,
 		Pseudo:    m.Pseudo,
 		Stateful:  m.Stateful,
 		Data:      m.Data,

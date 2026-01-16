@@ -30,10 +30,6 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 		}
 	}
 
-	if !m.ps {
-		return ErrNoTSIG.Fmt(": %s", "sign")
-	}
-
 	t := hasTSIG(m)
 	if t == nil {
 		return ErrNoTSIG.Fmt(": %s", "sign")
@@ -87,10 +83,6 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 		if err := m.Pack(); err != nil {
 			return err
 		}
-	}
-
-	if !m.ps {
-		return ErrNoTSIG.Fmt(": %s", "verify")
 	}
 
 	t := hasTSIG(m)
