@@ -5,7 +5,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"structs"
 	"sync/atomic"
 
 	"codeberg.org/miekg/dns/pkg/pool"
@@ -210,7 +209,6 @@ type MsgHeader struct {
 // Msg implements [iter.Seq], so you can range over it, when doing so the RRs of each section are returned,
 // this includes the pseudo section.
 type Msg struct {
-	_ structs.HostLayout
 	MsgHeader
 
 	// Question holds a single "RR", in quotes because it is only the domain name, type and class that is
