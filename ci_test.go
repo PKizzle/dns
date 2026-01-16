@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -15,7 +16,7 @@ func init() {
 	os.Remove("cmd/atomdns/atomdns")
 }
 
-func TestPrintln(t *testing.T) {
+func TestPrint(t *testing.T) {
 	files, _ := filepath.Glob("*.go")
 	subdirFiles, _ := filepath.Glob("*/*.go")
 	files = append(files, subdirFiles...)
@@ -33,6 +34,17 @@ func TestPrintln(t *testing.T) {
 		}
 
 		ast.Inspect(node, func(n ast.Node) bool {
+			sel, ok := n.(*ast.SelectorExpr)
+			if ok {
+				if sel.Sel.Name == "Printf" {
+					pkg := fmt.Sprintf("%s", sel.X)
+					if pkg == "fmt" {
+						pos := fset.Position(sel.Pos())
+						t.Errorf("%s:%d:%d: use of %s()", file, pos.Line, pos.Column, "fmt.Printf")
+					}
+				}
+			}
+
 			call, ok := n.(*ast.CallExpr)
 			if !ok {
 				return true

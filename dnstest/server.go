@@ -3,7 +3,7 @@ package dnstest
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"time"
@@ -22,7 +22,7 @@ func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening st
 	wait := make(chan error, 1)
 	s.NotifyStartedFunc = func(context.Context) { wait <- nil }
 	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
-		fmt.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
+		log.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
 	}
 
 	for _, opt := range opts {
