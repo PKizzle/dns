@@ -8,9 +8,7 @@ import (
 func newMsgWithTSIG() *Msg {
 	m := NewMsg("miek.nl.", TypeMX)
 	m.ID = 3
-
-	tsig := NewTSIG("example.", HmacSHA256, 0)
-	m.Pseudo = []RR{tsig}
+	m.Pseudo = []RR{NewTSIG("example.", HmacSHA256, 0)}
 	m.Pack()
 	return m
 }
@@ -44,7 +42,7 @@ func TestTSIG(t *testing.T) {
 
 			err := TSIGVerify(m, hmac, &option)
 			if err != tc.err {
-				t.Fatalf("expecpted %v error, got: %s", tc.err, err)
+				t.Fatalf("expected %v error, got: %s", tc.err, err)
 			}
 		})
 	}
