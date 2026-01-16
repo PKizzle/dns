@@ -1,6 +1,7 @@
 package pack
 
 import (
+	"fmt"
 	"maps"
 	"testing"
 )
@@ -31,18 +32,20 @@ func TestName(t *testing.T) {
 		{`www.example.org..`, false, nil},
 	}
 	buf := make([]byte, 256)
-	for _, tc := range testcases {
-		comp := map[string]uint16{}
-		_, got := Name(tc.in, buf, 0, comp, true)
-		if (got == nil) != tc.ok {
-			t.Errorf("expected %t for name %q: %v", tc.ok, tc.in, got)
-		}
-		if !tc.ok {
-			continue
-		}
-		if !maps.Equal(comp, tc.comp) {
-			t.Errorf("expected compression map\n %v, got\n %v", tc.comp, comp)
-		}
+	for i, tc := range testcases {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			comp := map[string]uint16{}
+			_, got := Name(tc.in, buf, 0, comp, true)
+			if (got == nil) != tc.ok {
+				t.Errorf("expected %t for name %q: %v", tc.ok, tc.in, got)
+			}
+			if !tc.ok {
+				return
+			}
+			if !maps.Equal(comp, tc.comp) {
+				t.Errorf("expected compression map\n %v, got\n %v", tc.comp, comp)
+			}
+		})
 	}
 }
 
