@@ -718,7 +718,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.Addr)
 			if m.msgPool != nil && !m.hijacked.Load() {
 				m.msgPool.Put(m.Data)
-				m.Data = nil
+				m.Data, m.msgPool = nil, nil
 			}
 			return int64(n), err
 		}
@@ -726,7 +726,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		n, err := r.Conn().Write(m.Data)
 		if m.msgPool != nil && !m.hijacked.Load() {
 			m.msgPool.Put(m.Data)
-			m.Data = nil
+			m.Data, m.msgPool = nil, nil
 		}
 		return int64(n), err
 	}
@@ -737,7 +737,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	n, err := r.Write(l)
 	if m.msgPool != nil && !m.hijacked.Load() {
 		m.msgPool.Put(m.Data)
-		m.Data = nil
+		m.Data, m.msgPool = nil, nil
 	}
 	return int64(n), err
 }
