@@ -174,6 +174,8 @@ type MsgHeader struct {
 	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
 	Options MsgOption
 
+	Opcode uint8
+
 	ID uint16
 
 	Rcode uint16 // Rcode is the message response code, extended rcodes can be set here as well.
@@ -183,7 +185,6 @@ type MsgHeader struct {
 	UDPSize uint16 // UDPSize is the OPT's RR advertised UDP size.
 	Version uint8  // Version is the EDNS version, always zero.
 
-	Opcode             uint8
 	Response           bool
 	Authoritative      bool
 	Truncated          bool
