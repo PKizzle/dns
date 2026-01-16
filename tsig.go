@@ -163,11 +163,10 @@ type TSIGSigner interface {
 }
 
 func hasTSIG(m *Msg) *TSIG {
-	// TODO(miek): should be last rr in this section, don't need to iterate.
-	for i := range m.Pseudo {
-		if t, ok := m.Pseudo[i].(*TSIG); ok {
-			return t
-		}
+	lp := len(m.Pseudo)
+	if lp == 0 {
+		return nil
 	}
-	return nil
+	t, _ := m.Pseudo[lp-1].(*TSIG)
+	return t
 }

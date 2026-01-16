@@ -104,10 +104,10 @@ type SIG0Signer interface {
 }
 
 func hasSIG0(m *Msg) *SIG {
-	for i := range m.Pseudo {
-		if s, ok := m.Pseudo[i].(*SIG); ok {
-			return s
-		}
+	lp := len(m.Pseudo)
+	if lp == 0 {
+		return nil
 	}
-	return nil
+	s, _ := m.Pseudo[lp-1].(*SIG)
+	return s
 }
