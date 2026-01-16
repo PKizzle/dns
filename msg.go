@@ -392,9 +392,9 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 			for i := range opt.Options {
 				m.Pseudo[i] = RR(opt.Options[i])
 			}
-
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place taken with last rr
 			m.Extra = m.Extra[:len(m.Extra)]     // remove the OPT RR
+
 			break
 		}
 	}
@@ -405,10 +405,11 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 		_, ok1 := m.Extra[i].(*TSIG)
 		_, ok2 := m.Extra[i].(*SIG)
 		if ok1 || ok2 {
-			m.ps = true
 			m.Pseudo = append(m.Pseudo, m.Extra[i])
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place taken with last rr
 			m.Extra = m.Extra[:len(m.Extra)]     // remove the sig/tsig RR
+
+			m.ps = true
 			break
 		}
 	}
