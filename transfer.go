@@ -81,8 +81,6 @@ func (c *Client) TransferInWithConn(ctx context.Context, m *Msg, conn net.Conn) 
 			return nil, err
 		}
 	}
-	println("TSIG SIGN", m.String())
-	println("******************")
 	// if.SIG0Signer != nil {} // TODO(miek): implement the whole SIG0 dance
 
 	remote := &response{conn: conn} // for Session() call in msg.go#L926
@@ -142,9 +140,6 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			ch <- &Envelope{Error: ErrRcode.Fmt(": %s", rcodeToString(r.Rcode))}
 			return
 		}
-		println(r.String())
-		println("r.UNPACK *************")
-		println(r.String())
 
 		r.Options = MsgOptionUnpack
 		err := r.Unpack()
