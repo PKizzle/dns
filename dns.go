@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"structs"
 	"sync/atomic"
 
 	"codeberg.org/miekg/dns/pkg/pool"
@@ -165,6 +166,15 @@ type DSO interface {
 // MsgHeader is the header of a DNS message. This contains most header bits, except Rcode as that needs to be
 // set via a function because of the extended Rcode that lives in the pseudo section.
 type MsgHeader struct {
+	// Both qtype and Options are moved there to aid in struct alignment.
+	// aligo -s Msg view .  shows 4 bytes padding for the hijacked field
+
+	// optimization to put the qtype directly in the message, shortcuts needing to actually have a question
+	// section (this will then be zero) and avoid RRToType which is slightly slower in the hot path.
+	qtype uint16
+	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
+	Options MsgOption
+
 	ID uint16
 
 	Rcode uint16 // Rcode is the message response code, extended rcodes can be set here as well.
@@ -200,6 +210,7 @@ type MsgHeader struct {
 // Msg implements [iter.Seq], so you can range over it, when doing so the RRs of each section are returned,
 // this includes the pseudo section.
 type Msg struct {
+	_ structs.HostLayout
 	MsgHeader
 
 	// Question holds a single "RR", in quotes because it is only the domain name, type and class that is
@@ -218,28 +229,21 @@ type Msg struct {
 
 	// The Stateful section is a virtual section that holds the DSO option, that are interpreted (and shown)
 	// as RRs. There is no OPT like record that holds these, the whole message format is slightly different.
-	Stateful []RR // Holds the DSO RR(s) for Stateful operations, see RFC 8490.
-
-	// Data is the data of the message that was either received from the wire or is about to be send
-	// over the wire. Note that this data is a snapshot of the Msg when it was packed or unpacked.
-	Data []byte
+	// Stateful []RR // Holds the DSO RR(s) for Stateful operations, see RFC 8490.
 
 	// msgPool is the [Pooler] from the server, *iff* the message was created by reading data from the wire.
 	msgPool  pool.Pooler
 	hijacked atomic.Bool // pool's allocation has been hijacked by caller
 
-	// optimization to put the qtype directly in the message, shortcuts needing to actually have a question
-	// section (this will then be zero) and avoid RRToType which is slightly slower in the hot path.
-	qtype uint16
-
-	// Option is a bit mask of options that control the unpacking. When zero the entire message is unpacked.
-	Options MsgOption
+	// Data is the data of the message that was either received from the wire or is about to be send
+	// over the wire. Note that this data is a snapshot of the Msg when it was packed or unpacked.
+	Data []byte
 }
 
 // Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
 // you only want to unpack the Question section you must also set unpack header: OptionUnpackHeader |
 // OptionUnpackQuestion.
-type MsgOption uint8
+type MsgOption uint16
 
 const (
 	MsgOptionUnpack         MsgOption = 0         // Unpack the entire message, mostly defined to serve as documentation.

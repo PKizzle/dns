@@ -373,8 +373,6 @@ func (m *Msg) unpack(dh header, msg, msgBuf []byte) error {
 		return err
 	}
 
-	m.Pseudo, m.Stateful = nil, nil // we append here, so don't want carry stuff from before with us
-
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
 	// section. We will only check one OPT, any others will be left in Extra.
 	for i := 0; i < len(m.Extra); i++ {
@@ -819,11 +817,6 @@ func (m *Msg) RRs() iter.Seq[RR] {
 					return
 				}
 			}
-			for i := range m.Stateful {
-				if !yield(m.Stateful[i]) {
-					return
-				}
-			}
 			break
 		}
 	}
@@ -836,15 +829,12 @@ func (m *Msg) RRs() iter.Seq[RR] {
 func (m *Msg) Copy() *Msg {
 	return &Msg{
 		MsgHeader: m.MsgHeader,
-		qtype:     m.qtype,
 		Question:  m.Question,
 		Answer:    m.Answer,
 		Ns:        m.Ns,
 		Extra:     m.Extra,
 		Pseudo:    m.Pseudo,
-		Stateful:  m.Stateful,
 		Data:      m.Data,
-		Options:   m.Options,
 		msgPool:   m.msgPool,
 	}
 }
