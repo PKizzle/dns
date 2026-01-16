@@ -230,18 +230,18 @@ type Msg struct {
 	// Stateful []RR // Holds the DSO RR(s) for Stateful operations, see RFC 8490.
 
 	// msgPool is the [Pooler] from the server, *iff* the message was created by reading data from the wire.
-	msgPool  pool.Pooler
-	hijacked atomic.Bool // pool's allocation has been hijacked by caller
+	msgPool pool.Pooler
 
 	// Data is the data of the message that was either received from the wire or is about to be send
 	// over the wire. Note that this data is a snapshot of the Msg when it was packed or unpacked.
-	Data []byte
+	Data     []byte
+	hijacked atomic.Bool // pool's allocation has been hijacked by caller
 }
 
 // Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
 // you only want to unpack the Question section you must also set unpack header: OptionUnpackHeader |
 // OptionUnpackQuestion.
-type MsgOption uint16
+type MsgOption uint8
 
 const (
 	MsgOptionUnpack         MsgOption = 0         // Unpack the entire message, mostly defined to serve as documentation.
