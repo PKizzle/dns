@@ -40,9 +40,6 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	}
 
 	last := len(m.Ns) + len(m.Answer) + len(m.Extra) // skip question as 0th, is the first after question
-	if last == 0 {
-		return ErrNoTSIG.Fmt(": %s", "sign")
-	}
 	off := jump.To(last, m.Data)
 	if off == 0 {
 		return ErrNoTSIG.Fmt(": %s", "sign")
@@ -110,9 +107,6 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	}
 
 	last := len(m.Answer) + len(m.Ns) + len(m.Extra)
-	if last == 0 {
-		return ErrNoTSIG.Fmt(": %s", "verify")
-	}
 	off := jump.To(last, m.Data)
 	if off == 0 {
 		return ErrNoTSIG.Fmt(": %s", "verify")
@@ -169,6 +163,7 @@ type TSIGSigner interface {
 }
 
 func hasTSIG(m *Msg) *TSIG {
+	// TODO(miek): should be last rr in this section, don't need to iterate.
 	for i := range m.Pseudo {
 		if t, ok := m.Pseudo[i].(*TSIG); ok {
 			return t

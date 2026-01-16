@@ -28,9 +28,6 @@ func SIG0Sign(m *Msg, k SIG0Signer, options *SIG0Option) error {
 	}
 
 	last := len(m.Ns) + len(m.Answer) + len(m.Extra) // skip question as 0th, is the first after question
-	if last == 0 {
-		return ErrNoSIG0.Fmt(": %s", "sign")
-	}
 	off := jump.To(last, m.Data)
 	if off == 0 {
 		return ErrNoSIG0.Fmt(": %s", "sign")
@@ -76,9 +73,6 @@ func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options *SIG0Option) error {
 	}
 
 	last := len(m.Answer) + len(m.Ns) + len(m.Extra)
-	if last == 0 {
-		return ErrNoSIG0.Fmt(": %s", "verify")
-	}
 	off := jump.To(last, m.Data)
 	if off == 0 {
 		return ErrNoSIG0.Fmt(": %s", "verify")
