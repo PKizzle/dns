@@ -1,6 +1,7 @@
 MACHINE := $(shell uname -m)
 ARCH := $(patsubst aarch64,arm64,$(MACHINE))
 ARCH := $(patsubst x86_64,amd64,$(ARCH))
+HOSTNAME ?= $(shell hostname)
 PERF := $(ARCH)/${HOSTNAME}
 
 reflect:

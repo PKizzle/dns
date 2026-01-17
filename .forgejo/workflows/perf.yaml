@@ -16,11 +16,4 @@ jobs:
           export HOSTNAME=runner
           make new.txt
           go install golang.org/x/perf/cmd/benchstat@latest
-          make stat > /tmp/benchstat
-      - uses:  actions/upload-artifact@v3
-        with:
-          name: benchstat
-          compression-level: 0
-          path: /tmp/benchstat
-      - name: artifact ID
-        run:  echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-id }}'
+          make stat | tee /tmp/benchstat
