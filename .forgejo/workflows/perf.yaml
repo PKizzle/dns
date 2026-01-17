@@ -13,6 +13,7 @@ jobs:
           name: benchstat
           path: /tmp/benchstat
       - run: |
+          wget https://miek.nl/libldns3_1.8.3-1+b1_amd64.deb && dpkg -i libldns3_1.8.3-1+b1_amd64.deb
           wget https://miek.nl/dnsperf_2.10.0-2_amd64.deb && dpkg -i dnsperf_2.10.0-2_amd64.deb
           cd cmd/reflect
           go build
