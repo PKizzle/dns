@@ -8,10 +8,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: ${{ vars.GOVERSION }}
-      - uses: https://github.com/thollander/actions-comment-pull-request@v3
-        with:
-          name: benchstat
-          file-path: /tmp/benchstat
       - run: |
           wget https://miek.nl/libldns3_1.8.3-1+b1_amd64.deb && dpkg -i libldns3_1.8.3-1+b1_amd64.deb
           wget https://miek.nl/dnsperf_2.10.0-2_amd64.deb && dpkg -i dnsperf_2.10.0-2_amd64.deb
@@ -21,3 +17,7 @@ jobs:
           make new.txt
           go install golang.org/x/perf/cmd/benchstat@latest
           make stat > /tmp/benchstat
+      - uses: https://github.com/thollander/actions-comment-pull-request@v3
+        with:
+          name: benchstat
+          file-path: /tmp/benchstat
