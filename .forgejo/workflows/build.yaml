@@ -23,7 +23,7 @@ jobs:
           name: benchstat
           path: /tmp/benchstat
       - run: |
-          apt-get install -y dnsperf
+          wget https://miek.nl/dnsperf_2.10.0-2_amd64.deb && sudo dpkg -i dnsperf_2.10.0-2_amd64.deb
           cd cmd/reflect
           go build
           export HOSTNAME=runner
