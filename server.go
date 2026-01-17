@@ -283,9 +283,11 @@ func (srv *Server) serveTCP(wg *sync.WaitGroup, conn net.Conn) {
 		r := &Msg{Data: srv.MsgPool.Get()}
 		if _, err := r.ReadFrom(conn); err != nil {
 			if isEOFOrClosedNetwork(err) {
+				srv.MsgPool.Put(r.Data)
 				break
 			}
 			srv.MsgInvalidFunc(r, err)
+			srv.MsgPool.Put(r.Data)
 			continue
 		}
 
