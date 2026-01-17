@@ -3,28 +3,30 @@
 goos: linux
 goarch: arm64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerfudp-8	380769			2626.3 ns/op
-BenchmarkDNSPerfudp-8	399712			2501.8 ns/op
-BenchmarkDNSPerfudp-8	401883			2488.3 ns/op
-BenchmarkDNSPerfudp-8	397247			2517.3 ns/op
-BenchmarkDNSPerfudp-8	376086			2659.0 ns/op
-BenchmarkDNSPerfudp-8	369221			2708.4 ns/op
-BenchmarkDNSPerfudp-8	391832			2552.1 ns/op
-BenchmarkDNSPerfudp-8	395685			2527.3 ns/op
+BenchmarkDNSPerfudp-8	391102			2556.9 ns/op
+BenchmarkDNSPerfudp-8	421239			2373.9 ns/op
+BenchmarkDNSPerfudp-8	417623			2394.5 ns/op
+BenchmarkDNSPerfudp-8	420096			2380.4 ns/op
+BenchmarkDNSPerfudp-8	415406			2407.3 ns/op
+BenchmarkDNSPerfudp-8	419288			2385.0 ns/op
+BenchmarkDNSPerfudp-8	417977			2392.5 ns/op
+BenchmarkDNSPerfudp-8	417728			2393.9 ns/op
+    reflect_test.go:43: canceled executing: udp
 === RUN   TestReflect/reflect-tcp
 goos: linux
 goarch: arm64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerftcp-8	324107			3085.4 ns/op
-BenchmarkDNSPerftcp-8	321223			3113.1 ns/op
-BenchmarkDNSPerftcp-8	324910			3077.8 ns/op
-BenchmarkDNSPerftcp-8	325051			3076.4 ns/op
-BenchmarkDNSPerftcp-8	323349			3092.6 ns/op
-BenchmarkDNSPerftcp-8	319773			3127.2 ns/op
-BenchmarkDNSPerftcp-8	322143			3104.2 ns/op
-BenchmarkDNSPerftcp-8	326108			3066.5 ns/op
+BenchmarkDNSPerftcp-8	337896			2959.5 ns/op
+BenchmarkDNSPerftcp-8	336167			2974.7 ns/op
+BenchmarkDNSPerftcp-8	338222			2956.6 ns/op
+BenchmarkDNSPerftcp-8	335022			2984.9 ns/op
+BenchmarkDNSPerftcp-8	335380			2981.7 ns/op
+BenchmarkDNSPerftcp-8	335934			2976.8 ns/op
+BenchmarkDNSPerftcp-8	337172			2965.8 ns/op
+BenchmarkDNSPerftcp-8	336682			2970.2 ns/op
+    reflect_test.go:43: canceled executing: tcp
 --- PASS: TestReflect (34.16s)
     --- PASS: TestReflect/reflect-udp (17.08s)
     --- PASS: TestReflect/reflect-tcp (17.08s)
 PASS
-ok  	codeberg.org/miekg/dns/cmd/reflect	34.160s
+ok  	codeberg.org/miekg/dns/cmd/reflect	34.162s
