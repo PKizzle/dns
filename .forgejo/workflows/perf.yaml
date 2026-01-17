@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: ${{ vars.GOVERSION }}
-      - uses: thollander/actions-comment-pull-request@v3
+      - uses: https://github.com/thollander/actions-comment-pull-request@v3
         with:
           name: benchstat
           path: /tmp/benchstat
