@@ -339,10 +339,7 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 		}
 		dst = append(dst, r)
 	}
-	if cnt != uint16(len(dst)) {
-		return dst, unpack.Errorf("section count mismatch: %d != %d", cnt, len(dst))
 
-	}
 	return dst, nil
 }
 
