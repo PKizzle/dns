@@ -9,15 +9,16 @@ jobs:
         with:
           go-version: ${{ vars.GOVERSION }}
       - run: |
-          wget https://miek.nl/libldns3_1.8.3-1+b1_amd64.deb && dpkg -i libldns3_1.8.3-1+b1_amd64.deb
-          wget https://miek.nl/dnsperf_2.10.0-2_amd64.deb && dpkg -i dnsperf_2.10.0-2_amd64.deb
-          cd cmd/reflect
-          go build
-          export HOSTNAME=runner
-          make new.txt
-          go install golang.org/x/perf/cmd/benchstat@latest
-          make stat > /tmp/benchstat
-      - uses:  actions/upload-artifact@v6
+          #wget https://miek.nl/libldns3_1.8.3-1+b1_amd64.deb && dpkg -i libldns3_1.8.3-1+b1_amd64.deb
+          #wget https://miek.nl/dnsperf_2.10.0-2_amd64.deb && dpkg -i dnsperf_2.10.0-2_amd64.deb
+          #cd cmd/reflect
+          #go build
+          #export HOSTNAME=runner
+          #make new.txt
+          #go install golang.org/x/perf/cmd/benchstat@latest
+          echo hallo > /tmp/benchstat
+          #make stat > /tmp/benchstat
+      - uses:  actions/upload-artifact@v3
         with:
           name: benchstat
           path: /tmp/benchstat
