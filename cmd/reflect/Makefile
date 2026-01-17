@@ -1,8 +1,7 @@
 MACHINE := $(shell uname -m)
 ARCH := $(patsubst aarch64,arm64,$(MACHINE))
 ARCH := $(patsubst x86_64,amd64,$(ARCH))
-HOST := $(shell hostname)
-PERF := $(ARCH)/$(HOST)
+PERF := $(ARCH)/${HOSTNAME}
 
 reflect:
 	go build

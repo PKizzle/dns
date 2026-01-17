@@ -23,8 +23,10 @@ jobs:
           name: benchstat
           path: /tmp/benchstat
       - run: |
+          apt-get install -y dnsperf
           cd cmd/reflect
           go build
+          export HOSTNAME=runner
           make new.txt
           go install golang.org/x/perf/cmd/benchstat@latest
           make stat > /tmp/benchstat
