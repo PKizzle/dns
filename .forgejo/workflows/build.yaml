@@ -11,22 +11,3 @@ jobs:
       - run: |
           go build
           go test -race -v ./...
-  perf:
-    runs-on: atoom
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: ${{ vars.GOVERSION }}
-      - uses: actions/upload-artifact@v6
-        with:
-          name: benchstat
-          path: /tmp/benchstat
-      - run: |
-          wget https://miek.nl/dnsperf_2.10.0-2_amd64.deb && dpkg -i dnsperf_2.10.0-2_amd64.deb
-          cd cmd/reflect
-          go build
-          export HOSTNAME=runner
-          make new.txt
-          go install golang.org/x/perf/cmd/benchstat@latest
-          make stat > /tmp/benchstat
