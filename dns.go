@@ -242,9 +242,10 @@ type Msg struct {
 	hijacked atomic.Bool // pool's allocation has been hijacked by caller
 }
 
-// Option is an option on how to handle a message. Options can be combined, but that have to be "in order", if
-// you only want to unpack the Question section you must also set unpack header: OptionUnpackHeader |
-// OptionUnpackQuestion.
+// Option is an option on how to handle a message. The options are ordered, MsgOptionUnpackQuestion will also
+// unpack the header of the message. If MsgOptionUnpackQuestion is used, Unpack will track where it left off
+// and then skip unpacking the question section in a subsequent Unpack that is done to get the entire message
+// of which the header and question section where previously deemed valid.
 type MsgOption uint8
 
 const (
@@ -252,7 +253,7 @@ const (
 	MsgOptionUnpackHeader   MsgOption = 1 << iota // Unpack only the header of the message.
 	MsgOptionUnpackQuestion                       // Unpack up the question section of the message.
 	MsgOptionUnpackAnswer                         // Unpack up to the answer section of the message.
-	// OptionNoBufferUse // reuse buffers? Or something else that tells what to do do with the buffer.
+
 )
 
 // Convert a MsgHeader to a string, with dig-like headers:
