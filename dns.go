@@ -165,6 +165,8 @@ type DSO interface {
 // MsgHeader is the header of a DNS message. This contains most header bits, except Rcode as that needs to be
 // set via a function because of the extended Rcode that lives in the pseudo section.
 type MsgHeader struct {
+	offset uint16
+
 	// Both qtype and Options are moved there to aid in struct alignment.
 	// aligo -s Msg view .  shows 4 bytes padding for the hijacked field
 
@@ -198,6 +200,7 @@ type MsgHeader struct {
 	Security       bool // Security is the DNSSEC OK bit, see RFC 403{3,4,5}.
 	CompactAnswers bool // Compact Answers OK, https://datatracker.ietf.org/doc/draft-ietf-dnsop-compact-denial-of-existence/.
 	Delegation     bool // Delegation is the DELEG OK bit, see https://datatracker.ietf.org/doc/draft-ietf-deleg/.
+
 }
 
 // Msg is a DNS message. Each message has a Data field that contains the binary data buffer. This is filled when

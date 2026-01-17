@@ -343,31 +343,33 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 	return dst, nil
 }
 
-func (m *Msg) unpack(dh header, s *cryptobyte.String, msgBuf []byte) error {
-	var err error
-	m.Question, err = m.unpackQuestions(dh.Qdcount, s, msgBuf)
-	if err != nil {
+func (m *Msg) unpack(dh header, s *cryptobyte.String, msgBuf []byte) (err error) {
+	if m.offset > MsgHeaderSize {
+		s.Skip(int(m.offset - MsgHeaderSize)) // should never fail...?
+		goto Rest
+	}
+
+	if m.Question, err = m.unpackQuestions(dh.Qdcount, s, msgBuf); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
+		m.offset = uint16(len(msgBuf) - len(*s))
 		return nil
 	}
 
-	m.Answer, err = unpackRRs(dh.Ancount, s, msgBuf)
-	if err != nil {
+Rest:
+	if m.Answer, err = unpackRRs(dh.Ancount, s, msgBuf); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
-	m.Ns, err = unpackRRs(dh.Nscount, s, msgBuf)
-	if err != nil {
+	if m.Ns, err = unpackRRs(dh.Nscount, s, msgBuf); err != nil {
 		return err
 	}
 
-	m.Extra, err = unpackRRs(dh.Arcount, s, msgBuf)
-	if err != nil {
+	if m.Extra, err = unpackRRs(dh.Arcount, s, msgBuf); err != nil {
 		return err
 	}
 
@@ -669,6 +671,7 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 			return 0, err
 		}
 	}
+	m.offset = 0
 
 	n = copy(m.Data, p)
 	return n, nil
@@ -682,6 +685,7 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 			return 0, err
 		}
 	}
+	m.offset = 0
 
 	n = copy(p, m.Data)
 	return n, nil
@@ -704,6 +708,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 			return 0, err
 		}
 	}
+	m.offset = 0
 
 	if rc, ok := w.(ResponseController); ok {
 		rc.SetWriteDeadline()
@@ -749,6 +754,7 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 			return 0, err
 		}
 	}
+	m.offset = 0
 
 	if sock, ok := r.(*net.UDPConn); ok {
 		n, err := sock.Read(m.Data)
