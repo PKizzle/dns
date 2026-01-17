@@ -17,7 +17,7 @@ jobs:
           make new.txt
           go install golang.org/x/perf/cmd/benchstat@latest
           make stat > /tmp/benchstat
-      - uses: https://github.com/thollander/actions-comment-pull-request@v3
+      - uses:  actions/upload-artifact@v6
         with:
           name: benchstat
-          file-path: /tmp/benchstat
+          path: /tmp/benchstat
