@@ -66,7 +66,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		log.Fatalf("%s", err.Error())
 	}
 	// re-use r
-	r.Answer, r.Ns, r.Extra, r.Pseudo = nil, nil, nil, nil
+	r.Answer, r.Ns, r.Extra, r.Pseudo = r.Answer[:0], r.Ns[:0], r.Extra[:0], r.Pseudo[:0]
 	r.Response = true
 
 	var ip netip.Addr
@@ -98,11 +98,11 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 
 	switch r.Question[0].(type) {
 	case *dns.TXT:
-		r.Answer = []dns.RR{t}
-		r.Extra = []dns.RR{rr}
+		r.Answer = append(r.Answer, t)
+		r.Extra = append(r.Extra, rr)
 	case *dns.AAAA, *dns.A:
-		r.Answer = []dns.RR{rr}
-		r.Extra = []dns.RR{t}
+		r.Answer = append(r.Answer, rr)
+		r.Extra = append(r.Extra, t)
 	}
 
 	r.Pack()

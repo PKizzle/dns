@@ -3,44 +3,61 @@ package dnsutil
 import (
 	"net"
 	"net/netip"
+	"strconv"
 
 	"codeberg.org/miekg/dns"
 )
 
 // RemoteIP returns the IP address of the client making the request.
-func RemoteIP(w dns.ResponseWriter) string { return ip(w.RemoteAddr().String()) }
-
-// LocalIP gets the IP address of server handling the request.
-func LocalIP(w dns.ResponseWriter) string { return ip(w.LocalAddr().String()) }
-
-// RemotePort gets the port of the client making the request.
-func RemotePort(w dns.ResponseWriter) string { return port(w.RemoteAddr().String()) }
-
-// LocalPort gets the local port of the server handling the request.
-func LocalPort(w dns.ResponseWriter) string { return port(w.LocalAddr().String()) }
-
-func port(addr string) string {
-	if _, port, err := net.SplitHostPort(addr); err != nil {
-		return ""
-	} else {
-		return port
+func RemoteIP(w dns.ResponseWriter) string {
+	switch t := w.RemoteAddr().(type) {
+	case *net.UDPAddr:
+		return t.AddrPort().Addr().String()
+	case *net.TCPAddr:
+		return t.AddrPort().Addr().String()
 	}
+	return ""
 }
 
-func ip(addr string) string {
-	if ip, _, err := net.SplitHostPort(addr); err != nil {
-		return ""
-	} else {
-		return ip
+// LocalIP gets the IP address of server handling the request.
+func LocalIP(w dns.ResponseWriter) string {
+	switch t := w.LocalAddr().(type) {
+	case *net.UDPAddr:
+		return t.AddrPort().Addr().String()
+	case *net.TCPAddr:
+		return t.AddrPort().Addr().String()
 	}
+	return ""
+}
+
+// RemotePort gets the port of the client making the request.
+func RemotePort(w dns.ResponseWriter) string {
+	switch t := w.RemoteAddr().(type) {
+	case *net.UDPAddr:
+		return strconv.Itoa(t.Port)
+	case *net.TCPAddr:
+		return strconv.Itoa(t.Port)
+	}
+	return ""
+}
+
+// LocalPort gets the local port of the server handling the request.
+func LocalPort(w dns.ResponseWriter) string {
+	switch t := w.LocalAddr().(type) {
+	case *net.UDPAddr:
+		return strconv.Itoa(t.Port)
+	case *net.TCPAddr:
+		return strconv.Itoa(t.Port)
+	}
+	return ""
 }
 
 // Network returns the network used to make the request, this can be udp or tcp.
 func Network(w dns.ResponseWriter) string {
-	if _, ok := w.RemoteAddr().(*net.UDPAddr); ok {
+	switch w.RemoteAddr().(type) {
+	case *net.UDPAddr:
 		return "udp"
-	}
-	if _, ok := w.RemoteAddr().(*net.TCPAddr); ok {
+	case *net.TCPAddr:
 		return "tcp"
 	}
 	return "udp"
@@ -49,12 +66,11 @@ func Network(w dns.ResponseWriter) string {
 // Family returns the family of the transport, which is either [IPv4Family] or [IPv6Family] as defined by IANA.
 func Family(w dns.ResponseWriter) int {
 	var a netip.Addr
-	ip := w.RemoteAddr()
-	if i, ok := ip.(*net.UDPAddr); ok {
-		a = i.AddrPort().Addr()
-	}
-	if i, ok := ip.(*net.TCPAddr); ok {
-		a = i.AddrPort().Addr()
+	switch t := w.RemoteAddr().(type) {
+	case *net.UDPAddr:
+		a = t.AddrPort().Addr()
+	case *net.TCPAddr:
+		a = t.AddrPort().Addr()
 	}
 
 	if a.Is4In6() {
