@@ -55,11 +55,11 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 
 		switch r.Question[0].(type) {
 		case *dns.TXT:
-			r.Answer = append(r.Answer, t)
-			r.Extra = append(r.Extra, rr)
+			m.Answer = append(m.Answer, t)
+			m.Extra = append(m.Extra, rr)
 		case *dns.AAAA, *dns.A:
-			r.Answer = append(r.Answer, rr)
-			r.Extra = append(r.Extra, t)
+			m.Answer = append(m.Answer, rr)
+			m.Extra = append(m.Extra, t)
 		default:
 			m.Rcode = dns.RcodeRefused
 		}
