@@ -40,3 +40,20 @@ func ExampleClient_Exchange_nxdomain() {
 		}
 	}
 }
+
+// ExampleClient_Exchange_edns0 shows how to add an EDNS0 option to a message. See [dns.NSID].
+func ExampleClient_Exchange_edns0() {
+	m := dns.NewMsg("wwww.example.org", dns.TypeA)
+	m.Pseudo = append(m.Pseudo, &dns.NSID{}) // we ask the server to put the server id in the reply.
+	r, err := dns.Exchange(context.TODO(), m, "udp", "8.8.8.8:53")
+	if err != nil {
+		log.Printf("Failed to exchange: %v", err)
+		return
+	}
+	for _, rr := range r.Pseudo {
+		if nsid, ok := rr.(*dns.NSID); ok {
+			fmt.Printf("NSID returned from server: %s\n", nsid.Nsid)
+			break
+		}
+	}
+}
