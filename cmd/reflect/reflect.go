@@ -66,7 +66,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		log.Fatalf("%s", err.Error())
 	}
 	// re-use r
-	r.Answer, r.Ns, r.Extra, r.Pseudo = r.Answer[:], r.Ns[:], r.Extra[:], r.Pseudo[:]
+	r.Answer, r.Ns, r.Extra, r.Pseudo = r.Answer[:0], r.Ns[:0], r.Extra[:0], r.Pseudo[:0]
 	r.Response = true
 
 	var ip netip.Addr
