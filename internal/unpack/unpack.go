@@ -7,8 +7,10 @@ import (
 	"net"
 	"net/netip"
 	"strings"
+	"sync"
 
 	"codeberg.org/miekg/dns/internal/ddd"
+	"codeberg.org/miekg/dns/pkg/pool"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -65,7 +67,7 @@ func String(s *cryptobyte.String) (string, error) {
 		return "", &Error{"overflow string"}
 	}
 
-	var sb strings.Builder
+	sb := builderPool.Get()
 	consumed := 0
 	for i, b := range txt {
 		switch {
@@ -90,7 +92,9 @@ func String(s *cryptobyte.String) (string, error) {
 		return string(txt), nil
 	}
 	sb.Write(txt[consumed:])
-	return sb.String(), nil
+	t := sb.String()
+	builderPool.Put(sb)
+	return t, nil
 }
 
 // Name unpacks a domain name.
@@ -207,3 +211,5 @@ func Names(s *cryptobyte.String, msgBuf []byte) ([]string, error) {
 	}
 	return names, nil
 }
+
+var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
