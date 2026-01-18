@@ -27,11 +27,11 @@ func IsReverse(s string) int {
 	return 0
 }
 
-const hexDigit = "0123456789abcdef"
-
 // ReverseAddr returns the in-addr.arpa. or ip6.arpa. hostname of the IP
 // address suitable for reverse DNS ([dns.PTR]) record lookups. Also see [AddrReverse].
 func ReverseAddr(ip netip.Addr) (arpa string) {
+	const hexDigit = "0123456789abcdef"
+
 	if ip.Is4() {
 		v4 := ip.As4()
 		buf := make([]byte, 0, net.IPv4len*4+len(IP4arpa))
