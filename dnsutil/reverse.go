@@ -69,7 +69,7 @@ func AddrReverse(s string) (ip netip.Addr) {
 		// which appear in forward order in the reverse name (a.b.c.d).
 		// e.g. 54.119.58.176.in-addr.arpa. -> 176.58.119.54
 		// 54 (byte 3) is first, 176 (byte 0) is last.
-		for byteIdx := 3; byteIdx >= 0; byteIdx-- {
+		for i := 3; i >= 0; i-- {
 			if idx >= len(s) {
 				return netip.Addr{}
 			}
@@ -84,7 +84,7 @@ func AddrReverse(s string) (ip netip.Addr) {
 				}
 				idx++
 			}
-			v4[byteIdx] = byte(n)
+			v4[i] = byte(n)
 
 			// Consumed number, expect a dot.
 			if idx >= len(s) || s[idx] != '.' {
@@ -123,11 +123,11 @@ func AddrReverse(s string) (ip netip.Addr) {
 			// i=0 -> byte 15, low part
 			// i=1 -> byte 15, high part
 			// i=2 -> byte 14, low part
-			bytePos := 15 - (i / 2)
+			pos := 15 - (i / 2)
 			if i%2 == 0 {
-				v6[bytePos] |= val
+				v6[pos] |= val
 			} else {
-				v6[bytePos] |= val << 4
+				v6[pos] |= val << 4
 			}
 
 			idx++

@@ -39,4 +39,3 @@ func BenchmarkAddrReverse(b *testing.B) {
 		}
 	})
 }
-
