@@ -94,7 +94,7 @@ func main() {
 					switch tag {
 					case `dns:"-"`: // ignored
 					case `dns:"txt"`:
-						o("off, err = pack.StringTxt(rr.%s, msg, off)\n")
+						o("off, err = pack.Strings(rr.%s, msg, off)\n")
 					case `dns:"opt"`:
 						o("off, err = packOPT(rr.%s, msg, off)\n")
 					case `dns:"nsec"`:
@@ -257,7 +257,7 @@ if rr.%s != "-" {
 					switch tag {
 					case `dns:"-"`: // ignored
 					case `dns:"txt"`:
-						unpackField("unpack.StringTxt")
+						unpackField("unpack.Strings")
 					case `dns:"opt"`:
 						unpackField("unpackOPT")
 					case `dns:"nsec"`:

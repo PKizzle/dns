@@ -47,9 +47,7 @@ func StringAny(s *cryptobyte.String, len int) (string, error) {
 	return string(b), nil
 }
 
-func StringTxt(s *cryptobyte.String) ([]string, error) { return Txt(s) }
-
-func Txt(s *cryptobyte.String) ([]string, error) {
+func Strings(s *cryptobyte.String) ([]string, error) {
 	var strs []string
 	for !s.Empty() {
 		str, err := String(s)
