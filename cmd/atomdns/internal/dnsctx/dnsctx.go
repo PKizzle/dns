@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 )
 
 type Keyer interface {
@@ -21,9 +20,18 @@ type Keyer interface {
 // Func is a function that can be set in the context and operates on a [dns.Msg].
 type Func func(*dns.Msg) *dns.Msg
 
+type funcsKey struct{}
+
 // WithFunc set the Func f in the context under the key <handler>/msgfunc.
 func WithFunc(ctx context.Context, handler Keyer, f Func) context.Context {
-	return context.WithValue(ctx, Key(handler, KeyMsgFunc), f)
+	// For backward compatibility and Value() lookups, also store it under the string key.
+	ctx = context.WithValue(ctx, Key(handler, KeyMsgFunc), f)
+
+	v := ctx.Value(funcsKey{})
+	if v == nil {
+		return context.WithValue(ctx, funcsKey{}, []Func{f})
+	}
+	return context.WithValue(ctx, funcsKey{}, append(v.([]Func), f))
 }
 
 // Predefined context keys.
@@ -35,17 +43,15 @@ const (
 // Key creates a key from the keyer and string.
 func Key(handler Keyer, key string) string { return handler.Key() + "/" + key }
 
-// Funcs iterates over all handlers and run the functions that are set in the context over the message. The possibly
+// Funcs iterates over all functions that are set in the context over the message. The possibly
 // modified message is returned.
 func Funcs(ctx context.Context, m *dns.Msg) *dns.Msg {
-	for _, h := range dnsserver.Handlers {
-		v := ctx.Value(h + "/" + KeyMsgFunc)
-		if v == nil {
-			continue
-		}
-		if f, ok := v.(Func); ok {
-			m = f(m)
-		}
+	v := ctx.Value(funcsKey{})
+	if v == nil {
+		return m
+	}
+	for _, f := range v.([]Func) {
+		m = f(m)
 	}
 	return m
 }
