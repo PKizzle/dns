@@ -30,7 +30,7 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.Clone()) // SoS' NSEC
+					r.Ns = append(r.Ns, rr) // SoS' NSEC
 				}
 				if s, ok := rr.(*dns.RRSIG); ok {
 					if s.TypeCovered == qtype {
@@ -39,7 +39,7 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 						r.Answer = append(r.Answer, rr1)
 					}
 					if s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.Clone())
+						r.Ns = append(r.Ns, rr)
 					}
 				}
 
@@ -51,12 +51,12 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 		// NODATA, as the type isn't there, only need SOA + RRSIG.
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
-				r.Ns = append(r.Ns, rr.Clone())
+				r.Ns = append(r.Ns, rr)
 				continue
 			}
 			if r.Security {
 				if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
-					r.Ns = append(r.Ns, rr.Clone())
+					r.Ns = append(r.Ns, rr)
 				}
 			}
 		}
@@ -67,15 +67,15 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 	if len(sosynthesis.RRs) == 0 {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
-				r.Ns = append(r.Ns, rr.Clone())
+				r.Ns = append(r.Ns, rr)
 				continue
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.Clone())
+					r.Ns = append(r.Ns, rr)
 				}
 				if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-					r.Ns = append(r.Ns, rr.Clone())
+					r.Ns = append(r.Ns, rr)
 				}
 			}
 		}
@@ -84,11 +84,11 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 			if !dns.EqualName(prev.Name, z.Origin()) { // we already have the SOA records, don't repeat.
 				for _, rr := range prev.RRs {
 					if _, ok := rr.(*dns.NSEC); ok {
-						r.Ns = append(r.Ns, rr.Clone())
+						r.Ns = append(r.Ns, rr)
 						continue
 					}
 					if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.Clone())
+						r.Ns = append(r.Ns, rr)
 					}
 				}
 			}
@@ -112,15 +112,15 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 	if hint != hintDelegation && !dns.EqualName(encloser.Name, r.Question[0].Header().Name) {
 		for _, rr := range z.Apex().RRs {
 			if _, ok := rr.(*dns.SOA); ok {
-				r.Ns = append(r.Ns, rr.Clone())
+				r.Ns = append(r.Ns, rr)
 				continue
 			}
 			if r.Security {
 				if _, ok := rr.(*dns.NSEC); ok {
-					r.Ns = append(r.Ns, rr.Clone())
+					r.Ns = append(r.Ns, rr)
 				}
 				if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-					r.Ns = append(r.Ns, rr.Clone())
+					r.Ns = append(r.Ns, rr)
 				}
 			}
 		}
@@ -129,11 +129,11 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 			if !dns.EqualName(prev.Name, z.Origin()) {
 				for _, rr := range prev.RRs {
 					if _, ok := rr.(*dns.NSEC); ok {
-						r.Ns = append(r.Ns, rr.Clone())
+						r.Ns = append(r.Ns, rr)
 						continue
 					}
 					if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
-						r.Ns = append(r.Ns, rr.Clone())
+						r.Ns = append(r.Ns, rr)
 					}
 				}
 			}
@@ -156,13 +156,13 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 		// But this is only true if we have a full chain. Use the saved re.Name
 		r.Question[0].Header().Name = re.Name
 		for _, rr := range re.Answer {
-			r.Answer = append(r.Answer, rr.Clone())
+			r.Answer = append(r.Answer, rr)
 		}
 	}
 
 	for _, rr := range encloser.RRs {
 		if dns.RRToType(rr) == qtype {
-			*section = append(*section, rr.Clone())
+			*section = append(*section, rr)
 		}
 		if hint == hintDelegation {
 			if n, ok := rr.(*dns.NS); ok {
@@ -171,11 +171,11 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 					if glue, ok := z.Get(n.Ns); ok {
 						for _, rr := range glue.RRs {
 							if _, ok := rr.(*dns.A); ok {
-								r.Extra = append(r.Extra, rr.Clone())
+								r.Extra = append(r.Extra, rr)
 								continue
 							}
 							if _, ok := rr.(*dns.AAAA); ok {
-								r.Extra = append(r.Extra, rr.Clone())
+								r.Extra = append(r.Extra, rr)
 							}
 						}
 					}
@@ -183,7 +183,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 			}
 			// cehck the target of NS a get the A/AAAA for it
 			if _, ok := rr.(*dns.DS); ok && r.Security {
-				*section = append(*section, rr.Clone())
+				*section = append(*section, rr)
 			}
 		}
 	}
@@ -191,11 +191,11 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 		for _, rr := range encloser.RRs {
 			if s, ok := rr.(*dns.RRSIG); ok {
 				if s.TypeCovered == qtype {
-					*section = append(*section, rr.Clone())
+					*section = append(*section, rr)
 				}
 				if hint == hintDelegation {
 					if s.TypeCovered == dns.TypeDS {
-						*section = append(*section, rr.Clone())
+						*section = append(*section, rr)
 					}
 				}
 			}
@@ -209,15 +209,15 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 	// NODATA response.
 	for _, rr := range z.Apex().RRs {
 		if _, ok := rr.(*dns.SOA); ok {
-			r.Ns = append(r.Ns, rr.Clone())
+			r.Ns = append(r.Ns, rr)
 			continue
 		}
 		if r.Security {
 			if _, ok := rr.(*dns.NSEC); ok {
-				r.Ns = append(r.Ns, rr.Clone())
+				r.Ns = append(r.Ns, rr)
 			}
 			if s, ok := rr.(*dns.RRSIG); ok && (s.TypeCovered == dns.TypeSOA || s.TypeCovered == dns.TypeNSEC) {
-				r.Ns = append(r.Ns, rr.Clone())
+				r.Ns = append(r.Ns, rr)
 			}
 		}
 	}
