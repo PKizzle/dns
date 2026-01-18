@@ -62,35 +62,85 @@ func ReverseAddr(ip netip.Addr) (arpa string) {
 // fails nil is returned. Also see [ReverseAddr].
 func AddrReverse(s string) (ip netip.Addr) {
 	switch IsReverse(s) {
-	default:
-		fallthrough
-	case 0:
-		return netip.Addr{}
 	case IPv4Family:
-		ipstr := strings.TrimSuffix(s, IP4arpa)
-		return rev(strings.Split(ipstr, "."), IPv4Family)
-	case IPv6Family:
-		ipstr := strings.TrimSuffix(s, IP6arpa)
-		return rev(strings.Split(ipstr, "."), IPv6Family)
-	}
-}
+		var v4 [4]byte
+		idx := 0
+		// Loop backwards through the bytes of the IPv4 address (d, c, b, a)
+		// which appear in forward order in the reverse name (a.b.c.d).
+		// e.g. 54.119.58.176.in-addr.arpa. -> 176.58.119.54
+		// 54 (byte 3) is first, 176 (byte 0) is last.
+		for byteIdx := 3; byteIdx >= 0; byteIdx-- {
+			if idx >= len(s) {
+				return netip.Addr{}
+			}
+			if s[idx] < '0' || s[idx] > '9' {
+				return netip.Addr{}
+			}
+			n := 0
+			for idx < len(s) && s[idx] >= '0' && s[idx] <= '9' {
+				n = n*10 + int(s[idx]-'0')
+				if n > 255 {
+					return netip.Addr{}
+				}
+				idx++
+			}
+			v4[byteIdx] = byte(n)
 
-func rev(slice []string, fam int) netip.Addr {
-	for i := 0; i < len(slice)/2; i++ {
-		j := len(slice) - i - 1
-		slice[i], slice[j] = slice[j], slice[i]
-	}
-	addr := ""
-	switch fam {
-	case IPv4Family:
-		addr = strings.Join(slice, ".")
-	case IPv6Family:
-		slice6 := []string{}
-		for i := 0; i < len(slice)/4; i++ {
-			slice6 = append(slice6, strings.Join(slice[i*4:i*4+4], ""))
+			// Consumed number, expect a dot.
+			if idx >= len(s) || s[idx] != '.' {
+				return netip.Addr{}
+			}
+			idx++
 		}
-		addr = strings.Join(slice6, ":")
+		// The remainder must be exactly "in-addr.arpa."
+		if s[idx:] != "in-addr.arpa." {
+			return netip.Addr{}
+		}
+		return netip.AddrFrom4(v4)
+
+	case IPv6Family:
+		var v6 [16]byte
+		idx := 0
+		// 32 nibbles.
+		// Reverse name: low nibble of byte 15, high nibble of byte 15, ...
+		for i := 0; i < 32; i++ {
+			if idx >= len(s) {
+				return netip.Addr{}
+			}
+			c := s[idx]
+			var val byte
+			switch {
+			case c >= '0' && c <= '9':
+				val = c - '0'
+			case c >= 'a' && c <= 'f':
+				val = c - 'a' + 10
+			case c >= 'A' && c <= 'F':
+				val = c - 'A' + 10
+			default:
+				return netip.Addr{}
+			}
+
+			// i=0 -> byte 15, low part
+			// i=1 -> byte 15, high part
+			// i=2 -> byte 14, low part
+			bytePos := 15 - (i / 2)
+			if i%2 == 0 {
+				v6[bytePos] |= val
+			} else {
+				v6[bytePos] |= val << 4
+			}
+
+			idx++
+			if idx >= len(s) || s[idx] != '.' {
+				return netip.Addr{}
+			}
+			idx++
+		}
+		if s[idx:] != "ip6.arpa." {
+			return netip.Addr{}
+		}
+		return netip.AddrFrom16(v6)
+	default:
+		return netip.Addr{}
 	}
-	ip, _ := netip.ParseAddr(addr)
-	return ip
 }
