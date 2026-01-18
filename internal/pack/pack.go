@@ -97,14 +97,28 @@ func Strings(s []string, msg []byte, off int) (int, error) {
 }
 
 func String(s string, msg []byte, off int) (int, error) {
+	if strings.IndexByte(s, '\\') == -1 {
+		l := len(s)
+		if l > 255 {
+			return len(msg), &Error{"overflow string"}
+		}
+		if off+1+l > len(msg) {
+			return len(msg), &Error{"overflow string"}
+		}
+		msg[off] = byte(l)
+		copy(msg[off+1:], s)
+		return off + 1 + l, nil
+	}
+
 	lenByteoff := off
 	if off >= len(msg) || len(s) > 256*4+1 /* If all \DDD */ {
 		return len(msg), &Error{"overflow string"}
 	}
 	off++
+
 	for i := 0; i < len(s); i++ {
 		if len(msg) <= off {
-			return off, &Error{"overflow string"}
+			return len(msg), &Error{"overflow string"}
 		}
 		if s[i] == '\\' {
 			i++

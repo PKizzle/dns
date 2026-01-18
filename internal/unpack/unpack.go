@@ -64,6 +64,7 @@ func String(s *cryptobyte.String) (string, error) {
 	if !s.ReadUint8LengthPrefixed(&txt) {
 		return "", &Error{"overflow string"}
 	}
+
 	var sb strings.Builder
 	consumed := 0
 	for i, b := range txt {
@@ -111,7 +112,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 	var c byte
 	for {
 		if !cs.ReadUint8(&c) {
-			return "", &Error{"overflow"}
+			return "", &Error{"overflow name"}
 		}
 		switch c & 0xC0 {
 		case 0x00: // literal string
@@ -140,7 +141,7 @@ func Name(s *cryptobyte.String, msgBuf []byte) (string, error) {
 			}
 			var c1 byte
 			if !cs.ReadUint8(&c1) {
-				return "", &Error{"overflow"}
+				return "", &Error{"overflow name"}
 			}
 			// If this is the first pointer we've seen, we need to advance s to our current position.
 			if !ptrs {
