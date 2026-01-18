@@ -96,13 +96,6 @@ type Server struct {
 	// Maximum number of TCP queries before we close the socket. Default is [MaxTCPQueries], unlimited if -1.
 	// See [ResponseWriter.Hijack] on how a handler can bypass this.
 	MaxTCPQueries int
-	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
-	// It is only supported on certain GOOSes and when using ListenAndServe.
-	ReusePort bool
-	// Whether to set the SO_REUSEADDR socket option, allowing multiple listeners to be bound to a single address.
-	// Crucially this allows binding when an existing server is listening on `0.0.0.0` or `::`.
-	// It is only supported on certain GOOSes and when using ListenAndServe.
-	ReuseAddr bool
 
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process. Defaults to
 	// [DefaultMsgAcceptFunc].
@@ -122,8 +115,17 @@ type Server struct {
 	ctx      context.Context // server wide context to signal shutdown to running handlers
 	cancel   context.CancelFunc
 	exited   chan struct{}
-	once     sync.Once
 	shutdown chan bool
+
+	once sync.Once
+
+	// Whether to set the SO_REUSEPORT socket option, allowing multiple listeners to be bound to a single address.
+	// It is only supported on certain GOOSes and when using ListenAndServe.
+	ReusePort bool
+	// Whether to set the SO_REUSEADDR socket option, allowing multiple listeners to be bound to a single address.
+	// Crucially this allows binding when an existing server is listening on `0.0.0.0` or `::`.
+	// It is only supported on certain GOOSes and when using ListenAndServe.
+	ReuseAddr bool
 }
 
 // NewServer return a new server initialized with some defaults
