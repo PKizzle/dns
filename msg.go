@@ -331,7 +331,7 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 		return []RR{}, nil
 	}
 	// See unpackQuestions for why we don't pre-allocate here.
-	dst := make([]RR, 0, 3)
+	dst := make([]RR, 0, min(5, cnt))
 	for i := 0; i < int(cnt); i++ {
 		r, err := unpackRR(msg, msgBuf)
 		if err != nil {
