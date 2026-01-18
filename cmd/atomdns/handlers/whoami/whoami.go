@@ -2,15 +2,17 @@ package whoami
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"net/netip"
+	"strings"
+	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/pkg/pool"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -42,20 +44,22 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 			rr = &dns.AAAA{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: ip}}
 		}
 
-		port := dnsutil.RemotePort(w)
-		network := dnsutil.Network(w)
-		t := &dns.TXT{
-			Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET},
-			TXT: rdata.TXT{Txt: []string{fmt.Sprintf("Port: %s (%s)", port, network)}},
-		}
+		sb := builderPool.Get()
+		sb.WriteString("Port: ")
+		sb.WriteString(dnsutil.RemotePort(w))
+		sb.WriteString(" (")
+		sb.WriteString(dnsutil.Network(w))
+		sb.WriteString(")")
+		t := &dns.TXT{Hdr: dns.Header{Name: r.Question[0].Header().Name, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{sb.String()}}}
+		builderPool.Put(sb)
 
 		switch r.Question[0].(type) {
 		case *dns.TXT:
-			m.Answer = []dns.RR{t}
-			m.Extra = []dns.RR{rr}
+			m.Answer = append(m.Answer, t)
+			m.Extra = append(m.Extra, rr)
 		case *dns.AAAA, *dns.A:
-			m.Answer = []dns.RR{rr}
-			m.Extra = []dns.RR{t}
+			m.Answer = append(m.Answer, rr)
+			m.Extra = append(m.Extra, t)
 		default:
 			m.Rcode = dns.RcodeRefused
 		}
@@ -67,3 +71,5 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 		io.Copy(w, m)
 	})
 }
+
+var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}

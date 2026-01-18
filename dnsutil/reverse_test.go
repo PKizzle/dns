@@ -26,3 +26,16 @@ func TestAddrReverse(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkAddrReverse(b *testing.B) {
+	b.Run("IPv4", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			AddrReverse("54.119.58.176.in-addr.arpa.")
+		}
+	})
+	b.Run("IPv6", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			AddrReverse("b.a.9.8.7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.")
+		}
+	})
+}
