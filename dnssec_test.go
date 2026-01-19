@@ -126,7 +126,7 @@ func TestDNSSECVerify(t *testing.T) {
 				},
 			},
 			&RRSIG{
-				Hdr: Header{Name: "org.", Class: ClassINET, TTL: 3600}, RRSIG: rdata.RRSIG{TypeCovered: TypeDNSKEY, Algorithm: RSASHA256, Expiration: 1760245200, Inception: 1759118400, OrigTTL: 3600, KeyTag: 26974, SignerName: "org.",
+				Hdr: Header{Name: "org.", Class: ClassINET, TTL: 3600}, RRSIG: rdata.RRSIG{TypeCovered: TypeDNSKEY, Algorithm: RSASHA256, Labels: 1, Expiration: 1760245200, Inception: 1759118400, OrigTTL: 3600, KeyTag: 26974, SignerName: "org.",
 					Signature: "YFVPRIIx6ZItt/17yrZmtnBQOFRD44rNDwOh3BQC+NhaM7+6w5kVVpMbVMFy6X8yuXp3+A857I6g6FYVB2p7zDRhq1hkIRyxyYKMmyQmgd0d/Km+vYU+KQjSDWFp0Cm7B+3q5bvbZKRsWho36fofO37jyWkDKYl3tPm8hSCzNuCJ7NfH+3GpcztYL/M3xeHJSJ1wwzFZUW7ioAY4cnmdzHEraXi1O/2UKb+h0lR6CdvNGSe6FLsmx1OETQ8JKneopXpm3RG07AwMSMXw+lgo1d0DZiXwscJpcqHWm9eWaI7OQX6JFl96Yjnjjh1z8gLXFYMXDxLUB3wBtYF903ukiQ==",
 				},
 			},
