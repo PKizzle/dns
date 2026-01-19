@@ -39,7 +39,7 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 					return co.ArgErr()
 				}
 
-				d.delay = 4
+				d.delay = 2
 				d.duration = 100 * time.Millisecond
 				if len(args) == 0 {
 					continue
@@ -67,6 +67,7 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 					return co.ArgErr()
 				}
 
+				d.truncate = 4
 				if len(args) == 0 {
 					continue
 				}
