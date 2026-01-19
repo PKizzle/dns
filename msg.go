@@ -278,6 +278,7 @@ func (m *Msg) Pack() error {
 			}
 		}
 	}
+	m.offset = 0
 	m.Data = m.Data[:off]
 	return nil
 }
@@ -671,8 +672,6 @@ func (m *Msg) Write(p []byte) (n int, err error) {
 			return 0, err
 		}
 	}
-	m.offset = 0
-
 	n = copy(m.Data, p)
 	return n, nil
 }
@@ -685,9 +684,10 @@ func (m *Msg) Read(p []byte) (n int, err error) {
 			return 0, err
 		}
 	}
-	m.offset = 0
-
 	n = copy(p, m.Data)
+	if len(p) > len(m.Data) {
+		return n, io.EOF
+	}
 	return n, nil
 }
 
@@ -708,7 +708,6 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 			return 0, err
 		}
 	}
-	m.offset = 0
 
 	if rc, ok := w.(ResponseController); ok {
 		rc.SetWriteDeadline()
@@ -754,7 +753,6 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 			return 0, err
 		}
 	}
-	m.offset = 0
 
 	if sock, ok := r.(*net.UDPConn); ok {
 		n, err := sock.Read(m.Data)
