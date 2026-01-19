@@ -3,30 +3,30 @@
 goos: linux
 goarch: amd64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerfudp-12	290804			3438.7 ns/op
-BenchmarkDNSPerfudp-12	298802			3346.7 ns/op
-BenchmarkDNSPerfudp-12	297113			3365.7 ns/op
-BenchmarkDNSPerfudp-12	298965			3344.9 ns/op
-BenchmarkDNSPerfudp-12	297447			3361.9 ns/op
-BenchmarkDNSPerfudp-12	298207			3353.4 ns/op
-BenchmarkDNSPerfudp-12	296634			3371.2 ns/op
-BenchmarkDNSPerfudp-12	283000			3533.6 ns/op
+BenchmarkDNSPerfudp-12	375108			2665.9 ns/op
+BenchmarkDNSPerfudp-12	340463			2937.2 ns/op
+BenchmarkDNSPerfudp-12	348151			2872.3 ns/op
+BenchmarkDNSPerfudp-12	361791			2764.0 ns/op
+BenchmarkDNSPerfudp-12	358526			2789.2 ns/op
+BenchmarkDNSPerfudp-12	351472			2845.2 ns/op
+BenchmarkDNSPerfudp-12	353487			2829.0 ns/op
+BenchmarkDNSPerfudp-12	354306			2822.4 ns/op
     reflect_test.go:43: canceled executing: udp
 === RUN   TestReflect/reflect-tcp
 goos: linux
 goarch: amd64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerftcp-12	237972			4202.2 ns/op
-BenchmarkDNSPerftcp-12	236973			4219.9 ns/op
-BenchmarkDNSPerftcp-12	236384			4230.4 ns/op
-BenchmarkDNSPerftcp-12	237574			4209.2 ns/op
-BenchmarkDNSPerftcp-12	236734			4224.1 ns/op
-BenchmarkDNSPerftcp-12	238006			4201.6 ns/op
-BenchmarkDNSPerftcp-12	237213			4215.6 ns/op
-BenchmarkDNSPerftcp-12	236859			4221.9 ns/op
+BenchmarkDNSPerftcp-12	285970			3496.9 ns/op
+BenchmarkDNSPerftcp-12	277702			3601.0 ns/op
+BenchmarkDNSPerftcp-12	283130			3531.9 ns/op
+BenchmarkDNSPerftcp-12	280753			3561.8 ns/op
+BenchmarkDNSPerftcp-12	279798			3574.0 ns/op
+BenchmarkDNSPerftcp-12	280932			3559.6 ns/op
+BenchmarkDNSPerftcp-12	286344			3492.3 ns/op
+BenchmarkDNSPerftcp-12	258481			3868.8 ns/op
     reflect_test.go:43: canceled executing: tcp
---- PASS: TestReflect (34.35s)
-    --- PASS: TestReflect/reflect-udp (17.17s)
-    --- PASS: TestReflect/reflect-tcp (17.18s)
+--- PASS: TestReflect (34.33s)
+    --- PASS: TestReflect/reflect-udp (17.16s)
+    --- PASS: TestReflect/reflect-tcp (17.17s)
 PASS
-ok  	codeberg.org/miekg/dns/cmd/reflect	34.356s
+ok  	codeberg.org/miekg/dns/cmd/reflect	34.333s
