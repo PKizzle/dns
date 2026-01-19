@@ -9,6 +9,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -29,7 +30,7 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 
 		drop := d.drop > 0 && i%d.drop == 0
 		delay := d.delay > 0 && i%d.delay == 0
-		trunc := d.truncate > 0 && i&d.truncate == 0
+		trunc := d.truncate > 0 && i%d.truncate == 0
 
 		m := r.Copy()
 		dnsutil.SetReply(m, r)
@@ -49,6 +50,10 @@ func (d *Drunk) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		if trunc {
 			rw.Msg.Truncated = true
+			// have to repack now
+			if err := rw.Msg.Pack(); err != nil {
+				dnslog.PackFail(ctx, log(), Err(err))
+			}
 		}
 
 		io.Copy(w, rw.Msg)
