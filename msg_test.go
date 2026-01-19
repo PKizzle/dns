@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/netip"
 	"os"
@@ -174,4 +175,21 @@ func FuzzMsgPack(f *testing.F) {
 		m.Unpack()
 		dnsfuzz.Stop(t, start)
 	})
+}
+
+func TestMsgReadAll(t *testing.T) {
+	m := dns.NewMsg("example.org.", dns.TypeA)
+	m.Pack()
+
+	done := make(chan struct{})
+	go func() {
+		io.ReadAll(m) // should not hang
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("expected io.ReadAll to complete, but hung")
+	}
 }
