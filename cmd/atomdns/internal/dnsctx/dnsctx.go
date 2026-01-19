@@ -24,9 +24,6 @@ type funcsKey struct{}
 
 // WithFunc set the Func f in the context under the key <handler>/msgfunc.
 func WithFunc(ctx context.Context, handler Keyer, f Func) context.Context {
-	// For backward compatibility and Value() lookups, also store it under the string key.
-	ctx = context.WithValue(ctx, Key(handler, KeyMsgFunc), f)
-
 	v := ctx.Value(funcsKey{})
 	if v == nil {
 		return context.WithValue(ctx, funcsKey{}, []Func{f})
