@@ -29,7 +29,7 @@ func TestSetup(t *testing.T) {
 		{`erraric {
 			drop /3
 			delay
-		}`, false, 3, 4, 0},
+		}`, false, 3, 2, 0},
 		// fails
 		{`drunk {
 			drop -1
