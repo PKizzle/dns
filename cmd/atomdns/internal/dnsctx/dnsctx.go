@@ -22,7 +22,8 @@ type Func func(*dns.Msg) *dns.Msg
 
 type funcsKey struct{}
 
-// WithFunc set the Func f in the context under the key <handler>/msgfunc.
+// WithFunc appends the Func f in the context under the funcsKey. It is not possible to retrieve a specific
+// Func. You can only run through them using [Funcs].
 func WithFunc(ctx context.Context, handler Keyer, f Func) context.Context {
 	v := ctx.Value(funcsKey{})
 	if v == nil {
@@ -32,10 +33,7 @@ func WithFunc(ctx context.Context, handler Keyer, f Func) context.Context {
 }
 
 // Predefined context keys.
-const (
-	KeyStatus  = "status"
-	KeyMsgFunc = "msgfunc"
-)
+const KeyStatus = "status"
 
 // Key creates a key from the keyer and string.
 func Key(handler Keyer, key string) string { return handler.Key() + "/" + key }
@@ -74,14 +72,8 @@ func Value(ctx context.Context, key string) any {
 	return v
 }
 
-// Reserved are context key suffixes that are used internally by atomdns.
-var Reserved = []string{"/" + KeyMsgFunc}
-
 // Valid returns a boolean indicating if the key is a valid context key.
 func Valid(key string) bool {
-	if slices.Contains(Reserved, key) {
-		return false
-	}
 	if len(key) < 3 {
 		return false
 	}
