@@ -20,7 +20,6 @@ import (
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m, err := dnshttp.Request(r)
 	if err != nil {
-		slog.Debug("Failed to convert http request", "server", "doh", slog.Any("error", err)) // todo keep log debug here?
 		h.MsgInvalidFunc(m, err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
