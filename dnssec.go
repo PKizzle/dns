@@ -359,7 +359,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	}
 
 	if options.Pooler == nil {
-		options.Pooler = pool.NewNoop(MinMsgSize)
+		options.Pooler = pool.NewNoop(DefaultMsgSize)
 	}
 
 	rr.Hdr.Name = rrset[0].Header().Name
