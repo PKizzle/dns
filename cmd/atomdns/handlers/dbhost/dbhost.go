@@ -44,7 +44,7 @@ func (d *Dbhost) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		dnsutil.SetReply(m, r)
 		for _, rr := range n.RRs {
 			if dns.RRToType(rr) == qtype {
-				m.Answer = append(m.Answer, rr.Clone())
+				m.Answer = append(m.Answer, rr)
 			}
 		}
 
