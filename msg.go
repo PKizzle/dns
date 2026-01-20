@@ -278,7 +278,6 @@ func (m *Msg) Pack() error {
 			}
 		}
 	}
-	m.offset = 0
 	m.Data = m.Data[:off]
 	return nil
 }
@@ -359,6 +358,7 @@ func (m *Msg) unpack(dh header, s *cryptobyte.String, msgBuf []byte) (err error)
 	}
 
 Rest:
+	m.offset = 0 // reset offset here, as it has done its purpose
 	if m.Answer, err = unpackRRs(dh.Ancount, s, msgBuf); err != nil {
 		return err
 	}
