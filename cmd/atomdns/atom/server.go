@@ -297,10 +297,10 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				}
 			}
 			if fn := handler.HandlerFunc(nil); fn != nil {
-				// Do not add noop handler funcs
+				// Do not add noop handler funcs.
 				hs = append(hs, handler)
 			} else {
-				// noop hanlder, check again if its a setupper, otherwise it isn't doing anything.
+				// Noop handler, check again if its a setupper, otherwise it isn't doing anything.
 				if _, ok := handler.(handlers.Setupper); !ok {
 					return fmt.Errorf("handler: %s, is a noop handler, but has no setup", name)
 				}
