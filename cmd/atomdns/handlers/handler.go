@@ -19,6 +19,10 @@ import (
 //   - modify the [dns.Msg] and then call the next handler, they can enrich the context or modify the message.
 //   - call the next handler, wait for it to return and modify the [dns.Msg], think of setting TSIG or a DNS
 //     cookie.
+//
+// If a Handler implements HandleFunc that returns a nil, instead of a proper dns.HandlerFunc, it is
+// considered a noop handler and not added to the handlers chain. For the Handler to be useful it should
+// implement [Setupper], because without it would be a comletely useless handler.
 type Handler interface {
 	// HandlerFunc run the handler's code.
 	HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc

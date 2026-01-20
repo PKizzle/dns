@@ -58,7 +58,7 @@ func main() {
 	source := &bytes.Buffer{}
 
 	for _, handler := range handlers {
-		source.WriteString(fmt.Sprintf(hdr, strings.ToLower(handler)))
+		fmt.Fprintf(source, hdr, strings.ToLower(handler))
 		out := filepath.Join(strings.ToLower(handler), "zerr.go")
 		if err := ErrFunc.Execute(source, handler); err != nil {
 			log.Fatalf("Failed to generate %s: %v", out, err)
