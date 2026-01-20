@@ -296,7 +296,15 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 					return handler.Err(err)
 				}
 			}
-			hs = append(hs, handler)
+			if fn := handler.HandlerFunc(nil); fn != nil {
+				// Do not add noop handler funcs.
+				hs = append(hs, handler)
+			} else {
+				// Noop handler, check again if its a setupper, otherwise it isn't doing anything.
+				if _, ok := handler.(handlers.Setupper); !ok {
+					return fmt.Errorf("handler: %s, is a noop handler, but has no setup", name)
+				}
+			}
 		}
 		hs = append(hs, new(refuse.Refuse)) // add refuse guard
 
