@@ -345,7 +345,9 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 
 func (m *Msg) unpack(dh header, s *cryptobyte.String, msgBuf []byte) (err error) {
 	if m.offset > MsgHeaderSize {
-		s.Skip(int(m.offset - MsgHeaderSize)) // should never fail...?
+		if !s.Skip(int(m.offset - MsgHeaderSize)) {
+			return fmt.Errorf("overflow %s", "MsgHeader")
+		}
 		goto Rest
 	}
 
