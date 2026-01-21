@@ -14,7 +14,7 @@ import (
 )
 
 // Server returns a new running (UDP) server. The returned cancel function shuts down the server. Any options should
-// be set by opts. The returned strings have the actual addresses, this is useful in case of listening on the
+// be set by opts. The returned strings have the actual listening addresses, this is useful in case of listening on the
 // wildcard port. If no network is configured via the opts functions, UDP is assumed.
 func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening string, err error) {
 	s := dns.NewServer()
@@ -22,7 +22,7 @@ func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening st
 	wait := make(chan error, 1)
 	s.NotifyStartedFunc = func(context.Context) { wait <- nil }
 	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
-		log.Printf("invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
+		log.Printf("Invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
 	}
 
 	for _, opt := range opts {
@@ -78,9 +78,10 @@ func TLSServer(addr string, opts ...func(*dns.Server)) (func(), string, error) {
 	return TCPServer(addr, opts...)
 }
 
-// TLSConfig returns the testing TLS config. The returned config has InsecureSkipVerify set to true.
+// TLSConfig returns the testing TLS config. The returned config has InsecureSkipVerify set to true, as the
+// certificate itself is expired.
 func TLSConfig() *tls.Config {
-	cert, _ := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
+	cert, _ := tls.X509KeyPair([]byte(certPEMBlock), []byte(keyPEMBlock))
 	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 }
 
@@ -126,9 +127,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 type handler struct{}
 
-var (
+const (
 	// certPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
-	certPEMBlock = []byte(`-----BEGIN CERTIFICATE-----
+	certPEMBlock = `-----BEGIN CERTIFICATE-----
 MIIDAzCCAeugAwIBAgIRAJFYMkcn+b8dpU15wjf++GgwDQYJKoZIhvcNAQELBQAw
 EjEQMA4GA1UEChMHQWNtZSBDbzAeFw0xNjAxMDgxMjAzNTNaFw0xNzAxMDcxMjAz
 NTNaMBIxEDAOBgNVBAoTB0FjbWUgQ28wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
@@ -146,10 +147,10 @@ BFOcubdw6LLIXvsTvwndKcHWx1rMX709QU1Vn1GAIsbJV/DWI231Jyyb+lxAUx/C
 8vce5uVxiKcGS+g6OjsN3D3TtiEQGSXLh013W6Wsih8td8yMCMZ3w8LQ38br1GUe
 ahLIgUJ9l6HDguM17R7kGqxNvbElsMUHfTtXXP7UDQUiYXDakg8xDP6n9DCDhJ8Y
 bSt7OLB7NQ==
------END CERTIFICATE-----`)
+-----END CERTIFICATE-----`
 
 	// keyPEMBlock is a X509 data used to test TLS servers (used with tls.X509KeyPair)
-	keyPEMBlock = []byte(`-----BEGIN RSA PRIVATE KEY-----
+	keyPEMBlock = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEA146jurJLz9N5OfAjY0IIHfRv5rflmvsUVPll4iggh7bWsDPM
 frJaucn7BwsMZcLBp+/R5iannDaoB29hlgVwL1VaJBQ03AtYVD+PoKdoLvTctu1B
 045S5jtJf8WeTDfLXysmJRcNfLV7t35Gj8h4/L/w9UQ5LqOAEXRbxknvE6orG4S5
@@ -175,5 +176,5 @@ RMix/QAauzBJhQhUVJ3OIys0Q1UBDmqCsjCE8SfOT4NKOUnA093C+YT+iyrmmktZ
 zDCJkckCgYEAndqM5KXGk5xYo+MAA1paZcbTUXwaWwjLU+XSRSSoyBEi5xMtfvUb
 7+a1OMhLwWbuz+pl64wFKrbSUyimMOYQpjVE/1vk/kb99pxbgol27hdKyTH1d+ov
 kFsxKCqxAnBVGEWAvVZAiiTOxleQFjz5RnL0BQp9Lg2cQe+dvuUmIAA=
------END RSA PRIVATE KEY-----`)
+-----END RSA PRIVATE KEY-----`
 )

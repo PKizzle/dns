@@ -10,7 +10,7 @@ import (
 
 // ResponseWriter is DOH capable [dns.ResponseWriter].
 type ResponseWriter struct {
-	// request is the original HTTP request.
+	// Req is the original HTTP request.
 	Req *http.Request
 	// w is the http responseWriter we are wrapping.
 	w http.ResponseWriter

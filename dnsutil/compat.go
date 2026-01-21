@@ -4,16 +4,16 @@ import "codeberg.org/miekg/dns"
 
 // SetQuestion set the question section in the message m.
 // It generates an ID and sets the RecursionDesired (RD) bit to true.
-// If the type t isn't know, nil is returned. Also see [dns.NewMsg].
+// If the type t isn't known to this library, nil is returned. Also see [dns.NewMsg].
 func SetQuestion(m *dns.Msg, z string, t uint16) *dns.Msg {
 	m.ID = dns.ID()
 	m.RecursionDesired = true
 	var rr dns.RR
-	if newFn, ok := dns.TypeToRR[t]; !ok {
+	newFn, ok := dns.TypeToRR[t]
+	if !ok {
 		return nil
-	} else {
-		rr = newFn()
 	}
+	rr = newFn()
 	rr.Header().Name = z
 	rr.Header().Class = dns.ClassINET
 
@@ -21,7 +21,7 @@ func SetQuestion(m *dns.Msg, z string, t uint16) *dns.Msg {
 	return m
 }
 
-// Question return the question name and the type from the message m.
+// Question returns the question name and the type from the message m.
 func Question(m *dns.Msg) (z string, t uint16) {
 	z = m.Question[0].Header().Name
 	t = dns.RRToType(m.Question[0])
@@ -30,7 +30,7 @@ func Question(m *dns.Msg) (z string, t uint16) {
 
 // SetReply creates a reply message from r. It copies the ID, opcode, rcode and question, r's Data buffer is not copied.
 // In the header the RecursionDesired, CheckingDisabled and Security bit are copied. All other sections are
-// set to nil.
+// resliced to length zero.
 func SetReply(m, r *dns.Msg) *dns.Msg {
 	m.ID = r.ID
 	m.Response = true
