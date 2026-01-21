@@ -9,7 +9,7 @@ import (
 )
 
 func TestDOH(t *testing.T) {
-	tests := map[string]struct {
+	testcases := map[string]struct {
 		method string
 		url    string
 	}{
@@ -23,12 +23,12 @@ func TestDOH(t *testing.T) {
 
 	MsgAcceptFunc = func(m *dns.Msg) dns.MsgAcceptAction { return dns.MsgAccept }
 
-	for name, test := range tests {
+	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			m := new(dns.Msg)
 			dnsutil.SetQuestion(m, "example.org.", dns.TypeDNSKEY)
 
-			req, err := NewRequest(test.method, test.url, m)
+			req, err := NewRequest(tc.method, tc.url, m)
 			if err != nil {
 				t.Fatalf("failure to make request: %s", err)
 			}
