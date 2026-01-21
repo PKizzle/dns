@@ -1,15 +1,15 @@
 // Package dnsutil contains function that are useful in the context of working with the DNS.
 package dnsutil
 
-// Trim removes the zone component from s. It returns the trimmed
-// name or an error is zone is longer than q. The trimmed name will be returned without a trailing dot.
-func Trim(s string, z string) string {
-	zl := Labels(z)
-	i, ok := Prev(s, zl)
-	if ok || i-1 < 0 {
+// Trim removes the zone component from s. It returns the trimmed name or the empty string if z is longer than s.
+// The trimmed name will be returned without a trailing dot.
+// s and z must be syntactically valid domain names, see [IsName] and [IsFqdn].
+func Trim(s, z string) string {
+	i, overshot := Prev(s, Labels(z))
+	if overshot || i-1 < 0 {
 		return ""
 	}
-	// This includes the '.', remove on return
+	// This includes the '.', remove on return.
 	return s[:i-1]
 }
 

@@ -5,7 +5,7 @@ import (
 )
 
 func TestJoin(t *testing.T) {
-	tests := []struct {
+	testcases := []struct {
 		in  []string
 		out string
 	}{
@@ -15,7 +15,7 @@ func TestJoin(t *testing.T) {
 		{[]string{"."}, "."},
 	}
 
-	for i, tc := range tests {
+	for i, tc := range testcases {
 		if x := Join(tc.in...); x != tc.out {
 			t.Errorf("test %d, expected %s, got %s", i, tc.out, x)
 		}
@@ -27,16 +27,16 @@ func TestNext(t *testing.T) {
 		string
 		int
 	}
-	nexts := map[next]int{
+	testcases := map[next]int{
 		{"", 1}:             0,
 		{"www.miek.nl.", 0}: 4,
 		{"www.miek.nl.", 4}: 9,
 		{"www.miek.nl.", 9}: 12,
 	}
-	for s, i := range nexts {
-		x, ok := Next(s.string, s.int)
+	for tc, i := range testcases {
+		x, ok := Next(tc.string, tc.int)
 		if i != x {
-			t.Errorf("label should be %d, got %d, %t: next %d, %s", i, x, ok, s.int, s.string)
+			t.Errorf("label should be %d, got %d, %t: next %d, %s", i, x, ok, tc.int, tc.string)
 		}
 	}
 }
@@ -46,7 +46,7 @@ func TestPrev(t *testing.T) {
 		string
 		int
 	}
-	prever := map[prev]int{
+	testcases := map[prev]int{
 		{"", 1}:             0,
 		{"www.miek.nl.", 0}: 12,
 		{"www.miek.nl.", 1}: 9,
@@ -62,7 +62,7 @@ func TestPrev(t *testing.T) {
 		{"www.miek.nl.", 3}: 0,
 		{"www.miek.nl", 3}:  0,
 	}
-	for s, i := range prever {
+	for s, i := range testcases {
 		x, ok := Prev(s.string, s.int)
 		if i != x {
 			t.Errorf("label should be %d, got %d, %t: previous %d, %s", i, x, ok, s.int, s.string)
@@ -71,14 +71,14 @@ func TestPrev(t *testing.T) {
 }
 
 func TestLabels(t *testing.T) {
-	splitter := map[string]int{
+	testcases := map[string]int{
 		"www.miek.nl.": 3,
 		"www.miek.nl":  3,
 		"nl":           1,
 		".":            0,
 	}
-	for s, i := range splitter {
-		x := Labels(s)
+	for tc, i := range testcases {
+		x := Labels(tc)
 		if x != i {
 			t.Errorf("labels should have %d, got %d", i, x)
 		}
