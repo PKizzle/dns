@@ -11,7 +11,7 @@ import (
 
 // Echo is a [dns.HandlerFunc] that echos the message m. Any dnsctx.Funcs set in the context are run.
 var Echo = dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-	m := r.Copy()
+	m := new(dns.Msg)
 	dnsutil.SetReply(m, r)
 	m = dnsctx.Funcs(ctx, m)
 	if err := m.Pack(); err != nil {
