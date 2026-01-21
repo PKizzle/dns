@@ -17,7 +17,7 @@ import (
 //	io.Copy(w, rw.Msg) // work on the original writer
 //
 // Due to how we handle UDP sockets, it's impossible (hard?) to make the recorder write to the wrapped writer,
-// so this must still be done separately.
+// so this must still be done separately, as shown above.
 type Recorder struct {
 	w     dns.ResponseWriter
 	Msg   *dns.Msg  // Msg contains the last message written.
