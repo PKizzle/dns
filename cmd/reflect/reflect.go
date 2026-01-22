@@ -59,14 +59,15 @@ var (
 
 const dom = "whoami.miek.nl."
 
+var hdr = dns.Header{Name: dom, Class: dns.ClassINET}
+
 var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
 		log.Fatalf("%s", err.Error())
 	}
-	// re-use r
-	r.Reset()
+	r.Reset() // re-use r
 	r.Response = true
 
 	var ip netip.Addr
@@ -82,9 +83,9 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 
 	var rr dns.RR
 	if ip.Is4() {
-		rr = &dns.A{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, A: rdata.A{Addr: ip}}
+		rr = &dns.A{Hdr: hdr, A: rdata.A{Addr: ip}}
 	} else {
-		rr = &dns.AAAA{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, AAAA: rdata.AAAA{Addr: ip}}
+		rr = &dns.AAAA{Hdr: hdr, AAAA: rdata.AAAA{Addr: ip}}
 	}
 
 	sb := builderPool.Get()
@@ -93,7 +94,7 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	sb.WriteString(" (")
 	sb.WriteString(dnsutil.Network(w))
 	sb.WriteString(")")
-	t := &dns.TXT{Hdr: dns.Header{Name: dom, Class: dns.ClassINET}, TXT: rdata.TXT{Txt: []string{sb.String()}}}
+	t := &dns.TXT{Hdr: hdr, TXT: rdata.TXT{Txt: []string{sb.String()}}}
 	builderPool.Put(sb)
 
 	switch r.Question[0].(type) {
@@ -141,7 +142,7 @@ func main() {
 	}
 
 	dns.HandleFunc("miek.nl.", reflect)
-	for range runtime.NumCPU() * 4 { // there is lock contention when writing back
+	for range runtime.NumCPU() * 6 { // there is lock contention when writing back
 		go serve("tcp")
 		go serve("udp")
 	}
