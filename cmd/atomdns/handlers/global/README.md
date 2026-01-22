@@ -83,10 +83,10 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:53`.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
-  - `run` **EXPR**, run this many servers the default is `NumCPU*3`, this can be a bare number,
+  - `run` **EXPR**, run this many servers the default is `NumCPU()*3`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in
-    lowercase. Also note that adding more servers helps with lock contention when writing the DNS messages
-    back to the client. This is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
+    lowercase, i.e. `numcpu()*N` is OK. Note that adding more servers helps with lock contention when writing the DNS messages
+    back to the client. This number is again multiplied by 2 for 50% UDP, and 50% TCP server. So `run 5`, will
     start 10 server instances. The maximum value is the number of CPUs \* 1024.
 
 ## `dot`
@@ -96,7 +96,7 @@ With `dot` you control DNS TLS server options, defined are:
 - `addr` **ADDRESS**: listen on this address, default is `[::]:853`.
 - `limits` set further limits:
   - `tcp` **LIMIT**, break off TCP connections after this many queries, default is 1024, -1 disables.
-  - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
+  - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()` may be spelled in lowercase.
     These are all TCP servers, so `run 5` will start 5 servers, not 10 as would the case with `dns`.
 
@@ -108,7 +108,7 @@ With `doh` you set http server options, defined are.
 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
 - `limits` set further limits:
-  - `run` **EXPR**, run this many servers the default is `NumCPU*1`, this can be a bare number,
+  - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()*` may be spelled in lowercase.
   - `inflight` **EXPR**, like `run`, how many inflight connection are we allowing, default is 1024, -1 disables.
 
