@@ -420,7 +420,19 @@ func TestZoneEdgeCases(t *testing.T) {
 				m := dns.NewMsg("mmark.miek.nl.", dns.TypeA)
 				m.Rcode = dns.RcodeNameError
 				m.Ns = []dns.RR{
-					dnstest.New("miek.nl. IN SOA     miek.miek.nl. miek.miek.nl. 3 1 1 1 1"),
+					dnstest.New("miek.nl. IN SOA     miek.miek.nl. miek.miek.nl. 5 1 1 1 1"),
+				}
+				return m
+			},
+		},
+		{
+			"apexcname",
+			func() *dns.Msg { m := dns.NewMsg("apex.miek.nl.", dns.TypeSOA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("apex.miek.nl.", dns.TypeSOA)
+				m.Answer = []dns.RR{
+					dnstest.New("apex.miek.nl. IN CNAME   miek.nl."),
+					dnstest.New("miek.nl. IN SOA     miek.miek.nl. miek.miek.nl. 5 1 1 1 1"),
 				}
 				return m
 			},
@@ -435,6 +447,7 @@ func TestZoneEdgeCases(t *testing.T) {
 			}
 
 			rmsg := dnszone.Retrieve(z, tc.in(), nil)
+			println(rmsg.String())
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.RRs() {
 				gotrrs = append(gotrrs, rr)
