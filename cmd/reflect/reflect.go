@@ -142,7 +142,7 @@ func main() {
 	}
 
 	dns.HandleFunc("miek.nl.", reflect)
-	for range runtime.NumCPU() * 6 { // there is lock contention when writing back
+	for range runtime.NumCPU() * 4 { // there is lock contention when writing back
 		go serve("tcp")
 		go serve("udp")
 	}
