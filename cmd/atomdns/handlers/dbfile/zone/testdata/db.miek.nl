@@ -1,5 +1,5 @@
 @                   IN   SOA        miek miek (
-                                       3            ; serial  
+                                       5            ; serial  
                                        1            ; refresh
                                        1            ; retry
                                        1            ; expire
@@ -9,3 +9,4 @@
 
 a                   IN   CNAME      b
 mmark               IN   CNAME      a
+apex                IN   CNAME      @
