@@ -23,7 +23,7 @@ import (
 //
 // runs: "dnsperf -s 127.0.0.1 -p 8053 -l 2 -c 2 -T 2", 10 times (if runtime.NumCPU returns 4).
 //
-// See dnsperf on how to create queries. The queries io.Reader is drained and placed in a file.
+// See dnsperf(1) on how to create queries. The queries io.Reader is drained and placed in a file.
 //
 // The output is simular to running Go benchmark tests and can be used in benchstat. See
 // https://pkg.go.dev/golang.org/x/perf/cmd/benchstat

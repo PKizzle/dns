@@ -8,9 +8,9 @@ import (
 	"codeberg.org/miekg/dns/internal/ddd"
 )
 
-// Dump dumps the slice p in a way to help debugging DNS binary code.
+// Dump dumps the slice p in a way to help debugging DNS wire-format.
 // Got used to reading decimal [192 12] is a pointer etc., so that's being used here.
-// If the optional off is given this is added to the counter.
+// If the optional off is given this is used as an offset in the buffer.
 //
 // Output looks like:
 //
@@ -35,13 +35,13 @@ func Dump(p []byte, off ...int) string {
 
 	const N = 16
 	dump := strings.Builder{}
-	dump.WriteString(fmt.Sprintf("% 5d\t", len(p[of:])))
+	fmt.Fprintf(&dump, "% 5d\t", len(p[of:]))
 	for i := range N {
-		dump.WriteString(fmt.Sprintf("% 4d", i))
+		fmt.Fprintf(&dump, "% 4d", i)
 	}
 	dump.WriteString("    ")
 	for i := range N {
-		dump.WriteString(fmt.Sprintf("% 4d", i))
+		fmt.Fprintf(&dump, "% 4d", i)
 	}
 	dump.WriteByte('\n')
 	dump.WriteByte('\n')
@@ -64,7 +64,7 @@ func Dump(p []byte, off ...int) string {
 		for j := range line {
 			c := line[j]
 			sb.WriteByte(' ')
-			sb.WriteString(fmt.Sprintf("%03d", c))
+			fmt.Fprintf(&sb, "%03d", c)
 		}
 		if len(line) < N { // pad out so the printable are aligned
 			for range N - len(line) {
@@ -78,13 +78,13 @@ func Dump(p []byte, off ...int) string {
 			c := line[j]
 			sb.WriteByte(' ')
 			if ddd.IsLetter(c) || ddd.IsDigit(c) {
-				sb.WriteString(fmt.Sprintf("%3s", string(c)))
+				fmt.Fprintf(&sb, "%3s", string(c))
 			} else {
-				sb.WriteString(fmt.Sprintf("%03d", c))
+				fmt.Fprintf(&sb, "%03d", c)
 			}
 		}
 
-		dump.WriteString(fmt.Sprintf("%5d\t|%s\n", row*N+plus, sb.String()))
+		fmt.Fprintf(&dump, "%5d\t|%s\n", row*N+plus, sb.String())
 		row++
 	}
 	return dump.String()
@@ -101,9 +101,9 @@ func Bytes(p []byte, off ...int) string {
 	}
 	dump := strings.Builder{}
 	dump.WriteString("[]byte{")
-	dump.WriteString(fmt.Sprintf("%d", p[of]))
+	fmt.Fprintf(&dump, "%d", p[of])
 	for _, c := range p[of+1:] {
-		dump.WriteString(fmt.Sprintf(", %d", c))
+		fmt.Fprintf(&dump, ", %d", c)
 	}
 
 	dump.WriteByte('}')
