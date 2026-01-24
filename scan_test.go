@@ -113,15 +113,26 @@ func TestZoneParserRRs(t *testing.T) {
 		},
 		{"empty", "", []RR{}, nil},
 		{"error", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A A: "::1"`}},
+		{
+			"multiple-error",
+			"1.example.org. 600 IN AAAA ::1\n1.bad.example.org. 600 IN A ::1",
+			[]RR{
+				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: rdata.AAAA{Addr: netip.IPv6Loopback()}},
+			},
+			&Error{`bad A A: "::1"`},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			zp := NewZoneParser(strings.NewReader(tc.input), "", "")
 			for rr, err := range zp.RRs() {
-				if tc.err != nil {
+				if tc.err != nil && err != nil {
 					if !strings.Contains(err.Error(), tc.err.Error()) {
 						t.Fatalf("expected err to be %s, got %s", tc.err, err)
 					}
+				}
+
+				if rr == nil {
 					continue
 				}
 

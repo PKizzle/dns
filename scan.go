@@ -713,9 +713,13 @@ func (zp *ZoneParser) Next() (RR, bool) {
 // RRs allows ranging over the RRs from the zone currently parsed.
 func (zp *ZoneParser) RRs() iter.Seq2[RR, error] {
 	return func(yield func(RR, error) bool) {
-		for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
+		for {
+			rr, ok := zp.Next()
 			if !yield(rr, zp.Err()) {
 				return
+			}
+			if !ok {
+				break
 			}
 		}
 	}
