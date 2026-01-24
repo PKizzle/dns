@@ -147,31 +147,6 @@ func readRR(r io.Reader, file string) (RR, error) {
 	return rr, zp.Err()
 }
 
-// ZoneParserIter returns an iterator over RRs parsed from an RFC 1035 style zone file.
-// The origin and file parameters are as per [NewZoneParser].
-//
-// Example:
-//
-//		for rr, err := range ZoneParserIter(strings.NewReader(mystring), "example.com", "zone.example.com") {
-//		    if err != nil {
-//		        return err
-//		    }
-//	        fmt.Printf("%s\n", rr.String())
-//		}
-func ZoneParserIter(r io.Reader, origin, file string) iter.Seq2[RR, error] {
-	return func(yield func(RR, error) bool) {
-		zp := NewZoneParser(r, origin, file)
-		for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
-			if !yield(rr, nil) {
-				return
-			}
-			if err := zp.Err(); err != nil {
-				yield(rr, err)
-			}
-		}
-	}
-}
-
 // ZoneParser is a parser for an RFC 1035 style zone file.
 //
 // Each parsed RR in the zone is returned sequentially from Next. An
