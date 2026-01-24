@@ -150,7 +150,7 @@ func ExampleZoneParser_RRs() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%s\n", rr.String())
+		fmt.Printf("%s\n", rr)
 	}
 }
 
