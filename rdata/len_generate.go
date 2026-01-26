@@ -81,15 +81,15 @@ func main() {
 				case `dns:"-"`:
 					// ignored
 				case `dns:"cdomain-name"`:
-					o("for _, x := range rd.%s { l += len(x)+1 }\n")
+					o("for i := range rd.%s { l += len(rd.%[1]s[i])+1 }\n")
 				case `dns:"domain-name"`:
-					o("for _, x := range rd.%s { l += len(x)+1 }\n")
+					o("for i := range rd.%s { l += len(rd.%[1]s[i])+1 }\n")
 				case `dns:"txt"`:
-					o("for _, x := range rd.%s { l += len(x) + 1 }\n")
+					o("for i := range rd.%s { l += len(rd.%[1]s[i]) + 1 }\n")
 				case `dns:"pairs"`:
-					o("for _, x := range rd.%s { l += x.Len() }\n")
+					o("for i := range rd.%s { l += rd.%[1]s[i].Len() }\n")
 				case `dns:"infos"`:
-					o("for _, x := range rd.%s { l += x.Len() }\n")
+					o("for i := range rd.%s { l += rd.%[1]s[i].Len() }\n")
 				default:
 					log.Fatalln(rrname, fieldname, tag)
 				}
@@ -114,9 +114,9 @@ func main() {
 			case tag == `dns:"any"`:
 				o("l += len(rd.%s)\n")
 			case tag == `dns:"a"`:
-				o("if rd.%s.IsValid() { l += net.IPv4len }\n")
+				o("l += net.IPv4len // %s\n")
 			case tag == `dns:"aaaa"`:
-				o("if rd.%s.IsValid() { l += net.IPv6len }\n")
+				o("l += net.IPv6len // %s\n")
 			case tag == `dns:"uint48"`:
 				o("l += 6 // %s\n")
 			case tag == "":
