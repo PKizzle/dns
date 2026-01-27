@@ -99,34 +99,28 @@ func TestTransfer(t *testing.T) {
 
 	for _, name := range []string{"tcp", "tcp-tls", "tcp-ixfr", "tcp-tls-ixfr"} {
 		t.Run(name, func(t *testing.T) {
+			c := dns.NewClient()
+			m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
+			ixfrsoa := []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2026012700}}}
 			addr := ""
 			switch name {
 			case "tcp", "tcp-ixfr":
 				cancel, adr, _ := dnstest.TCPServer(":0")
 				defer cancel()
 				addr = adr
+				if strings.HasSuffix(name, "-ixfr") {
+					m = dns.NewMsg(testTransferZone, dns.TypeIXFR)
+					m.Ns = ixfrsoa
+				}
 			case "tcp-tls", "tcp-tls-ixfr":
 				cancel, adr, _ := dnstest.TLSServer(":0")
 				defer cancel()
 				addr = adr
-			}
-
-			c := dns.NewClient()
-			if strings.HasPrefix(name, "tcp-tls") {
 				c.TLSConfig = dnstest.TLSConfig()
-			}
-
-			m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
-			if strings.HasSuffix(name, "-ixfr") {
-				m = dns.NewMsg(testTransferZone, dns.TypeIXFR)
-				m.Ns = []dns.RR{&dns.SOA{
-					Hdr: *m.Question[0].Header(),
-					SOA: rdata.SOA{
-						Ns:     ".",
-						Mbox:   ".",
-						Serial: 2026012700,
-					},
-				}}
+				if strings.HasSuffix(name, "-ixfr") {
+					m = dns.NewMsg(testTransferZone, dns.TypeIXFR)
+					m.Ns = ixfrsoa
+				}
 			}
 
 			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
