@@ -55,8 +55,30 @@ var TypeToRDATA = map[uint16]func(RR, RDATA){
 			continue
 		}
 		fmt.Fprintf(b, "Type%s: func (rr RR, rd RDATA) { rr.(*%[1]s).%[1]s = rd.(rdata.%[1]s) },\n", rrname)
-
 	}
 	b.WriteString("}\n")
+
+	for _, spec := range specs {
+		rrname := spec.Name.Name
+		switch rrname {
+		case "OPT":
+			fallthrough
+		case "RFC3597":
+			continue
+		}
+
+		strct := spec.Type.(*ast.StructType)
+
+		if generate.IsEmbedded(strct) {
+			fmt.Fprintf(b, "func (rr *%[2]s) Data() RDATA { return rr.%[1]s.%[1]s }\n", strct.Fields.List[0].Type, rrname)
+			continue
+		}
+		if len(strct.Fields.List) == 1 { // Only header, no rdata
+			fmt.Fprintf(b, "func (rr %s) Data() RDATA { return nil }\n", rrname)
+			continue
+		}
+		fmt.Fprintf(b, "func (rr *%[1]s) Data() RDATA { return rr.%[1]s }\n", rrname)
+	}
+
 	generate.Write(b, out)
 }

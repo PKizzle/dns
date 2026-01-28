@@ -182,7 +182,11 @@ return 1
 			case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
 				fallthrough
 			case tag == `dns:"hex"`:
-				o(`x = comparehex(rr.%s, b.(*%s).%s)`)
+				if fieldname == "Data" {
+					o(`x = comparehex(rr.RFC3597.%s, b.(*%s).RFC3597.%s)`)
+				} else {
+					o(`x = comparehex(rr.%s, b.(*%s).%s)`)
+				}
 
 			case tag == `dns:"any"`:
 				// can we do strings.Compare here? TODO(miek)

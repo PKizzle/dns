@@ -155,6 +155,11 @@ func main() {
 				continue
 			}
 
+			if fieldname == "Data" { // only the case for RFC3597 RR
+				o("rr.RFC3597.%s,\n")
+				continue
+			}
+
 			o("rr.%s,\n")
 		}
 		if i < lspecs {

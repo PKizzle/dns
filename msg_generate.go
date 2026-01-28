@@ -152,7 +152,11 @@ if rr.%s != "-" {
 				case strings.HasPrefix(tag, `dns:"size-hex`): // size-hex can be packed just like hex
 					fallthrough
 				case tag == `dns:"hex"`:
-					o("off, err = pack.StringHex(rr.%s, msg, off)\n")
+					if fieldname == "Data" {
+						o("off, err = pack.StringHex(rr.RFC3597.%s, msg, off)\n")
+					} else {
+						o("off, err = pack.StringHex(rr.%s, msg, off)\n")
+					}
 				case tag == `dns:"any"`:
 					o("off, err = pack.StringAny(rr.%s, msg, off)\n")
 				case tag == "":
@@ -225,7 +229,11 @@ if rr.%s != "-" {
 					errCheck()
 				}
 				unpackFieldRest := func(unpacker string) {
-					fmt.Fprintf(b, "rr.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
+					if fieldname == "Data" {
+						fmt.Fprintf(b, "rr.RFC3597.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
+					} else {
+						fmt.Fprintf(b, "rr.%s, err = %s(&s, len(s))\n", fieldname, unpacker)
+					}
 					errCheck()
 				}
 				unpackFieldLength := func(unpacker, len string) {
