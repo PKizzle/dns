@@ -30,7 +30,7 @@ I have ported a few utilities from dnsv1 to dnsv2, and dnsv2 is mostly a drop-in
   Pseudo section RR (EDNS0 OPT) can also be parsed from their (also unique to this library) presentation format.
 
   The `Stateful` section in the message that holds DNS Stateful Operation (DSO) records, these records are
-  also `RR`s.
+  also `RR`s. (The Stateful section was unused - this has been removed from Msg for the time being).
 
 - `New` will return an `RR`, `NewRR` is gone, `dnstest/New` will do the same, but panic on errors.
 - `Client` has a `dns.Transport` just like `http.Client`, so _all_ connection management is now external.
