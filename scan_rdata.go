@@ -241,7 +241,7 @@ func parseRT(rd *rdata.RT, c *dnslex.Lexer, o string) *ParseError {
 	return toParseError(dnslex.Remainder(c))
 }
 
-func parseAFSBD(rd *rdata.AFSDB, c *dnslex.Lexer, o string) *ParseError {
+func parseAFSDB(rd *rdata.AFSDB, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.Token, 10, 16)
 	if e != nil || l.Err {
@@ -1370,25 +1370,7 @@ func parseRFC3597(rd *rdata.RFC3597, c *dnslex.Lexer, o string) *ParseError {
 	if int(rdlength)*2 != len(s) {
 		return &ParseError{err: "bad RFC3597 Rdata", lex: l}
 	}
-	rd.RFC3597.Data = s
-	return nil
-}
-
-func parseSPF(rd *rdata.SPF, c *dnslex.Lexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad SPF Txt")
-	if e != nil {
-		return e
-	}
-	rd.Txt = s
-	return nil
-}
-
-func parseAVC(rd *rdata.AVC, c *dnslex.Lexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad AVC Txt")
-	if e != nil {
-		return e
-	}
-	rd.Txt = s
+	rd.Data = s
 	return nil
 }
 
@@ -1409,34 +1391,6 @@ func parseNINFO(rd *rdata.NINFO, c *dnslex.Lexer, o string) *ParseError {
 		return e
 	}
 	rd.ZSData = s
-	return nil
-}
-
-// Uses the same format as TXT
-func parseRESINFO(rd *rdata.RESINFO, c *dnslex.Lexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad RESINFO Resinfo")
-	if e != nil {
-		return e
-	}
-	rd.Txt = s
-	return nil
-}
-
-func parseWALLER(rd *rdata.WALLET, c *dnslex.Lexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad WALLET Txt")
-	if e != nil {
-		return e
-	}
-	rd.Txt = s
-	return nil
-}
-
-func parseCLA(rd *rdata.CLA, c *dnslex.Lexer, o string) *ParseError {
-	s, e := endingToTxtSlice(c, "bad CLA Txt")
-	if e != nil {
-		return e
-	}
-	rd.Txt = s
 	return nil
 }
 
