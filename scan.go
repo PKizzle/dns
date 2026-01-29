@@ -16,8 +16,6 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
-const maxTok = 512 // Token buffer start size, and growth size amount.
-
 // The maximum depth of $INCLUDE directives supported by the ZoneParser API.
 const maxIncludeDepth = 7
 
@@ -124,6 +122,20 @@ func readRR(r io.Reader, file string) (RR, error) {
 	zp.SetDefaultTTL(defaultTTL)
 	rr, _ := zp.Next()
 	return rr, zp.Err()
+}
+
+// NewData parses s, but only for the rdata, i.e. when the full RR is "miek.nl. IN 3600 MX 10 mx.miek.nl.",
+// NewData must get "10 mx.miek.nl." and optionally an origin".
+func NewData(rrtype uint16, s, origin string) (RDATA, error) {
+	c := dnslex.New(strings.NewReader(s), StringToType, StringToCode, StringToClass)
+
+	switch rrtype {
+	case TypeMX:
+		rd := rdata.MX{}
+		err := parseMX(&rd, c, origin)
+		return rd, err
+	}
+	return nil, nil
 }
 
 // ZoneParser is a parser for an RFC 1035 style zone file.
@@ -852,6 +864,7 @@ func defaultIncludeAllowFunc(file, include string) bool {
 
 func toParseError(err *dnslex.ScanError) *ParseError {
 	if err == nil {
+		println("RET NIL")
 		return nil
 	}
 	return &ParseError{err: err.Err, lex: err.Lex}
