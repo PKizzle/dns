@@ -108,16 +108,16 @@ type ttlState struct {
 // literals.
 func New(s string) (RR, error) {
 	if len(s) > 0 && s[len(s)-1] != '\n' { // We need a closing newline
-		return readRR(strings.NewReader(s+"\n"), "")
+		return read(strings.NewReader(s+"\n"), "")
 	}
-	return readRR(strings.NewReader(s), "")
+	return read(strings.NewReader(s), "")
 }
 
 // Read behaves like [New] but reads from an io.Reader. Note the reader must include an ending newline,
 // otherwise the parsing will fail.
-func Read(r io.Reader) (RR, error) { return readRR(r, "") }
+func Read(r io.Reader) (RR, error) { return read(r, "") }
 
-func readRR(r io.Reader, file string) (RR, error) {
+func read(r io.Reader, file string) (RR, error) {
 	zp := NewZoneParser(r, ".", file)
 	zp.SetDefaultTTL(defaultTTL)
 	rr, _ := zp.Next()
@@ -125,15 +125,27 @@ func readRR(r io.Reader, file string) (RR, error) {
 }
 
 // NewData parses s, but only for the rdata, i.e. when the full RR is "miek.nl. IN 3600 MX 10 mx.miek.nl.",
-// NewData must get "10 mx.miek.nl." and optionally an origin".
+// NewData must get "10 mx.miek.nl." and optionally an origin". Leading spaces are not allowed.
 func NewData(rrtype uint16, s, origin string) (RDATA, error) {
-	c := dnslex.New(strings.NewReader(s), StringToType, StringToCode, StringToClass)
+	return readData(strings.NewReader(s), rrtype, origin)
+}
+
+// ReadData behaves like [NewData] but reads from an io.Reader.
+func ReadData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
+	return readData(r, rrtype, origin)
+}
+
+func readData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
+	c := dnslex.New(r, StringToType, StringToCode, StringToClass)
 
 	switch rrtype {
 	case TypeMX:
 		rd := rdata.MX{}
-		err := parseMX(&rd, c, origin)
-		return rd, err
+		pe := parseMX(&rd, c, origin)
+		if pe != nil { // Return rd, pe directly breaks things, prolly due non-empty error interfaces.
+			return rd, pe
+		}
+		return rd, nil
 	}
 	return nil, nil
 }
@@ -864,7 +876,6 @@ func defaultIncludeAllowFunc(file, include string) bool {
 
 func toParseError(err *dnslex.ScanError) *ParseError {
 	if err == nil {
-		println("RET NIL")
 		return nil
 	}
 	return &ParseError{err: err.Err, lex: err.Lex}
