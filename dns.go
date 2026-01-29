@@ -126,9 +126,12 @@ func (h *Header) Clone() RR       { return &Header{h.Name, h.TTL, h.Class} }
 // String returns the string representation of h.
 // Note that as the RR type is derived from the RR containing this header, getting the text
 // representation of just the header will show TYPE0 instead of the actual type. As this not that useful
-// the TYPE0 is not added as well, leaving name, ttl and class.
+// the TYPE0 is not even added, leaving name, ttl and class.
 //
-// For correctly printing the header you need the RR type to correctly print it. See [codeberg.org/miekg/dns/dnsutil.TypeToString] omong others.
+// For correctly printing the header you need the RR type to correctly print it. See [codeberg.org/miekg/dns/dnsutil.TypeToString] among others.
+// For a RR to be completely printed use:
+//
+//	s := rr.Header().String() + " " + dnsutil.TypeToString(dns.RRToType(rr)) + "\t" + rr.Data().String)
 func (h *Header) String() string {
 	sb := builderPool.Get()
 	defer builderPool.Put(sb)
