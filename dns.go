@@ -41,9 +41,9 @@ const (
 
 // An RR represents a DNS resource record.
 type RR interface {
-	// Header returns the header of an resource record. The header contains everything up to the rdata.
+	// Header returns the header of a resource record. The header contains everything up to the rdata.
 	Header() *Header
-	// Data return the rdata of the an resource record. The Data contains everything after the header.
+	// Data return the rdata of a resource record. The Data contains everything after the header.
 	Data() RDATA
 	// String returns the text representation of the resource record.
 	String() string
