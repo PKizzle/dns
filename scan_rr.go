@@ -12,90 +12,6 @@ import (
 	"codeberg.org/miekg/dns/svcb"
 )
 
-// A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
-// or an error
-func endingToString(c *dnslex.Lexer, errstr string) (string, *ParseError) {
-	var s strings.Builder
-	l, _ := c.Next() // dnslex.String
-	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
-		if l.Err {
-			return s.String(), &ParseError{err: errstr, lex: l}
-		}
-		switch l.Value {
-		case dnslex.String:
-			s.WriteString(l.Token)
-		case dnslex.Blank: // Ok
-		default:
-			return "", &ParseError{err: errstr, lex: l}
-		}
-		l, _ = c.Next()
-	}
-
-	return s.String(), nil
-}
-
-// A remainder of the rdata with embedded spaces, split on unquoted whitespace
-// and return the parsed string slice or an error
-func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, *ParseError) {
-	// Get the remaining data until we see a dnslex.Newline
-	l, _ := c.Next()
-	if l.Err {
-		return nil, &ParseError{err: errstr, lex: l}
-	}
-
-	// Build the slice
-	s := make([]string, 0)
-	quote := false
-	empty := false
-	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
-		if l.Err {
-			return nil, &ParseError{err: errstr, lex: l}
-		}
-		switch l.Value {
-		case dnslex.String:
-			empty = false
-			// split up tokens that are larger than 255 into 255-chunks
-			sx := []string{}
-			p := 0
-			for {
-				i, ok := escapedStringOffset(l.Token[p:], 255)
-				if !ok {
-					return nil, &ParseError{err: errstr, lex: l}
-				}
-				if i != -1 && p+i != len(l.Token) {
-					sx = append(sx, l.Token[p:p+i])
-				} else {
-					sx = append(sx, l.Token[p:])
-					break
-
-				}
-				p += i
-			}
-			s = append(s, sx...)
-		case dnslex.Blank:
-			if quote {
-				// dnslex.Blank can only be seen in between txt parts.
-				return nil, &ParseError{err: errstr, lex: l}
-			}
-		case dnslex.Quote:
-			if empty && quote {
-				s = append(s, "")
-			}
-			quote = !quote
-			empty = true
-		default:
-			return nil, &ParseError{err: errstr, lex: l}
-		}
-		l, _ = c.Next()
-	}
-
-	if quote {
-		return nil, &ParseError{err: errstr, lex: l}
-	}
-
-	return s, nil
-}
-
 func (rr *A) parse(c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
 	value, err := netip.ParseAddr(l.Token)
@@ -284,26 +200,7 @@ func (rr *MD) parse(c *dnslex.Lexer, o string) *ParseError {
 	return toParseError(dnslex.Remainder(c))
 }
 
-func (rr *MX) parse(c *dnslex.Lexer, o string) *ParseError {
-	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
-		return &ParseError{err: "bad MX Pref", lex: l}
-	}
-	rr.Preference = uint16(i)
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	rr.Mx = l.Token
-
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
-		return &ParseError{err: "bad MX Mx", lex: l}
-	}
-	rr.Mx = name
-
-	return toParseError(dnslex.Remainder(c))
-}
+func (rr *MX) parse(c *dnslex.Lexer, o string) *ParseError { return parseMX(&rr.MX, c, o) }
 
 func (rr *RT) parse(c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
@@ -1240,14 +1137,18 @@ func (rr *DNSKEY) parseDNSKEY(c *dnslex.Lexer, o, typ string) *ParseError {
 	return nil
 }
 
-func (rr *DNSKEY) parse(c *dnslex.Lexer, o string) *ParseError { return rr.parseDNSKEY(c, o, "DNSKEY") }
-func (rr *KEY) parse(c *dnslex.Lexer, o string) *ParseError    { return rr.parseDNSKEY(c, o, "KEY") }
-func (rr *CDNSKEY) parse(c *dnslex.Lexer, o string) *ParseError {
-	return rr.parseDNSKEY(c, o, "CDNSKEY")
+func (rr *DNSKEY) parse(c *dnslex.Lexer, o string) *ParseError {
+	return parseDNSKEY(&rr.DNSKEY, o, "DNSKEY")
 }
-func (rr *DS) parse(c *dnslex.Lexer, o string) *ParseError  { return rr.parseDS(c, o, "DS") }
-func (rr *DLV) parse(c *dnslex.Lexer, o string) *ParseError { return rr.parseDS(c, o, "DLV") }
-func (rr *CDS) parse(c *dnslex.Lexer, o string) *ParseError { return rr.parseDS(c, o, "CDS") }
+func (rr *KEY) parse(c *dnslex.Lexer, o string) *ParseError {
+	return parseDNSKEY(&rr.DNSKEY.DNSKEY, c, o, "KEY")
+}
+func (rr *CDNSKEY) parse(c *dnslex.Lexer, o string) *ParseError {
+	return parseDNSKEY(&rr.DNSKEY.DNSKEY, c, o, "KEY")
+}
+func (rr *DS) parse(c *dnslex.Lexer, o string) *ParseError  { return parseDS(&rr.DS, c, o, "DS") }
+func (rr *DLV) parse(c *dnslex.Lexer, o string) *ParseError { return parseDS(&rr.DS.DS, c, o, "DLV") }
+func (rr *CDS) parse(c *dnslex.Lexer, o string) *ParseError { return parseDS(&rr.DS.DS, c, o, "CDS") }
 
 func (rr *RKEY) parse(c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
@@ -2042,4 +1943,88 @@ func typeToInt(token string) (uint16, bool) {
 		return 0, false
 	}
 	return uint16(typ), true
+}
+
+// A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
+// or an error
+func endingToString(c *dnslex.Lexer, errstr string) (string, *ParseError) {
+	var s strings.Builder
+	l, _ := c.Next() // dnslex.String
+	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
+		if l.Err {
+			return s.String(), &ParseError{err: errstr, lex: l}
+		}
+		switch l.Value {
+		case dnslex.String:
+			s.WriteString(l.Token)
+		case dnslex.Blank: // Ok
+		default:
+			return "", &ParseError{err: errstr, lex: l}
+		}
+		l, _ = c.Next()
+	}
+
+	return s.String(), nil
+}
+
+// A remainder of the rdata with embedded spaces, split on unquoted whitespace
+// and return the parsed string slice or an error
+func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, *ParseError) {
+	// Get the remaining data until we see a dnslex.Newline
+	l, _ := c.Next()
+	if l.Err {
+		return nil, &ParseError{err: errstr, lex: l}
+	}
+
+	// Build the slice
+	s := make([]string, 0)
+	quote := false
+	empty := false
+	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
+		if l.Err {
+			return nil, &ParseError{err: errstr, lex: l}
+		}
+		switch l.Value {
+		case dnslex.String:
+			empty = false
+			// split up tokens that are larger than 255 into 255-chunks
+			sx := []string{}
+			p := 0
+			for {
+				i, ok := escapedStringOffset(l.Token[p:], 255)
+				if !ok {
+					return nil, &ParseError{err: errstr, lex: l}
+				}
+				if i != -1 && p+i != len(l.Token) {
+					sx = append(sx, l.Token[p:p+i])
+				} else {
+					sx = append(sx, l.Token[p:])
+					break
+
+				}
+				p += i
+			}
+			s = append(s, sx...)
+		case dnslex.Blank:
+			if quote {
+				// dnslex.Blank can only be seen in between txt parts.
+				return nil, &ParseError{err: errstr, lex: l}
+			}
+		case dnslex.Quote:
+			if empty && quote {
+				s = append(s, "")
+			}
+			quote = !quote
+			empty = true
+		default:
+			return nil, &ParseError{err: errstr, lex: l}
+		}
+		l, _ = c.Next()
+	}
+
+	if quote {
+		return nil, &ParseError{err: errstr, lex: l}
+	}
+
+	return s, nil
 }
