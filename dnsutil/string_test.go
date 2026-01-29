@@ -1,6 +1,12 @@
 package dnsutil
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/rdata"
+)
 
 func TestToString(t *testing.T) {
 	if x := RcodeToString(5); x != "REFUSED" {
@@ -21,4 +27,10 @@ func TestToString(t *testing.T) {
 	if x := ClassToString(1); x != "IN" {
 		t.Errorf("expected %s, got %s", "IN", x)
 	}
+}
+
+func ExampleTypeToString() {
+	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
+	fmt.Println(TypeToString(dns.RRToType(rr)))
+	// Output: MX
 }

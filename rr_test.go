@@ -25,6 +25,7 @@ func (rr *YO) Type() uint16 { return codepoint }
 // RR interface.
 func (rr *YO) Header() *dns.Header { return &rr.Hdr }
 func (rr *YO) Len() int            { return rr.Hdr.Len() + 1 + len(rr.Yo) }
+func (rr *YO) Data() dns.RDATA     { return nil } // Not implemented.
 func (rr *YO) Clone() dns.RR       { return &YO{rr.Hdr, rr.Priority, rr.Yo} }
 func (rr *YO) String() string {
 	return rr.Header().Name + "\t" +
@@ -103,7 +104,7 @@ func TestExternalRR(t *testing.T) {
 
 // YOOPT is a custom EDNS0 option for testing external EDNS0 support.
 type YOOPT struct {
-	Data string
+	Yo string
 }
 
 const optcodepoint = 65001
@@ -113,24 +114,25 @@ func (o *YOOPT) Type() uint16 { return optcodepoint }
 
 // RR interface.
 func (o *YOOPT) Header() *dns.Header { return &dns.Header{Name: "."} }
-func (o *YOOPT) Len() int            { return 4 + len(o.Data) } // 4 = TLV overhead (code + length)
-func (o *YOOPT) Clone() dns.RR       { return &YOOPT{Data: o.Data} }
-func (o *YOOPT) String() string      { return "YOOPT " + o.Data }
+func (o *YOOPT) Data() dns.RDATA     { return o }
+func (o *YOOPT) Len() int            { return 4 + len(o.Yo) } // 4 = TLV overhead (code + length)
+func (o *YOOPT) Clone() dns.RR       { return &YOOPT{Yo: o.Yo} }
+func (o *YOOPT) String() string      { return "YOOPT " + o.Yo }
 
 // EDNS0 interface.
 func (o *YOOPT) Pseudo() bool { return true }
 
 // Packer interface.
 func (o *YOOPT) Pack(msg []byte, off int) (int, error) {
-	if off+len(o.Data) > len(msg) {
+	if off+len(o.Yo) > len(msg) {
 		return len(msg), fmt.Errorf("overflow packing YOOPT")
 	}
-	copy(msg[off:], o.Data)
-	return off + len(o.Data), nil
+	copy(msg[off:], o.Yo)
+	return off + len(o.Yo), nil
 }
 
-func (o *YOOPT) Unpack(data []byte) error {
-	o.Data = string(data)
+func (o *YOOPT) Unpack(yo []byte) error {
+	o.Yo = string(yo)
 	return nil
 }
 
@@ -139,7 +141,7 @@ func TestExternalEDNS0(t *testing.T) {
 	dns.CodeToString[optcodepoint] = "YOOPT"
 
 	m := dns.NewMsg("yo.example.org.", dns.TypeA)
-	m.Pseudo = []dns.RR{&YOOPT{Data: "Yo!"}}
+	m.Pseudo = []dns.RR{&YOOPT{Yo: "Yo!"}}
 
 	if err := m.Pack(); err != nil {
 		t.Fatalf("YOOPT failed to Pack: %v", err)
@@ -157,8 +159,8 @@ func TestExternalEDNS0(t *testing.T) {
 	if !ok {
 		t.Fatalf("pseudo record is not YOOPT, got %T", m.Pseudo[0])
 	}
-	if y.Data != "Yo!" {
-		t.Fatalf("expected Data 'Yo!', got '%s'", y.Data)
+	if y.Yo != "Yo!" {
+		t.Fatalf("expected Data 'Yo!', got '%s'", y.Yo)
 	}
 	if x := y.Type(); x != optcodepoint {
 		t.Fatalf("expected type %d, got %d", optcodepoint, x)
