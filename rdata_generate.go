@@ -18,6 +18,7 @@ var hdr = `
 package dns
 
 import "codeberg.org/miekg/dns/rdata"
+import "codeberg.org/miekg/dns/internal/dnslex"
 import "io"
 
 `
@@ -59,17 +60,44 @@ var TypeToRDATA = map[uint16]func(RR, RDATA){
 	}
 	b.WriteString("}\n\n")
 
+	for _, spec := range specs {
+		rrname := spec.Name.Name
+		switch rrname {
+		case "OPT":
+			fallthrough
+		case "RFC3597":
+			continue
+		}
+
+		strct := spec.Type.(*ast.StructType)
+
+		if generate.IsEmbedded(strct) {
+			fmt.Fprintf(b, "func (rr *%[2]s) Data() RDATA { return rr.%[1]s.%[1]s }\n", strct.Fields.List[0].Type, rrname)
+			continue
+		}
+		if len(strct.Fields.List) == 1 { // Only header, no rdata
+			fmt.Fprintf(b, "func (rr %s) Data() RDATA { return nil }\n", rrname)
+			continue
+		}
+		fmt.Fprintf(b, "func (rr *%[1]s) Data() RDATA { return rr.%[1]s }\n", rrname)
+	}
+
 	b.WriteString("func parseData(r io.Reader, rrtype uint16, o string) (RDATA, error) {\n")
 	b.WriteString("c := dnslex.New(r, StringToType, StringToCode, StringToClass)\n\n")
 	b.WriteString("switch rrtype {\n")
 	for _, spec := range specs {
 		rrname := spec.Name.Name
 		switch rrname {
-		case "OPT":
+		case "OPT", "NULL", "TSIG", "RFC3597":
 			continue
 		}
 
 		strct := spec.Type.(*ast.StructType)
+		if !generate.IsEmbedded(strct) && len(strct.Fields.List) == 1 {
+			// Only header, no rdata
+			continue
+		}
+
 		fmt.Fprintf(b, "case Type%s:\n", rrname)
 
 		if generate.IsEmbedded(strct) {
@@ -82,10 +110,18 @@ var TypeToRDATA = map[uint16]func(RR, RDATA){
 		fmt.Fprintf(b, `if pe != nil {
 	return rd, pe
     }
-return rd, pe
+return rd, nil
 
 `)
 	}
-	b.WriteString("}\n}\n")
+	b.WriteString("}\n")
+	b.WriteString(`rd := rdata.RFC3597{}
+	pe := parseRFC3597(&rd, c, o)
+	if pe != nil {
+		return rd, pe
+	}
+	return rd, nil
+}
+`)
 	generate.Write(b, out)
 }

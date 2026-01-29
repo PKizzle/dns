@@ -136,25 +136,7 @@ func ReadData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
 }
 
 func readData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
-	c := dnslex.New(r, StringToType, StringToCode, StringToClass)
-
-	switch rrtype {
-	case TypeMX:
-		rd := rdata.MX{}
-		pe := parseMX(&rd, c, origin)
-		if pe != nil { // Return rd, pe directly breaks things, prolly due non-empty error interfaces.
-			return rd, pe
-		}
-		return rd, nil
-	case TypeSPF:
-		rd := rdata.TXT{}
-		pe := parseTXT(&rd, c, origin)
-		if pe != nil { // Return rd, pe directly breaks things, prolly due non-empty error interfaces.
-			return rd, pe
-		}
-		return rd, nil
-	}
-	return nil, nil
+	return parseData(r, rrtype, origin)
 }
 
 // ZoneParser is a parser for an RFC 1035 style zone file.
