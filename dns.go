@@ -124,7 +124,7 @@ func (h *Header) Data() RDATA     { return nil }
 func (h *Header) Clone() RR       { return &Header{h.Name, h.TTL, h.Class} }
 
 // String returns the string representation of h.
-// Note that as the RR type is derived from the RR containing this header, getting the text
+// Note that as the RR type is derived from the [RR] containing this header, getting the text
 // representation of just the header will show TYPE0 instead of the actual type. As this not that useful
 // the TYPE0 is not even added, leaving name, ttl and class.
 //
