@@ -51,21 +51,19 @@ func (rr *NSEC3) parse(c *dnslex.Lexer, o string) *ParseError  { return parseNSE
 func (rr *NSEC3PARAM) parse(c *dnslex.Lexer, o string) *ParseError {
 	return parseNSEC3PARAM(&rr.NSEC3PARAM, c, o)
 }
-func (rr *EUI48) parse(c *dnslex.Lexer, o string) *ParseError { return parseEUI48(&rr.EUI48, c, o) }
-func (rr *EUI64) parse(c *dnslex.Lexer, o string) *ParseError { return parseEUI64(&rr.EUI64, c, o) }
-func (rr *SSHFP) parse(c *dnslex.Lexer, o string) *ParseError { return parseSSHFP(&rr.SSHFP, c, o) }
-func (rr *DNSKEY) parse(c *dnslex.Lexer, o string) *ParseError {
-	return parseDNSKEY(&rr.DNSKEY, c, o, "DNSKEY")
-}
+func (rr *EUI48) parse(c *dnslex.Lexer, o string) *ParseError  { return parseEUI48(&rr.EUI48, c, o) }
+func (rr *EUI64) parse(c *dnslex.Lexer, o string) *ParseError  { return parseEUI64(&rr.EUI64, c, o) }
+func (rr *SSHFP) parse(c *dnslex.Lexer, o string) *ParseError  { return parseSSHFP(&rr.SSHFP, c, o) }
+func (rr *DNSKEY) parse(c *dnslex.Lexer, o string) *ParseError { return parseDNSKEY(&rr.DNSKEY, c, o) }
 func (rr *KEY) parse(c *dnslex.Lexer, o string) *ParseError {
-	return parseDNSKEY(&rr.DNSKEY.DNSKEY, c, o, "KEY")
+	return parseDNSKEY(&rr.DNSKEY.DNSKEY, c, o)
 }
 func (rr *CDNSKEY) parse(c *dnslex.Lexer, o string) *ParseError {
-	return parseDNSKEY(&rr.DNSKEY.DNSKEY, c, o, "CDNSKEY")
+	return parseDNSKEY(&rr.DNSKEY.DNSKEY, c, o)
 }
-func (rr *DS) parse(c *dnslex.Lexer, o string) *ParseError     { return parseDS(&rr.DS, c, o, "DS") }
-func (rr *DLV) parse(c *dnslex.Lexer, o string) *ParseError    { return parseDS(&rr.DS.DS, c, o, "DLV") }
-func (rr *CDS) parse(c *dnslex.Lexer, o string) *ParseError    { return parseDS(&rr.DS.DS, c, o, "CDS") }
+func (rr *DS) parse(c *dnslex.Lexer, o string) *ParseError     { return parseDS(&rr.DS, c, o) }
+func (rr *DLV) parse(c *dnslex.Lexer, o string) *ParseError    { return parseDS(&rr.DS.DS, c, o) }
+func (rr *CDS) parse(c *dnslex.Lexer, o string) *ParseError    { return parseDS(&rr.DS.DS, c, o) }
 func (rr *RKEY) parse(c *dnslex.Lexer, o string) *ParseError   { return parseRKEY(&rr.RKEY, c, o) }
 func (rr *EID) parse(c *dnslex.Lexer, o string) *ParseError    { return parseEID(&rr.EID, c, o) }
 func (rr *NIMLOC) parse(c *dnslex.Lexer, o string) *ParseError { return parseNIMLOC(&rr.NIMLOC, c, o) }

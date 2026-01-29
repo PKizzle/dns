@@ -2,8 +2,11 @@
 
 package dns
 
-import "fmt"
-import "codeberg.org/miekg/dns/internal/dnslex"
+import (
+	"fmt"
+
+	"codeberg.org/miekg/dns/internal/dnslex"
+)
 
 func parse(rr RR, c *dnslex.Lexer, o string) *ParseError {
 	switch x := rr.(type) {

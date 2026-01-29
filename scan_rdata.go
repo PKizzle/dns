@@ -1122,28 +1122,28 @@ func parseSSHFP(rd *rdata.SSHFP, c *dnslex.Lexer, o string) *ParseError {
 	return nil
 }
 
-func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o, typ string) *ParseError {
+func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.Token, 10, 16)
 	if e != nil || l.Err {
-		return &ParseError{err: "bad " + typ + " Flags", lex: l}
+		return &ParseError{err: "bad DNSKEY Flags", lex: l}
 	}
 	rd.Flags = uint16(i)
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
 	i, e1 := strconv.ParseUint(l.Token, 10, 8)
 	if e1 != nil || l.Err {
-		return &ParseError{err: "bad " + typ + " Protocol", lex: l}
+		return &ParseError{err: "bad DNSKEY Protocol", lex: l}
 	}
 	rd.Protocol = uint8(i)
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
 	i, e2 := strconv.ParseUint(l.Token, 10, 8)
 	if e2 != nil || l.Err {
-		return &ParseError{err: "bad " + typ + " Algorithm", lex: l}
+		return &ParseError{err: "bad DNSKEY Algorithm", lex: l}
 	}
 	rd.Algorithm = uint8(i)
-	s, e3 := endingToString(c, "bad "+typ+" PublicKey")
+	s, e3 := endingToString(c, "bad DNSKEY PublicKey")
 	if e3 != nil {
 		return e3
 	}
@@ -1222,11 +1222,11 @@ func parseGPOS(rd *rdata.GPOS, c *dnslex.Lexer, o string) *ParseError {
 	return toParseError(dnslex.Remainder(c))
 }
 
-func parseDS(rd *rdata.DS, c *dnslex.Lexer, o, typ string) *ParseError {
+func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
 	i, e := strconv.ParseUint(l.Token, 10, 16)
 	if e != nil || l.Err {
-		return &ParseError{err: "bad " + typ + " KeyTag", lex: l}
+		return &ParseError{err: "bad DS KeyTag", lex: l}
 	}
 	rd.KeyTag = uint16(i)
 	c.Next() // dnslex.Blank
@@ -1235,7 +1235,7 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o, typ string) *ParseError {
 		tokenUpper := strings.ToUpper(l.Token)
 		i, ok := StringToAlgorithm[tokenUpper]
 		if !ok || l.Err {
-			return &ParseError{err: "bad " + typ + " Algorithm", lex: l}
+			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
 		rd.Algorithm = i
 	} else {
@@ -1245,10 +1245,10 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o, typ string) *ParseError {
 	l, _ = c.Next()
 	i, e1 := strconv.ParseUint(l.Token, 10, 8)
 	if e1 != nil || l.Err {
-		return &ParseError{err: "bad " + typ + " DigestType", lex: l}
+		return &ParseError{err: "bad DS DigestType", lex: l}
 	}
 	rd.DigestType = uint8(i)
-	s, e2 := endingToString(c, "bad "+typ+" Digest")
+	s, e2 := endingToString(c, "bad DS Digest")
 	if e2 != nil {
 		return e2
 	}
