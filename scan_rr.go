@@ -1786,7 +1786,9 @@ func (rr *SVCB) parse(c *dnslex.Lexer, o string) *ParseError {
 	return nil
 }
 
-func (rr *HTTPS) parse(c *dnslex.Lexer, o string) *ParseError { return rr.SVCB.parse(c, o) }
+func (rr *HTTPS) parse(c *dnslex.Lexer, o string) *ParseError {
+	return SVCB.parseSCVB(&rr.SVCB.SVCB, c, o)
+}
 
 func (rr *DELEG) parse(c *dnslex.Lexer, o string) *ParseError {
 	// TODO(miek): unify with SVCB
@@ -1867,7 +1869,7 @@ func (rr *DELEG) parse(c *dnslex.Lexer, o string) *ParseError {
 	return nil
 }
 
-func (rr *DELEGI) parse(c *dnslex.Lexer, o string) *ParseError { return rr.DELEG.parse(c, o) }
+func (rr *DELEGI) parse(c *dnslex.Lexer, o string) *ParseError { return parseDELEG(&rr.DELEG.DELEG, o) }
 
 func (rr *DSYNC) parse(c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
