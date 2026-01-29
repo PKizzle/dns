@@ -16,7 +16,7 @@ rtypes:
 
 ```
 num := dns.StringToType["MX"]
-typeStr := dnsutil.TypeToString(t uint16) string {
+typeStr := dnsutil.TypeToString(num)
 ```
 
 ## Create an empty RR
