@@ -56,10 +56,10 @@ func TestNewData(t *testing.T) {
 			dns.TypeMX,
 			" 10 mx.miek.nl.",
 			func(rd RDATA) error {
-				if rd == nil {
+				if rd.(rdata.MX).Preference == 0 {
 					return nil
 				}
-				return fmt.Errorf("expected nil rd")
+				return fmt.Errorf("expected nil rd: %v", rd)
 			},
 		},
 	}
