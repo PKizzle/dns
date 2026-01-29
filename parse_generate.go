@@ -42,25 +42,6 @@ func parse(rr RR, c *dnslex.Lexer, o string) *ParseError {
 
 `))
 
-var parseDataFunc = template.Must(template.New("parseDataFunc").Parse(`
-func parse(rr RR, c *dnslex.Lexer, o string) *ParseError {
-	switch x := rr.(type) {
-{{range .}}  case *{{.}}:
-	return x.parse(c, o)
-{{end}} }
-	// if here, we don't have the RR in our pkg, check if it does Parser.
-	if x, ok := rr.(Parser); ok {
-		err := x.Parse(dnslex.Tokens(c), o)
-		if err != nil {
-			return &ParseError{err: err.Error()}
-		}
-		return nil
-	}
-	return &ParseError{err: fmt.Sprintf("no parse defined: %T", rr)}
-}
-
-`))
-
 const out = "zparse.go"
 
 func main() {

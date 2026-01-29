@@ -146,6 +146,13 @@ func readData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
 			return rd, pe
 		}
 		return rd, nil
+	case TypeSPF:
+		rd := rdata.TXT{}
+		pe := parseTXT(&rd, c, origin)
+		if pe != nil { // Return rd, pe directly breaks things, prolly due non-empty error interfaces.
+			return rd, pe
+		}
+		return rd, nil
 	}
 	return nil, nil
 }

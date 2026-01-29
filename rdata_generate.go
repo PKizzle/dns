@@ -18,6 +18,7 @@ var hdr = `
 package dns
 
 import "codeberg.org/miekg/dns/rdata"
+import "io"
 
 `
 
@@ -56,29 +57,35 @@ var TypeToRDATA = map[uint16]func(RR, RDATA){
 		}
 		fmt.Fprintf(b, "Type%s: func (rr RR, rd RDATA) { rr.(*%[1]s).%[1]s = rd.(rdata.%[1]s) },\n", rrname)
 	}
-	b.WriteString("}\n")
+	b.WriteString("}\n\n")
 
+	b.WriteString("func parseData(r io.Reader, rrtype uint16, o string) (RDATA, error) {\n")
+	b.WriteString("c := dnslex.New(r, StringToType, StringToCode, StringToClass)\n\n")
+	b.WriteString("switch rrtype {\n")
 	for _, spec := range specs {
 		rrname := spec.Name.Name
 		switch rrname {
 		case "OPT":
-			fallthrough
-		case "RFC3597":
 			continue
 		}
 
 		strct := spec.Type.(*ast.StructType)
+		fmt.Fprintf(b, "case Type%s:\n", rrname)
 
 		if generate.IsEmbedded(strct) {
-			fmt.Fprintf(b, "func (rr *%[2]s) Data() RDATA { return rr.%[1]s.%[1]s }\n", strct.Fields.List[0].Type, rrname)
-			continue
+			fmt.Fprintf(b, "rd := rdata.%s{}\n", strct.Fields.List[0].Type)
+			fmt.Fprintf(b, "pe := parse%s(&rd, c, o)\n", strct.Fields.List[0].Type)
+		} else {
+			fmt.Fprintf(b, "rd := rdata.%s{}\n", rrname)
+			fmt.Fprintf(b, "pe := parse%s(&rd, c, o)\n", rrname)
 		}
-		if len(strct.Fields.List) == 1 { // Only header, no rdata
-			fmt.Fprintf(b, "func (rr %s) Data() RDATA { return nil }\n", rrname)
-			continue
-		}
-		fmt.Fprintf(b, "func (rr *%[1]s) Data() RDATA { return rr.%[1]s }\n", rrname)
-	}
+		fmt.Fprintf(b, `if pe != nil {
+	return rd, pe
+    }
+return rd, pe
 
+`)
+	}
+	b.WriteString("}\n}\n")
 	generate.Write(b, out)
 }
