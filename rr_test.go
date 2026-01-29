@@ -114,7 +114,7 @@ func (o *YOOPT) Type() uint16 { return optcodepoint }
 
 // RR interface.
 func (o *YOOPT) Header() *dns.Header { return &dns.Header{Name: "."} }
-func (rr *YOOPT) Data() dns.RDATA    { return nil }           // Not implemented.
+func (o *YOOPT) Data() dns.RDATA     { return o }
 func (o *YOOPT) Len() int            { return 4 + len(o.Yo) } // 4 = TLV overhead (code + length)
 func (o *YOOPT) Clone() dns.RR       { return &YOOPT{Yo: o.Yo} }
 func (o *YOOPT) String() string      { return "YOOPT " + o.Yo }
