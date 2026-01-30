@@ -52,7 +52,7 @@ None of these are required but experience has proven them to be good ideas.
 
     Find the files that need this change:
 
-        grep -l -R -r --include='*.go' github.com/miekg/dns/dns
+        grep -l -R -r --include='*.go' github.com/miekg/dns
 
 3.  Do this for _dnsutil_ and other packages
 
