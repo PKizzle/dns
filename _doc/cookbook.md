@@ -7,8 +7,8 @@ the right direction. It's usually best to read the comments in the code for more
 
 ## Terminology
 
-* `RR`: A resource-record. It is made up of a header and the rdata.  Example: `foo.example.com. IN MX 0 mx.example.com.`
-* `RDATA`: resource-data. The a header and the rdata.  Example: `0 mx.example.com.`
+- `RR`: A resource-record. It is made up of a header and the rdata. Example: `foo.example.com. IN MX 0 mx.example.com.`
+- `RDATA`: resource-data. The a header and the rdata. Example: `0 mx.example.com.`
 
 ## Convert between text and enums
 
@@ -129,4 +129,3 @@ rdmx = 40 mx.miek.nl.
 Sure, you love A, CNAME, MX and other rtypes. What if your code needs a custom type?
 
 Read about the `Typer` interface in `dns.go` for instructions how.
-
