@@ -1,0 +1,15 @@
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: atoom-tiny
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ vars.GOVERSION }}
+      - run: |
+          apt-get update
+          apt-get -y install dnsperf
+          go install golang.org/x/perf/cmd/benchstat@latest
+          (cd cmd/reflect; go build)
