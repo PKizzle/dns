@@ -18,7 +18,7 @@ func ExampleRDATA_string() {
 }
 
 // Example on how to set the rdata of an RR.
-func ExampleRDATA_newdata() {
+func ExampleRDATA_newData() {
 	rd, _ := dns.NewData(dns.TypeMX, "10 mx.miek.nl.")
 	rr := dns.TypeToRR[dns.TypeMX]()
 	rr.Header().Name = "miek.nl."
