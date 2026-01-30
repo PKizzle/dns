@@ -3,30 +3,30 @@
 goos: linux
 goarch: arm64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerfudp-8	417468			2395.4 ns/op
-BenchmarkDNSPerfudp-8	416396			2401.6 ns/op
-BenchmarkDNSPerfudp-8	419761			2382.3 ns/op
-BenchmarkDNSPerfudp-8	421527			2372.3 ns/op
-BenchmarkDNSPerfudp-8	419113			2386.0 ns/op
-BenchmarkDNSPerfudp-8	416830			2399.1 ns/op
-BenchmarkDNSPerfudp-8	398394			2510.1 ns/op
-BenchmarkDNSPerfudp-8	422739			2365.5 ns/op
+BenchmarkDNSPerfudp-8	430515			2322.8 ns/op
+BenchmarkDNSPerfudp-8	434620			2300.9 ns/op
+BenchmarkDNSPerfudp-8	437697			2284.7 ns/op
+BenchmarkDNSPerfudp-8	434853			2299.6 ns/op
+BenchmarkDNSPerfudp-8	431738			2316.2 ns/op
+BenchmarkDNSPerfudp-8	412683			2423.2 ns/op
+BenchmarkDNSPerfudp-8	432460			2312.3 ns/op
+BenchmarkDNSPerfudp-8	435089			2298.4 ns/op
     reflect_test.go:43: canceled executing: udp
 === RUN   TestReflect/reflect-tcp
 goos: linux
 goarch: arm64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerftcp-8	342421			2920.4 ns/op
-BenchmarkDNSPerftcp-8	337490			2963.0 ns/op
-BenchmarkDNSPerftcp-8	336418			2972.5 ns/op
-BenchmarkDNSPerftcp-8	337255			2965.1 ns/op
-BenchmarkDNSPerftcp-8	340247			2939.0 ns/op
-BenchmarkDNSPerftcp-8	331871			3013.2 ns/op
-BenchmarkDNSPerftcp-8	335451			2981.1 ns/op
-BenchmarkDNSPerftcp-8	335292			2982.5 ns/op
+BenchmarkDNSPerftcp-8	357653			2796.0 ns/op
+BenchmarkDNSPerftcp-8	356313			2806.5 ns/op
+BenchmarkDNSPerftcp-8	355043			2816.6 ns/op
+BenchmarkDNSPerftcp-8	355807			2810.5 ns/op
+BenchmarkDNSPerftcp-8	355148			2815.7 ns/op
+BenchmarkDNSPerftcp-8	353156			2831.6 ns/op
+BenchmarkDNSPerftcp-8	354197			2823.3 ns/op
+BenchmarkDNSPerftcp-8	352983			2833.0 ns/op
     reflect_test.go:43: canceled executing: tcp
---- PASS: TestReflect (34.16s)
-    --- PASS: TestReflect/reflect-udp (17.07s)
-    --- PASS: TestReflect/reflect-tcp (17.09s)
+--- PASS: TestReflect (34.15s)
+    --- PASS: TestReflect/reflect-udp (17.08s)
+    --- PASS: TestReflect/reflect-tcp (17.07s)
 PASS
-ok  	codeberg.org/miekg/dns/cmd/reflect	34.159s
+ok  	codeberg.org/miekg/dns/cmd/reflect	34.152s
