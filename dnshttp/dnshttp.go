@@ -133,7 +133,7 @@ func msg(r io.ReadCloser) (*dns.Msg, error) {
 // should never be nil.
 var MsgAcceptFunc = DefaultMsgAcceptFunc
 
-// DefaultMsgAcceptFunc does everything the dns.DefaultMsgAcceptFunc does in addtion to the check mandated by
+// DefaultMsgAcceptFunc does everything the dns.DefaultMsgAcceptFunc does in addition to the check mandated by
 // DOQ, that the Pseudo section cannot contain an TCP-KEEPALIVE option. Not other checks are performed.
 func DefaultMsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
 	// copied from dns.DefaultMsgAcceptFunc, keep in sync.
