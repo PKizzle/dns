@@ -10,7 +10,14 @@ jobs:
           go-version: ${{ vars.GOVERSION }}
       - run: |
           apt-get update
-          apt-get -y install dnsperf
+          apt-get -y install dnsperf jq
           go install golang.org/x/perf/cmd/benchstat@latest
           (cd cmd/reflect; go build)
           HOSTNAME=atoom-tiny
+          (cd cmd/reflect; make new.txt)
+          REF=$(echo ${{ forgejo.ref }} | cut -d/ -f3)
+          echo ${{ forgejo.api_url}}/repos/${{ forgejo.repository }}/issues/${REF}/comments
+          echo "{\"body\": $(cd cmd/reflect; make stat | jq -sR .)}" | \
+                          curl --json @- \
+                          -H 'Authorization: token ${{ forgejo.token }}' \
+                          ${{ forgejo.api_url}}/repos/${{ forgejo.repository }}/issues/${REF}/comments
