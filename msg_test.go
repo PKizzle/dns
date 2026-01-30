@@ -57,7 +57,7 @@ func ExampleMsg() {
 	}
 }
 
-func ExampleMsg_dnssec() {
+func ExampleMsg_dNSSEC() {
 	m := dns.NewMsg("miek.nl.", dns.TypeMX)
 	m.UDPSize = dns.DefaultMsgSize
 	m.Security = true
