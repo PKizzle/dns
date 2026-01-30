@@ -20,7 +20,7 @@ None of these are required but experience has proven them to be good ideas.
 
     Code that uses both will have imports that look like:
 
-    ```
+    ```go
         import (
             dnsv1 "github.com/miekg/dns"
             "codeberg.org/miekg/dns"
@@ -45,10 +45,10 @@ None of these are required but experience has proven them to be good ideas.
     and therefore no tests should fail, no features should break. Now you have a baseline
     before other changes are made.
 
-    ProTip: VSCode makes this easy. Find code that mentions `dns.` and use "Rename Symbol"
-    (F2) to change it to `dnsv1.`. VSCode does all the work of finding all instances. It even
-    updates the imports line. You'll need to do this once for each file. VSCode is smart enough to know that imports are per-file, even
-    though Rename Symbol can work across multiple files.
+    ProTip: VSCode makes this easy. Find code that mentions `dns.` and use "Rename Symbol" (F2) to change it
+    to `dnsv1.`. VSCode does all the work of finding all instances. It even updates the imports line. You'll
+    need to do this once for each file. VSCode is smart enough to know that imports are per-file, even though
+    Rename Symbol can work across multiple files.
 
     Find the files that need this change:
 
@@ -56,55 +56,53 @@ None of these are required but experience has proven them to be good ideas.
 
 3.  Do this for _dnsutil_ and other packages
 
-Do something similar for _dnsutil_ (_dnsutilv1_) also.
+    Do something similar for _dnsutil_ (_dnsutilv1_) also. Again, this isn't required, just useful.
 
-Again, this isn't required, just useful.
+4.  Work incrementally
 
-4. Work incrementally
+    It's best to convert a little, test, convert a little more, test, etc. Trying to convert
+    everything makes testing difficult.
 
-It's best to convert a little, test, convert a little more, test, etc. Trying to convert
-everything makes testing difficult.
+    Doing this requires you to be able to convert between v1's `RR` and v2's `RR`.
 
-Doing this requires you to be able to convert between v1's `RR` and v2's `RR`.
+    Here are some conversion functions. The functions are slow and ugly, but accuracy is more important. (The
+    functions being slow is OK because they are temporary. The slowness should give you incentive to finish
+    porting to v2!
 
-Here are some conversion functions. The functions are slow and ugly, but accuracy is more important. (The
-functions being slow is OK because they are temporary. The slowness should give you incentive to finish
-porting to v2!
+    ```go
+    package dnsrr
 
-```go
-package dnsrr
+    import (
+            dnsv2 "codeberg.org/miekg/dns"
+            dnsv1 "github.com/miekg/dns"
+    )
 
-import (
-        dnsv2 "codeberg.org/miekg/dns"
-        dnsv1 "github.com/miekg/dns"
-)
+    // RRv1tov2 converts github.com/miekg/dns (v1) RR to codeberg.org/miekg/dns (v2) RR.
+    // Typically used in providers that still use v1.
+    // Note: this function is not efficient. It converts via string representation.
+    // Use it until you are able to convert to v2 fully.
+    // Note: Panics on error.
+    func RRv1tov2(rrv1 dnsv1.RR) dnsv2.RR {
+            rrv2, err := dnsv2.New(rrv1.String())
+            if err != nil {
+                    panic("Failed to convert RR to v2: " + err.Error())
+            }
+            return rrv2
+    }
 
-// RRv1tov2 converts github.com/miekg/dns (v1) RR to codeberg.org/miekg/dns (v2) RR.
-// Typically used in providers that still use v1.
-// Note: this function is not efficient. It converts via string representation.
-// Use it until you are able to convert to v2 fully.
-// Note: Panics on error.
-func RRv1tov2(rrv1 dnsv1.RR) dnsv2.RR {
-        rrv2, err := dnsv2.New(rrv1.String())
-        if err != nil {
-                panic("Failed to convert RR to v2: " + err.Error())
-        }
-        return rrv2
-}
-
-// RRv2tov1 converts codeberg.org/miekg/dns (v2) RR to github.com/miekg/dns (v1) RR.
-// Typically used in providers that still use v1.
-// Note: this function is not efficient. It converts via string representation.
-// Use it until you are able to convert to v1 fully.
-// Note: Panics on error.
-func RRv2tov1(rrv2 dnsv2.RR) dnsv1.RR {
-        rrv1, err := dnsv1.NewRR(rrv2.String())
-        if err != nil {
-                panic("Failed to convert RR to v1: " + err.Error())
-        }
-        return rrv1
-}
-```
+    // RRv2tov1 converts codeberg.org/miekg/dns (v2) RR to github.com/miekg/dns (v1) RR.
+    // Typically used in providers that still use v1.
+    // Note: this function is not efficient. It converts via string representation.
+    // Use it until you are able to convert to v1 fully.
+    // Note: Panics on error.
+    func RRv2tov1(rrv2 dnsv2.RR) dnsv1.RR {
+            rrv1, err := dnsv1.NewRR(rrv2.String())
+            if err != nil {
+                    panic("Failed to convert RR to v1: " + err.Error())
+            }
+            return rrv1
+    }
+    ```
 
 # Difference with github.com/miekg/dns
 
@@ -284,7 +282,7 @@ o.Option = append(o.Option, e)                                    |
 m.Extra = append(m.Extra, o)                                      |
 ```
 
-## Msgs
+## Msg
 
 Ranging over an entire `Msg`:
 
@@ -351,8 +349,8 @@ m.SetQuestion("miek.nl.", dns.TypeDNSKEY)     |  dnsutil.SetQuestion(m, "miek.nl
 CanonicalName has moved and been renamed.
 
 ```
-OLD                            | NEW
-                               |
+OLD                                | NEW
+                                   |
 canon := dns.CanonicalName(name)   | canon := dnsutil.Canonical(name)
 ```
 
