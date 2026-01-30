@@ -158,7 +158,7 @@ I have ported a few utilities from dnsv1 to dnsv2, and dnsv2 is mostly a drop-in
 
 # Converting idioms
 
-Here are some v1 vs v2 changes. See [cookbook.md] for useful idioms.
+Here are some v1 vs v2 changes.
 
 Please add to this list! The conversions you find will be useful to others. Please submit a PR to this file!
 
