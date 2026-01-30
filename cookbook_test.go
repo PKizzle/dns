@@ -8,19 +8,6 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
-// ExampleStringToType shows conversions between type codes and strings.
-func ExampleStringToType() {
-	tpy := dns.StringToType["mx"]
-	str := dnsutil.TypeToString(tpy)
-	fmt.Println(str) // "MX"
-}
-
-// ExampleTypeToRR shows how to create an RR if you have a type code. The RR will be empty.
-func ExampleTypeToRR() {
-	rr := dns.TypeToRR[dns.TypeMX]()
-	fmt.Println(rr) // "0       CLASS0  MX      0"
-}
-
 // ExampleHeader_replace shows how to overwrite a header.
 func ExampleHeader_replace() {
 	rr := &dns.MX{}

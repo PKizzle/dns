@@ -2,12 +2,9 @@
 
 package dns
 
-import (
-	"io"
-
-	"codeberg.org/miekg/dns/internal/dnslex"
-	"codeberg.org/miekg/dns/rdata"
-)
+import "codeberg.org/miekg/dns/rdata"
+import "codeberg.org/miekg/dns/internal/dnslex"
+import "io"
 
 // TypeToRDATA is a map of functions for each RR type to set it's rdata.
 var TypeToRDATA = map[uint16]func(RR, RDATA){
