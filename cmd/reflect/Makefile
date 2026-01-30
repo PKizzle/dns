@@ -17,8 +17,13 @@ new.txt: | reflect
 
 .PHONY: stat
 stat: $(PERF)/old.txt $(PERF)/new.txt
+	@echo "This benchmark shows the difference in performance against the baseline."
+	@echo "The results may vary if the machine was under (heavy) load."
+	@echo
 	@echo "~~~"
-	benchstat $(PERF)/old.txt $(PERF)/new.txt
+	@uptime
+	@echo
+	@benchstat $(PERF)/old.txt $(PERF)/new.txt
 	@echo "~~~"
 
 .PHONY: clean

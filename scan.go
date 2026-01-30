@@ -94,7 +94,7 @@ type ttlState struct {
 //
 // Note that building an RR directly from it Go structure is far more efficient, i.e.
 //
-//	mx := &MX{Hdr: Header{Name: "miek.nl.", Class: ClassINET}, Preference: 10, Mx: "mx.miek.nl."}
+//	mx := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
 //
 // instead of:
 //
@@ -104,8 +104,9 @@ type ttlState struct {
 // presentation format is also parsed back to EDNS0. In other words you can get an ENDS0 option code just from
 // a string.
 //
-// Note because this invokes the full [ZoneParser] it will be much faster to construct a new [RR] via struct
-// literals.
+// Or with [codeberg.org/miekg/dns/dnstest.New], if you are sure no error will occur.
+//
+//	mx := dnstest.New("miek.nl.  IN MX 10 mx.miek.nl.")
 func New(s string) (RR, error) {
 	if len(s) > 0 && s[len(s)-1] != '\n' { // We need a closing newline
 		return read(strings.NewReader(s+"\n"), "")

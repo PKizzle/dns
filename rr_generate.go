@@ -22,6 +22,10 @@ package dns
 
 var TypeToRR = template.Must(template.New("TypeToRR").Parse(`
 // TypeToRR is a map of constructors for each RR type.
+// Basic usage if you have a type  code and want to create a [RR]:
+//
+//	rr := dns.TypeToRR[dns.TypeMX]()
+//	fmt.Println(rr) // "0       CLASS0  MX      0"
 var TypeToRR = map[uint16]func() RR{
 {{range .}}{{if ne . "RFC3597"}}  Type{{.}}:  func() RR { return new({{.}}) },
 {{end}}{{end}}                    }
