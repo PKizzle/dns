@@ -70,7 +70,8 @@ type RDATA interface {
 //	dns.TypeToString[codepoint] = "TYPE"
 //	dns.StringToType["TYPE"] = codepoint
 //
-// For EDNS0 registration use, [CodeToRR], [CodeToString] and [StringToType].
+// For EDNS0 registration use, [CodeToRR], [CodeToString] and [StringToType]. See the file rr_test.go for an
+// example on how to register a private RR and an EDNS0 type.
 type Typer interface {
 	Type() uint16
 }
