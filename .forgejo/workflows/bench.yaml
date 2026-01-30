@@ -13,3 +13,4 @@ jobs:
           apt-get -y install dnsperf
           go install golang.org/x/perf/cmd/benchstat@latest
           (cd cmd/reflect; go build)
+          HOSTNAME=atoom-tiny
