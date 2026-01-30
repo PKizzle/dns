@@ -322,7 +322,7 @@ OLD                                                                  | NEW
                                                                      | miek.nl.                IN      A
 ```
 
-### Functions and Methods
+## Functions and Methods
 
 ```
 OLD                   | NEW
