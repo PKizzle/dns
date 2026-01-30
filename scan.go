@@ -126,17 +126,21 @@ func read(r io.Reader, file string) (RR, error) {
 
 // NewData parses s, but only for the rdata, i.e. when the full RR is "miek.nl. IN 3600 MX 10 mx.miek.nl.",
 // NewData must get "10 mx.miek.nl." and optionally an origin". Leading spaces are not allowed.
-func NewData(rrtype uint16, s, origin string) (RDATA, error) {
-	return readData(strings.NewReader(s), rrtype, origin)
+func NewData(rrtype uint16, s string, origin ...string) (RDATA, error) {
+	return readData(strings.NewReader(s), rrtype, origin...)
 }
 
 // ReadData behaves like [NewData] but reads from an io.Reader.
-func ReadData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
-	return readData(r, rrtype, origin)
+func ReadData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
+	return readData(r, rrtype, origin...)
 }
 
-func readData(r io.Reader, rrtype uint16, origin string) (RDATA, error) {
-	return parseData(r, rrtype, origin)
+func readData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
+	o := "."
+	if len(origin) > 0 {
+		o = origin[0]
+	}
+	return parseData(r, rrtype, o)
 }
 
 // ZoneParser is a parser for an RFC 1035 style zone file.

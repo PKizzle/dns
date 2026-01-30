@@ -17,6 +17,19 @@ func ExampleRDATA_string() {
 	// Output: miek.nl.	3600	IN MX	10 mx.miek.nl.
 }
 
+// Example on how to set the rdata of an RR.
+func ExampleRDATA_newdata() {
+	rd, _ := dns.NewData(dns.TypeMX, "10 mx.miek.nl.")
+	rr := dns.TypeToRR[dns.TypeMX]()
+	rr.Header().Name = "miek.nl."
+	rr.Header().Class = dns.ClassINET
+	fn := dns.TypeToRDATA[dns.TypeMX]
+	// Set the rdata in the rr.
+	fn(rr, rd)
+	fmt.Println(rr)
+	// Output: miek.nl.	0	IN	MX	10 mx.miek.nl.
+}
+
 func TestTypeToRDATA(t *testing.T) {
 	testcases := []struct {
 		name string
@@ -50,6 +63,71 @@ func TestTypeToRDATA(t *testing.T) {
 			fn := dns.TypeToRDATA[tc.t]
 			fn(rr, rd)
 
+		})
+	}
+}
+
+func TestNewData(t *testing.T) {
+	testcases := []struct {
+		name string
+		t    uint16
+		in   string
+		fn   func(rd dns.RDATA) error
+	}{
+		{
+			"mx-origin-ok",
+			dns.TypeMX,
+			"10 mx.miek.nl",
+			func(rd dns.RDATA) error {
+				if rd == nil {
+					return fmt.Errorf("expected rd, got none")
+				}
+				mx := rd.(rdata.MX)
+				if mx.Preference != 10 {
+					return fmt.Errorf("expected 10, got %d", mx.Preference)
+				}
+				if mx.Mx != "mx.miek.nl." {
+					return fmt.Errorf("expected mx.miek.nl., got %s", mx.Mx)
+				}
+				return nil
+			},
+		},
+		{
+			"mx-ok",
+			dns.TypeMX,
+			"10 mx.miek.nl.",
+			func(rd dns.RDATA) error {
+				if rd == nil {
+					return fmt.Errorf("expected rd, got none")
+				}
+				mx := rd.(rdata.MX)
+				if mx.Preference != 10 {
+					return fmt.Errorf("expected 10, got %d", mx.Preference)
+				}
+				if mx.Mx != "mx.miek.nl." {
+					return fmt.Errorf("expected mx.miek.nl., got %s", mx.Mx)
+				}
+				return nil
+			},
+		},
+		{
+			"mx-space-fail",
+			dns.TypeMX,
+			" 10 mx.miek.nl.",
+			func(rd dns.RDATA) error {
+				if rd.(rdata.MX).Preference == 0 {
+					return nil
+				}
+				return fmt.Errorf("expected nil rd: %v", rd)
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			rd, _ := dns.NewData(tc.t, tc.in, ".")
+			if err := tc.fn(rd); err != nil {
+				t.Fatal(err)
+			}
 		})
 	}
 }
