@@ -1,5 +1,8 @@
 package dns_test
 
+// This files has (testable) snippets to document  how to do common tasks.
+// Feel free to add ones you encounted when using this library.
+
 import (
 	"fmt"
 
