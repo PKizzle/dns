@@ -15,14 +15,13 @@ func unpackHeader(h *Header, msg *cryptobyte.String, msgBuf []byte) (typ, rdleng
 	if err != nil {
 		return 0, 0, err
 	}
-	t := uint16(0)
-	if !msg.ReadUint16(&t) ||
+	if !msg.ReadUint16(&typ) ||
 		!msg.ReadUint16(&h.Class) ||
 		!msg.ReadUint32(&h.TTL) ||
 		!msg.ReadUint16(&rdlength) {
-		return t, rdlength, unpack.ErrTruncatedMessage
+		return typ, rdlength, unpack.ErrTruncatedMessage
 	}
-	return t, rdlength, nil
+	return typ, rdlength, nil
 }
 
 // packHeader packs an RR header, returning the off to the end of the header.
