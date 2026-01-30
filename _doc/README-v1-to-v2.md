@@ -8,53 +8,53 @@ A lot. See below.
 
 None of these are required but experience has proven them to be good ideas.
 
-1. Convert to netip.Addr first.
-   Before you convert to dns v2, convert from `net.IP` to `netip.Addr`. DNS v2
-   uses `netip.Addr` to represent IP addresses. Converting two modules at the same
-   time is much more difficult than converting them in sequence.
+1.  Convert to netip.Addr first.
+    Before you convert to dns v2, convert from `net.IP` to `netip.Addr`. DNS v2
+    uses `netip.Addr` to represent IP addresses. Converting two modules at the same
+    time is much more difficult than converting them in sequence.
 
-2. Make v1 and v2 coexist, then work to eliminate v1
-   If you make v1 and v2 coexist your conversion will be easier. You can work incrementally
-   instead of one big "big bang" change. You can identify code that needs to be upgraded
-   by searching for `dnsv1.`
+2.  Make v1 and v2 coexist, then work to eliminate v1
+    If you make v1 and v2 coexist your conversion will be easier. You can work incrementally
+    instead of one big "big bang" change. You can identify code that needs to be upgraded
+    by searching for `dnsv1.`
 
-Code that uses both will have imports that look like:
+    Code that uses both will have imports that look like:
 
-```
-    import (
+    ```
+        import (
+            dnsv1 "github.com/miekg/dns"
+            "codeberg.org/miekg/dns"
+        )
+    ```
+
+    Here's how to do it:
+
+    Rename v1 to dnsv1
+
+    Change all imports from
+
+        "github.com/miekg/dns"
+
+    to
+
         dnsv1 "github.com/miekg/dns"
-        "codeberg.org/miekg/dns"
-    )
-```
 
-Here's how to do it:
+    Now v1 and v2 can co-exist. `dnsv1.RR` is the old code and `dns.RR` is the new code.
 
-Rename v1 to dnsv1
+    You might consider shipping a release that has this one change. This should be a "no op" change
+    and therefore no tests should fail, no features should break. Now you have a baseline
+    before other changes are made.
 
-Change all imports from
+    ProTip: VSCode makes this easy. Find code that mentions `dns.` and use "Rename Symbol"
+    (F2) to change it to `dnsv1.`. VSCode does all the work of finding all instances. It even
+    updates the imports line. You'll need to do this once for each file. VSCode is smart enough to know that imports are per-file, even
+    though Rename Symbol can work across multiple files.
 
-    "github.com/miekg/dns"
+    Find the files that need this change:
 
-to
+        grep -l -R -r --include='*.go' github.com/miekg/dns/dns
 
-    dnsv1 "github.com/miekg/dns"
-
-Now v1 and v2 can co-exist. `dnsv1.RR` is the old code and `dns.RR` is the new code.
-
-You might consider shipping a release that has this one change. This should be a "no op" change
-and therefore no tests should fail, no features should break. Now you have a baseline
-before other changes are made.
-
-ProTip: VSCode makes this easy. Find code that mentions `dns.` and use "Rename Symbol"
-(F2) to change it to `dnsv1.`. VSCode does all the work of finding all instances. It even
-updates the imports line. You'll need to do this once for each file. VSCode is smart enough to know that imports are per-file, even
-though Rename Symbol can work across multiple files.
-
-Find the files that need this change:
-
-    grep -l -R -r --include='*.go' github.com/miekg/dns/dns
-
-3. Do this for _dnsutil_ and other packages
+3.  Do this for _dnsutil_ and other packages
 
 Do something similar for _dnsutil_ (_dnsutilv1_) also.
 
