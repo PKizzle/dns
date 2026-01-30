@@ -17,7 +17,9 @@ new.txt: | reflect
 
 .PHONY: stat
 stat: $(PERF)/old.txt $(PERF)/new.txt
+	@echo "~~~"
 	benchstat $(PERF)/old.txt $(PERF)/new.txt
+	@echo "~~~"
 
 .PHONY: clean
 clean:
