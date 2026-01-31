@@ -1,5 +1,3 @@
-# On https://codeberg.org/miekg/dns/actions you can see the run and copy and paste a new.txt if performance is
-# better. Put this contents in old.txt
 on: [push, pull_request]
 
 jobs:
