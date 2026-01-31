@@ -27,9 +27,6 @@ func unpackHeader(h *Header, msg *cryptobyte.String, msgBuf []byte) (typ, rdleng
 // packHeader packs an RR header, returning the off to the end of the header.
 // See PackName for documentation about the compression.
 func (h Header) packHeader(msg []byte, off int, rrtype uint16, compress map[string]uint16) (int, error) {
-	if off == len(msg) {
-		return off, nil
-	}
 	off, err := pack.Name(h.Name, msg, off, compress, true)
 	if err != nil {
 		return len(msg), err
