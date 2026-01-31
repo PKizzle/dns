@@ -23,7 +23,7 @@ stat: $(PERF)/old.txt $(PERF)/new.txt
 	@echo "~~~"
 	@uptime | sed 's/^ //'
 	@echo
-	cat $(PERF)/new.txt
+	@cat $(PERF)/new.txt
 	@echo "~~~"
 	@echo
 	@echo "~~~"
