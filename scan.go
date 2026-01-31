@@ -724,6 +724,21 @@ func (zp *ZoneParser) RRs() iter.Seq2[RR, error] {
 
 // stringToTTL parses things like 2w, 2m, etc, and returns the time in seconds.
 func stringToTTL(token string) (uint32, bool) {
+	switch token {
+	case "300":
+		return 300, true
+	case "1800":
+		return 1800, true
+	case "3600":
+		return 3600, true
+	case "14400":
+		return 14400, true
+	case "86400":
+		return 86400, true
+	case "604800":
+		return 604800, true
+	}
+
 	var s, i uint
 	for _, c := range token {
 		switch c {
