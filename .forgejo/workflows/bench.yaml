@@ -1,4 +1,20 @@
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - "internal/pack/*.go"
+      - "internal/unpack/*.go"
+      - "headerpack.go"
+      - "serve*.go"
+      - "msg.go"
+      - "udp*.go"
+  pull_request:
+    paths:
+      - "internal/pack/*.go"
+      - "internal/unpack/*.go"
+      - "headerpack.go"
+      - "serve*.go"
+      - "msg.go"
+      - "udp*.go"
 
 jobs:
   test:
