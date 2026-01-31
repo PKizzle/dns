@@ -23,6 +23,10 @@ stat: $(PERF)/old.txt $(PERF)/new.txt
 	@echo "~~~"
 	@uptime
 	@echo
+	cat $(PERF)/new.txt
+	@echo "~~~"
+	@echo
+	@echo "~~~"
 	@benchstat $(PERF)/old.txt $(PERF)/new.txt
 	@echo "~~~"
 
