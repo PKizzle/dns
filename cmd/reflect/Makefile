@@ -21,7 +21,7 @@ stat: $(PERF)/old.txt $(PERF)/new.txt
 	@echo "The results may vary if the machine was under (heavy) load."
 	@echo
 	@echo "~~~"
-	@uptime
+	@uptime | sed 's/^ //'
 	@echo
 	cat $(PERF)/new.txt
 	@echo "~~~"
