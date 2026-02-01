@@ -90,6 +90,13 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"A no rdata", `www.example.org. IN A`,
+			func(rr RR) error {
+				println(rr.String())
+				return nil
+			},
+		},
 		// EDNS0 types
 		{
 			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },
