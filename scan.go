@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/internal/dnslex"
+	"codeberg.org/miekg/dns/internal/dnsstring"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -27,27 +28,27 @@ const maxIncludeDepth = 7
 // * Handle braces - anywhere.
 const (
 	// Privatekey file
-	zValue = iota
+	zValue uint8 = iota
 	zKey
 
-	zExpectOwnerDir      = iota // Ownername
-	zExpectOwnerBl              // Whitespace after the ownername
-	zExpectAny                  // Expect rrtype, ttl or class
-	zExpectAnyNoClass           // Expect rrtype or ttl
-	zExpectAnyNoClassBl         // The whitespace after _EXPECT_ANY_NOCLASS
-	zExpectAnyNoTTL             // Expect rrtype or class
-	zExpectAnyNoTTLBl           // Whitespace after _EXPECT_ANY_NOTTL
-	zExpectRrtype               // Expect rrtype
-	zExpectRrtypeBl             // Whitespace BEFORE rrtype
-	zExpectRdata                // The first element of the rdata
-	zExpectDirTTLBl             // Space after directive $TTL
-	zExpectDirTTL               // Directive $TTL
-	zExpectDirOriginBl          // Space after directive $ORIGIN
-	zExpectDirOrigin            // Directive $ORIGIN
-	zExpectDirIncludeBl         // Space after directive $INCLUDE
-	zExpectDirInclude           // Directive $INCLUDE
-	zExpectDirGenerate          // Directive $GENERATE
-	zExpectDirGenerateBl        // Space after directive $GENERATE
+	zExpectOwnerDir      uint8 = iota // Ownername
+	zExpectOwnerBl                    // Whitespace after the ownername
+	zExpectAny                        // Expect rrtype, ttl or class
+	zExpectAnyNoClass                 // Expect rrtype or ttl
+	zExpectAnyNoClassBl               // The whitespace after _EXPECT_ANY_NOCLASS
+	zExpectAnyNoTTL                   // Expect rrtype or class
+	zExpectAnyNoTTLBl                 // Whitespace after _EXPECT_ANY_NOTTL
+	zExpectRrtype                     // Expect rrtype
+	zExpectRrtypeBl                   // Whitespace BEFORE rrtype
+	zExpectRdata                      // The first element of the rdata
+	zExpectDirTTLBl                   // Space after directive $TTL
+	zExpectDirTTL                     // Directive $TTL
+	zExpectDirOriginBl                // Space after directive $ORIGIN
+	zExpectDirOrigin                  // Directive $ORIGIN
+	zExpectDirIncludeBl               // Space after directive $INCLUDE
+	zExpectDirInclude                 // Directive $INCLUDE
+	zExpectDirGenerate                // Directive $GENERATE
+	zExpectDirGenerateBl              // Space after directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -108,10 +109,7 @@ type ttlState struct {
 //
 //	mx := dnstest.New("miek.nl.  IN MX 10 mx.miek.nl.")
 func New(s string) (RR, error) {
-	if len(s) > 0 && s[len(s)-1] != '\n' { // We need a closing newline
-		return read(strings.NewReader(s+"\n"), "")
-	}
-	return read(strings.NewReader(s), "")
+	return read(dnsstring.NewReader(s), "")
 }
 
 // Read behaves like [New] but reads from an io.Reader. Note the reader must include an ending newline,
