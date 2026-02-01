@@ -26,7 +26,7 @@ const maxTok = 512 // Token buffer start size, and growth size amount.
 // * Handle braces - anywhere.
 const (
 	// Zone file
-	EOF = iota
+	EOF uint8 = iota
 	String
 	Blank
 	Quote
