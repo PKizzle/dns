@@ -53,7 +53,6 @@ func TestRandomize(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		rand := Randomize(tc)
-		println(rand)
 		if rand == tc {
 			t.Fatalf("expected randomized string to not be equal to input: %s", tc)
 		}
