@@ -2,7 +2,6 @@ package dns
 
 import (
 	"strconv"
-	"strings"
 
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/dnslex"
@@ -156,15 +155,15 @@ func typeToInt(token string) (uint16, bool) {
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func endingToString(c *dnslex.Lexer, errstr string) (string, *ParseError) {
-	var s strings.Builder
+	sb := builderPool.Get()
 	l, _ := c.Next() // dnslex.String
 	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
 		if l.Err {
-			return s.String(), &ParseError{err: errstr, lex: l}
+			return "", &ParseError{err: errstr, lex: l}
 		}
 		switch l.Value {
 		case dnslex.String:
-			s.WriteString(l.Token)
+			sb.WriteString(l.Token)
 		case dnslex.Blank: // Ok
 		default:
 			return "", &ParseError{err: errstr, lex: l}
@@ -172,7 +171,9 @@ func endingToString(c *dnslex.Lexer, errstr string) (string, *ParseError) {
 		l, _ = c.Next()
 	}
 
-	return s.String(), nil
+	s := sb.String()
+	builderPool.Put(sb)
+	return s, nil
 }
 
 // A remainder of the rdata with embedded spaces, split on unquoted whitespace
