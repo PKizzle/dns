@@ -747,7 +747,7 @@ func parseCSYNC(rd *rdata.CSYNC, c *dnslex.Lexer, o string) *ParseError {
 	j, e := strconv.ParseUint(l.Token, 10, 32)
 	if e != nil {
 		// Serial must be a number
-		return &ParseError{err: "bad CSYNC serial", lex: l}
+		return &ParseError{err: "bad CSYNC Serial", lex: l}
 	}
 	rd.Serial = uint32(j)
 
@@ -757,7 +757,7 @@ func parseCSYNC(rd *rdata.CSYNC, c *dnslex.Lexer, o string) *ParseError {
 	j, e1 := strconv.ParseUint(l.Token, 10, 16)
 	if e1 != nil {
 		// Serial must be a number
-		return &ParseError{err: "bad CSYNC flags", lex: l}
+		return &ParseError{err: "bad CSYNC Flags", lex: l}
 	}
 	rd.Flags = uint16(j)
 

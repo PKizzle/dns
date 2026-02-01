@@ -1,6 +1,7 @@
 package dns
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -411,32 +412,16 @@ func TestZoneParserEDNS0(t *testing.T) {
 }
 
 func BenchmarkZoneParser(b *testing.B) {
-	// 10 rrs
-	const z = `
-$ORIGIN example.org.
-foo IN A 10.0.0.1 ; this is comment 1
-foo IN A (
-	10.0.0.2 ; this is comment 2
-)
-; this is comment 3
-www.foo IN A 10.0.0.3
-www.foo IN A ( 10.0.0.4 ); this is comment 4
+	root, err := os.ReadFile("testdata/root.zone")
+	if err != nil {
+		b.Fatal(err)
+	}
 
-bla.foo IN A 10.0.0.5
-; this is comment 5
-
-w.foo IN A 10.0.0.6
-
-key.www.foo IN DNSKEY 256 3 5 AwEAAb+8l ; this is comment 6
-next.foo IN NSEC miek.nl. TXT RRSIG NSEC
-txt.foo IN TXT "this is text"
-aaaa.foo IN AAAA ::1
-`
-
+	r := bytes.NewReader(root)
 	for b.Loop() {
-		zp := NewZoneParser(strings.NewReader(z), ".", "<bench>")
-
+		zp := NewZoneParser(r, ".", "testdata/root.zone")
 		for _, ok := zp.Next(); ok; _, ok = zp.Next() {
 		}
+		r.Seek(0, 0)
 	}
 }
