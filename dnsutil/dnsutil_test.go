@@ -43,3 +43,18 @@ func TestIsFqdn(t *testing.T) {
 		}
 	}
 }
+
+func TestRandomize(t *testing.T) {
+	testcases := []string{
+		"www.example.org.",
+		"www.EXAM__PLE.org.",
+		"www.Example1223.org.",
+		"www.examPle.^$^$a.%orG.",
+	}
+	for _, tc := range testcases {
+		rand := Randomize(tc)
+		if rand == tc {
+			t.Fatalf("expected randomized string to not be equal to input: %s", tc)
+		}
+	}
+}
