@@ -314,6 +314,17 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		return zp.subNext()
 	}
 
+	setTTL := func(l dnslex.Lex) (uint32, bool) {
+		ttl, ok := stringToTTL(l.Token)
+		if !ok {
+			return 0, false
+		}
+		if zp.defttl == nil || !zp.defttl.isByDirective {
+			zp.defttl = &ttlState{ttl, false}
+		}
+		return ttl, true
+	}
+
 	// 6 possible beginnings of a line (_ is a space):
 	//
 	//   0. zRrtype                                                -> all omitted until the rrtype
@@ -377,15 +388,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
 			case dnslex.String:
-				ttl, ok := stringToTTL(l.Token)
-				if !ok {
+				if h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
-				}
-
-				h.TTL = ttl
-
-				if zp.defttl == nil || !zp.defttl.isByDirective {
-					zp.defttl = &ttlState{ttl, false}
 				}
 
 				st = zExpectAnyNoTTLBl
@@ -551,15 +555,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectAnyNoClassBl
 			case dnslex.String:
-				ttl, ok := stringToTTL(l.Token)
-				if !ok {
+				if h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
-				}
-
-				h.TTL = ttl
-
-				if zp.defttl == nil || !zp.defttl.isByDirective {
-					zp.defttl = &ttlState{ttl, false}
 				}
 
 				st = zExpectAnyNoTTLBl
@@ -594,15 +591,8 @@ func (zp *ZoneParser) Next() (RR, bool) {
 		case zExpectAnyNoClass:
 			switch l.Value {
 			case dnslex.String:
-				ttl, ok := stringToTTL(l.Token)
-				if !ok {
+				if h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
-				}
-
-				h.TTL = ttl
-
-				if zp.defttl == nil || !zp.defttl.isByDirective {
-					zp.defttl = &ttlState{ttl, false}
 				}
 
 				st = zExpectRrtypeBl
@@ -675,7 +665,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				parseAsRR = &RFC3597{*h, rdata.RFC3597{RRType: *t}}
 			}
 
-			// This needs zparser which calles Parser for new types.
+			// This needs zparser which calls Parser for new types.
 			if err := parse(parseAsRR, zp.c, zp.origin); err != nil {
 				// err is a concrete *ParseError without the file field set.
 				// The setParseError call below will construct a new
