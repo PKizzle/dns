@@ -31,24 +31,16 @@ const (
 	zValue uint8 = iota
 	zKey
 
-	zExpectOwnerDir      uint8 = iota // Ownername
-	zExpectOwnerBl                    // Whitespace after the ownername
-	zExpectAny                        // Expect rrtype, ttl or class
-	zExpectAnyNoClass                 // Expect rrtype or ttl
-	zExpectAnyNoClassBl               // The whitespace after _EXPECT_ANY_NOCLASS
-	zExpectAnyNoTTL                   // Expect rrtype or class
-	zExpectAnyNoTTLBl                 // Whitespace after _EXPECT_ANY_NOTTL
-	zExpectRrtype                     // Expect rrtype
-	zExpectRrtypeBl                   // Whitespace BEFORE rrtype
-	zExpectRdata                      // The first element of the rdata
-	zExpectDirTTLBl                   // Space after directive $TTL
-	zExpectDirTTL                     // Directive $TTL
-	zExpectDirOriginBl                // Space after directive $ORIGIN
-	zExpectDirOrigin                  // Directive $ORIGIN
-	zExpectDirIncludeBl               // Space after directive $INCLUDE
-	zExpectDirInclude                 // Directive $INCLUDE
-	zExpectDirGenerate                // Directive $GENERATE
-	zExpectDirGenerateBl              // Space after directive $GENERATE
+	zExpectOwnerDir    uint8 = iota // Ownername
+	zExpectAny                      // Expect rrtype, ttl or class
+	zExpectAnyNoClass               // Expect rrtype or ttl
+	zExpectAnyNoTTL                 // Expect rrtype or class
+	zExpectRrtype                   // Expect whitespace and rrtype
+	zExpectRdata                    // The first element of the rdata
+	zExpectDirTTL                   // Directive $TTL
+	zExpectDirOrigin                // Directive $ORIGIN
+	zExpectDirInclude               // Directive $INCLUDE
+	zExpectDirGenerate              // Directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -341,6 +333,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	h := &zp.h
 	t := &zp.t
 
+Next:
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		// zlexer spotted an error already
 		if l.Err {
@@ -367,15 +360,51 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				h.Name = name
 
-				st = zExpectOwnerBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after owner", l)
+				}
+
+				st = zExpectAny
 			case dnslex.DirTTL:
-				st = zExpectDirTTLBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $TTL-directive", l)
+				}
+
+				st = zExpectDirTTL
+
 			case dnslex.DirOrigin:
-				st = zExpectDirOriginBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $ORIGIN-directive", l)
+				}
+
+				st = zExpectDirOrigin
 			case dnslex.DirInclude:
-				st = zExpectDirIncludeBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $INCLUDE-directive", l)
+				}
+
+				st = zExpectDirInclude
 			case dnslex.DirGenerate:
-				st = zExpectDirGenerateBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $GENERATE-directive", l)
+				}
+
+				st = zExpectDirGenerate
 			case dnslex.Rrtype:
 				t = &l.Torc
 
@@ -383,7 +412,14 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			case dnslex.Class:
 				h.Class = l.Torc
 
-				st = zExpectAnyNoClassBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after class", l)
+				}
+
+				st = zExpectAnyNoClass
 			case dnslex.Blank:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
@@ -391,229 +427,27 @@ func (zp *ZoneParser) Next() (RR, bool) {
 				if h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after TTL", l)
+				}
 
-				st = zExpectAnyNoTTLBl
+				st = zExpectAnyNoTTL
 			default:
 				return zp.setParseError("syntax error at beginning", l)
 			}
-		case zExpectDirIncludeBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $INCLUDE-directive", l)
-			}
-
-			st = zExpectDirInclude
-		case zExpectDirInclude:
-			if l.Value != dnslex.String {
-				return zp.setParseError("expecting $INCLUDE value, not this...", l)
-			}
-
-			neworigin := zp.origin // There may be optionally a new origin set after the filename, if not use current one
-			switch l, _ := zp.c.Next(); l.Value {
-			case dnslex.Blank:
-				l, _ := zp.c.Next()
-				if l.Value == dnslex.String {
-					name := dnsutilAbsolute(l.Token, zp.origin)
-					if name == "" {
-						return zp.setParseError("bad origin name", l)
-					}
-
-					neworigin = name
-				}
-			case dnslex.Newline, dnslex.EOF:
-				// Ok
-			default:
-				return zp.setParseError("garbage after $INCLUDE", l)
-			}
-
-			if !zp.IncludeAllowFunc(zp.path, l.Token) {
-				return zp.setParseError("$INCLUDE directive not allowed", l)
-			}
-			if zp.includeDepth >= maxIncludeDepth {
-				return zp.setParseError("too deeply nested $INCLUDE", l)
-			}
-
-			// Start with the new file
-			includePath := l.Token
-			var r1 io.Reader
-			var e1 error
-			if zp.IncludeFS != nil {
-				// fs.FS always uses / as separator, even on Windows, so use
-				// path instead of filepath here:
-				if !path.IsAbs(includePath) {
-					includePath = path.Join(path.Dir(zp.file), includePath)
-				}
-
-				// os.DirFS, and probably others, expect all paths to be
-				// relative, so clean the path and remove leading / if
-				// present:
-				includePath = strings.TrimLeft(path.Clean(includePath), "/")
-
-				r1, e1 = zp.IncludeFS.Open(includePath)
-			} else {
-				if !filepath.IsAbs(includePath) {
-					includePath = filepath.Join(filepath.Dir(zp.file), includePath)
-				}
-				r1, e1 = os.Open(includePath)
-			}
-			if e1 != nil {
-				var as string
-				if includePath != l.Token {
-					as = fmt.Sprintf(" as `%s'", includePath)
-				}
-				zp.parseErr = &ParseError{
-					file:       zp.file,
-					wrappedErr: fmt.Errorf("failed to open `%s'%s: %w", l.Token, as, e1),
-					lex:        l,
-				}
-				return nil, false
-			}
-
-			zp.sub = NewZoneParser(r1, neworigin, includePath)
-			zp.sub.defttl, zp.sub.includeDepth, zp.sub.r = zp.defttl, zp.includeDepth+1, r1
-			zp.sub.IncludeAllowFunc = zp.IncludeAllowFunc
-			zp.sub.IncludeFS = zp.IncludeFS
-			return zp.subNext()
-		case zExpectDirTTLBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $TTL-directive", l)
-			}
-
-			st = zExpectDirTTL
-		case zExpectDirTTL:
-			if l.Value != dnslex.String {
-				return zp.setParseError("expecting $TTL value, not this...", l)
-			}
-
-			if err := dnslex.Remainder(zp.c); err != nil {
-				return zp.setParseError(err.Err, err.Lex)
-			}
-
-			ttl, ok := stringToTTL(l.Token)
-			if !ok {
-				return zp.setParseError("expecting $TTL value, not this...", l)
-			}
-
-			zp.defttl = &ttlState{ttl, true}
-
-			st = zExpectOwnerDir
-		case zExpectDirOriginBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $ORIGIN-directive", l)
-			}
-
-			st = zExpectDirOrigin
-		case zExpectDirOrigin:
-			if l.Value != dnslex.String {
-				return zp.setParseError("expecting $ORIGIN value, not this...", l)
-			}
-
-			if err := dnslex.Remainder(zp.c); err != nil {
-				return zp.setParseError(err.Err, err.Lex)
-			}
-
-			name := dnsutilAbsolute(l.Token, zp.origin)
-			if name == "" {
-				return zp.setParseError("bad origin name", l)
-			}
-
-			zp.origin = name
-
-			st = zExpectOwnerDir
-		case zExpectDirGenerateBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $GENERATE-directive", l)
-			}
-
-			st = zExpectDirGenerate
-		case zExpectDirGenerate:
-			if zp.generateDisallowed {
-				return zp.setParseError("nested $GENERATE directive not allowed", l)
-			}
-			if l.Value != dnslex.String {
-				return zp.setParseError("expecting $GENERATE value, not this...", l)
-			}
-
-			return zp.generate(l)
-		case zExpectOwnerBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after owner", l)
-			}
-
-			st = zExpectAny
-		case zExpectAny:
-			switch l.Value {
-			case dnslex.Rrtype:
-				if zp.defttl == nil {
-					return zp.setParseError("missing TTL with no previous value", l)
-				}
-
-				t = &l.Torc
-
-				st = zExpectRdata
-			case dnslex.Class:
-				h.Class = l.Torc
-
-				st = zExpectAnyNoClassBl
-			case dnslex.String:
-				if h.TTL, ok = setTTL(l); !ok {
-					return zp.setParseError("not a TTL", l)
-				}
-
-				st = zExpectAnyNoTTLBl
-			default:
-				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
-			}
-		case zExpectAnyNoClassBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank before class", l)
-			}
-
-			st = zExpectAnyNoClass
-		case zExpectAnyNoTTLBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank before TTL", l)
-			}
-
-			st = zExpectAnyNoTTL
-		case zExpectAnyNoTTL:
-			switch l.Value {
-			case dnslex.Class:
-				h.Class = l.Torc
-
-				st = zExpectRrtypeBl
-			case dnslex.Rrtype:
-				t = &l.Torc
-
-				st = zExpectRdata
-			default:
-				return zp.setParseError("expecting RR type or class, not this...", l)
-			}
-		case zExpectAnyNoClass:
-			switch l.Value {
-			case dnslex.String:
-				if h.TTL, ok = setTTL(l); !ok {
-					return zp.setParseError("not a TTL", l)
-				}
-
-				st = zExpectRrtypeBl
-			case dnslex.Rrtype:
-				t = &l.Torc
-
-				st = zExpectRdata
-			default:
-				return zp.setParseError("expecting RR type or TTL, not this...", l)
-			}
-		case zExpectRrtypeBl:
+		case zExpectRrtype:
 			if l.Value != dnslex.Blank {
 				return zp.setParseError("no blank before RR type", l)
 			}
-
-			st = zExpectRrtype
-		case zExpectRrtype:
+			if l, ok = zp.c.Next(); !ok {
+				break Next
+			}
 			if l.Value != dnslex.Rrtype {
 				return zp.setParseError("unknown RR type", l)
 			}
-
 			t = &l.Torc
 
 			st = zExpectRdata
@@ -687,6 +521,185 @@ func (zp *ZoneParser) Next() (RR, bool) {
 			}
 
 			return rr, true
+		case zExpectDirInclude:
+			if l.Value != dnslex.String {
+				return zp.setParseError("expecting $INCLUDE value, not this...", l)
+			}
+
+			neworigin := zp.origin // There may be optionally a new origin set after the filename, if not use current one
+			switch l, _ := zp.c.Next(); l.Value {
+			case dnslex.Blank:
+				l, _ := zp.c.Next()
+				if l.Value == dnslex.String {
+					name := dnsutilAbsolute(l.Token, zp.origin)
+					if name == "" {
+						return zp.setParseError("bad origin name", l)
+					}
+
+					neworigin = name
+				}
+			case dnslex.Newline, dnslex.EOF:
+				// Ok
+			default:
+				return zp.setParseError("garbage after $INCLUDE", l)
+			}
+
+			if !zp.IncludeAllowFunc(zp.path, l.Token) {
+				return zp.setParseError("$INCLUDE directive not allowed", l)
+			}
+			if zp.includeDepth >= maxIncludeDepth {
+				return zp.setParseError("too deeply nested $INCLUDE", l)
+			}
+
+			// Start with the new file
+			includePath := l.Token
+			var r1 io.Reader
+			var e1 error
+			if zp.IncludeFS != nil {
+				// fs.FS always uses / as separator, even on Windows, so use
+				// path instead of filepath here:
+				if !path.IsAbs(includePath) {
+					includePath = path.Join(path.Dir(zp.file), includePath)
+				}
+
+				// os.DirFS, and probably others, expect all paths to be
+				// relative, so clean the path and remove leading / if
+				// present:
+				includePath = strings.TrimLeft(path.Clean(includePath), "/")
+
+				r1, e1 = zp.IncludeFS.Open(includePath)
+			} else {
+				if !filepath.IsAbs(includePath) {
+					includePath = filepath.Join(filepath.Dir(zp.file), includePath)
+				}
+				r1, e1 = os.Open(includePath)
+			}
+			if e1 != nil {
+				var as string
+				if includePath != l.Token {
+					as = fmt.Sprintf(" as `%s'", includePath)
+				}
+				zp.parseErr = &ParseError{
+					file:       zp.file,
+					wrappedErr: fmt.Errorf("failed to open `%s'%s: %w", l.Token, as, e1),
+					lex:        l,
+				}
+				return nil, false
+			}
+
+			zp.sub = NewZoneParser(r1, neworigin, includePath)
+			zp.sub.defttl, zp.sub.includeDepth, zp.sub.r = zp.defttl, zp.includeDepth+1, r1
+			zp.sub.IncludeAllowFunc = zp.IncludeAllowFunc
+			zp.sub.IncludeFS = zp.IncludeFS
+			return zp.subNext()
+
+		case zExpectDirTTL:
+			if l.Value != dnslex.String {
+				return zp.setParseError("expecting $TTL value, not this...", l)
+			}
+
+			if err := dnslex.Remainder(zp.c); err != nil {
+				return zp.setParseError(err.Err, err.Lex)
+			}
+
+			ttl, ok := stringToTTL(l.Token)
+			if !ok {
+				return zp.setParseError("expecting $TTL value, not this...", l)
+			}
+
+			zp.defttl = &ttlState{ttl, true}
+
+			st = zExpectOwnerDir
+		case zExpectDirOrigin:
+			if l.Value != dnslex.String {
+				return zp.setParseError("expecting $ORIGIN value, not this...", l)
+			}
+
+			if err := dnslex.Remainder(zp.c); err != nil {
+				return zp.setParseError(err.Err, err.Lex)
+			}
+
+			name := dnsutilAbsolute(l.Token, zp.origin)
+			if name == "" {
+				return zp.setParseError("bad origin name", l)
+			}
+
+			zp.origin = name
+
+			st = zExpectOwnerDir
+		case zExpectDirGenerate:
+			if zp.generateDisallowed {
+				return zp.setParseError("nested $GENERATE directive not allowed", l)
+			}
+			if l.Value != dnslex.String {
+				return zp.setParseError("expecting $GENERATE value, not this...", l)
+			}
+
+			return zp.generate(l)
+		case zExpectAny:
+			switch l.Value {
+			case dnslex.Rrtype:
+				if zp.defttl == nil {
+					return zp.setParseError("missing TTL with no previous value", l)
+				}
+
+				t = &l.Torc
+
+				st = zExpectRdata
+			case dnslex.Class:
+				h.Class = l.Torc
+
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after class", l)
+				}
+
+				st = zExpectAnyNoClass
+			case dnslex.String:
+				if h.TTL, ok = setTTL(l); !ok {
+					return zp.setParseError("not a TTL", l)
+				}
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after TTL", l)
+				}
+
+				st = zExpectAnyNoTTL
+			default:
+				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
+			}
+		case zExpectAnyNoTTL:
+			switch l.Value {
+			case dnslex.Class:
+				h.Class = l.Torc
+
+				st = zExpectRrtype
+			case dnslex.Rrtype:
+				t = &l.Torc
+
+				st = zExpectRdata
+			default:
+				return zp.setParseError("expecting RR type or class, not this...", l)
+			}
+		case zExpectAnyNoClass:
+			switch l.Value {
+			case dnslex.String:
+				if h.TTL, ok = setTTL(l); !ok {
+					return zp.setParseError("not a TTL", l)
+				}
+
+				st = zExpectRrtype
+			case dnslex.Rrtype:
+				t = &l.Torc
+
+				st = zExpectRdata
+			default:
+				return zp.setParseError("expecting RR type or TTL, not this...", l)
+			}
 		}
 	}
 
