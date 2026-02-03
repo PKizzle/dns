@@ -1,8 +1,6 @@
 package dns
 
 import (
-	"strconv"
-
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/dnslex"
 )
@@ -137,19 +135,6 @@ func escapedStringOffset(s string, desiredByteOffset int) (int, bool) {
 	}
 
 	return -1, true
-}
-
-// Extract the rr number from TYPExxx
-func typeToInt(token string) (uint16, bool) {
-	offset := 4
-	if len(token) < offset+1 {
-		return 0, false
-	}
-	typ, err := strconv.ParseUint(token[offset:], 10, 16)
-	if err != nil {
-		return 0, false
-	}
-	return uint16(typ), true
 }
 
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)

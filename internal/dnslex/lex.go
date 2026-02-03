@@ -230,20 +230,19 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Token = string(str[:stri])
 
 				if !zl.rrtype {
-					tokenUpper := strings.ToUpper(l.Token)
-					if t, ok := zl.StringToType[tokenUpper]; ok {
+					if t, ok := zl.StringToType[l.Token]; ok {
 						l.Value = Rrtype
 						l.Torc = t
 
 						zl.rrtype = true
-					} else if t, ok := zl.StringToCode[tokenUpper]; ok {
+					} else if t, ok := zl.StringToCode[l.Token]; ok {
 						l.As = asCode
 						l.Value = Rrtype
 						l.Torc = t
 
 						zl.rrtype = true
-					} else if strings.HasPrefix(tokenUpper, "TYPE") {
-						t, ok := typeToInt(l.Token)
+					} else if strings.HasPrefix(l.Token, "TYPE") {
+						t, ok := TypeToInt(l.Token)
 						if !ok {
 							l.Token = "unknown RR type"
 							l.Err = true
@@ -256,10 +255,10 @@ func (zl *Lexer) Next() (Lex, bool) {
 						zl.rrtype = true
 					}
 
-					if t, ok := zl.StringToClass[tokenUpper]; ok {
+					if t, ok := zl.StringToClass[l.Token]; ok {
 						l.Value = Class
 						l.Torc = t
-					} else if strings.HasPrefix(tokenUpper, "CLASS") {
+					} else if strings.HasPrefix(l.Token, "CLASS") {
 						t, ok := classToInt(l.Token)
 						if !ok {
 							l.Token = "unknown class"
@@ -351,12 +350,11 @@ func (zl *Lexer) Next() (Lex, bool) {
 					l.Token = string(str[:stri])
 
 					if !zl.rrtype {
-						tokenUpper := strings.ToUpper(l.Token)
-						if t, ok := zl.StringToType[tokenUpper]; ok {
+						if t, ok := zl.StringToType[l.Token]; ok {
 							zl.rrtype = true
 							l.Value = Rrtype
 							l.Torc = t
-						} else if t, ok := zl.StringToCode[tokenUpper]; ok {
+						} else if t, ok := zl.StringToCode[l.Token]; ok {
 							zl.rrtype = true
 							l.As = asCode
 							l.Value = Rrtype
@@ -499,28 +497,15 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 // Extract the class number from CLASSxx
 func classToInt(token string) (uint16, bool) {
-	offset := 5
-	if len(token) < offset+1 {
-		return 0, false
-	}
-	class, err := strconv.ParseUint(token[offset:], 10, 16)
-	if err != nil {
-		return 0, false
-	}
-	return uint16(class), true
+	class, err := strconv.ParseUint(token[5:], 10, 16)
+	return uint16(class), err == nil
 }
 
-// Extract the rr number from TYPExxx
-func typeToInt(token string) (uint16, bool) {
-	offset := 4
-	if len(token) < offset+1 {
-		return 0, false
-	}
-	typ, err := strconv.ParseUint(token[offset:], 10, 16)
-	if err != nil {
-		return 0, false
-	}
-	return uint16(typ), true
+// Extract the rr number from TYPExxx. There is no length check, it is assumed the caller has checked the
+// prefix is at least "TYPE" (4)
+func TypeToInt(token string) (uint16, bool) {
+	typ, err := strconv.ParseUint(token[4:], 10, 16)
+	return uint16(typ), err == nil
 }
 
 // Remainer eats the rest of the "line".
