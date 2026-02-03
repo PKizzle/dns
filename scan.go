@@ -31,20 +31,16 @@ const (
 	zValue uint8 = iota
 	zKey
 
-	zExpectOwnerDir      uint8 = iota // Ownername
-	zExpectAny                        // Expect rrtype, ttl or class
-	zExpectAnyNoClass                 // Expect rrtype or ttl
-	zExpectAnyNoTTL                   // Expect rrtype or class
-	zExpectRrtype                     // Expect whitespace and rrtype
-	zExpectRdata                      // The first element of the rdata
-	zExpectDirTTLBl                   // Space after directive $TTL
-	zExpectDirTTL                     // Directive $TTL
-	zExpectDirOriginBl                // Space after directive $ORIGIN
-	zExpectDirOrigin                  // Directive $ORIGIN
-	zExpectDirIncludeBl               // Space after directive $INCLUDE
-	zExpectDirInclude                 // Directive $INCLUDE
-	zExpectDirGenerate                // Directive $GENERATE
-	zExpectDirGenerateBl              // Space after directive $GENERATE
+	zExpectOwnerDir    uint8 = iota // Ownername
+	zExpectAny                      // Expect rrtype, ttl or class
+	zExpectAnyNoClass               // Expect rrtype or ttl
+	zExpectAnyNoTTL                 // Expect rrtype or class
+	zExpectRrtype                   // Expect whitespace and rrtype
+	zExpectRdata                    // The first element of the rdata
+	zExpectDirTTL                   // Directive $TTL
+	zExpectDirOrigin                // Directive $ORIGIN
+	zExpectDirInclude               // Directive $INCLUDE
+	zExpectDirGenerate              // Directive $GENERATE
 )
 
 // ParseError is a parsing error. It contains the parse error and the location in the io.Reader
@@ -373,13 +369,42 @@ Next:
 
 				st = zExpectAny
 			case dnslex.DirTTL:
-				st = zExpectDirTTLBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $TTL-directive", l)
+				}
+
+				st = zExpectDirTTL
+
 			case dnslex.DirOrigin:
-				st = zExpectDirOriginBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $ORIGIN-directive", l)
+				}
+
+				st = zExpectDirOrigin
 			case dnslex.DirInclude:
-				st = zExpectDirIncludeBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $INCLUDE-directive", l)
+				}
+
+				st = zExpectDirInclude
 			case dnslex.DirGenerate:
-				st = zExpectDirGenerateBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after $GENERATE-directive", l)
+				}
+
+				st = zExpectDirGenerate
 			case dnslex.Rrtype:
 				t = &l.Torc
 
@@ -496,12 +521,6 @@ Next:
 			}
 
 			return rr, true
-		case zExpectDirIncludeBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $INCLUDE-directive", l)
-			}
-
-			st = zExpectDirInclude
 		case zExpectDirInclude:
 			if l.Value != dnslex.String {
 				return zp.setParseError("expecting $INCLUDE value, not this...", l)
@@ -573,12 +592,7 @@ Next:
 			zp.sub.IncludeAllowFunc = zp.IncludeAllowFunc
 			zp.sub.IncludeFS = zp.IncludeFS
 			return zp.subNext()
-		case zExpectDirTTLBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $TTL-directive", l)
-			}
 
-			st = zExpectDirTTL
 		case zExpectDirTTL:
 			if l.Value != dnslex.String {
 				return zp.setParseError("expecting $TTL value, not this...", l)
@@ -596,12 +610,6 @@ Next:
 			zp.defttl = &ttlState{ttl, true}
 
 			st = zExpectOwnerDir
-		case zExpectDirOriginBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $ORIGIN-directive", l)
-			}
-
-			st = zExpectDirOrigin
 		case zExpectDirOrigin:
 			if l.Value != dnslex.String {
 				return zp.setParseError("expecting $ORIGIN value, not this...", l)
@@ -619,12 +627,6 @@ Next:
 			zp.origin = name
 
 			st = zExpectOwnerDir
-		case zExpectDirGenerateBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank after $GENERATE-directive", l)
-			}
-
-			st = zExpectDirGenerate
 		case zExpectDirGenerate:
 			if zp.generateDisallowed {
 				return zp.setParseError("nested $GENERATE directive not allowed", l)
