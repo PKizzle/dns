@@ -213,7 +213,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Token = string(str[:stri])
 
 				// escape $... start with a \ not a $, so this will work
-				switch strings.ToUpper(l.Token) {
+				switch l.Token {
 				case "$TTL":
 					l.Value = DirTTL
 				case "$ORIGIN":
@@ -237,10 +237,11 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 						zl.rrtype = true
 					} else if t, ok := zl.StringToCode[tokenUpper]; ok {
-						zl.rrtype = true
 						l.As = asCode
 						l.Value = Rrtype
 						l.Torc = t
+
+						zl.rrtype = true
 					} else if strings.HasPrefix(tokenUpper, "TYPE") {
 						t, ok := typeToInt(l.Token)
 						if !ok {
@@ -429,7 +430,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 			zl.quote = !zl.quote
 
-			if retL != (Lex{}) {
+			if retL.Value == String {
 				zl.nextL = true
 				return retL, true
 			}

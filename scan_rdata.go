@@ -823,7 +823,7 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
 	tokenUpper := strings.ToUpper(l.Token)
 	if t, ok := StringToType[tokenUpper]; !ok {
-		if strings.HasPrefix(tokenUpper, "TYPE") {
+		if strings.HasPrefix(l.Token, "TYPE") {
 			t, ok = typeToInt(l.Token)
 			if !ok {
 				return &ParseError{err: "bad RRSIG Typecovered", lex: l}
