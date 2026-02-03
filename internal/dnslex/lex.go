@@ -16,7 +16,7 @@ type ScanError struct {
 
 func (e *ScanError) Error() string { return "" }
 
-const maxTok = 16 // Token buffer start size, doubles when too small.
+const tokenSize = 512 // Token buffer start size, doubles when too small.
 
 // Tokenize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
@@ -58,7 +58,8 @@ const (
 // Lexer tokenizes the zone data, so that the grammar implemented in ZoneParser can parse RRs out of an RFC
 // 1035 styled text file.
 type Lexer struct {
-	br io.ByteReader
+	br  io.ByteReader
+	tok []byte
 
 	readErr error
 
@@ -93,6 +94,7 @@ func New(r io.Reader, StringToType, StringToCode, StringToClass map[string]uint1
 
 	return &Lexer{
 		br:            br,
+		tok:           make([]byte, tokenSize),
 		line:          1,
 		owner:         true,
 		StringToType:  StringToType,
@@ -173,29 +175,25 @@ func (zl *Lexer) Next() (Lex, bool) {
 		return Lex{Value: EOF}, false
 	}
 
-	var (
-		str  = make([]byte, maxTok) // Hold string text
-		stri int                    // Offset in str (0 means empty)
-
-		escape bool
-	)
+	zl.tok = zl.tok[:0]
+	escape := false
 
 	l.As = asRR
 
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.Line, l.Column = zl.line, zl.column
 
-		if stri >= len(str) { // if buffer length is insufficient, increase it.
-			str = append(str[:], make([]byte, maxTok)...)
+		if len(zl.tok) >= cap(zl.tok) {
+			cap1 := cap(zl.tok) * 2
+			buf := make([]byte, len(zl.tok), cap1)
+			copy(buf, zl.tok)
+			zl.tok = buf
 		}
 
 		switch x {
 		case ' ', '\t':
 			if escape || zl.quote {
-				// Inside quotes or escaped this is legal.
-				str[stri] = x
-				stri++
-
+				zl.tok = append(zl.tok, x)
 				escape = false
 				break
 			}
@@ -205,12 +203,12 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 
 			var retL Lex
-			if stri == 0 {
+			if len(zl.tok) == 0 {
 				// Space directly in the beginning, handled in the grammar
 			} else if zl.owner {
 				// If we have a string and it's the first, make it an owner
 				l.Value = Owner
-				l.Token = string(str[:stri])
+				l.Token = string(zl.tok)
 
 				// escape $... start with a \ not a $, so this will work
 				switch l.Token {
@@ -227,10 +225,10 @@ func (zl *Lexer) Next() (Lex, bool) {
 				retL = *l
 			} else {
 				l.Value = String
-				l.Token = string(str[:stri])
+				l.Token = string(zl.tok)
 
 				if !zl.rrtype {
-					if t, ok := zl.StringToType[strings.ToUpper(l.Token)]; ok {
+					if t, ok := upperLookup(l.Token, zl.StringToType); ok {
 						l.Value = Rrtype
 						l.Torc = t
 
@@ -295,26 +293,23 @@ func (zl *Lexer) Next() (Lex, bool) {
 		case ';':
 			if escape || zl.quote {
 				// Inside quotes or escaped this is legal.
-				str[stri] = x
-				stri++
-
+				zl.tok = append(zl.tok, x)
 				escape = false
 				break
 			}
 
 			zl.commt = true
 
-			if stri > 0 {
+			if len(zl.tok) > 0 {
 				l.Value = String
-				l.Token = string(str[:stri])
+				l.Token = string(zl.tok)
 				return *l, true
 			}
 		case '\r':
 			escape = false
 
 			if zl.quote {
-				str[stri] = x
-				stri++
+				zl.tok = append(zl.tok, x)
 			}
 
 			// discard if outside of quotes
@@ -323,8 +318,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 			// Escaped newline
 			if zl.quote {
-				str[stri] = x
-				stri++
+				zl.tok = append(zl.tok, x)
 				break
 			}
 
@@ -345,12 +339,12 @@ func (zl *Lexer) Next() (Lex, bool) {
 			if zl.brace == 0 {
 				// If there is previous text, we should output it here
 				var retL Lex
-				if stri != 0 {
+				if len(zl.tok) != 0 {
 					l.Value = String
-					l.Token = string(str[:stri])
+					l.Token = string(zl.tok)
 
 					if !zl.rrtype {
-						if t, ok := zl.StringToType[strings.ToUpper(l.Token)]; ok {
+						if t, ok := upperLookup(l.Token, zl.StringToType); ok {
 							zl.rrtype = true
 							l.Value = Rrtype
 							l.Torc = t
@@ -386,17 +380,13 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 			// something already escaped must be in string
 			if escape {
-				str[stri] = x
-				stri++
-
+				zl.tok = append(zl.tok, x)
 				escape = false
 				break
 			}
 
 			// something escaped outside of string gets added to string
-			str[stri] = x
-			stri++
-
+			zl.tok = append(zl.tok, x)
 			escape = true
 		case '"':
 			if zl.commt {
@@ -404,9 +394,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 
 			if escape {
-				str[stri] = x
-				stri++
-
+				zl.tok = append(zl.tok, x)
 				escape = false
 				break
 			}
@@ -415,9 +403,9 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 			// send previous gathered text and the quote
 			var retL Lex
-			if stri != 0 {
+			if len(zl.tok) != 0 {
 				l.Value = String
-				l.Token = string(str[:stri])
+				l.Token = string(zl.tok)
 
 				retL = *l
 			}
@@ -441,9 +429,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 			if escape || zl.quote {
 				// Inside quotes or escaped this is legal.
-				str[stri] = x
-				stri++
-
+				zl.tok = append(zl.tok, x)
 				escape = false
 				break
 			}
@@ -467,9 +453,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 				break
 			}
 
-			str[stri] = x
-			stri++
-
+			zl.tok = append(zl.tok, x)
 			zl.space = false
 		}
 	}
@@ -479,10 +463,10 @@ func (zl *Lexer) Next() (Lex, bool) {
 		return Lex{Value: EOF}, false
 	}
 
-	if stri > 0 {
+	if len(zl.tok) > 0 {
 		// Send remainder of str
 		l.Value = String
-		l.Token = string(str[:stri])
+		l.Token = string(zl.tok)
 		return *l, true
 	}
 
@@ -539,4 +523,12 @@ func Tokens(c *Lexer) []string {
 		}
 		l, _ = c.Next()
 	}
+}
+
+func upperLookup(s string, m map[string]uint16) (uint16, bool) {
+	if t, ok := m[s]; ok {
+		return t, true
+	}
+	t, ok := m[strings.ToUpper(s)]
+	return t, ok
 }
