@@ -230,7 +230,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Token = string(str[:stri])
 
 				if !zl.rrtype {
-					if t, ok := zl.StringToType[l.Token]; ok {
+					if t, ok := zl.StringToType[strings.ToUpper(l.Token)]; ok {
 						l.Value = Rrtype
 						l.Torc = t
 
@@ -350,7 +350,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 					l.Token = string(str[:stri])
 
 					if !zl.rrtype {
-						if t, ok := zl.StringToType[l.Token]; ok {
+						if t, ok := zl.StringToType[strings.ToUpper(l.Token)]; ok {
 							zl.rrtype = true
 							l.Value = Rrtype
 							l.Torc = t
