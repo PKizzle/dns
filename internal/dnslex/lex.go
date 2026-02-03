@@ -16,7 +16,7 @@ type ScanError struct {
 
 func (e *ScanError) Error() string { return "" }
 
-const maxTok = 512 // Token buffer start size, and growth size amount.
+const maxTok = 16 // Token buffer start size, doubles when too small.
 
 // Tokenize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
