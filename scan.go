@@ -416,7 +416,7 @@ Next:
 					break Next
 				}
 				if l.Value != dnslex.Blank {
-					return zp.setParseError("no blank before class", l)
+					return zp.setParseError("no blank after class", l)
 				}
 
 				st = zExpectAnyNoClass
@@ -653,7 +653,7 @@ Next:
 					break Next
 				}
 				if l.Value != dnslex.Blank {
-					return zp.setParseError("no blank before class", l)
+					return zp.setParseError("no blank after class", l)
 				}
 
 				st = zExpectAnyNoClass
