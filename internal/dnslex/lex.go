@@ -282,14 +282,14 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Value = Blank
 				l.Token = " "
 
-				if retL == (Lex{}) {
+				if retL.Value == EOF { // empty
 					return *l, true
 				}
 
 				zl.nextL = true
 			}
 
-			if retL != (Lex{}) {
+			if retL.Value != EOF { // not empty
 				return retL, true
 			}
 		case ';':
@@ -371,7 +371,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 				zl.rrtype = false
 				zl.owner = true
 
-				if retL != (Lex{}) {
+				if retL.Value != EOF { // not empty
 					zl.nextL = true
 					return retL, true
 				}
