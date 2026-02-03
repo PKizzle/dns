@@ -1,8 +1,6 @@
 package dns
 
 import (
-	"strconv"
-
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/dnslex"
 )
@@ -139,47 +137,38 @@ func escapedStringOffset(s string, desiredByteOffset int) (int, bool) {
 	return -1, true
 }
 
-// Extract the rr number from TYPExxx
-func typeToInt(token string) (uint16, bool) {
-	offset := 4
-	if len(token) < offset+1 {
-		return 0, false
-	}
-	typ, err := strconv.ParseUint(token[offset:], 10, 16)
-	if err != nil {
-		return 0, false
-	}
-	return uint16(typ), true
-}
-
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func endingToString(c *dnslex.Lexer, errstr string) (string, *ParseError) {
 	sb := builderPool.Get()
-	l, _ := c.Next() // dnslex.String
-	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
+
+	for {
+		l, _ := c.Next()
+		if l.Value == dnslex.Newline || l.Value == dnslex.EOF {
+			s := sb.String()
+			builderPool.Put(sb)
+			return s, nil
+		}
 		if l.Err {
+			builderPool.Put(sb)
 			return "", &ParseError{err: errstr, lex: l}
 		}
+
 		switch l.Value {
 		case dnslex.String:
 			sb.WriteString(l.Token)
-		case dnslex.Blank: // Ok
+		case dnslex.Blank:
+			continue
 		default:
+			builderPool.Put(sb)
 			return "", &ParseError{err: errstr, lex: l}
 		}
-		l, _ = c.Next()
 	}
-
-	s := sb.String()
-	builderPool.Put(sb)
-	return s, nil
 }
 
 // A remainder of the rdata with embedded spaces, split on unquoted whitespace
 // and return the parsed string slice or an error
 func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, *ParseError) {
-	// Get the remaining data until we see a dnslex.Newline
 	l, _ := c.Next()
 	if l.Err {
 		return nil, &ParseError{err: errstr, lex: l}

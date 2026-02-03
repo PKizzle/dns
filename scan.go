@@ -259,19 +259,6 @@ func (zp *ZoneParser) setParseError(err string, l dnslex.Lex) (RR, bool) {
 	return nil, false
 }
 
-// Comment returns an optional text comment that occurred alongside the RR.
-func (zp *ZoneParser) Comment() string {
-	if zp.parseErr != nil {
-		return ""
-	}
-
-	if zp.sub != nil {
-		return zp.sub.Comment()
-	}
-
-	return zp.c.Comment()
-}
-
 func (zp *ZoneParser) subNext() (RR, bool) {
 	if rr, ok := zp.sub.Next(); ok {
 		return rr, true
