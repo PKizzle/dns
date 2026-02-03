@@ -21,8 +21,7 @@ const maxTok = 512 // Token buffer start size, and growth size amount.
 // Tokenize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
-// * Make each RR fit on one line (_NEWLINE is send as last)
-// * Handle comments: ;
+// * Make each RR fit on one line ([Newline] is send as last)
 // * Handle braces - anywhere.
 const (
 	// Zone file
@@ -65,9 +64,6 @@ type Lexer struct {
 
 	line   int
 	column int
-
-	comBuf  string
-	comment string
 
 	l       Lex
 	cachedL *Lex
@@ -178,33 +174,19 @@ func (zl *Lexer) Next() (Lex, bool) {
 	}
 
 	var (
-		str = make([]byte, maxTok) // Hold string text
-		com = make([]byte, maxTok) // Hold comment text
-
-		stri int // Offset in str (0 means empty)
-		comi int // Offset in com (0 means empty)
+		str  = make([]byte, maxTok) // Hold string text
+		stri int                    // Offset in str (0 means empty)
 
 		escape bool
 	)
 
-	if zl.comBuf != "" {
-		comi = copy(com[:], zl.comBuf)
-		zl.comBuf = ""
-	}
-
-	zl.comment = ""
 	l.As = asRR
 
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.Line, l.Column = zl.line, zl.column
 
-		if stri >= len(str) {
-			// if buffer length is insufficient, increase it.
+		if stri >= len(str) { // if buffer length is insufficient, increase it.
 			str = append(str[:], make([]byte, maxTok)...)
-		}
-		if comi >= len(com) {
-			// if buffer length is insufficient, increase it.
-			com = append(com[:], make([]byte, maxTok)...)
 		}
 
 		switch x {
@@ -219,8 +201,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 
 			if zl.commt {
-				com[comi] = x
-				comi++
 				break
 			}
 
@@ -323,26 +303,8 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 
 			zl.commt = true
-			zl.comBuf = ""
-
-			if comi > 1 {
-				// A newline was previously seen inside a comment that
-				// was inside braces and we delayed adding it until now.
-				com[comi] = ' ' // convert newline to space
-				comi++
-				if comi >= len(com) {
-					l.Token = "comment length insufficient for parsing"
-					l.Err = true
-					return *l, true
-				}
-			}
-
-			com[comi] = ';'
-			comi++
 
 			if stri > 0 {
-				zl.comBuf = string(com[:comi])
-
 				l.Value = String
 				l.Token = string(str[:stri])
 				return *l, true
@@ -367,21 +329,16 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 
 			if zl.commt {
-				// Reset a comment
 				zl.commt = false
 				zl.rrtype = false
 
-				// If not in a brace this ends the comment AND the RR
 				if zl.brace == 0 {
 					zl.owner = true
 
 					l.Value = Newline
 					l.Token = "\n"
-					zl.comment = string(com[:comi])
 					return *l, true
 				}
-
-				zl.comBuf = string(com[:comi])
 				break
 			}
 
@@ -412,8 +369,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Value = Newline
 				l.Token = "\n"
 
-				zl.comment = zl.comBuf
-				zl.comBuf = ""
 				zl.rrtype = false
 				zl.owner = true
 
@@ -427,8 +382,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 		case '\\':
 			// comments do not get escaped chars, everything is copied
 			if zl.commt {
-				com[comi] = x
-				comi++
 				break
 			}
 
@@ -448,8 +401,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 			escape = true
 		case '"':
 			if zl.commt {
-				com[comi] = x
-				comi++
 				break
 			}
 
@@ -486,8 +437,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 			return *l, true
 		case '(', ')':
 			if zl.commt {
-				com[comi] = x
-				comi++
 				break
 			}
 
@@ -516,8 +465,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 			escape = false
 
 			if zl.commt {
-				com[comi] = x
-				comi++
 				break
 			}
 
@@ -533,29 +480,10 @@ func (zl *Lexer) Next() (Lex, bool) {
 		return Lex{Value: EOF}, false
 	}
 
-	var retL Lex
 	if stri > 0 {
 		// Send remainder of str
 		l.Value = String
 		l.Token = string(str[:stri])
-		retL = *l
-
-		if comi <= 0 {
-			return retL, true
-		}
-	}
-
-	if comi > 0 {
-		// Send remainder of com
-		l.Value = Newline
-		l.Token = "\n"
-		zl.comment = string(com[:comi])
-
-		if retL != (Lex{}) {
-			zl.nextL = true
-			return retL, true
-		}
-
 		return *l, true
 	}
 
@@ -566,14 +494,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 	}
 
 	return Lex{Value: EOF}, false
-}
-
-func (zl *Lexer) Comment() string {
-	if zl.l.Err {
-		return ""
-	}
-
-	return zl.comment
 }
 
 // Extract the class number from CLASSxx
