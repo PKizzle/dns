@@ -34,9 +34,7 @@ const (
 	zExpectOwnerDir      uint8 = iota // Ownername
 	zExpectAny                        // Expect rrtype, ttl or class
 	zExpectAnyNoClass                 // Expect rrtype or ttl
-	zExpectAnyNoClassBl               // The whitespace after _EXPECT_ANY_NOCLASS
 	zExpectAnyNoTTL                   // Expect rrtype or class
-	zExpectAnyNoTTLBl                 // Whitespace after _EXPECT_ANY_NOTTL
 	zExpectRrtype                     // Expect whitespace and rrtype
 	zExpectRdata                      // The first element of the rdata
 	zExpectDirTTLBl                   // Space after directive $TTL
@@ -366,8 +364,7 @@ Next:
 
 				h.Name = name
 
-				l, ok := zp.c.Next()
-				if !ok {
+				if l, ok = zp.c.Next(); !ok {
 					break Next
 				}
 				if l.Value != dnslex.Blank {
@@ -390,7 +387,14 @@ Next:
 			case dnslex.Class:
 				h.Class = l.Torc
 
-				st = zExpectAnyNoClassBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank before class", l)
+				}
+
+				st = zExpectAnyNoClass
 			case dnslex.Blank:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
@@ -398,8 +402,14 @@ Next:
 				if h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after TTL", l)
+				}
 
-				st = zExpectAnyNoTTLBl
+				st = zExpectAnyNoTTL
 			default:
 				return zp.setParseError("syntax error at beginning", l)
 			}
@@ -407,8 +417,7 @@ Next:
 			if l.Value != dnslex.Blank {
 				return zp.setParseError("no blank before RR type", l)
 			}
-			l, ok = zp.c.Next()
-			if !ok {
+			if l, ok = zp.c.Next(); !ok {
 				break Next
 			}
 			if l.Value != dnslex.Rrtype {
@@ -638,28 +647,29 @@ Next:
 			case dnslex.Class:
 				h.Class = l.Torc
 
-				st = zExpectAnyNoClassBl
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank before class", l)
+				}
+
+				st = zExpectAnyNoClass
 			case dnslex.String:
 				if h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
+				if l, ok = zp.c.Next(); !ok {
+					break Next
+				}
+				if l.Value != dnslex.Blank {
+					return zp.setParseError("no blank after TTL", l)
+				}
 
-				st = zExpectAnyNoTTLBl
+				st = zExpectAnyNoTTL
 			default:
 				return zp.setParseError("expecting RR type, TTL or class, not this...", l)
 			}
-		case zExpectAnyNoClassBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank before class", l)
-			}
-
-			st = zExpectAnyNoClass
-		case zExpectAnyNoTTLBl:
-			if l.Value != dnslex.Blank {
-				return zp.setParseError("no blank before TTL", l)
-			}
-
-			st = zExpectAnyNoTTL
 		case zExpectAnyNoTTL:
 			switch l.Value {
 			case dnslex.Class:
