@@ -16,8 +16,6 @@ type ScanError struct {
 
 func (e *ScanError) Error() string { return "" }
 
-const tokenSize = 512 // Token buffer start size, doubles when too small.
-
 // Tokenize a RFC 1035 zone file. The tokenizer will normalize it:
 // * Add ownernames if they are left blank;
 // * Suppress sequences of spaces;
@@ -94,7 +92,7 @@ func New(r io.Reader, StringToType, StringToCode, StringToClass map[string]uint1
 
 	return &Lexer{
 		br:            br,
-		tok:           make([]byte, tokenSize),
+		tok:           make([]byte, 512),
 		line:          1,
 		owner:         true,
 		StringToType:  StringToType,
@@ -183,54 +181,47 @@ func (zl *Lexer) Next() (Lex, bool) {
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
 		l.Line, l.Column = zl.line, zl.column
 
-		if len(zl.tok) >= cap(zl.tok) {
-			cap1 := cap(zl.tok) * 2
-			buf := make([]byte, len(zl.tok), cap1)
-			copy(buf, zl.tok)
-			zl.tok = buf
-		}
-
 		switch x {
 		case ' ', '\t':
 			if escape || zl.quote {
 				zl.tok = append(zl.tok, x)
 				escape = false
-				break
+				continue
 			}
 
 			if zl.commt {
-				break
+				continue
 			}
 
 			var retL Lex
-			if len(zl.tok) == 0 {
-				// Space directly in the beginning, handled in the grammar
-			} else if zl.owner {
-				// If we have a string and it's the first, make it an owner
-				l.Value = Owner
-				l.Token = string(zl.tok)
+			if len(zl.tok) > 0 {
+				if zl.owner {
+					// If we have a string and it's the first, make it an owner
+					l.Value = Owner
+					l.Token = string(zl.tok)
 
-				// escape $... start with a \ not a $, so this will work
-				switch l.Token {
-				case "$TTL":
-					l.Value = DirTTL
-				case "$ORIGIN":
-					l.Value = DirOrigin
-				case "$INCLUDE":
-					l.Value = DirInclude
-				case "$GENERATE":
-					l.Value = DirGenerate
+					// escape $... start with a \ not a $, so this will work
+					switch l.Token {
+					case "$TTL":
+						l.Value = DirTTL
+					case "$ORIGIN":
+						l.Value = DirOrigin
+					case "$INCLUDE":
+						l.Value = DirInclude
+					case "$GENERATE":
+						l.Value = DirGenerate
+					}
+
+					retL = *l
+				} else {
+					l.Value = String
+					l.Token = string(zl.tok)
+
+					if !zl.rrtype {
+						zl.typeOrCodeOrClass(l)
+					}
+					retL = *l
 				}
-
-				retL = *l
-			} else {
-				l.Value = String
-				l.Token = string(zl.tok)
-
-				if !zl.rrtype {
-					zl.typeOrCodeOrClass(l)
-				}
-				retL = *l
 			}
 
 			zl.owner = false
@@ -256,7 +247,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 				// Inside quotes or escaped this is legal.
 				zl.tok = append(zl.tok, x)
 				escape = false
-				break
+				continue
 			}
 
 			zl.commt = true
@@ -280,7 +271,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 			// Escaped newline
 			if zl.quote {
 				zl.tok = append(zl.tok, x)
-				break
+				continue
 			}
 
 			if zl.commt {
@@ -294,7 +285,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 					l.Token = "\n"
 					return *l, true
 				}
-				break
+				continue
 			}
 
 			if zl.brace == 0 {
@@ -327,14 +318,14 @@ func (zl *Lexer) Next() (Lex, bool) {
 		case '\\':
 			// comments do not get escaped chars, everything is copied
 			if zl.commt {
-				break
+				continue
 			}
 
 			// something already escaped must be in string
 			if escape {
 				zl.tok = append(zl.tok, x)
 				escape = false
-				break
+				continue
 			}
 
 			// something escaped outside of string gets added to string
@@ -342,13 +333,13 @@ func (zl *Lexer) Next() (Lex, bool) {
 			escape = true
 		case '"':
 			if zl.commt {
-				break
+				continue
 			}
 
 			if escape {
 				zl.tok = append(zl.tok, x)
 				escape = false
-				break
+				continue
 			}
 
 			zl.space = false
@@ -376,14 +367,14 @@ func (zl *Lexer) Next() (Lex, bool) {
 			return *l, true
 		case '(', ')':
 			if zl.commt {
-				break
+				continue
 			}
 
 			if escape || zl.quote {
 				// Inside quotes or escaped this is legal.
 				zl.tok = append(zl.tok, x)
 				escape = false
-				break
+				continue
 			}
 
 			switch x {
@@ -400,13 +391,10 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 		default:
 			escape = false
-
-			if zl.commt {
-				break
+			if !zl.commt {
+				zl.tok = append(zl.tok, x)
+				zl.space = false
 			}
-
-			zl.tok = append(zl.tok, x)
-			zl.space = false
 		}
 	}
 
