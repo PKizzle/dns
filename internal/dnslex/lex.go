@@ -228,47 +228,8 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Token = string(zl.tok)
 
 				if !zl.rrtype {
-					if t, ok := upperLookup(l.Token, zl.StringToType); ok {
-						l.Value = Rrtype
-						l.Torc = t
-
-						zl.rrtype = true
-					} else if t, ok := zl.StringToCode[l.Token]; ok {
-						l.As = asCode
-						l.Value = Rrtype
-						l.Torc = t
-
-						zl.rrtype = true
-					} else if strings.HasPrefix(l.Token, "TYPE") {
-						t, ok := TypeToInt(l.Token)
-						if !ok {
-							l.Token = "unknown RR type"
-							l.Err = true
-							return *l, true
-						}
-
-						l.Value = Rrtype
-						l.Torc = t
-
-						zl.rrtype = true
-					}
-
-					if t, ok := zl.StringToClass[l.Token]; ok {
-						l.Value = Class
-						l.Torc = t
-					} else if strings.HasPrefix(l.Token, "CLASS") {
-						t, ok := classToInt(l.Token)
-						if !ok {
-							l.Token = "unknown class"
-							l.Err = true
-							return *l, true
-						}
-
-						l.Value = Class
-						l.Torc = t
-					}
+					zl.typeOrCodeOrClass(l)
 				}
-
 				retL = *l
 			}
 
@@ -344,16 +305,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 					l.Token = string(zl.tok)
 
 					if !zl.rrtype {
-						if t, ok := upperLookup(l.Token, zl.StringToType); ok {
-							zl.rrtype = true
-							l.Value = Rrtype
-							l.Torc = t
-						} else if t, ok := zl.StringToCode[l.Token]; ok {
-							zl.rrtype = true
-							l.As = asCode
-							l.Value = Rrtype
-							l.Torc = t
-						}
+						zl.typeOrCodeOrClass(l)
 					}
 
 					retL = *l
@@ -531,4 +483,52 @@ func upperLookup(s string, m map[string]uint16) (uint16, bool) {
 	}
 	t, ok := m[strings.ToUpper(s)]
 	return t, ok
+}
+
+func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
+	if t, ok := upperLookup(l.Token, zl.StringToType); ok {
+		l.Value = Rrtype
+		l.Torc = t
+		zl.rrtype = true
+		return
+	}
+
+	if t, ok := zl.StringToCode[l.Token]; ok {
+		l.As = asCode
+		l.Value = Rrtype
+		l.Torc = t
+		zl.rrtype = true
+		return
+	}
+
+	if strings.HasPrefix(l.Token, "TYPE") {
+		t, ok := TypeToInt(l.Token)
+		if !ok {
+			l.Token = "unknown RR type"
+			l.Err = true
+			return
+		}
+		l.Value = Rrtype
+		l.Torc = t
+		zl.rrtype = true
+		return
+	}
+
+	// Check for class
+	if t, ok := zl.StringToClass[l.Token]; ok {
+		l.Value = Class
+		l.Torc = t
+		return
+	}
+
+	if strings.HasPrefix(l.Token, "CLASS") {
+		t, ok := classToInt(l.Token)
+		if !ok {
+			l.Token = "unknown class"
+			l.Err = true
+			return
+		}
+		l.Value = Class
+		l.Torc = t
+	}
 }

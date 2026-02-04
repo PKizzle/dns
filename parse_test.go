@@ -93,7 +93,6 @@ func TestNew(t *testing.T) {
 		{
 			"A no rdata", `www.example.org. IN A`,
 			func(rr RR) error {
-				println(rr.String())
 				return nil
 			},
 		},
