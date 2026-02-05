@@ -1741,7 +1741,7 @@ func parseDSYNC(rd *rdata.DSYNC, c *dnslex.Lexer, o string) error {
 	return toParseError(dnslex.Discard(c))
 }
 
-// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
+// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occurred and nothing
 // was found.
 func upperLookup(s string, m map[string]uint8) (uint8, bool) {
 	// Duplicated in dnsex/lex.go

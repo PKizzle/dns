@@ -17,8 +17,8 @@ func TestSetup(t *testing.T) {
 			aaa/bloep
 			bbb/addr
 		}`, &Log{Contexts: map[string][]string{
-			"aaa": []string{"addr", "bloep"},
-			"bbb": []string{"addr"},
+			"aaa": {"addr", "bloep"},
+			"bbb": {"addr"},
 		}},
 		},
 	}

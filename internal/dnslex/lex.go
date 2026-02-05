@@ -465,7 +465,7 @@ func Tokens(c *Lexer) []string {
 	}
 }
 
-// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
+// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occurred and nothing
 // was found.
 func upperLookup(s string, m map[string]uint16) (uint16, bool) {
 	if t, ok := m[s]; ok {
