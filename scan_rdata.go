@@ -19,7 +19,7 @@ func parseA(rd *rdata.A, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad A A", lex: l}
 	}
 	rd.Addr = value
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseAAAA(rd *rdata.AAAA, c *dnslex.Lexer, o string) *ParseError {
@@ -29,7 +29,7 @@ func parseAAAA(rd *rdata.AAAA, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad AAAA AAAA", lex: l}
 	}
 	rd.Addr = value
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseNS(rd *rdata.NS, c *dnslex.Lexer, o string) *ParseError {
@@ -39,7 +39,7 @@ func parseNS(rd *rdata.NS, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad NS Ns", lex: l}
 	}
 	rd.Ns = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parsePTR(rd *rdata.PTR, c *dnslex.Lexer, o string) *ParseError {
@@ -49,7 +49,7 @@ func parsePTR(rd *rdata.PTR, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad PTR Ptr", lex: l}
 	}
 	rd.Ptr = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseNSAPPTR(rd *rdata.NSAPPTR, c *dnslex.Lexer, o string) *ParseError {
@@ -59,7 +59,7 @@ func parseNSAPPTR(rd *rdata.NSAPPTR, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad NSAP-PTR Ptr", lex: l}
 	}
 	rd.Ptr = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseRP(rd *rdata.RP, c *dnslex.Lexer, o string) *ParseError {
@@ -80,7 +80,7 @@ func parseRP(rd *rdata.RP, c *dnslex.Lexer, o string) *ParseError {
 	}
 	rd.Txt = txt
 
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseMR(rd *rdata.MR, c *dnslex.Lexer, o string) *ParseError {
@@ -90,7 +90,7 @@ func parseMR(rd *rdata.MR, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad MR Mr", lex: l}
 	}
 	rd.Mr = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseMB(rd *rdata.MB, c *dnslex.Lexer, o string) *ParseError {
@@ -100,7 +100,7 @@ func parseMB(rd *rdata.MB, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad MB Mb", lex: l}
 	}
 	rd.Mb = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseMG(rd *rdata.MG, c *dnslex.Lexer, o string) *ParseError {
@@ -110,7 +110,7 @@ func parseMG(rd *rdata.MG, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad MG Mg", lex: l}
 	}
 	rd.Mg = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) *ParseError {
@@ -177,7 +177,7 @@ func parseMINFO(rd *rdata.MINFO, c *dnslex.Lexer, o string) *ParseError {
 	}
 	rd.Email = email
 
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseMF(rd *rdata.MF, c *dnslex.Lexer, o string) *ParseError {
@@ -187,7 +187,7 @@ func parseMF(rd *rdata.MF, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad MF Mf", lex: l}
 	}
 	rd.Mf = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseMD(rd *rdata.MD, c *dnslex.Lexer, o string) *ParseError {
@@ -197,7 +197,7 @@ func parseMD(rd *rdata.MD, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad MD Md", lex: l}
 	}
 	rd.Md = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseMX(rd *rdata.MX, c *dnslex.Lexer, o string) *ParseError {
@@ -217,7 +217,7 @@ func parseMX(rd *rdata.MX, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad MX Mx", lex: l}
 	}
 	rd.Mx = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseRT(rd *rdata.RT, c *dnslex.Lexer, o string) *ParseError {
@@ -238,7 +238,7 @@ func parseRT(rd *rdata.RT, c *dnslex.Lexer, o string) *ParseError {
 	}
 	rd.Host = name
 
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseAFSDB(rd *rdata.AFSDB, c *dnslex.Lexer, o string) *ParseError {
@@ -258,7 +258,7 @@ func parseAFSDB(rd *rdata.AFSDB, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad AFSDB Hostname", lex: l}
 	}
 	rd.Hostname = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseX25(rd *rdata.X25, c *dnslex.Lexer, o string) *ParseError {
@@ -267,7 +267,7 @@ func parseX25(rd *rdata.X25, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad X25 PSDNAddress", lex: l}
 	}
 	rd.PSDNAddress = l.Token
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseKX(rd *rdata.KX, c *dnslex.Lexer, o string) *ParseError {
@@ -287,7 +287,7 @@ func parseKX(rd *rdata.KX, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad KX Exchanger", lex: l}
 	}
 	rd.Exchanger = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseCNAME(rd *rdata.CNAME, c *dnslex.Lexer, o string) *ParseError {
@@ -297,7 +297,7 @@ func parseCNAME(rd *rdata.CNAME, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad CNAME Target", lex: l}
 	}
 	rd.Target = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseDNAME(rd *rdata.DNAME, c *dnslex.Lexer, o string) *ParseError {
@@ -307,7 +307,7 @@ func parseDNAME(rd *rdata.DNAME, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad DNAME Target", lex: l}
 	}
 	rd.Target = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) *ParseError {
@@ -368,7 +368,7 @@ func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) *ParseError {
 			rd.Minttl = v
 		}
 	}
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseSRV(rd *rdata.SRV, c *dnslex.Lexer, o string) *ParseError {
@@ -404,7 +404,7 @@ func parseSRV(rd *rdata.SRV, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad SRV Target", lex: l}
 	}
 	rd.Target = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseNAPTR(rd *rdata.NAPTR, c *dnslex.Lexer, o string) *ParseError {
@@ -493,7 +493,7 @@ func parseNAPTR(rd *rdata.NAPTR, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad NAPTR Replacement", lex: l}
 	}
 	rd.Replacement = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseTALINK(rd *rdata.TALINK, c *dnslex.Lexer, o string) *ParseError {
@@ -514,7 +514,7 @@ func parseTALINK(rd *rdata.TALINK, c *dnslex.Lexer, o string) *ParseError {
 	}
 	rd.NextName = nextName
 
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseLOC(rd *rdata.LOC, c *dnslex.Lexer, o string) *ParseError {
@@ -1047,7 +1047,7 @@ func parseNSEC3PARAM(rd *rdata.NSEC3PARAM, c *dnslex.Lexer, o string) *ParseErro
 		rd.SaltLength = uint8(len(l.Token) / 2)
 		rd.Salt = l.Token
 	}
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseEUI48(rd *rdata.EUI48, c *dnslex.Lexer, o string) *ParseError {
@@ -1073,7 +1073,7 @@ func parseEUI48(rd *rdata.EUI48, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad EUI48 Address", lex: l}
 	}
 	rd.Address = i
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseEUI64(rd *rdata.EUI64, c *dnslex.Lexer, o string) *ParseError {
@@ -1099,7 +1099,7 @@ func parseEUI64(rd *rdata.EUI64, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad EUI68 Address", lex: l}
 	}
 	rd.Address = i
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseSSHFP(rd *rdata.SSHFP, c *dnslex.Lexer, o string) *ParseError {
@@ -1222,7 +1222,7 @@ func parseGPOS(rd *rdata.GPOS, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad GPOS Altitude", lex: l}
 	}
 	rd.Altitude = l.Token
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
@@ -1404,7 +1404,7 @@ func parseIPN(rd *rdata.IPN, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad IPN Node", lex: l}
 	}
 	rd.Node = uint64(i)
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseURI(rd *rdata.URI, c *dnslex.Lexer, o string) *ParseError {
@@ -1458,7 +1458,7 @@ func parseNID(rd *rdata.NID, c *dnslex.Lexer, o string) *ParseError {
 		return e1
 	}
 	rd.NodeID = u
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseL32(rd *rdata.L32, c *dnslex.Lexer, o string) *ParseError {
@@ -1475,7 +1475,7 @@ func parseL32(rd *rdata.L32, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad L32 Locator", lex: l}
 	}
 	rd.Locator32 = loc
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseLP(rd *rdata.LP, c *dnslex.Lexer, o string) *ParseError {
@@ -1494,7 +1494,7 @@ func parseLP(rd *rdata.LP, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad LP Fqdn", lex: l}
 	}
 	rd.Fqdn = name
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseL64(rd *rdata.L64, c *dnslex.Lexer, o string) *ParseError {
@@ -1511,7 +1511,7 @@ func parseL64(rd *rdata.L64, c *dnslex.Lexer, o string) *ParseError {
 		return e1
 	}
 	rd.Locator64 = u
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseUID(rd *rdata.UID, c *dnslex.Lexer, o string) *ParseError {
@@ -1521,7 +1521,7 @@ func parseUID(rd *rdata.UID, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad UID Uid", lex: l}
 	}
 	rd.Uid = uint32(i)
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseGID(rd *rdata.GID, c *dnslex.Lexer, o string) *ParseError {
@@ -1531,7 +1531,7 @@ func parseGID(rd *rdata.GID, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad GID Gid", lex: l}
 	}
 	rd.Gid = uint32(i)
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseUINFO(rd *rdata.UINFO, c *dnslex.Lexer, o string) *ParseError {
@@ -1571,7 +1571,7 @@ func parsePX(rd *rdata.PX, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad PX Mapx400", lex: l}
 	}
 	rd.Mapx400 = mapx400
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
 
 func parseCAA(rd *rdata.CAA, c *dnslex.Lexer, o string) *ParseError {
@@ -1847,5 +1847,5 @@ func parseDSYNC(rd *rdata.DSYNC, c *dnslex.Lexer, o string) *ParseError {
 	if l.Err || rd.Target == "" {
 		return &ParseError{err: "bad DSYNC Target", lex: l}
 	}
-	return toParseError(dnslex.Remainder(c))
+	return toParseError(dnslex.Discard(c))
 }
