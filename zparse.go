@@ -167,7 +167,7 @@ func parse(rr RR, c *dnslex.Lexer, o string) error {
 		return x.parse(c, o)
 	case *DELEG:
 		return x.parse(c, o)
-	case *DELEGI:
+	case *DELEGPARAM:
 		return x.parse(c, o)
 	case *DSYNC:
 		return x.parse(c, o)
