@@ -155,9 +155,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 		// First answer in the chain must have the original qname.
 		// But this is only true if we have a full chain. Use the saved re.Name
 		r.Question[0].Header().Name = re.Name
-		for _, rr := range re.Answer {
-			r.Answer = append(r.Answer, rr)
-		}
+		r.Answer = append(r.Answer, re.Answer...)
 	}
 
 	for _, rr := range encloser.RRs {
