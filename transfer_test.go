@@ -19,7 +19,7 @@ var testTransferData = []dns.RR{
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
 }
 
-var testIXFRData = []dns.RR{
+var testTransferDataIncrementalData = []dns.RR{
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
 	dnstest.New("x.miek.nl. IN A 10.0.0.1"),
@@ -154,7 +154,7 @@ func TestTransfer(t *testing.T) {
 	}
 }
 
-func TestIXFRTransfer(t *testing.T) {
+func TestTransferIncremental(t *testing.T) {
 	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 		r.Unpack()
 		w.Hijack()
@@ -171,8 +171,8 @@ func TestIXFRTransfer(t *testing.T) {
 			w.Close()
 		})
 
-		env <- &dns.Envelope{Answer: testIXFRData[:4]}
-		env <- &dns.Envelope{Answer: testIXFRData[4:]}
+		env <- &dns.Envelope{Answer: testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2]}
+		env <- &dns.Envelope{Answer: testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:]}
 		close(env)
 	})
 	defer dns.HandleRemove(testTransferZone)
@@ -204,13 +204,12 @@ func TestIXFRTransfer(t *testing.T) {
 			i := 0
 			for e := range env {
 				if e.Error != nil {
-					t.Errorf("unexpected error: %s", e.Error)
-					break
+					t.Fatalf("unexpected error: %s", e.Error)
 				}
 				i += len(e.Answer)
 			}
-			if i != len(testIXFRData) {
-				t.Fatalf("bad ixfr: expected %d, got %d", len(testIXFRData), i)
+			if i != len(testTransferDataIncrementalData) {
+				t.Fatalf("bad ixfr: expected %d, got %d", len(testTransferDataIncrementalData), i)
 			}
 		})
 	}
