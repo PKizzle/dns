@@ -96,7 +96,7 @@ func (rr *HTTPS) parse(c *dnslex.Lexer, o string) error {
 	return parseSVCB(&rr.SVCB.SVCB, c, o)
 }
 func (rr *DELEG) parse(c *dnslex.Lexer, o string) error { return parseDELEG(&rr.DELEG, c, o) }
-func (rr *DELEGI) parse(c *dnslex.Lexer, o string) error {
+func (rr *DELEGPARAM) parse(c *dnslex.Lexer, o string) error {
 	return parseDELEG(&rr.DELEG.DELEG, c, o)
 }
 func (rr *DSYNC) parse(c *dnslex.Lexer, o string) error { return parseDSYNC(&rr.DSYNC, c, o) }
