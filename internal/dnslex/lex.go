@@ -65,7 +65,7 @@ type Lexer struct {
 	column int
 
 	l       Lex
-	cachedL *Lex
+	cachedL *Lex // used when finding a token, but delaying it's return.
 
 	brace  int
 	quote  bool
@@ -432,8 +432,8 @@ func TypeToInt(token string) (uint16, bool) {
 	return uint16(typ), err == nil
 }
 
-// Remainer eats the rest of the "line".
-func Remainder(c *Lexer) *ScanError {
+// Discard discards the rest of the "line".
+func Discard(c *Lexer) *ScanError {
 	l, _ := c.Next()
 	switch l.Value {
 	case Blank:
@@ -465,6 +465,8 @@ func Tokens(c *Lexer) []string {
 	}
 }
 
+// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
+// was found.
 func upperLookup(s string, m map[string]uint16) (uint16, bool) {
 	if t, ok := m[s]; ok {
 		return t, true
@@ -473,6 +475,8 @@ func upperLookup(s string, m map[string]uint16) (uint16, bool) {
 	return t, ok
 }
 
+// typeOrCodeOrClass returns the type, or code, or TYPExxxx, or class, or CLASSxxxx, from the current token in
+// l. The check happens in that order.
 func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 	if t, ok := upperLookup(l.Token, zl.StringToType); ok {
 		l.Value = Rrtype
@@ -502,7 +506,6 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		return
 	}
 
-	// Check for class
 	if t, ok := zl.StringToClass[l.Token]; ok {
 		l.Value = Class
 		l.Torc = t

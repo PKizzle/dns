@@ -472,7 +472,7 @@ Next:
 
 			if zp.c.Peek().Token == "" {
 				// This is a dynamic update rr.
-				if err := dnslex.Remainder(zp.c); err != nil {
+				if err := dnslex.Discard(zp.c); err != nil {
 					return zp.setParseError(err.Err, err.Lex)
 				}
 
@@ -585,7 +585,7 @@ Next:
 				return zp.setParseError("expecting $TTL value, not this...", l)
 			}
 
-			if err := dnslex.Remainder(zp.c); err != nil {
+			if err := dnslex.Discard(zp.c); err != nil {
 				return zp.setParseError(err.Err, err.Lex)
 			}
 
@@ -602,7 +602,7 @@ Next:
 				return zp.setParseError("expecting $ORIGIN value, not this...", l)
 			}
 
-			if err := dnslex.Remainder(zp.c); err != nil {
+			if err := dnslex.Discard(zp.c); err != nil {
 				return zp.setParseError(err.Err, err.Lex)
 			}
 
