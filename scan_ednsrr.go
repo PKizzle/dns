@@ -8,7 +8,7 @@ import (
 	"codeberg.org/miekg/dns/internal/dnslex"
 )
 
-func (o *ZONEVERSION) parse(c *dnslex.Lexer, _ string) *ParseError {
+func (o *ZONEVERSION) parse(c *dnslex.Lexer, _ string) error {
 	// this parses the output: 8 SOA-SERIAL 1000000000
 	l, _ := c.Next()
 	i, err := strconv.ParseUint(l.Token, 10, 8)
@@ -34,7 +34,7 @@ func (o *ZONEVERSION) parse(c *dnslex.Lexer, _ string) *ParseError {
 	return toParseError(dnslex.Discard(c))
 }
 
-func (o *EDE) parse(c *dnslex.Lexer, _ string) *ParseError {
+func (o *EDE) parse(c *dnslex.Lexer, _ string) error {
 	// this parses the output: EDE     15 "Blocked": ""
 	l, _ := c.Next()
 	i, err := strconv.ParseUint(l.Token, 10, 16)
@@ -73,7 +73,7 @@ func (o *EDE) parse(c *dnslex.Lexer, _ string) *ParseError {
 	return toParseError(dnslex.Discard(c))
 }
 
-func (o *NSID) parse(c *dnslex.Lexer, _ string) *ParseError {
+func (o *NSID) parse(c *dnslex.Lexer, _ string) error {
 	// this parses the output: NSID 	5573652074686520666f726365: "Use the force"
 	l, _ := c.Next()
 	if !strings.HasSuffix(l.Token, ":") {

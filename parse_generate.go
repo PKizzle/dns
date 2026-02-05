@@ -24,7 +24,7 @@ import "codeberg.org/miekg/dns/internal/dnslex"
 `
 
 var parseFunc = template.Must(template.New("parseFunc").Parse(`
-func parse(rr RR, c *dnslex.Lexer, o string) *ParseError {
+func parse(rr RR, c *dnslex.Lexer, o string) error {
 	switch x := rr.(type) {
 {{range .}}  case *{{.}}:
 	return x.parse(c, o)
