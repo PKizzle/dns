@@ -202,8 +202,8 @@ func parseMD(rd *rdata.MD, c *dnslex.Lexer, o string) *ParseError {
 
 func parseMX(rd *rdata.MX, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	i, e := strconv.Atoi(l.Token)
+	if e != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad MX Pref", lex: l}
 	}
 	rd.Preference = uint16(i)
@@ -339,8 +339,8 @@ func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) *ParseError {
 		if l.Err {
 			return &ParseError{err: "bad SOA field", lex: l}
 		}
-		if j, err := strconv.ParseUint(l.Token, 10, 32); err != nil {
-			if i == 0 {
+		if j, err := strconv.Atoi(l.Token); err != nil {
+			if i <= 0 {
 				// Serial must be a number
 				return &ParseError{err: "bad SOA Serial", lex: l}
 			}
@@ -373,24 +373,24 @@ func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) *ParseError {
 
 func parseSRV(rd *rdata.SRV, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	i, e := strconv.Atoi(l.Token)
+	if e != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad SRV Priority", lex: l}
 	}
 	rd.Priority = uint16(i)
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e1 := strconv.ParseUint(l.Token, 10, 16)
-	if e1 != nil || l.Err {
+	i, e1 := strconv.Atoi(l.Token)
+	if e1 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad SRV Weight", lex: l}
 	}
 	rd.Weight = uint16(i)
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e2 := strconv.ParseUint(l.Token, 10, 16)
-	if e2 != nil || l.Err {
+	i, e2 := strconv.Atoi(l.Token)
+	if e2 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad SRV Port", lex: l}
 	}
 	rd.Port = uint16(i)
@@ -840,7 +840,7 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 	if l.Err {
 		return &ParseError{err: "bad RRSIG Algorithm", lex: l}
 	}
-	i, e := strconv.ParseUint(l.Token, 10, 8)
+	i, e := strconv.Atoi(l.Token)
 	rd.Algorithm = uint8(i) // if 0 we'll check the mnemonic in the if
 	if e != nil {
 		if rd.Algorithm, ok = StringToAlgorithm[l.Token]; !ok {
@@ -850,16 +850,16 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	i, e1 := strconv.Atoi(l.Token)
+	if e1 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad RRSIG Labels", lex: l}
 	}
 	rd.Labels = uint8(i)
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e2 := strconv.ParseUint(l.Token, 10, 32)
-	if e2 != nil || l.Err {
+	i, e2 := strconv.Atoi(l.Token)
+	if e2 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad RRSIG OrigTTL", lex: l}
 	}
 	rd.OrigTTL = uint32(i)
@@ -891,8 +891,8 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e3 := strconv.ParseUint(l.Token, 10, 16)
-	if e3 != nil || l.Err {
+	i, e3 := strconv.Atoi(l.Token)
+	if e3 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad RRSIG KeyTag", lex: l}
 	}
 	rd.KeyTag = uint16(i)
@@ -954,22 +954,22 @@ func parseNSEC(rd *rdata.NSEC, c *dnslex.Lexer, o string) *ParseError {
 
 func parseNSEC3(rd *rdata.NSEC3, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 8)
-	if e != nil || l.Err {
+	i, e := strconv.Atoi(l.Token)
+	if e != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad NSEC3 Hash", lex: l}
 	}
 	rd.Hash = uint8(i)
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	i, e1 := strconv.Atoi(l.Token)
+	if e1 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad NSEC3 Flags", lex: l}
 	}
 	rd.Flags = uint8(i)
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e2 := strconv.ParseUint(l.Token, 10, 16)
-	if e2 != nil || l.Err {
+	i, e2 := strconv.Atoi(l.Token)
+	if e2 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad NSEC3 Iterations", lex: l}
 	}
 	rd.Iterations = uint16(i)
@@ -1227,14 +1227,14 @@ func parseGPOS(rd *rdata.GPOS, c *dnslex.Lexer, o string) *ParseError {
 
 func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	i, e := strconv.Atoi(l.Token)
+	if e != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad DS KeyTag", lex: l}
 	}
 	rd.KeyTag = uint16(i)
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	if i, err := strconv.ParseUint(l.Token, 10, 8); err != nil {
+	if i, err := strconv.Atoi(l.Token); err != nil {
 		tokenUpper := strings.ToUpper(l.Token)
 		i, ok := StringToAlgorithm[tokenUpper]
 		if !ok || l.Err {
@@ -1246,8 +1246,8 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
 	}
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	i, e1 := strconv.Atoi(l.Token)
+	if e1 != nil || l.Err || i < 0 {
 		return &ParseError{err: "bad DS DigestType", lex: l}
 	}
 	rd.DigestType = uint8(i)
