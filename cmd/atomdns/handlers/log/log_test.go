@@ -16,7 +16,7 @@ import (
 func TestLog(t *testing.T) {
 	l := &log.Log{
 		Contexts: map[string][]string{
-			"hello": []string{"here", "there"},
+			"hello": {"here", "there"},
 		},
 	}
 
