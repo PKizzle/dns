@@ -901,8 +901,8 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 	}
 
 	rd.Signature, err = endingToString(c, "bad RRSIG Signature")
-	if err != nil {
-		return err.(*ParseError)
+	if pe, ok := err.(*ParseError); ok {
+		return pe
 	}
 	return nil
 }
@@ -1141,8 +1141,8 @@ func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) *ParseError {
 	}
 
 	rd.PublicKey, err = endingToString(c, "bad DNSKEY PublicKey")
-	if err != nil {
-		return err.(*ParseError)
+	if pe, ok := err.(*ParseError); ok {
+		return pe
 	}
 	return nil
 }

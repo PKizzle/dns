@@ -175,7 +175,7 @@ func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, *ParseError) {
 	}
 
 	// Build the slice
-	s := make([]string, 0)
+	s := make([]string, 0, 2)
 	quote := false
 	empty := false
 	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
@@ -186,7 +186,6 @@ func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, *ParseError) {
 		case dnslex.String:
 			empty = false
 			// split up tokens that are larger than 255 into 255-chunks
-			sx := []string{}
 			p := 0
 			for {
 				i, ok := escapedStringOffset(l.Token[p:], 255)
@@ -194,15 +193,13 @@ func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, *ParseError) {
 					return nil, &ParseError{err: errstr, lex: l}
 				}
 				if i != -1 && p+i != len(l.Token) {
-					sx = append(sx, l.Token[p:p+i])
+					s = append(s, l.Token[p:p+i])
 				} else {
-					sx = append(sx, l.Token[p:])
+					s = append(s, l.Token[p:])
 					break
-
 				}
 				p += i
 			}
-			s = append(s, sx...)
 		case dnslex.Blank:
 			if quote {
 				// dnslex.Blank can only be seen in between txt parts.
