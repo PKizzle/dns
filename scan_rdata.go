@@ -14,32 +14,31 @@ import (
 )
 
 func parseA(rd *rdata.A, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	l, _ := c.Next()
-	value, err := netip.ParseAddr(l.Token)
-	if l.Err || err != nil || !value.Is4() {
+	rd.Addr, err = netip.ParseAddr(l.Token)
+	if l.Err || err != nil || !rd.Addr.Is4() {
 		return &ParseError{err: "bad A A", lex: l}
 	}
-	rd.Addr = value
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseAAAA(rd *rdata.AAAA, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	l, _ := c.Next()
-	value, err := netip.ParseAddr(l.Token)
-	if l.Err || err != nil || !value.Is6() {
+	rd.Addr, err = netip.ParseAddr(l.Token)
+	if l.Err || err != nil || !rd.Addr.Is6() {
 		return &ParseError{err: "bad AAAA AAAA", lex: l}
 	}
-	rd.Addr = value
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseNS(rd *rdata.NS, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Ns = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Ns == "" {
 		return &ParseError{err: "bad NS Ns", lex: l}
 	}
-	rd.Ns = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -202,22 +201,19 @@ func parseMD(rd *rdata.MD, c *dnslex.Lexer, o string) *ParseError {
 }
 
 func parseMX(rd *rdata.MX, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.Atoi(l.Token)
-	if e != nil || l.Err || i < 0 {
+	rd.Preference, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad MX Pref", lex: l}
 	}
-	rd.Preference = uint16(i)
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	rd.Mx = l.Token
-
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Mx = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mx == "" {
 		return &ParseError{err: "bad MX Mx", lex: l}
 	}
-	rd.Mx = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -293,41 +289,37 @@ func parseKX(rd *rdata.KX, c *dnslex.Lexer, o string) *ParseError {
 
 func parseCNAME(rd *rdata.CNAME, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Target = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Target == "" {
 		return &ParseError{err: "bad CNAME Target", lex: l}
 	}
-	rd.Target = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseDNAME(rd *rdata.DNAME, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Target = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Target == "" {
 		return &ParseError{err: "bad DNAME Target", lex: l}
 	}
-	rd.Target = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	ns := dnsutilAbsolute(l.Token, o)
-	if l.Err || ns == "" {
+	rd.Ns = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Ns == "" {
 		return &ParseError{err: "bad SOA Ns", lex: l}
 	}
-	rd.Ns = ns
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	rd.Mbox = l.Token
 
-	mbox := dnsutilAbsolute(l.Token, o)
-	if l.Err || mbox == "" {
+	rd.Mbox = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mbox == "" {
 		return &ParseError{err: "bad SOA Mbox", lex: l}
 	}
-	rd.Mbox = mbox
 
 	c.Next() // dnslex.Blank
 
@@ -909,11 +901,10 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 
 func parseNSEC(rd *rdata.NSEC, c *dnslex.Lexer, o string) *ParseError {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.NextDomain = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.NextDomain == "" {
 		return &ParseError{err: "bad NSEC NextDomain", lex: l}
 	}
-	rd.NextDomain = name
 
 	rd.TypeBitMap = make([]uint16, 0, 2)
 	var (
@@ -978,11 +969,11 @@ func parseNSEC3(rd *rdata.NSEC3, c *dnslex.Lexer, o string) *ParseError {
 
 	c.Next()
 	l, _ = c.Next()
-	if l.Token == "" || l.Err {
+	rd.NextDomain = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.NextDomain == "" {
 		return &ParseError{err: "bad NSEC3 NextDomain", lex: l}
 	}
 	rd.HashLength = 20 // Fix for NSEC3 (sha1 160 bits)
-	rd.NextDomain = l.Token
 
 	rd.TypeBitMap = make([]uint16, 0, 3)
 	var (
@@ -1225,15 +1216,16 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
 	if err != nil || l.Err {
 		return &ParseError{err: "bad DS KeyTag", lex: l}
 	}
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
-		i, ok := upperLookupUint8(l.Token, StringToAlgorithm)
+		var ok bool
+		rd.Algorithm, ok = upperLookupUint8(l.Token, StringToAlgorithm)
 		if !ok || l.Err {
 			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
-		rd.Algorithm = i
 	}
 
 	c.Next() // dnslex.Blank
@@ -1242,11 +1234,10 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
 	if err != nil || l.Err {
 		return &ParseError{err: "bad DS DigestType", lex: l}
 	}
-	s, e2 := endingToString(c, "bad DS Digest")
-	if e2 != nil {
-		return e2
+	rd.Digest, err = endingToString(c, "bad DS Digest")
+	if pe, ok := err.(*ParseError); ok {
+		return pe
 	}
-	rd.Digest = s
 	return nil
 }
 
