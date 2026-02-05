@@ -1222,7 +1222,7 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
 		var ok bool
-		rd.Algorithm, ok = upperLookupUint8(l.Token, StringToAlgorithm)
+		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok || l.Err {
 			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
@@ -1360,12 +1360,12 @@ func parseRFC3597(rd *rdata.RFC3597, c *dnslex.Lexer, o string) *ParseError {
 }
 
 func parseTXT(rd *rdata.TXT, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	// no dnslex.Blank reading here, because all this rdata is TXT
-	s, e := endingToTxtSlice(c, "bad TXT Txt")
-	if e != nil {
-		return e
+	rd.Txt, err = endingToTxtSlice(c, "bad TXT Txt")
+	if pe, ok := err.(*ParseError); ok {
+		return pe
 	}
-	rd.Txt = s
 	return nil
 }
 
@@ -1834,18 +1834,7 @@ func parseDSYNC(rd *rdata.DSYNC, c *dnslex.Lexer, o string) *ParseError {
 
 // upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
 // was found.
-func upperLookupUint16(s string, m map[string]uint16) (uint16, bool) {
-	// Duplicated in dnsex/lex.go
-	if t, ok := m[s]; ok {
-		return t, true
-	}
-	t, ok := m[strings.ToUpper(s)]
-	return t, ok
-}
-
-// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
-// was found.
-func upperLookupUint8(s string, m map[string]uint8) (uint8, bool) {
+func upperLookup(s string, m map[string]uint8) (uint8, bool) {
 	// Duplicated in dnsex/lex.go
 	if t, ok := m[s]; ok {
 		return t, true
