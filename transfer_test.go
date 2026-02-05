@@ -19,6 +19,17 @@ var testTransferData = []dns.RR{
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
 }
 
+var testIXFRData = []dns.RR{
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
+	dnstest.New("x.miek.nl. IN A 10.0.0.1"),
+	dnstest.New("miek.nl. IN MX 1 x.miek.nl."),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
+	dnstest.New("x.miek.nl. IN A 10.0.0.5"),
+	dnstest.New("miek.nl. IN MX 10 x.miek.nl."),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
+}
+
 const testTransferZone = "miek.nl."
 
 func TestTransferEdgeCases(t *testing.T) {
@@ -138,6 +149,68 @@ func TestTransfer(t *testing.T) {
 			}
 			if i != len(testTransferData) {
 				t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+			}
+		})
+	}
+}
+
+func TestIXFRTransfer(t *testing.T) {
+	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
+		w.Hijack()
+
+		env := make(chan *dns.Envelope)
+		c := dns.NewClient()
+
+		var wg sync.WaitGroup
+		wg.Go(func() {
+			err := c.TransferOut(w, r, env)
+			if err != nil {
+				t.Fatal(err)
+			}
+			w.Close()
+		})
+
+		env <- &dns.Envelope{Answer: testIXFRData[:4]}
+		env <- &dns.Envelope{Answer: testIXFRData[4:]}
+		close(env)
+	})
+	defer dns.HandleRemove(testTransferZone)
+
+	for _, name := range []string{"tcp", "tcp-tls"} {
+		t.Run(name, func(t *testing.T) {
+			c := dns.NewClient()
+			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
+			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2009032802}}} // Serial should be 2009032800, but now we need to reproduce panic in transferInIXFR
+
+			addr := ""
+			switch name {
+			case "tcp":
+				cancel, adr, _ := dnstest.TCPServer(":0")
+				defer cancel()
+				addr = adr
+			case "tcp-tls":
+				cancel, adr, _ := dnstest.TLSServer(":0")
+				defer cancel()
+				addr = adr
+				c.TLSConfig = dnstest.TLSConfig()
+			}
+
+			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			if err != nil {
+				t.Fatal("failed to setup zone transfer in", err)
+			}
+
+			i := 0
+			for e := range env {
+				if e.Error != nil {
+					t.Errorf("unexpected error: %s", e.Error)
+					break
+				}
+				i += len(e.Answer)
+			}
+			if i != len(testIXFRData) {
+				t.Fatalf("bad ixfr: expected %d, got %d", len(testIXFRData), i)
 			}
 		})
 	}
