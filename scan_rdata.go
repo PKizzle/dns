@@ -18,7 +18,7 @@ func parseA(rd *rdata.A, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
 	rd.Addr, err = netip.ParseAddr(l.Token)
 	if l.Err || err != nil || !rd.Addr.Is4() {
-		return &ParseError{err: "bad A A", lex: l}
+		return &ParseError{err: "bad A Addr", lex: l}
 	}
 	return toParseError(dnslex.Discard(c))
 }
@@ -28,7 +28,7 @@ func parseAAAA(rd *rdata.AAAA, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
 	rd.Addr, err = netip.ParseAddr(l.Token)
 	if l.Err || err != nil || !rd.Addr.Is6() {
-		return &ParseError{err: "bad AAAA AAAA", lex: l}
+		return &ParseError{err: "bad AAAA Addr", lex: l}
 	}
 	return toParseError(dnslex.Discard(c))
 }
