@@ -44,72 +44,64 @@ func parseNS(rd *rdata.NS, c *dnslex.Lexer, o string) error {
 
 func parsePTR(rd *rdata.PTR, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Ptr = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Ptr == "" {
 		return &ParseError{err: "bad PTR Ptr", lex: l}
 	}
-	rd.Ptr = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseNSAPPTR(rd *rdata.NSAPPTR, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Ptr = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Ptr == "" {
 		return &ParseError{err: "bad NSAP-PTR Ptr", lex: l}
 	}
-	rd.Ptr = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseRP(rd *rdata.RP, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	mbox := dnsutilAbsolute(l.Token, o)
-	if l.Err || mbox == "" {
+	rd.Mbox = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mbox == "" {
 		return &ParseError{err: "bad RP Mbox", lex: l}
 	}
-	rd.Mbox = mbox
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	rd.Txt = l.Token
 
-	txt := dnsutilAbsolute(l.Token, o)
-	if l.Err || txt == "" {
+	rd.Txt = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Txt == "" {
 		return &ParseError{err: "bad RP Txt", lex: l}
 	}
-	rd.Txt = txt
-
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseMR(rd *rdata.MR, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Mr = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mr == "" {
 		return &ParseError{err: "bad MR Mr", lex: l}
 	}
-	rd.Mr = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseMB(rd *rdata.MB, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Mb = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mb == "" {
 		return &ParseError{err: "bad MB Mb", lex: l}
 	}
-	rd.Mb = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseMG(rd *rdata.MG, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Mg = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mg == "" {
 		return &ParseError{err: "bad MG Mg", lex: l}
 	}
-	rd.Mg = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -155,48 +147,42 @@ func parseISDN(rd *rdata.ISDN, c *dnslex.Lexer, o string) error {
 
 	rd.Address = chunks[0]
 	rd.SubAddress = strings.Join(chunks[1:], " ")
-
 	return nil
 }
 
 func parseMINFO(rd *rdata.MINFO, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	rmail := dnsutilAbsolute(l.Token, o)
-	if l.Err || rmail == "" {
+	rd.Rmail = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Rmail == "" {
 		return &ParseError{err: "bad MINFO Rmail", lex: l}
 	}
-	rd.Rmail = rmail
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	rd.Email = l.Token
 
-	email := dnsutilAbsolute(l.Token, o)
-	if l.Err || email == "" {
+	rd.Email = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Email == "" {
 		return &ParseError{err: "bad MINFO Email", lex: l}
 	}
-	rd.Email = email
-
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseMF(rd *rdata.MF, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Mf = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mf == "" {
 		return &ParseError{err: "bad MF Mf", lex: l}
 	}
-	rd.Mf = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseMD(rd *rdata.MD, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Md = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Md == "" {
 		return &ParseError{err: "bad MD Md", lex: l}
 	}
-	rd.Md = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -229,12 +215,10 @@ func parseRT(rd *rdata.RT, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next() // dnslex.String
 	rd.Host = l.Token
 
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Host = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Host == "" {
 		return &ParseError{err: "bad RT Host", lex: l}
 	}
-	rd.Host = name
-
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -250,11 +234,10 @@ func parseAFSDB(rd *rdata.AFSDB, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next() // dnslex.String
 	rd.Hostname = l.Token
 
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Hostname = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Hostname == "" {
 		return &ParseError{err: "bad AFSDB Hostname", lex: l}
 	}
-	rd.Hostname = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -279,11 +262,10 @@ func parseKX(rd *rdata.KX, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next() // dnslex.String
 	rd.Exchanger = l.Token
 
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Exchanger = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Exchanger == "" {
 		return &ParseError{err: "bad KX Exchanger", lex: l}
 	}
-	rd.Exchanger = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -323,27 +305,26 @@ func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) error {
 
 	c.Next() // dnslex.Blank
 
-	var (
-		v  uint32
-		ok bool
-	)
 	for i := range 5 {
+
 		l, _ = c.Next()
 		if l.Err {
 			return &ParseError{err: "bad SOA field", lex: l}
 		}
-		if j, err := strconv.Atoi(l.Token); err != nil {
-			if i <= 0 {
-				// Serial must be a number
+
+		v, err := dnsstring.AtoiUint32(l.Token)
+		if err != nil {
+			var ok bool
+			if i == 0 { // Serial must be a number
 				return &ParseError{err: "bad SOA Serial", lex: l}
 			}
 			// We allow other fields to be unitful duration strings
-			if v, ok = stringToTTL(l.Token); !ok {
+			v, ok = stringToTTL(l.Token)
+			if !ok {
 				return &ParseError{err: "bad SOA field", lex: l}
 			}
-		} else {
-			v = uint32(j)
 		}
+
 		switch i {
 		case 0:
 			rd.Serial = v
@@ -390,13 +371,10 @@ func parseSRV(rd *rdata.SRV, c *dnslex.Lexer, o string) error {
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	rd.Target = l.Token
-
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Target = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Target == "" {
 		return &ParseError{err: "bad SRV Target", lex: l}
 	}
-	rd.Target = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -481,32 +459,28 @@ func parseNAPTR(rd *rdata.NAPTR, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next() // dnslex.String
 	rd.Replacement = l.Token
 
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Replacement = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Replacement == "" {
 		return &ParseError{err: "bad NAPTR Replacement", lex: l}
 	}
-	rd.Replacement = name
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseTALINK(rd *rdata.TALINK, c *dnslex.Lexer, o string) error {
 	l, _ := c.Next()
-	previousName := dnsutilAbsolute(l.Token, o)
-	if l.Err || previousName == "" {
+	rd.PreviousName = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.PreviousName == "" {
 		return &ParseError{err: "bad TALINK PreviousName", lex: l}
 	}
-	rd.PreviousName = previousName
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	rd.NextName = l.Token
 
-	nextName := dnsutilAbsolute(l.Token, o)
-	if l.Err || nextName == "" {
+	rd.NextName = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.NextName == "" {
 		return &ParseError{err: "bad TALINK NextName", lex: l}
 	}
-	rd.NextName = nextName
-
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -1417,12 +1391,10 @@ func parseLP(rd *rdata.LP, c *dnslex.Lexer, o string) error {
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	rd.Fqdn = l.Token
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Fqdn = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Fqdn == "" {
 		return &ParseError{err: "bad LP Fqdn", lex: l}
 	}
-	rd.Fqdn = name
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -1485,21 +1457,17 @@ func parsePX(rd *rdata.PX, c *dnslex.Lexer, o string) error {
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	rd.Map822 = l.Token
-	map822 := dnsutilAbsolute(l.Token, o)
-	if l.Err || map822 == "" {
+	rd.Map822 = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Map822 == "" {
 		return &ParseError{err: "bad PX Map822", lex: l}
 	}
-	rd.Map822 = map822
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	rd.Mapx400 = l.Token
-	mapx400 := dnsutilAbsolute(l.Token, o)
-	if l.Err || mapx400 == "" {
+	rd.Mapx400 = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Mapx400 == "" {
 		return &ParseError{err: "bad PX Mapx400", lex: l}
 	}
-	rd.Mapx400 = mapx400
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -1583,11 +1551,10 @@ func parseSVCB(rd *rdata.SVCB, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next() // dnslex.String
 	rd.Target = l.Token
 
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.Target = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.Target == "" {
 		return &ParseError{file: l.Token, err: "bad SVCB Target", lex: l}
 	}
-	rd.Target = name
 
 	// Values (if any)
 	l, _ = c.Next()
