@@ -5,7 +5,7 @@ package dns
 import "fmt"
 import "codeberg.org/miekg/dns/internal/dnslex"
 
-func parse(rr RR, c *dnslex.Lexer, o string) *ParseError {
+func parse(rr RR, c *dnslex.Lexer, o string) error {
 	switch x := rr.(type) {
 	case *NULL:
 		return x.parse(c, o)

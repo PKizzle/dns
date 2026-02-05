@@ -421,15 +421,15 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 // Extract the class number from CLASSxx
 func classToInt(token string) (uint16, bool) {
-	class, err := strconv.ParseUint(token[5:], 10, 16)
-	return uint16(class), err == nil
+	class, err := strconv.Atoi(token[5:])
+	return uint16(class), err == nil && class >= 0
 }
 
 // Extract the rr number from TYPExxx. There is no length check, it is assumed the caller has checked the
 // prefix is at least "TYPE" (4)
 func TypeToInt(token string) (uint16, bool) {
-	typ, err := strconv.ParseUint(token[4:], 10, 16)
-	return uint16(typ), err == nil
+	typ, err := strconv.Atoi(token[4:])
+	return uint16(typ), err == nil && typ >= 0
 }
 
 // Discard discards the rest of the "line".

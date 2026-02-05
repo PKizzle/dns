@@ -41,9 +41,9 @@ func TestZoneParser(t *testing.T) {
 			},
 			nil,
 		},
-		{"badaddr1", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A A: "::1"`}},
-		{"baddaddr2", "2.bad.example.org. 600 IN A ::FFFF:127.0.0.1", nil, &Error{`bad A A:`}},
-		{"badaddr3", "3.bad.example.org. 600 IN AAAA 127.0.0.1", nil, &Error{`bad AAAA AAAA:`}},
+		{"badaddr1", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A Addr: "::1"`}},
+		{"baddaddr2", "2.bad.example.org. 600 IN A ::FFFF:127.0.0.1", nil, &Error{`bad A Addr:`}},
+		{"badaddr3", "3.bad.example.org. 600 IN AAAA 127.0.0.1", nil, &Error{`bad AAAA Addr:`}},
 		{
 			"unknown-rdata",
 			"example. 3600 tYpe44 \\# 03 75  0100",
@@ -113,14 +113,14 @@ func TestZoneParserRRs(t *testing.T) {
 			nil,
 		},
 		{"empty", "", []RR{}, nil},
-		{"error", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A A: "::1"`}},
+		{"error", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A Addr: "::1"`}},
 		{
 			"multiple-error",
 			"1.example.org. 600 IN AAAA ::1\n1.bad.example.org. 600 IN A ::1",
 			[]RR{
 				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: rdata.AAAA{Addr: netip.IPv6Loopback()}},
 			},
-			&Error{`bad A A: "::1"`},
+			&Error{`bad A Addr: "::1"`},
 		},
 	}
 	for _, tc := range testcases {
