@@ -8,6 +8,7 @@ import (
 
 	"codeberg.org/miekg/dns/deleg"
 	"codeberg.org/miekg/dns/internal/dnslex"
+	"codeberg.org/miekg/dns/internal/dnsstring"
 	"codeberg.org/miekg/dns/rdata"
 	"codeberg.org/miekg/dns/svcb"
 )
@@ -823,8 +824,9 @@ func parseZONEMD(rd *rdata.ZONEMD, c *dnslex.Lexer, o string) *ParseError {
 }
 
 func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
-	l, _ := c.Next()
+	var err error
 	var ok bool
+	l, _ := c.Next()
 	rd.TypeCovered, ok = StringToType[l.Token]
 	if !ok {
 		if !strings.HasPrefix(l.Token, "TYPE") {
@@ -840,9 +842,8 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 	if l.Err {
 		return &ParseError{err: "bad RRSIG Algorithm", lex: l}
 	}
-	i, e := strconv.Atoi(l.Token)
-	rd.Algorithm = uint8(i) // if 0 we'll check the mnemonic in the if
-	if e != nil {
+	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil {
 		if rd.Algorithm, ok = StringToAlgorithm[l.Token]; !ok {
 			return &ParseError{err: "bad RRSIG Algorithm", lex: l}
 		}
@@ -850,68 +851,59 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) *ParseError {
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.Atoi(l.Token)
-	if e1 != nil || l.Err || i < 0 {
+	rd.Labels, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad RRSIG Labels", lex: l}
 	}
-	rd.Labels = uint8(i)
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e2 := strconv.Atoi(l.Token)
-	if e2 != nil || l.Err || i < 0 {
+	rd.OrigTTL, err = dnsstring.AtoiUint32(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad RRSIG OrigTTL", lex: l}
 	}
-	rd.OrigTTL = uint32(i)
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	if i, err := dnsutilStringToTime(l.Token); err != nil {
+	rd.Expiration, err = dnsutilStringToTime(l.Token)
+	if err != nil {
 		// Try to see if all numeric and use it as epoch
 		if i, err := strconv.ParseUint(l.Token, 10, 32); err == nil {
 			rd.Expiration = uint32(i)
 		} else {
 			return &ParseError{err: "bad RRSIG Expiration", lex: l}
 		}
-	} else {
-		rd.Expiration = i
 	}
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	if i, err := dnsutilStringToTime(l.Token); err != nil {
+	rd.Inception, err = dnsutilStringToTime(l.Token)
+	if err != nil {
 		if i, err := strconv.ParseUint(l.Token, 10, 32); err == nil {
 			rd.Inception = uint32(i)
 		} else {
 			return &ParseError{err: "bad RRSIG Inception", lex: l}
 		}
-	} else {
-		rd.Inception = i
 	}
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e3 := strconv.Atoi(l.Token)
-	if e3 != nil || l.Err || i < 0 {
+	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad RRSIG KeyTag", lex: l}
 	}
-	rd.KeyTag = uint16(i)
 
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	rd.SignerName = l.Token
-	name := dnsutilAbsolute(l.Token, o)
-	if l.Err || name == "" {
+	rd.SignerName = dnsutilAbsolute(l.Token, o)
+	if l.Err || rd.SignerName == "" {
 		return &ParseError{err: "bad RRSIG SignerName", lex: l}
 	}
-	rd.SignerName = name
 
-	s, e4 := endingToString(c, "bad RRSIG Signature")
-	if e4 != nil {
-		return e4
+	rd.Signature, err = endingToString(c, "bad RRSIG Signature")
+	if err != nil {
+		return err.(*ParseError)
 	}
-	rd.Signature = s
-
 	return nil
 }
 
@@ -923,7 +915,7 @@ func parseNSEC(rd *rdata.NSEC, c *dnslex.Lexer, o string) *ParseError {
 	}
 	rd.NextDomain = name
 
-	rd.TypeBitMap = make([]uint16, 0)
+	rd.TypeBitMap = make([]uint16, 0, 2)
 	var (
 		k  uint16
 		ok bool
@@ -953,26 +945,27 @@ func parseNSEC(rd *rdata.NSEC, c *dnslex.Lexer, o string) *ParseError {
 }
 
 func parseNSEC3(rd *rdata.NSEC3, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.Atoi(l.Token)
-	if e != nil || l.Err || i < 0 {
+	rd.Hash, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad NSEC3 Hash", lex: l}
 	}
-	rd.Hash = uint8(i)
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.Atoi(l.Token)
-	if e1 != nil || l.Err || i < 0 {
+	rd.Flags, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad NSEC3 Flags", lex: l}
 	}
-	rd.Flags = uint8(i)
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e2 := strconv.Atoi(l.Token)
-	if e2 != nil || l.Err || i < 0 {
+	rd.Iterations, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad NSEC3 Iterations", lex: l}
 	}
-	rd.Iterations = uint16(i)
+
 	c.Next()
 	l, _ = c.Next()
 	if l.Token == "" || l.Err {
@@ -991,7 +984,7 @@ func parseNSEC3(rd *rdata.NSEC3, c *dnslex.Lexer, o string) *ParseError {
 	rd.HashLength = 20 // Fix for NSEC3 (sha1 160 bits)
 	rd.NextDomain = l.Token
 
-	rd.TypeBitMap = make([]uint16, 0)
+	rd.TypeBitMap = make([]uint16, 0, 3)
 	var (
 		k  uint16
 		ok bool
@@ -1126,31 +1119,31 @@ func parseSSHFP(rd *rdata.SSHFP, c *dnslex.Lexer, o string) *ParseError {
 }
 
 func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.Flags, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad DNSKEY Flags", lex: l}
 	}
-	rd.Flags = uint16(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	rd.Protocol, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad DNSKEY Protocol", lex: l}
 	}
-	rd.Protocol = uint8(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e2 := strconv.ParseUint(l.Token, 10, 8)
-	if e2 != nil || l.Err {
+	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad DNSKEY Algorithm", lex: l}
 	}
-	rd.Algorithm = uint8(i)
-	s, e3 := endingToString(c, "bad DNSKEY PublicKey")
-	if e3 != nil {
-		return e3
+
+	rd.PublicKey, err = endingToString(c, "bad DNSKEY PublicKey")
+	if err != nil {
+		return err.(*ParseError)
 	}
-	rd.PublicKey = s
 	return nil
 }
 
@@ -1226,31 +1219,29 @@ func parseGPOS(rd *rdata.GPOS, c *dnslex.Lexer, o string) *ParseError {
 }
 
 func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) *ParseError {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.Atoi(l.Token)
-	if e != nil || l.Err || i < 0 {
+	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad DS KeyTag", lex: l}
 	}
-	rd.KeyTag = uint16(i)
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	if i, err := strconv.Atoi(l.Token); err != nil {
-		tokenUpper := strings.ToUpper(l.Token)
-		i, ok := StringToAlgorithm[tokenUpper]
+	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil {
+		i, ok := upperLookupUint8(l.Token, StringToAlgorithm)
 		if !ok || l.Err {
 			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
 		rd.Algorithm = i
-	} else {
-		rd.Algorithm = uint8(i)
 	}
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.Atoi(l.Token)
-	if e1 != nil || l.Err || i < 0 {
+	rd.DigestType, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad DS DigestType", lex: l}
 	}
-	rd.DigestType = uint8(i)
 	s, e2 := endingToString(c, "bad DS Digest")
 	if e2 != nil {
 		return e2
@@ -1848,4 +1839,26 @@ func parseDSYNC(rd *rdata.DSYNC, c *dnslex.Lexer, o string) *ParseError {
 		return &ParseError{err: "bad DSYNC Target", lex: l}
 	}
 	return toParseError(dnslex.Discard(c))
+}
+
+// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
+// was found.
+func upperLookupUint16(s string, m map[string]uint16) (uint16, bool) {
+	// Duplicated in dnsex/lex.go
+	if t, ok := m[s]; ok {
+		return t, true
+	}
+	t, ok := m[strings.ToUpper(s)]
+	return t, ok
+}
+
+// upperLookup will defer strings.ToUpper in the map lookup, until after the lookup has occured and nothing
+// was found.
+func upperLookupUint8(s string, m map[string]uint8) (uint8, bool) {
+	// Duplicated in dnsex/lex.go
+	if t, ok := m[s]; ok {
+		return t, true
+	}
+	t, ok := m[strings.ToUpper(s)]
+	return t, ok
 }
