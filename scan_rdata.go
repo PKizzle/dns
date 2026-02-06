@@ -106,9 +106,9 @@ func parseMG(rd *rdata.MG, c *dnslex.Lexer, o string) error {
 }
 
 func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) error {
-	chunks, e := endingToTxtSlice(c, "bad HINFO Fields")
-	if e != nil {
-		return e
+	chunks, err := endingToTxtSlice(c, "bad HINFO Fields")
+	if err != nil {
+		return err
 	}
 
 	if ln := len(chunks); ln == 0 {
@@ -129,9 +129,9 @@ func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) error {
 
 // according to RFC 1183 the parsing is identical to HINFO, so just use that code.
 func parseISDN(rd *rdata.ISDN, c *dnslex.Lexer, o string) error {
-	chunks, e := endingToTxtSlice(c, "bad ISDN Fields")
-	if e != nil {
-		return e
+	chunks, err := endingToTxtSlice(c, "bad ISDN Fields")
+	if err != nil {
+		return err
 	}
 
 	if ln := len(chunks); ln == 0 {
@@ -667,13 +667,14 @@ func parseCERT(rd *rdata.CERT, c *dnslex.Lexer, o string) error {
 	} else {
 		rd.Type = uint16(i)
 	}
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad CERT KeyTag", lex: l}
 	}
-	rd.KeyTag = uint16(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
 	if v, ok := StringToAlgorithm[l.Token]; ok {
@@ -995,8 +996,8 @@ func parseEUI48(rd *rdata.EUI48, c *dnslex.Lexer, o string) error {
 	addr[10] = l.Token[15]
 	addr[11] = l.Token[16]
 
-	i, e := strconv.ParseUint(string(addr), 16, 48)
-	if e != nil {
+	i, err := strconv.ParseUint(string(addr), 16, 48)
+	if err != nil {
 		return &ParseError{err: "bad EUI48 Address", lex: l}
 	}
 	rd.Address = i
@@ -1021,8 +1022,8 @@ func parseEUI64(rd *rdata.EUI64, c *dnslex.Lexer, o string) error {
 	addr[14] = l.Token[21]
 	addr[15] = l.Token[22]
 
-	i, e := strconv.ParseUint(string(addr), 16, 64)
-	if e != nil {
+	i, err := strconv.ParseUint(string(addr), 16, 64)
+	if err != nil {
 		return &ParseError{err: "bad EUI68 Address", lex: l}
 	}
 	rd.Address = i
@@ -1032,18 +1033,18 @@ func parseEUI64(rd *rdata.EUI64, c *dnslex.Lexer, o string) error {
 func parseSSHFP(rd *rdata.SSHFP, c *dnslex.Lexer, o string) error {
 	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 8)
-	if e != nil || l.Err {
+	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad SSHFP Algorithm", lex: l}
 	}
-	rd.Algorithm = uint8(i)
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	rd.Type, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad SSHFP Type", lex: l}
 	}
-	rd.Type = uint8(i)
+
 	c.Next() // dnslex.Blank
 	rd.FingerPrint, err = endingToString(c, "bad SSHFP Fingerprint")
 	return err
@@ -1078,25 +1079,25 @@ func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) error {
 func parseRKEY(rd *rdata.RKEY, c *dnslex.Lexer, o string) error {
 	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.Flags, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad RKEY Flags", lex: l}
 	}
-	rd.Flags = uint16(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	rd.Protocol, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad RKEY Protocol", lex: l}
 	}
-	rd.Protocol = uint8(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	i, e2 := strconv.ParseUint(l.Token, 10, 8)
-	if e2 != nil || l.Err {
+	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad RKEY Algorithm", lex: l}
 	}
-	rd.Algorithm = uint8(i)
+
 	rd.PublicKey, err = endingToString(c, "bad RKEY PublicKey")
 	return err
 }
@@ -1169,30 +1170,30 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) error {
 func parseTA(rd *rdata.TA, c *dnslex.Lexer, o string) error {
 	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad TA KeyTag", lex: l}
 	}
-	rd.KeyTag = uint16(i)
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	if i, err := strconv.ParseUint(l.Token, 10, 8); err != nil {
+	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil {
 		tokenUpper := strings.ToUpper(l.Token)
 		i, ok := StringToAlgorithm[tokenUpper]
 		if !ok || l.Err {
 			return &ParseError{err: "bad TA Algorithm", lex: l}
 		}
 		rd.Algorithm = i
-	} else {
-		rd.Algorithm = uint8(i)
 	}
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	rd.DigestType, err = dnsstring.AtoiUint8(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad TA DigestType", lex: l}
 	}
-	rd.DigestType = uint8(i)
+
 	rd.Digest, err = endingToString(c, "bad TA Digest")
 	return err
 }
@@ -1345,29 +1346,29 @@ func parseNID(rd *rdata.NID, c *dnslex.Lexer, o string) error {
 }
 
 func parseL32(rd *rdata.L32, c *dnslex.Lexer, o string) error {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.Preference, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad L32 Preference", lex: l}
 	}
-	rd.Preference = uint16(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	loc, err := netip.ParseAddr(l.Token)
-	if l.Err || err != nil || !loc.Is4() {
+	rd.Locator32, err = netip.ParseAddr(l.Token)
+	if l.Err || err != nil || !rd.Locator32.Is4() {
 		return &ParseError{err: "bad L32 Locator", lex: l}
 	}
-	rd.Locator32 = loc
 	return toParseError(dnslex.Discard(c))
 }
 
 func parseLP(rd *rdata.LP, c *dnslex.Lexer, o string) error {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.Preference, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad LP Preference", lex: l}
 	}
-	rd.Preference = uint16(i)
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
@@ -1379,19 +1380,19 @@ func parseLP(rd *rdata.LP, c *dnslex.Lexer, o string) error {
 }
 
 func parseL64(rd *rdata.L64, c *dnslex.Lexer, o string) error {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.Preference, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad L64 Preference", lex: l}
 	}
-	rd.Preference = uint16(i)
+
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	u, e1 := stringToNodeID(l)
-	if e1 != nil || l.Err {
-		return e1
+	rd.Locator64, err = stringToNodeID(l)
+	if err != nil || l.Err {
+		return err
 	}
-	rd.Locator64 = u
 	return toParseError(dnslex.Discard(c))
 }
 
@@ -1428,12 +1429,12 @@ func parseUINFO(rd *rdata.UINFO, c *dnslex.Lexer, o string) error {
 }
 
 func parsePX(rd *rdata.PX, c *dnslex.Lexer, o string) error {
+	var err error
 	l, _ := c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 16)
-	if e != nil || l.Err {
+	rd.Preference, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad PX Preference", lex: l}
 	}
-	rd.Preference = uint16(i)
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
@@ -1479,6 +1480,7 @@ func parseCAA(rd *rdata.CAA, c *dnslex.Lexer, o string) error {
 }
 
 func parseTKEY(rd *rdata.TKEY, c *dnslex.Lexer, o string) error {
+	var err error
 	l, _ := c.Next()
 
 	// Algorithm
@@ -1490,11 +1492,11 @@ func parseTKEY(rd *rdata.TKEY, c *dnslex.Lexer, o string) error {
 
 	// Get the key length and key values
 	l, _ = c.Next()
-	i, e := strconv.ParseUint(l.Token, 10, 8)
-	if e != nil || l.Err {
+	rd.KeySize, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad TKEY KeySize", lex: l}
 	}
-	rd.KeySize = uint16(i)
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	if l.Value != dnslex.String {
@@ -1505,11 +1507,11 @@ func parseTKEY(rd *rdata.TKEY, c *dnslex.Lexer, o string) error {
 
 	// Get the otherdata length and string data
 	l, _ = c.Next()
-	i, e1 := strconv.ParseUint(l.Token, 10, 8)
-	if e1 != nil || l.Err {
+	rd.OtherLen, err = dnsstring.AtoiUint16(l.Token)
+	if err != nil || l.Err {
 		return &ParseError{err: "bad TKEY OtherLen", lex: l}
 	}
-	rd.OtherLen = uint16(i)
+
 	c.Next() // dnslex.Blank
 	l, _ = c.Next()
 	if l.Value != dnslex.String {
