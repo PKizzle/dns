@@ -109,7 +109,7 @@ func (zl *Lexer) Err() error {
 	return zl.readErr
 }
 
-// readByte returns the next byte from the input
+// readByte returns the next byte from the input.
 func (zl *Lexer) readByte() (byte, bool) {
 	if zl.readErr != nil {
 		return 0, false
@@ -129,10 +129,10 @@ func (zl *Lexer) readByte() (byte, bool) {
 		zl.eol = false
 	}
 
+	zl.column++
 	if c == '\n' {
 		zl.eol = true
-	} else {
-		zl.column++
+		zl.column--
 	}
 
 	return c, true
