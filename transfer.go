@@ -145,6 +145,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		err := r.Unpack()
 		if err != nil {
 			ch <- &Envelope{Answer: r.Answer, Error: err}
+			return
 		}
 
 		// On first loop first be need to see a SOA RR.
@@ -162,6 +163,7 @@ func (c *Client) transferInAXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		if c.Transfer != nil && c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
 			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
+				return
 			}
 		}
 
@@ -207,7 +209,8 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		r.Options = MsgOptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
-			ch <- &Envelope{Error: err}
+			// the response writer or actual conn is closed, just return, or some other error, we may
+			// not be sure someone is still listening on this channel.
 			return
 		}
 		if err := ctx.Err(); err != nil {
@@ -267,20 +270,19 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 			}
 		}
 
+		ch <- &Envelope{Answer: r.Answer}
+
 		// If we see the first SOA's serial expectSOA times we need to stop.
 		if options.TimersOnly {
 			for i := range r.Answer {
 				if s, ok := r.Answer[i].(*SOA); ok && s.Serial == serial {
 					expectSOA--
 					if expectSOA == 0 {
-						ch <- &Envelope{r.Answer, nil}
 						return
 					}
 				}
 			}
 		}
-
-		ch <- &Envelope{Answer: r.Answer}
 
 		options.TimersOnly = true
 		if t != nil {
