@@ -191,7 +191,6 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 		}
 
 		close(env)
-		w.Close()
 	})
 	defer dns.HandleRemove(testTransferZone)
 

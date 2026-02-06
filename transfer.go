@@ -207,6 +207,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		r.Options = MsgOptionUnpackHeader
 		conn.SetReadDeadline(time.Now().Add(c.ReadTimeout))
 		if _, err := io.Copy(r, conn); err != nil {
+			ch <- &Envelope{Error: err}
 			return
 		}
 		if err := ctx.Err(); err != nil {
