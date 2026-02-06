@@ -925,7 +925,7 @@ func parseNSEC3(rd *rdata.NSEC3, c *dnslex.Lexer, o string) error {
 
 	c.Next()
 	l, _ = c.Next()
-	rd.NextDomain = dnsutilAbsolute(l.Token, o)
+	rd.NextDomain = l.Token // do not append origin, this is a hashed name
 	if l.Err || rd.NextDomain == "" {
 		return &ParseError{err: "bad NSEC3 NextDomain", lex: l}
 	}
