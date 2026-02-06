@@ -113,6 +113,15 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+
+		{
+			"LOC",
+			"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m",
+			func(rr RR) error {
+				// TODO(miek)
+				return nil
+			},
+		},
 		// EDNS0 types
 		{
 			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },
