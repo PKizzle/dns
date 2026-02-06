@@ -632,7 +632,7 @@ func parseHIP(rd *rdata.HIP, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad HIP PublicKey", lex: l}
 	}
 	rd.PublicKey = l.Token // This cannot contain spaces
-	rd.PublicKeyLength = uint16(base64.StdEncoding.EncodedLen(len(rd.PublicKey)))
+	rd.PublicKeyLength = uint16(base64.StdEncoding.DecodedLen(len(rd.PublicKey)))
 
 	// RendezvousServers (if any)
 	l, _ = c.Next()
