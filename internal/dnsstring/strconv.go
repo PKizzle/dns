@@ -47,7 +47,7 @@ func ToTime(s string) (time.Time, error) {
 		month < 1 || month > 12 ||
 		day < 1 || day > 31 ||
 		hour > 23 || minute > 59 || second > 59 {
-		return time.Time{}, errors.New("timestamp contains out‑of‑range values")
+		return time.Time{}, errors.New("timestamp contains out-of-range values")
 	}
 
 	return time.Date(year, time.Month(month), day, hour, minute, second, 0, time.UTC), nil
