@@ -13,7 +13,7 @@ import (
 )
 
 var testTransferData = []dns.RR{
-	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032802 21600 7200 604800 3600"),
+	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
 	dnstest.New("x.miek.nl. IN A 10.0.0.1"),
 	dnstest.New("miek.nl. IN MX 1 x.miek.nl."),
 	dnstest.New("miek.nl. IN SOA linode.atoom.net. miek.miek.nl. 2009032800 21600 7200 604800 3600"),
@@ -112,7 +112,7 @@ func TestTransfer(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			c := dns.NewClient()
 			m := dns.NewMsg(testTransferZone, dns.TypeAXFR)
-			ixfrsoa := []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2026012700}}}
+			ixfrsoa := []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2009032799}}}
 			addr := ""
 			switch name {
 			case "tcp", "tcp-ixfr":
@@ -148,7 +148,86 @@ func TestTransfer(t *testing.T) {
 				i += len(e.Answer)
 			}
 			if i != len(testTransferData) {
-				t.Fatalf("bad axfr: expected %d, got %d", i, len(testTransferData))
+				t.Fatalf("bad axfr: expected %d, got %d", len(testTransferData), i)
+			}
+		})
+	}
+}
+
+func TestTransferIncrementalEdgeCases(t *testing.T) {
+	tests := []struct {
+		name    string
+		answers [][]dns.RR
+		serial  uint32
+		wantErr bool
+		want    int
+	}{
+		{"invalid", [][]dns.RR{{}}, 2009032802, true, 0},
+		{"not-soa", [][]dns.RR{{testTransferData[1]}}, 2009032802, true, 0},
+		{"single", [][]dns.RR{{testTransferData[0]}}, 2009032800, false, 1},
+		{
+			"up-to-date", [][]dns.RR{
+				testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2],
+				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
+			}, 2009032802, false, 1,
+		},
+	}
+
+	var answers [][]dns.RR
+	dns.HandleFunc(testTransferZone, func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
+		r.Unpack()
+		w.Hijack()
+
+		env := make(chan *dns.Envelope)
+		c := new(dns.Client)
+
+		var wg sync.WaitGroup
+		wg.Go(func() {
+			c.TransferOut(w, r, env)
+		})
+
+		for _, ans := range answers {
+			env <- &dns.Envelope{Answer: ans}
+		}
+
+		close(env)
+	})
+	defer dns.HandleRemove(testTransferZone)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			answers = tt.answers
+			cancel, addr, _ := dnstest.TCPServer(":0")
+			defer cancel()
+
+			c := new(dns.Client)
+			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
+			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: tt.serial}}}
+
+			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
+			if err != nil {
+				t.Fatal("failed to zone transfer in", err)
+			}
+
+			var (
+				gotErr error
+				i      = 0
+			)
+			for e := range env {
+				if e.Error != nil {
+					gotErr = e.Error
+				}
+				i += len(e.Answer)
+			}
+
+			if gotErr == nil && tt.wantErr {
+				t.Fatal("expected error, got none")
+			}
+			if gotErr != nil && !tt.wantErr {
+				t.Fatalf("unexpected error: %s", gotErr)
+			}
+			if i != tt.want {
+				t.Fatalf("bad ixfr: expected %d, got %d", tt.want, i)
 			}
 		})
 	}
@@ -181,7 +260,7 @@ func TestTransferIncremental(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			c := dns.NewClient()
 			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2009032802}}} // Serial should be 2009032800, but now we need to reproduce panic in transferInIXFR
+			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: 2009032800}}}
 
 			addr := ""
 			switch name {
