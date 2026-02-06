@@ -1151,6 +1151,7 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) error {
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
 		var ok bool
+		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok || l.Err {
 			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
