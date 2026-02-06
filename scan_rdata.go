@@ -677,12 +677,12 @@ func parseCERT(rd *rdata.CERT, c *dnslex.Lexer, o string) error {
 
 	c.Next()        // dnslex.Blank
 	l, _ = c.Next() // dnslex.String
-	if v, ok := StringToAlgorithm[l.Token]; ok {
-		rd.Algorithm = v
-	} else if i, err := strconv.ParseUint(l.Token, 10, 8); err != nil {
-		return &ParseError{err: "bad CERT Algorithm", lex: l}
-	} else {
-		rd.Algorithm = uint8(i)
+	var ok bool
+	rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
+	if !ok {
+		if rd.Algorithm, err = dnsstring.AtoiUint8(l.Token); err != nil {
+			return &ParseError{err: "bad CERT Algorithm", lex: l}
+		}
 	}
 	rd.Certificate, err = endingToString(c, "bad CERT Certificate")
 	return err
@@ -785,7 +785,7 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) error {
 	}
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
-		if rd.Algorithm, ok = StringToAlgorithm[l.Token]; !ok {
+		if rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm); !ok {
 			return &ParseError{err: "bad RRSIG Algorithm", lex: l}
 		}
 	}
@@ -1151,7 +1151,6 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) error {
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
 		var ok bool
-		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok || l.Err {
 			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
@@ -1179,11 +1178,11 @@ func parseTA(rd *rdata.TA, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next()
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
-		i, ok := StringToAlgorithm[l.Token]
+		var ok bool
+		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok || l.Err {
 			return &ParseError{err: "bad TA Algorithm", lex: l}
 		}
-		rd.Algorithm = i
 	}
 
 	c.Next() // dnslex.Blank
