@@ -21,7 +21,7 @@ func TestNew(t *testing.T) {
 			func(rr RR) error {
 				alpn := rr.(*SVCB).Value[0].(*svcb.ALPN).Alpn
 				if alpn[0] != "h2" {
-					return fmt.Errorf("parsing alpn failed, wanted %v got %v", "h2", alpn)
+					return fmt.Errorf("wanted %v got %v", "h2", alpn)
 				}
 				return nil
 			},
@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 				alpn := rr.(*SVCB).Value[0].(*svcb.ALPN).Alpn
 				for i := range v {
 					if v[i] != alpn[i] {
-						return fmt.Errorf("parsing alpn failed, wanted %v got %v", v, alpn)
+						return fmt.Errorf("wanted %v got %v", v, alpn)
 					}
 				}
 				return nil
@@ -46,7 +46,7 @@ func TestNew(t *testing.T) {
 				alpn := rr.(*SVCB).Value[0].(*svcb.ALPN).Alpn
 				for i := range v {
 					if v[i] != alpn[i] {
-						return fmt.Errorf("parsing alpn failed, wanted %v got %v", v, alpn)
+						return fmt.Errorf("wanted %v got %v", v, alpn)
 					}
 				}
 				return nil
@@ -57,13 +57,13 @@ func TestNew(t *testing.T) {
 			func(rr RR) error {
 				dsync := rr.(*DSYNC)
 				if dsync.Scheme != 1 {
-					return fmt.Errorf("parsing DSYNC failed, expected scheme 1, got %d", dsync.Scheme)
+					return fmt.Errorf("expected scheme 1, got %d", dsync.Scheme)
 				}
 				if dsync.Port != 5300 {
-					return fmt.Errorf("parsing DSYNC failed, expected port 5300, got %d", dsync.Port)
+					return fmt.Errorf("expected port 5300, got %d", dsync.Port)
 				}
 				if dsync.Target != "rr-endpoint.example." {
-					return fmt.Errorf("parsing DSYNC failed, expected port rr-endpoint.example., got %s", "rr-endpoint.example.")
+					return fmt.Errorf("expected port rr-endpoint.example., got %s", "rr-endpoint.example.")
 				}
 				return nil
 			},
@@ -93,6 +93,32 @@ func TestNew(t *testing.T) {
 		{
 			"A no rdata", `www.example.org. IN A`,
 			func(rr RR) error {
+				return nil
+			},
+		},
+		{
+			"NSEC3",
+			"k36vo59bkum4osckkrd8tvibdgr0njbc.nl. 599 IN NSEC3 1 0 0 - K36VONMLM2T8IF3G8P5AV864OHLTB7K7 NS SOA TXT RRSIG DNSKEY NSEC3PARAM",
+			func(rr RR) error {
+				nsec3 := rr.(*NSEC3)
+				if x := nsec3.NextDomain; x != "K36VONMLM2T8IF3G8P5AV864OHLTB7K7" {
+					return fmt.Errorf("expected %s, got %s", x, nsec3.NextDomain)
+				}
+				if x := nsec3.TypeBitMap[0]; x != TypeNS {
+					return fmt.Errorf("expected %s, got %s", TypeToString[x], TypeToString[nsec3.TypeBitMap[0]])
+				}
+				if x := nsec3.TypeBitMap[5]; x != TypeNSEC3PARAM {
+					return fmt.Errorf("expected %s, got %s", TypeToString[TypeNSEC3PARAM], TypeToString[nsec3.TypeBitMap[4]])
+				}
+				return nil
+			},
+		},
+
+		{
+			"LOC",
+			"SW1A2AA.find.me.uk.	LOC	51 30 12.748 N 00 07 39.611 W 0.00m 0.00m 0.00m 0.00m",
+			func(rr RR) error {
+				// TODO(miek)
 				return nil
 			},
 		},
