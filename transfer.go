@@ -233,6 +233,7 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		err := r.Unpack()
 		if err != nil {
 			ch <- &Envelope{Answer: r.Answer, Error: err}
+			return
 		}
 
 		// On first loop first be need to see a SOA RR and check that with the request serial.
@@ -245,10 +246,10 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 				ch <- &Envelope{Error: ErrSOA}
 				return
 			}
-			serial := r.Answer[0].(*SOA).Serial
+			serial = r.Answer[0].(*SOA).Serial
 			// If we requested a higher serial, we are already up to date.
-			if m.Ns[0].(*SOA).Serial < serial { // TODO(miek): serial arithmetic
-				ch <- &Envelope{Answer: r.Answer}
+			if m.Ns[0].(*SOA).Serial >= serial { // TODO(miek): serial arithmetic
+				ch <- &Envelope{Answer: []RR{r.Answer[0]}}
 				return
 			}
 			if len(r.Answer) > 2 {
@@ -261,10 +262,9 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 		if c.Transfer != nil && c.TSIGSigner != nil && t != nil { // original request had tsig, so we need to check that.
 			if err := TSIGVerify(r, c.TSIGSigner, &options); err != nil {
 				ch <- &Envelope{Answer: r.Answer, Error: err}
+				return
 			}
 		}
-
-		ch <- &Envelope{Answer: r.Answer}
 
 		// If we see the first SOA's serial expectSOA times we need to stop.
 		if options.TimersOnly {
@@ -278,6 +278,8 @@ func (c *Client) transferInIXFR(ctx context.Context, m *Msg, ch chan<- *Envelope
 				}
 			}
 		}
+
+		ch <- &Envelope{Answer: r.Answer}
 
 		options.TimersOnly = true
 		if t != nil {
