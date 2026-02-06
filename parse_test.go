@@ -122,6 +122,17 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"DS",
+			"0-0-1.se.               3600    IN      DS      12412 8 2 47783E3806F62788EF4E4C69D1AFE48262BEC34872E8C400132107A7 6D442D82",
+			func(rr RR) error {
+				ds := rr.(*DS)
+				if x := ds.KeyTag; x != 12412 {
+					return fmt.Errorf("expected %d, got %d", 12412, x)
+				}
+				return nil
+			},
+		},
 		// EDNS0 types
 		{
 			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },
