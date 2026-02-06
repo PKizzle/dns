@@ -1179,8 +1179,7 @@ func parseTA(rd *rdata.TA, c *dnslex.Lexer, o string) error {
 	l, _ = c.Next()
 	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
 	if err != nil {
-		tokenUpper := strings.ToUpper(l.Token)
-		i, ok := StringToAlgorithm[tokenUpper]
+		i, ok := StringToAlgorithm[l.Token]
 		if !ok || l.Err {
 			return &ParseError{err: "bad TA Algorithm", lex: l}
 		}
