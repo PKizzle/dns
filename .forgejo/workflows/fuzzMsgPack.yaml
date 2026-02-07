@@ -1,6 +1,6 @@
 on:
   schedule:
-  - cron: '32 23 * * 5'
+    - cron: "32 11 * * 5"
 
 env:
   FUZZ: 2h
