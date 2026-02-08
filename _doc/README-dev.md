@@ -11,6 +11,7 @@ function/method that is _also_ useful in _dns_ should be put in `dnsutil/shared.
 generated" to various other locations.
 
 Useful helper function? -> _dnsutil_.
+Useful helper function, but no way to put it in subpackage (cyclic dependencie) -> _dns_.
 Useful helper function, that can help with testing (and other things) -> _dnstest_.
 Helper function(s) -> new package in _internal/..._.
 
@@ -60,6 +61,12 @@ ZONEMDSchemeSimple, for a constant used in the ZONEMD RR.
 
 Methods on RR types have `rr` as the receiver's name. For EDNS0 "RRs", the receiver is named `o`. For DSO `d`
 is used. Methods on `Msg` use `m`.
+
+### Exporting more Functions/Methods
+
+In dnsv1, `packRR` was exported as `PackRR`, this made the compression map (`map[string]int`), part of the API,
+meaning the more efficient `map[string]uint16` could never be properly used. In this library we are going to
+be very hesitant to add to the API, `packRR` is a private function again.
 
 ### Tests
 
