@@ -267,6 +267,7 @@ Checking if there _is_ an EDNS0 option added.
 OLD                                                      | NEW
                                                          |
 x := m.IsEdns0()                                         | x := len(m.Pseudo) > 0
+                                                         | // The OPT RR itself is incorperated into Msg.
 ```
 
 Adding an EDNS0 option is just as easy, assign to the pseudo section.
