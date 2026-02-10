@@ -61,8 +61,9 @@ For developers please read the
     - On my Dell XPS 17 (Intel) it is similar-ish (~300K/240K qps UDP/TCP).
     - On other Intel/AMD hardware it is lower (~200K (UDP) qps) - yet to understand why.
   - See `cmd/reflect` and do a `go build; make new.txt` to redo the performance test. Requires `dnsperf` to be installed.
-  - Parsing zone files goes by 440K RR/s, meaning the SE (8M RRs) zone is parsed in ~18s, for NL (6M RRs), this would be
-    ~13s. This was achieved with a PGO optimized build of `cmd/parse`.
+  - The SE zone (8M RRs) is parsed in \~18s (\~440K RR/s), the CH zones (15M RRs) is parsed in \~24s (\~ 610K
+    RRs). The main difference being that SE use algorithm 8, and CH algorithm 13 (shorter signatures).
+    See `cmd/parse`, tested with M2/Asahi Linux.
 
 # Users
 
