@@ -63,7 +63,7 @@ For developers please read the
   - See `cmd/reflect` and do a `go build; make new.txt` to redo the performance test. Requires `dnsperf` to be installed.
   - The SE zone (8M RRs) is parsed in \~18s (\~440K RR/s), the CH zones (15M RRs) is parsed in \~24s (\~ 610K
     RRs). The main difference being that SE use algorithm 8, and CH algorithm 13 (shorter signatures).
-    See `cmd/parse`.
+    See `cmd/parse`, tested with M2/Asahi Linux.
 
 # Users
 
