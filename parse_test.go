@@ -154,34 +154,10 @@ func TestNew(t *testing.T) {
 func FuzzNew(f *testing.F) {
 	f.Add(`. 5 IN SVCB 50 five.test. alpn=part1\,\p\a\r\t2\044part3\092,part4\092\\`)
 	f.Add(`miek.nl. IN 3600 MX 15 mx.miek.nl.`)
+	f.Add(`\"\" IN 3600 (MX) (15) (mx.miek.nl.)`)
 	start := time.Now()
 	f.Fuzz(func(t *testing.T, s string) {
 		New(s)
 		dnsfuzz.Stop(t, start)
 	})
 }
-
-/*
-func TestALPN(t *testing.T) {
-	tests := map[string][]string{
-		`. 2 IN SVCB 20 two.test. alpn=h2,h3-19`:                                   {"h2", "h3-19"},
-		`. 3 IN SVCB 30 three.test. alpn="f\\\\oo\\,bar,h2"`:                       {`f\oo,bar`, "h2"},
-		`. 4 IN SVCB 40 four.test. alpn="part1,part2,part3\\,part4\\\\"`:           {"part1", "part2", `part3,part4\`},
-	}
-	for s, v := range tests {
-		if err != nil {
-			t.Error("failed to parse RR: ", err)
-			continue
-		}
-		alpn := rr.(*dns.SVCB).Value[0].(*svcb.ALPN).Alpn
-		if len(v) != len(alpn) {
-			t.Fatalf("parsing alpn failed, wanted %v got %v", v, alpn)
-		}
-		for i := range v {
-			if v[i] != alpn[i] {
-				t.Fatalf("parsing alpn failed, wanted %v got %v", v, alpn)
-			}
-		}
-	}
-}
-*/

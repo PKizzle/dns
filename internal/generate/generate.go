@@ -25,6 +25,8 @@ var EmptyData = []string{
 	"IXFR", "KEY", "NXNAME", "NXT", "OPT", "SIG", "SPF", "RESINFO", "WALLET",
 }
 
+var Popular = []string{"A", "AAAA", "NS", "CNAME", "DNSKEY", "DS", "RRSIG", "DELEG", "MX", "TXT", "NSEC", "NSEC3"}
+
 // Ast returns the *ast.File of file or an error.
 func Ast(file string) (f *ast.File, t *token.FileSet, err error) {
 	fset := token.NewFileSet()
@@ -50,7 +52,12 @@ func Types(file string) ([]string, error) {
 					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
 						if typeSpec.Name.IsExported() {
 							if !slices.Contains(exclude, typeSpec.Name.Name) {
-								types = append(types, typeSpec.Name.Name)
+								// prepend if popular
+								if slices.Contains(Popular, typeSpec.Name.Name) {
+									types = append([]string{typeSpec.Name.Name}, types...)
+								} else {
+									types = append(types, typeSpec.Name.Name)
+								}
 							}
 						}
 					}
