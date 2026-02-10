@@ -169,6 +169,9 @@ func readData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
 // syntactically correct, e.g. illegal base64 in RRSIGs will be returned as-is.
 type ZoneParser struct {
 	h Header // rr header as we parse
+	t uint16 // type as we parse, not stored in the header
+	r io.Reader
+	c *dnslex.Lexer
 
 	// IncludeAllowFunc tells if and how includes are allowed.
 	IncludeAllowFunc
@@ -199,10 +202,7 @@ type ZoneParser struct {
 	// Next, by calling subNext, forwards the resulting RRs from this
 	// sub parser to the calling code.
 	sub *ZoneParser
-	r   io.Reader
-	c   *dnslex.Lexer
 
-	t                  uint16 // type as we parse, not stored in the header
 	includeDepth       uint8
 	generateDisallowed bool
 }
@@ -304,19 +304,16 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	// 6 possible beginnings of a line (_ is a space):
 	//
-	//   0. zRrtype                                                -> all omitted until the rrtype
-	//   1. dnslex.Owner _ zRrtype                                 -> class/ttl omitted
-	//   2. dnslex.Owner _ dnslex.String _ zRrtype                 -> class omitted
-	//   3. dnslex.Owner _ dnslex.String _ dnslex.Class  _ zRrtype -> ttl/class
-	//   4. dnslex.Owner _ dnslex.Class  _ zRrtype                 -> ttl omitted
-	//   5. dnslex.Owner _ dnslex.Class  _ dnslex.String _ zRrtype -> class/ttl (reversed)
+	//   0. dnslex.Rrtype                                                -> all omitted until the rrtype
+	//   1. dnslex.Owner _ dnslex.Rrtype                                 -> class/ttl omitted
+	//   2. dnslex.Owner _ dnslex.String _ dnslex.Rrtype                 -> class omitted
+	//   3. dnslex.Owner _ dnslex.Class  _ dnslex.Rrtype                 -> ttl omitted
+	//   4. dnslex.Owner _ dnslex.String _ dnslex.Class  _ dnslex.Rrtype -> ttl/class
+	//   5. dnslex.Owner _ dnslex.Class  _ dnslex.String _ dnslex.Rrtype -> class/ttl (reversed)
 	//
-	// After detecting these, we know the zRrtype so we can jump to functions
-	// handling the rdata for each of these types.
+	// After detecting these, we know the zRrtype so we can jump to functions handling the rdata for each of these types.
 
 	st := zExpectOwnerDir // initial state
-	h := &zp.h
-	t := &zp.t
 
 Next:
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
@@ -329,10 +326,10 @@ Next:
 		case zExpectOwnerDir:
 			// We can also expect a directive, like $TTL or $ORIGIN
 			if zp.defttl != nil {
-				h.TTL = zp.defttl.ttl
+				zp.h.TTL = zp.defttl.ttl
 			}
 
-			h.Class = ClassINET
+			zp.h.Class = ClassINET
 
 			switch l.Value {
 			case dnslex.Newline:
@@ -343,7 +340,7 @@ Next:
 					return zp.setParseError("bad owner name", l)
 				}
 
-				h.Name = name
+				zp.h.Name = name
 
 				if l, ok = zp.c.Next(); !ok {
 					break Next
@@ -391,11 +388,11 @@ Next:
 
 				st = zExpectDirGenerate
 			case dnslex.Rrtype:
-				t = &l.Torc
+				zp.t = l.Torc
 
 				st = zExpectRdata
 			case dnslex.Class:
-				h.Class = l.Torc
+				zp.h.Class = l.Torc
 
 				if l, ok = zp.c.Next(); !ok {
 					break Next
@@ -409,7 +406,7 @@ Next:
 				// Discard, can happen when there is nothing on the
 				// line except the RR type
 			case dnslex.String:
-				if h.TTL, ok = setTTL(l); !ok {
+				if zp.h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
 				if l, ok = zp.c.Next(); !ok {
@@ -433,7 +430,7 @@ Next:
 			if l.Value != dnslex.Rrtype {
 				return zp.setParseError("unknown RR type", l)
 			}
-			t = &l.Torc
+			zp.t = l.Torc
 
 			st = zExpectRdata
 		case zExpectRdata:
@@ -443,9 +440,9 @@ Next:
 			)
 			switch l.As {
 			case asRR:
-				if newFn, ok := TypeToRR[*t]; ok {
+				if newFn, ok := TypeToRR[zp.t]; ok {
 					rr = newFn()
-					*rr.Header() = *h
+					*rr.Header() = zp.h
 
 					// We may be parsing a known RR type using the RFC3597 format.
 					// If so, we handle that here in a generic way.
@@ -457,15 +454,15 @@ Next:
 						parseAsRFC3597 = true
 					}
 				} else {
-					rr = &RFC3597{*h, rdata.RFC3597{RRType: *t}}
+					rr = &RFC3597{zp.h, rdata.RFC3597{RRType: zp.t}}
 				}
 			case asCode:
-				newFn, ok := CodeToRR[*t]
+				newFn, ok := CodeToRR[zp.t]
 				if !ok {
 					return zp.setParseError("unknown EDNS0 type", l)
 				}
 				rr = newFn()
-				*rr.Header() = *h
+				*rr.Header() = zp.h
 			}
 
 			if zp.c.Peek().Token == "" {
@@ -481,7 +478,7 @@ Next:
 
 			parseAsRR := rr
 			if parseAsRFC3597 {
-				parseAsRR = &RFC3597{*h, rdata.RFC3597{RRType: *t}}
+				parseAsRR = &RFC3597{zp.h, rdata.RFC3597{RRType: zp.t}}
 			}
 
 			// This needs zparser which calls Parser for new types.
@@ -629,11 +626,11 @@ Next:
 					return zp.setParseError("missing TTL with no previous value", l)
 				}
 
-				t = &l.Torc
+				zp.t = l.Torc
 
 				st = zExpectRdata
 			case dnslex.Class:
-				h.Class = l.Torc
+				zp.h.Class = l.Torc
 
 				if l, ok = zp.c.Next(); !ok {
 					break Next
@@ -644,7 +641,7 @@ Next:
 
 				st = zExpectAnyNoClass
 			case dnslex.String:
-				if h.TTL, ok = setTTL(l); !ok {
+				if zp.h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
 				if l, ok = zp.c.Next(); !ok {
@@ -661,11 +658,11 @@ Next:
 		case zExpectAnyNoTTL:
 			switch l.Value {
 			case dnslex.Class:
-				h.Class = l.Torc
+				zp.h.Class = l.Torc
 
 				st = zExpectRrtype
 			case dnslex.Rrtype:
-				t = &l.Torc
+				zp.t = l.Torc
 
 				st = zExpectRdata
 			default:
@@ -674,13 +671,13 @@ Next:
 		case zExpectAnyNoClass:
 			switch l.Value {
 			case dnslex.String:
-				if h.TTL, ok = setTTL(l); !ok {
+				if zp.h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
 
 				st = zExpectRrtype
 			case dnslex.Rrtype:
-				t = &l.Torc
+				zp.t = l.Torc
 
 				st = zExpectRdata
 			default:
