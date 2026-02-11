@@ -127,12 +127,12 @@ func (zl *Lexer) readByte() (byte, bool) {
 		zl.eol = false
 	}
 
-	zl.column++
 	if c == '\n' {
 		zl.eol = true
-		zl.column--
+		return c, true
 	}
 
+	zl.column++
 	return c, true
 }
 
@@ -149,11 +149,11 @@ func (zl *Lexer) Peek() Lex {
 	if zl.nextL {
 		// Cache l. Next returns zl.cachedL then zl.l.
 		zl.cachedL = &l
-	} else {
-		// In this case l == zl.l, so we just tell Next to return zl.l.
-		zl.nextL = true
+		return l
 	}
 
+	// In this case l == zl.l, so we just tell Next to return zl.l.
+	zl.nextL = true
 	return l
 }
 
@@ -173,7 +173,6 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 	zl.tok = zl.tok[:0]
 	escape := false
-
 	l.As = asRR
 
 	for x, ok := zl.readByte(); ok; x, ok = zl.readByte() {
@@ -471,11 +470,9 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		return
 	}
 
-	if t, ok := zl.stringToCode[l.Token]; ok {
-		l.As = asCode
-		l.Value = Rrtype
+	if t, ok := zl.stringToClass[l.Token]; ok {
+		l.Value = Class
 		l.Torc = t
-		zl.rrtype = true
 		return
 	}
 
@@ -492,12 +489,6 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		return
 	}
 
-	if t, ok := zl.stringToClass[l.Token]; ok {
-		l.Value = Class
-		l.Torc = t
-		return
-	}
-
 	if strings.HasPrefix(l.Token, "CLASS") {
 		t, ok := classToInt(l.Token)
 		if !ok {
@@ -507,6 +498,14 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		}
 		l.Value = Class
 		l.Torc = t
+	}
+
+	if t, ok := zl.stringToCode[l.Token]; ok {
+		l.As = asCode
+		l.Value = Rrtype
+		l.Torc = t
+		zl.rrtype = true
+		return
 	}
 }
 
