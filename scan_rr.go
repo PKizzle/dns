@@ -140,27 +140,19 @@ func escapedStringOffset(s string, desiredByteOffset int) (int, bool) {
 // A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func endingToString(c *dnslex.Lexer, errstr string) (string, error) {
-	sb := builderPool.Get()
-
+	s := "" // usually one or two strings, just contact without strings.Builder
+	var l dnslex.Lex
 	for {
-		l, _ := c.Next()
-		if l.Value == dnslex.Newline || l.Value == dnslex.EOF {
-			s := sb.String()
-			builderPool.Put(sb)
-			return s, nil
-		}
-		if l.Value == dnslex.Error {
-			builderPool.Put(sb)
-			return "", &ParseError{err: errstr, lex: l}
-		}
-
+		l, _ = c.Next()
 		switch l.Value {
+		case dnslex.Newline:
+			return s, nil
+		case dnslex.EOF:
+			return s, nil
 		case dnslex.String:
-			sb.WriteString(l.Token)
+			s += l.Token
 		case dnslex.Blank:
-			continue
 		default:
-			builderPool.Put(sb)
 			return "", &ParseError{err: errstr, lex: l}
 		}
 	}
