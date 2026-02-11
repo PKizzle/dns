@@ -149,7 +149,7 @@ func endingToString(c *dnslex.Lexer, errstr string) (string, error) {
 			builderPool.Put(sb)
 			return s, nil
 		}
-		if l.Err {
+		if l.Value == dnslex.Error {
 			builderPool.Put(sb)
 			return "", &ParseError{err: errstr, lex: l}
 		}
@@ -170,7 +170,7 @@ func endingToString(c *dnslex.Lexer, errstr string) (string, error) {
 // and return the parsed string slice or an error
 func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
 	l, _ := c.Next()
-	if l.Err {
+	if l.Value == dnslex.Error {
 		return nil, &ParseError{err: errstr, lex: l}
 	}
 
@@ -179,7 +179,7 @@ func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
 	quote := false
 	empty := false
 	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
-		if l.Err {
+		if l.Value == dnslex.Error {
 			return nil, &ParseError{err: errstr, lex: l}
 		}
 		switch l.Value {
