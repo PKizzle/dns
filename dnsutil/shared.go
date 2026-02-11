@@ -196,9 +196,6 @@ func Absolute(s, origin string) string {
 	if s == "@" {
 		return origin
 	}
-	if s == "\n" || s == "" { // this can happen when a zone is parsed, internal quirk, should not be here...
-		return ""
-	}
 	if IsName(s) == false { // done to make the conversion via dnsutil_generate.go work, instead of !IsName(s)
 		return ""
 	}
