@@ -318,7 +318,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 Next:
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		// zlexer spotted an error already
-		if l.Err {
+		if l.Value == dnslex.Error {
 			return zp.setParseError(l.Token, l)
 		}
 
@@ -333,6 +333,7 @@ Next:
 
 			switch l.Value {
 			case dnslex.Newline:
+
 				st = zExpectOwnerDir
 			case dnslex.Owner:
 				name := dnsutilAbsolute(l.Token, zp.origin)
@@ -359,7 +360,6 @@ Next:
 				}
 
 				st = zExpectDirTTL
-
 			case dnslex.DirOrigin:
 				if l, ok = zp.c.Next(); !ok {
 					break Next

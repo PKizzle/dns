@@ -24,6 +24,7 @@ func (e *ScanError) Error() string { return "" }
 const (
 	// Zone file
 	EOF uint8 = iota
+	Error
 	String
 	Blank
 	Quote
@@ -39,12 +40,11 @@ const (
 
 type Lex struct {
 	Token  string // text of the token
+	Torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
 	Line   int    // line in the file
 	Column int    // column in the file
-	Torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
 	Value  uint8  // value: String, Blank, etc.
 	As     uint8  // create an RR (asRR), an EDNS0 (asCode) or DSO RR (asStateful)
-	Err    bool   // when true, token text has lexer error
 }
 
 const (
@@ -166,7 +166,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 	case zl.nextL:
 		zl.nextL = false
 		return *l, true
-	case l.Err:
+	case l.Value == Error:
 		// Parsing errors should be sticky.
 		return Lex{Value: EOF}, false
 	}
@@ -369,7 +369,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 				if zl.brace < 0 {
 					l.Token = "extra closing brace"
-					l.Err = true
+					l.Value = Error
 					return *l, true
 				}
 			case '(':
@@ -398,7 +398,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 	if zl.brace != 0 {
 		l.Token = "unbalanced brace"
-		l.Err = true
+		l.Value = Error
 		return *l, true
 	}
 
@@ -483,7 +483,7 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		t, ok := TypeToInt(l.Token)
 		if !ok {
 			l.Token = "unknown RR type"
-			l.Err = true
+			l.Value = Error
 			return
 		}
 		l.Value = Rrtype
@@ -502,7 +502,7 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		t, ok := classToInt(l.Token)
 		if !ok {
 			l.Token = "unknown class"
-			l.Err = true
+			l.Value = Error
 			return
 		}
 		l.Value = Class
