@@ -116,7 +116,7 @@ func read(r io.Reader, file string) (RR, error) {
 }
 
 // NewData parses s, but only for the rdata, i.e. when the full RR is "miek.nl. IN 3600 MX 10 mx.miek.nl.",
-// NewData must get "10 mx.miek.nl." and optionally an origin". Leading spaces are not allowed.
+// NewData must get "10 mx.miek.nl." and optionally an origin. Leading spaces are not allowed.
 func NewData(rrtype uint16, s string, origin ...string) (RDATA, error) {
 	return readData(strings.NewReader(s), rrtype, origin...)
 }
@@ -136,15 +136,13 @@ func readData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
 
 // ZoneParser is a parser for an RFC 1035 style zone file.
 //
-// Each parsed RR in the zone is returned sequentially from [ZoneParser.Next]. An
-// optional comment can be retrieved with Comment. Also see [ZoneParser.RRs] which is an iterator.
+// Each parsed RR in the zone is returned sequentially from [ZoneParser.Next].
+// Also see [ZoneParser.RRs] which is an iterator.
 //
-// The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are all
-// supported. Although $INCLUDE is disabled by default.
+// The directives $INCLUDE, $ORIGIN, $TTL and $GENERATE are all supported.
 // Note that $GENERATE's range support up to a maximum of 65535 steps.
 //
-// Basic usage pattern when reading from a string (z) containing the
-// zone data:
+// Basic usage pattern when reading from a string (z) containing the zone data:
 //
 //	zp := NewZoneParser(strings.NewReader(z), "", "")
 //
@@ -155,15 +153,6 @@ func readData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
 //	if err := zp.Err(); err != nil {
 //		// log.Println(err)
 //	}
-//
-// Comments specified after an RR (and on the same line!) are
-// returned too:
-//
-//	foo. IN A 10.0.0.1 ; this is a comment
-//
-// The text "; this is comment" is returned from Comment. Comments inside
-// the RR are returned concatenated along with the RR. Comments on a line
-// by themselves are discarded.
 //
 // Callers should not assume all returned data in a RR is
 // syntactically correct, e.g. illegal base64 in RRSIGs will be returned as-is.
