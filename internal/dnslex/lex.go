@@ -437,8 +437,8 @@ func Discard(c *Lexer) *ScanError {
 // Tokens is used to gather up the remaining tokens and hand them to a custom Scan method for external RRs.
 func Tokens(c *Lexer) []string {
 	tokens := []string{}
-	l, _ := c.Next()
 	for {
+		l, _ := c.Next()
 		switch l.Value {
 		case Blank:
 		case Newline, EOF:
@@ -446,7 +446,6 @@ func Tokens(c *Lexer) []string {
 		default:
 			tokens = append(tokens, l.Token)
 		}
-		l, _ = c.Next()
 	}
 }
 

@@ -137,13 +137,12 @@ func escapedStringOffset(s string, desiredByteOffset int) (int, bool) {
 	return -1, true
 }
 
-// A remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
+// remainder returns a remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
-func endingToString(c *dnslex.Lexer, errstr string) (string, error) {
+func remainder(c *dnslex.Lexer, errstr string) (string, error) {
 	s := "" // usually one or two strings, just contact without strings.Builder
-	var l dnslex.Lex
 	for {
-		l, _ = c.Next()
+		l, _ := c.Next()
 		switch l.Value {
 		case dnslex.Newline:
 			return s, nil
@@ -158,15 +157,15 @@ func endingToString(c *dnslex.Lexer, errstr string) (string, error) {
 	}
 }
 
-// A remainder of the rdata with embedded spaces, split on unquoted whitespace
+// remainderSlice returns a remainder of the rdata with embedded spaces, split on unquoted whitespace
 // and return the parsed string slice or an error
-func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
+func remainderSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
 	l, _ := c.Next()
 	if l.Value == dnslex.Error {
 		return nil, &ParseError{err: errstr, lex: l}
 	}
 
-	// Build the slice
+	// build the slice
 	s := make([]string, 0, 2)
 	quote := false
 	empty := false
@@ -186,11 +185,11 @@ func endingToTxtSlice(c *dnslex.Lexer, errstr string) ([]string, error) {
 				}
 				if i != -1 && p+i != len(l.Token) {
 					s = append(s, l.Token[p:p+i])
+					p += i
 				} else {
 					s = append(s, l.Token[p:])
 					break
 				}
-				p += i
 			}
 		case dnslex.Blank:
 			if quote {

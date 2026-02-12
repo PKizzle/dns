@@ -106,7 +106,7 @@ func parseMG(rd *rdata.MG, c *dnslex.Lexer, o string) error {
 }
 
 func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) error {
-	chunks, err := endingToTxtSlice(c, "bad HINFO Fields")
+	chunks, err := remainderSlice(c, "bad HINFO Fields")
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) error {
 
 // according to RFC 1183 the parsing is identical to HINFO, so just use that code.
 func parseISDN(rd *rdata.ISDN, c *dnslex.Lexer, o string) error {
-	chunks, err := endingToTxtSlice(c, "bad ISDN Fields")
+	chunks, err := remainderSlice(c, "bad ISDN Fields")
 	if err != nil {
 		return err
 	}
@@ -684,13 +684,13 @@ func parseCERT(rd *rdata.CERT, c *dnslex.Lexer, o string) error {
 			return &ParseError{err: "bad CERT Algorithm", lex: l}
 		}
 	}
-	rd.Certificate, err = endingToString(c, "bad CERT Certificate")
+	rd.Certificate, err = remainder(c, "bad CERT Certificate")
 	return err
 }
 
 func parseOPENPGPKEY(rd *rdata.OPENPGPKEY, c *dnslex.Lexer, o string) error {
 	var err error
-	rd.PublicKey, err = endingToString(c, "bad OPENPGPKEY PublicKey")
+	rd.PublicKey, err = remainder(c, "bad OPENPGPKEY PublicKey")
 	return err
 }
 
@@ -760,7 +760,7 @@ func parseZONEMD(rd *rdata.ZONEMD, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad ZONEMD Hash Algorithm", lex: l}
 	}
 
-	rd.Digest, err = endingToString(c, "bad ZONEMD Digest")
+	rd.Digest, err = remainder(c, "bad ZONEMD Digest")
 	return err
 }
 
@@ -838,7 +838,7 @@ func parseRRSIG(rd *rdata.RRSIG, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad RRSIG SignerName", lex: l}
 	}
 
-	rd.Signature, err = endingToString(c, "bad RRSIG Signature")
+	rd.Signature, err = remainder(c, "bad RRSIG Signature")
 	return err
 }
 
@@ -1046,7 +1046,7 @@ func parseSSHFP(rd *rdata.SSHFP, c *dnslex.Lexer, o string) error {
 	}
 
 	c.Next() // dnslex.Blank
-	rd.FingerPrint, err = endingToString(c, "bad SSHFP Fingerprint")
+	rd.FingerPrint, err = remainder(c, "bad SSHFP Fingerprint")
 	return err
 }
 
@@ -1072,7 +1072,7 @@ func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad DNSKEY Algorithm", lex: l}
 	}
 
-	rd.PublicKey, err = endingToString(c, "bad DNSKEY PublicKey")
+	rd.PublicKey, err = remainder(c, "bad DNSKEY PublicKey")
 	return err
 }
 
@@ -1098,19 +1098,19 @@ func parseRKEY(rd *rdata.RKEY, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad RKEY Algorithm", lex: l}
 	}
 
-	rd.PublicKey, err = endingToString(c, "bad RKEY PublicKey")
+	rd.PublicKey, err = remainder(c, "bad RKEY PublicKey")
 	return err
 }
 
 func parseEID(rd *rdata.EID, c *dnslex.Lexer, o string) error {
 	var err error
-	rd.Endpoint, err = endingToString(c, "bad EID Endpoint")
+	rd.Endpoint, err = remainder(c, "bad EID Endpoint")
 	return err
 }
 
 func parseNIMLOC(rd *rdata.NIMLOC, c *dnslex.Lexer, o string) error {
 	var err error
-	rd.Locator, err = endingToString(c, "bad NIMLOC Locator")
+	rd.Locator, err = remainder(c, "bad NIMLOC Locator")
 	return err
 }
 
@@ -1163,7 +1163,7 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) error {
 	if err != nil || l.Value == dnslex.Error {
 		return &ParseError{err: "bad DS DigestType", lex: l}
 	}
-	rd.Digest, err = endingToString(c, "bad DS Digest")
+	rd.Digest, err = remainder(c, "bad DS Digest")
 	return err
 }
 
@@ -1193,7 +1193,7 @@ func parseTA(rd *rdata.TA, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad TA DigestType", lex: l}
 	}
 
-	rd.Digest, err = endingToString(c, "bad TA Digest")
+	rd.Digest, err = remainder(c, "bad TA Digest")
 	return err
 }
 
@@ -1219,7 +1219,7 @@ func parseTLSA(rd *rdata.TLSA, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad TLSA MatchingType", lex: l}
 	}
 
-	rd.Certificate, err = endingToString(c, "bad TLSA Certificate")
+	rd.Certificate, err = remainder(c, "bad TLSA Certificate")
 	return err
 }
 
@@ -1245,7 +1245,7 @@ func parseSMIMEA(rd *rdata.SMIMEA, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad SMIMEA MatchingType", lex: l}
 	}
 
-	rd.Certificate, err = endingToString(c, "bad SMIMEA Certificate")
+	rd.Certificate, err = remainder(c, "bad SMIMEA Certificate")
 	return err
 }
 
@@ -1262,7 +1262,7 @@ func parseRFC3597(rd *rdata.RFC3597, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad RFC3597 Rdata ", lex: l}
 	}
 
-	rd.Data, err = endingToString(c, "bad RFC3597 Rdata")
+	rd.Data, err = remainder(c, "bad RFC3597 Rdata")
 	if int(rdlength)*2 != len(rd.Data) {
 		return &ParseError{err: "bad RFC3597 Rdata", lex: l}
 	}
@@ -1272,14 +1272,14 @@ func parseRFC3597(rd *rdata.RFC3597, c *dnslex.Lexer, o string) error {
 func parseTXT(rd *rdata.TXT, c *dnslex.Lexer, o string) error {
 	var err error
 	// no dnslex.Blank reading here, because all this rdata is TXT
-	rd.Txt, err = endingToTxtSlice(c, "bad TXT Txt")
+	rd.Txt, err = remainderSlice(c, "bad TXT Txt")
 	return err
 }
 
 // identical to setTXT
 func parseNINFO(rd *rdata.NINFO, c *dnslex.Lexer, o string) error {
 	var err error
-	rd.ZSData, err = endingToTxtSlice(c, "bad NINFO ZSData")
+	rd.ZSData, err = remainderSlice(c, "bad NINFO ZSData")
 	return err
 }
 
@@ -1309,7 +1309,7 @@ func parseURI(rd *rdata.URI, c *dnslex.Lexer, o string) error {
 	}
 
 	c.Next() // dnslex.Blank
-	s, err := endingToTxtSlice(c, "bad URI Target")
+	s, err := remainderSlice(c, "bad URI Target")
 	if err != nil {
 		return err
 	}
@@ -1323,7 +1323,7 @@ func parseURI(rd *rdata.URI, c *dnslex.Lexer, o string) error {
 func parseDHCID(rd *rdata.DHCID, c *dnslex.Lexer, o string) error {
 	var err error
 	// awesome record to parse!
-	rd.Digest, err = endingToString(c, "bad DHCID Digest")
+	rd.Digest, err = remainder(c, "bad DHCID Digest")
 	return err
 }
 
@@ -1416,7 +1416,7 @@ func parseGID(rd *rdata.GID, c *dnslex.Lexer, o string) error {
 }
 
 func parseUINFO(rd *rdata.UINFO, c *dnslex.Lexer, o string) error {
-	s, err := endingToTxtSlice(c, "bad UINFO Uinfo")
+	s, err := remainderSlice(c, "bad UINFO Uinfo")
 	if err != nil {
 		return err
 	}
@@ -1467,7 +1467,7 @@ func parseCAA(rd *rdata.CAA, c *dnslex.Lexer, o string) error {
 	rd.Tag = l.Token
 
 	c.Next() // dnslex.Blank
-	s, err := endingToTxtSlice(c, "bad CAA Value")
+	s, err := remainderSlice(c, "bad CAA Value")
 	if err != nil {
 		return err
 	}
