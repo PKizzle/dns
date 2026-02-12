@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"runtime/trace"
+	"time"
 
 	"codeberg.org/miekg/dns"
 )
@@ -44,6 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	now := time.Now()
 	zp := dns.NewZoneParser(z, ".", flag.Arg(0))
 	i := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
@@ -55,5 +57,5 @@ func main() {
 	if zp.Err() != nil {
 		log.Fatal(zp.Err())
 	}
-	fmt.Println(i)
+	fmt.Printf("time = %.2fs, RRs = %d, RRs/s = %.2f\n", time.Since(now).Seconds(), i, float64(i)/time.Since(now).Seconds())
 }
