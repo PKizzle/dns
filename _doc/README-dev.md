@@ -62,6 +62,14 @@ ZONEMDSchemeSimple, for a constant used in the ZONEMD RR.
 Methods on RR types have `rr` as the receiver's name. For EDNS0 "RRs", the receiver is named `o`. For DSO `d`
 is used. Methods on `Msg` use `m`.
 
+### RR Types
+
+The naming of types follows the RFCs. EDNS0 types are similarly named, for instance, DHU (DS Hash Understood).
+If there is a clash between an actual RR's and an EDNS0 one, the EDNS0 type will get an 'E' as prefix, e.g.
+EDHU. This will also be done if the RR was named later than the EDNS0 option! The same is the for DSO (DNS
+Stateful Operations), when clashing those types will be prefixed with a 'D'. If EDNS0 and DSO clash, EDNS0
+wins. See PADDING and DPADDING as an example.
+
 ### Exporting more Functions/Methods
 
 In dnsv1, `packRR` was exported as `PackRR`, this made the compression map (`map[string]int`), part of the API,
