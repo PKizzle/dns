@@ -19,7 +19,6 @@ var Handlers = []string{
 	"kill",
 	"log",
 	"metrics",
-	"msgcache",
 	"nsid",
 	"refuse",
 	"sign",

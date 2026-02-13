@@ -26,9 +26,10 @@ func TestCookie(t *testing.T) {
 	m.Pseudo = []dns.RR{cookie}
 	m.Pack()
 
-	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewTestRecorder()
 	c.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), tw, m)
 
+	tw.Msg.Unpack()
 	if len(tw.Msg.Pseudo) != 1 {
 		t.Fatal("expected pseudo section")
 	}

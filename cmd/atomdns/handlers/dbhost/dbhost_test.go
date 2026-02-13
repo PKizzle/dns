@@ -18,10 +18,11 @@ func TestDbhost(t *testing.T) {
 	m.ID = 3
 	m.Pack()
 
-	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewTestRecorder()
 	next := new(whoami.Whoami).HandlerFunc(nil)
 	d.HandlerFunc(next).ServeDNS(context.TODO(), tw, m)
 
+	tw.Msg.Unpack()
 	if x := tw.Msg.Answer[0].(*dns.A).Addr; x != netip.MustParseAddr("127.0.0.1") {
 		t.Fatalf("expected %s, got %s", "127.0.0.1", x)
 	}

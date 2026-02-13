@@ -43,7 +43,7 @@ func TestServer(t *testing.T) {
 			defer dns.HandleRemove("miek.nl.")
 			defer dns.HandleRemove("example.nl.")
 
-			cancel, addrstr, _ := tc.run(":0")
+			cancel, addr, _ := tc.run(":0")
 			defer cancel()
 
 			c := &dns.Client{Transport: dns.NewTransport()}
@@ -55,7 +55,7 @@ func TestServer(t *testing.T) {
 			dnsutil.SetQuestion(m, "miek.nl.", dns.TypeTXT)
 			m.Pack()
 
-			r, _, err := c.Exchange(context.TODO(), m, tc.network, addrstr)
+			r, _, err := c.Exchange(context.TODO(), m, tc.network, addr)
 			if err != nil {
 				t.Fatal("failed to exchange miek.nl.", err)
 			}
@@ -67,7 +67,7 @@ func TestServer(t *testing.T) {
 			dnsutil.SetQuestion(m, "example.com.", dns.TypeTXT)
 			m.Pack()
 
-			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
+			r, _, err = c.Exchange(context.TODO(), m, tc.network, addr)
 			if err != nil {
 				t.Fatal("failed to exchange example.com.", err)
 			}
@@ -80,7 +80,7 @@ func TestServer(t *testing.T) {
 			dnsutil.SetQuestion(m, "eXaMPlE.cOm.", dns.TypeTXT)
 			m.Pack()
 
-			r, _, err = c.Exchange(context.TODO(), m, tc.network, addrstr)
+			r, _, err = c.Exchange(context.TODO(), m, tc.network, addr)
 			if err != nil {
 				t.Error("failed to exchange eXaMplE.cOm.", err)
 			}
@@ -96,7 +96,7 @@ func TestServer(t *testing.T) {
 func TestServerZFlag(t *testing.T) {
 	dns.HandleFunc("example.com.", helloHandler)
 	defer dns.HandleRemove("example.com.")
-	cancel, addrstr, _ := dnstest.UDPServer(":0")
+	cancel, addr, _ := dnstest.UDPServer(":0")
 	defer cancel()
 
 	m := new(dns.Msg)
@@ -104,7 +104,7 @@ func TestServerZFlag(t *testing.T) {
 	m.Zero = true
 	m.Pack()
 
-	r, err := dns.Exchange(context.TODO(), m, "udp", addrstr)
+	r, err := dns.Exchange(context.TODO(), m, "udp", addr)
 	if err != nil {
 		t.Fatal("failed to exchange example.com. with +zflag", err)
 	}

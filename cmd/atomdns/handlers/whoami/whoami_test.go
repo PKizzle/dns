@@ -14,9 +14,10 @@ func TestWhoami(t *testing.T) {
 	w := new(whoami.Whoami)
 	m := dnstest.NewMsg()
 
-	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewTestRecorder()
 	w.HandlerFunc(atomtest.Echo).ServeDNS(context.TODO(), tw, m)
 
+	tw.Msg.Unpack()
 	if len(tw.Msg.Answer) != 1 {
 		t.Fatal("expected answer section")
 	}
