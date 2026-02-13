@@ -7,6 +7,7 @@ import (
 	"flag"
 	"html/template"
 	"log"
+	"slices"
 
 	"codeberg.org/miekg/dns/internal/generate"
 )
@@ -71,6 +72,9 @@ func main() {
 	if err := interfaceFunc.Execute(source, types); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
+
+	types = slices.DeleteFunc(types, func(s string) bool { return s == "ERFC3597" })
+
 	if err := CodeToRR.Execute(source, types); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}

@@ -915,6 +915,13 @@ func (rr *ZONEVERSION) Clone() RR {
 	}
 }
 
+func (rr *ERFC3597) Clone() RR {
+	return &ERFC3597{
+		rr.EDNS0Code,
+		rr.Code,
+	}
+}
+
 func (rr *KEEPALIVE) Clone() RR {
 	return &KEEPALIVE{
 		rr.Timeout,

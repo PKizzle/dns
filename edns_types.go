@@ -61,7 +61,7 @@ func (o *LLQ) String() string {
 //
 // This record must be put in the pseudo section.
 type REPORTING struct {
-	AgentDomain string
+	AgentDomain string `dns:"domain-name"`
 }
 
 func (o *REPORTING) Len() int    { return tlv + len(o.AgentDomain) }
@@ -392,6 +392,22 @@ func (o *ZONEVERSION) String() string {
 		sb.WriteByte(' ')
 		sb.Write(o.Version)
 	}
+	s := sb.String()
+	builderPool.Put(*sb)
+	return s
+}
+
+// ERFC3597 is used to represent unknown EDNS0 option.
+type ERFC3597 struct {
+	EDNS0Code uint16 `dns:"-"`
+	Code      string `dns:"hex"`
+}
+
+func (o *ERFC3597) Len() int    { return tlv + 2*len(o.Code) }
+func (o *ERFC3597) Data() RDATA { return o }
+func (o *ERFC3597) String() string {
+	sb := sprintOptionHeader(o)
+	sprintData(sb, `\#`, strconv.Itoa(len(o.Code)/2), o.Code)
 	s := sb.String()
 	builderPool.Put(*sb)
 	return s
