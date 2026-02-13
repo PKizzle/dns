@@ -29,8 +29,9 @@ func TestLog(t *testing.T) {
 	ctx = dnsctx.WithValue(ctx, "hello/here", "not far")
 	ctx = dnsctx.WithValue(ctx, "hello/there", "far")
 
-	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewTestRecorder()
 	l.HandlerFunc(atomtest.Echo).ServeDNS(ctx, tw, m)
+	tw.Msg.Unpack()
 	if !strings.Contains(b.String(), `hello.here="not far" hello.there=far`) {
 		t.Fatal("expected context items to show up, got none")
 	}

@@ -115,7 +115,7 @@ func TestAcl(t *testing.T) {
 			co := dnsserver.NewTestController(tc.config)
 			a.Setup(co)
 
-			tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+			tw := dnstest.NewTestRecorder()
 			m := new(dns.Msg)
 			if tc.qtype == 0 {
 				tc.qtype = dns.TypeA
@@ -128,6 +128,7 @@ func TestAcl(t *testing.T) {
 			}
 			a.HandlerFunc(atomtest.Echo).ServeDNS(ctx, tw, m)
 
+			tw.Msg.Unpack()
 			if tw.Msg.Rcode != uint16(tc.rcode) {
 				t.Errorf("rcode mismatch want %d, got %d", tc.rcode, tw.Msg.Rcode)
 			}

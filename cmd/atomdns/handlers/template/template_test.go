@@ -14,9 +14,10 @@ func TestTemplate(t *testing.T) {
 	te := &template.Template{Path: "testdata/msg.go.tmpl", Regexp: regexp.MustCompile(".*")}
 
 	m := dnstest.NewMsg()
-	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewTestRecorder()
 	te.HandlerFunc(atomtest.Noop).ServeDNS(context.TODO(), tw, m)
 
+	tw.Msg.Unpack()
 	if tw.Msg.ID != m.ID {
 		t.Fatalf("expected %d, got %d", m.ID, tw.Msg.ID)
 	}

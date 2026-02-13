@@ -71,6 +71,8 @@ func (m *Metrics) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			return
 		}
 
+		rw.Msg.Options = dns.MsgOptionUnpackHeader // we only need to rcode
+		rw.Msg.Unpack()
 		RequestDuration.WithLabelValues(dns.Zone(ctx), net, fam).Observe(time.Since(rw.Start).Seconds())
 		ResponseSize.WithLabelValues(dns.Zone(ctx), net, fam).Observe(float64(len(rw.Msg.Data)))
 		Responses.WithLabelValues(dns.Zone(ctx), net, fam, dnsutil.RcodeToString(rw.Msg.Rcode)).Inc()

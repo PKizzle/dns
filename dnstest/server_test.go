@@ -1,6 +1,13 @@
 package dnstest
 
-import "testing"
+import (
+	"context"
+	"fmt"
+	"log"
+	"testing"
+
+	"codeberg.org/miekg/dns"
+)
 
 func TestServer(t *testing.T) {
 	// mostly to check if it will not hang
@@ -19,4 +26,16 @@ func TestServerHTTP(t *testing.T) {
 	}
 	defer cancel()
 	t.Logf("%s", listen)
+}
+
+func ExampleTCPServer() {
+	cancel, addr, _ := TCPServer(":0")
+	defer cancel()
+
+	m := NewMsg()
+	r, err := dns.Exchange(context.TODO(), m, "tcp", addr)
+	if err != nil {
+		log.Fatalf("failed to exchange %s: %s", m.Question[0].Header().Name, err)
+	}
+	fmt.Println(r)
 }

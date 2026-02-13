@@ -19,7 +19,7 @@ func TestEcs(t *testing.T) {
 	m.Pseudo = []dns.RR{ecs}
 	m.Pack()
 
-	tw := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+	tw := dnstest.NewTestRecorder()
 	next := dns.HandlerFunc(func(ctx context.Context, _ dns.ResponseWriter, _ *dns.Msg) {
 		address := dnsctx.Value(ctx, e.Key()+"/addr")
 		if address == nil {

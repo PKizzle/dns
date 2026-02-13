@@ -16,9 +16,13 @@ import (
 //	ServeDNS(ctx, rw, r)
 //	io.Copy(w, rw.Msg) // work on the original writer
 //
+// The msg is not unpacked during the Write, if you need this a rw.Msg.Unpack() is needed.
+//
 // Due to how we handle UDP sockets, it's impossible (hard?) to make the recorder write to the wrapped writer,
 // so this must still be done separately, as shown above.
 type Recorder struct {
+	// In msg.go WriteTo we use the socket and then do a WriteMsgUDP to get the session right, this bypasses
+	// the io.Writer stuff, thereby breaking the possibility to write here.
 	w     dns.ResponseWriter
 	Msg   *dns.Msg  // Msg contains the last message written.
 	Start time.Time // Time when the recorder was created.
@@ -29,15 +33,14 @@ var _ dns.ResponseWriter = &Recorder{}
 // NewRecorder makes and returns a new Recorder that wraps the given ResponseWriter. Start time set to now.
 func NewRecorder(w dns.ResponseWriter) *Recorder { return &Recorder{w: w, Start: time.Now()} }
 
+// NewTestRecorder returns a new Recorder that wraps a [dnstest.ResponseWriter]. This is a shortcut for
+// rec := dnstest.NewRecorder(&dnstest.ResponseWriter{}) which is useful in tests.
+func NewTestRecorder() *Recorder { return NewRecorder(&ResponseWriter{}) }
+
 func (r *Recorder) Write(b []byte) (int, error) {
 	// See [Msg.WriteTo] that defaults to TCP.
-	msg := &dns.Msg{Data: b[2:]}
-	err := msg.Unpack()
-	if err != nil {
-		return 0, err
-	}
-	r.Msg = msg
-
+	r.Msg = &dns.Msg{Data: make([]byte, len(b)-2)}
+	copy(r.Msg.Data, b[2:])
 	return len(b), nil
 }
 
@@ -48,6 +51,7 @@ func (r *Recorder) SetReadDeadline(time.Time) error  { return nil }
 func (r *Recorder) SetWriteDeadline(time.Time) error { return nil }
 
 func (r *Recorder) Conn() net.Conn {
+	// because of this everything defaults to "TCP"
 	return r // we are a net.Conn ourselves
 }
 
