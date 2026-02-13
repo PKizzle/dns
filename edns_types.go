@@ -397,7 +397,7 @@ func (o *ZONEVERSION) String() string {
 	return s
 }
 
-// ERFC3597 is used to represent unknown EDNS0 option.
+// ERFC3597 is used to represent unknown EDNS0 options.
 type ERFC3597 struct {
 	EDNS0Code uint16 `dns:"-"`
 	Code      string `dns:"hex"`
