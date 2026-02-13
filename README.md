@@ -33,6 +33,14 @@ Everything from <https://github.com/miekg/dns> works. See
 [README-v1-to-v2.md](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-v1-to-v2.md)
 for the differences, if you are porting your application.
 
+## Performace
+
+dnsv2's performance should be roughly 2x accross the board compared to v1 (also see below).
+
+- Serving DNS queries per second is \~2x (maybe more).
+- Parsing zones files in RRs per second is \~1.5x.
+- Memory usage can be \~0.5x due to rdata split off.
+
 For developers please read the
 [developer README](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-dev.md).
 
@@ -42,7 +50,7 @@ For developers please read the
 - Everything is a resource record, EDNS0 pseudo RRs included.
   - Easy way to access RR's header and resource data (rdata).
 - Small API.
-  - Package _dnsutil_ contains functions that help programmers, but are not nessecarily in scope the the
+  - Package _dnsutil_ contains functions that help programmers, but are not necessarily in scope the the
     _dns_ package.
   - Package _dnstest_ contains functions and types that help you test, similar to the _httptest_ package.
   - Package _svcb_ holds all details of the SVCB/HTTPS record.
@@ -55,7 +63,7 @@ For developers please read the
     - On my Dell XPS 17 (Intel) it is similar-ish (~300K/240K qps UDP/TCP).
     - On other Intel/AMD hardware it is lower (~200K (UDP) qps) - yet to understand why.
   - See `cmd/reflect` and do a `go build; make new.txt` to redo the performance test. Requires `dnsperf` to be installed.
-  - The SE zone (8M RRs) is parsed in \~18s (\~440K RR/s), the CH zones (15M RRs) is parsed in \~21s (\~ 650K
+  - The SE zone (8M RRs) is parsed in \~18s (\~440K RR/s), the CH zones (15M RRs) is parsed in \~21s (\~650K
     RRs). The main difference being that SE use algorithm 8, and CH algorithm 13 (shorter RRSIGs).
     See `cmd/parse`, tested with M2/Asahi Linux.
 
