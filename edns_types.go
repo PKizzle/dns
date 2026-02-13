@@ -403,13 +403,21 @@ type ERFC3597 struct {
 	Code      string `dns:"hex"`
 }
 
-func (o *ERFC3597) Len() int    { return tlv + 2*len(o.Code) }
+func (o *ERFC3597) Len() int    { return tlv + len(o.Code)/2 }
 func (o *ERFC3597) Data() RDATA { return o }
 func (o *ERFC3597) String() string {
-	sb := sprintOptionHeader(o)
-	sprintData(sb, `\#`, strconv.Itoa(len(o.Code)/2), o.Code)
+	sb := builderPool.Get()
+	sb.WriteByte('.')
+	sb.WriteByte('\t')
+	sb.WriteByte('\t') // skip TTL
+	sb.WriteString(classToString(o.Header().Class))
+	sb.WriteByte('\t')
+	sb.WriteString(codeToString(o.EDNS0Code))
+	sb.WriteByte('\t')
+
+	sprintData(&sb, `\#`, strconv.Itoa(len(o.Code)/2), o.Code)
 	s := sb.String()
-	builderPool.Put(*sb)
+	builderPool.Put(sb)
 	return s
 }
 

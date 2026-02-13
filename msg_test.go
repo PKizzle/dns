@@ -131,6 +131,20 @@ func TestMsgBinary(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"unknown-edns0-type20-code",
+			[]byte{0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 3, 119, 119, 119, 7, 101, 120, 97, 109, 112, 108, 101, 3, 111, 114, 103, 0, 0, 1, 0, 1, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 9, 0, 20, 0, 5, 104, 97, 108, 108, 111},
+			func(m *dns.Msg) error {
+				if len(m.Pseudo) != 1 {
+					return errors.New("expected pseudo section to carry an option")
+				}
+				x := m.Pseudo[0].(*dns.ERFC3597)
+				if x.EDNS0Code != 20 {
+					return fmt.Errorf("expected code 20, got %d", x.EDNS0Code)
+				}
+				return nil
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
