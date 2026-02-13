@@ -517,6 +517,8 @@ func unpackOptionCode(option EDNS0, s *cryptobyte.String) error {
 		return x.unpack(s)
 	case *ZONEVERSION:
 		return x.unpack(s)
+	case *ERFC3597:
+		return x.unpack(s)
 	}
 	if x, ok := option.(Packer); ok {
 		msg := []byte(*s)
@@ -554,6 +556,8 @@ func packOptionCode(option EDNS0, msg []byte, off int) (int, error) {
 	case *ESU:
 		return x.pack(msg, off)
 	case *ZONEVERSION:
+		return x.pack(msg, off)
+	case *ERFC3597:
 		return x.pack(msg, off)
 	}
 	if x, ok := option.(Packer); ok {
