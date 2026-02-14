@@ -881,7 +881,6 @@ func (rr *N3U) Clone() RR {
 func (rr *TCPKEEPALIVE) Clone() RR {
 	return &TCPKEEPALIVE{
 		rr.Timeout,
-		rr.Length,
 	}
 }
 

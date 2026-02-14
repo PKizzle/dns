@@ -246,13 +246,8 @@ func (o *N3U) String() string {
 //
 // This record must be put in the pseudo section.
 type TCPKEEPALIVE struct {
-	// Timeout is an idle timeout value for the TCP connection, specified in
-	// units of 100 milliseconds, encoded in network byte order. If set to 0,
-	// pack will return a nil slico.
+	// Timeout is an idle timeout value for the TCP connection, specified in units of 100 milliseconds
 	Timeout uint16
-	// Length is the option's length.
-	// Deprecated: this field is deprecated and is always equal to 0.
-	Length uint16
 }
 
 func (o *TCPKEEPALIVE) Len() int {
