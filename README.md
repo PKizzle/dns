@@ -25,7 +25,7 @@ production ready name server. Because of these we are depending on a lot more ex
 point these servers will be split off.
 
 This new version will not soon see a v1.0.0 release because I want to be able to still make changes. In a
-year or two (2028?) when things have stablized it will be blessed with a v1.0.0.
+year or two (2028?) when things have stabilized it will be blessed with a v1.0.0.
 
 # Porting From v1
 
@@ -33,9 +33,9 @@ Everything from <https://github.com/miekg/dns> works. See
 [README-v1-to-v2.md](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-v1-to-v2.md)
 for the differences, if you are porting your application.
 
-## Performace
+## Performance
 
-dnsv2's performance should be roughly 2x accross the board compared to v1 (also see below).
+dnsv2's performance should be roughly 2x across the board compared to v1 (also see below).
 
 - Serving DNS queries per second is \~2x (maybe more).
 - Parsing zones files in RRs per second is \~1.5x.
