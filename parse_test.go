@@ -133,6 +133,17 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"RFC3597",
+			`example.com. 3600 IN TYPE65280 \# 4 0A000001`,
+			func(rr RR) error {
+				exp := "example.com.\t3600\tIN\tTYPE65280\t\\# 4 0A000001"
+				if x := rr.String(); x != exp {
+					return fmt.Errorf("expected %q, got %q", exp, x)
+				}
+				return nil
+			},
+		},
 		// EDNS0 types
 		{
 			"NSID", `. IN NSID 5573652074686520666f726365: "Use the force"`, func(rr RR) error { _ = rr.(*NSID); return nil },

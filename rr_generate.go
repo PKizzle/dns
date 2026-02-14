@@ -9,6 +9,7 @@ import (
 	"flag"
 	"html/template"
 	"log"
+	"slices"
 
 	"codeberg.org/miekg/dns/internal/generate"
 )
@@ -27,8 +28,8 @@ var TypeToRR = template.Must(template.New("TypeToRR").Parse(`
 //	rr := dns.TypeToRR[dns.TypeMX]()
 //	fmt.Println(rr) // "0       CLASS0  MX      0"
 var TypeToRR = map[uint16]func() RR{
-{{range .}}{{if ne . "RFC3597"}}  Type{{.}}:  func() RR { return new({{.}}) },
-{{end}}{{end}}                    }
+{{range .}}  Type{{.}}:  func() RR { return new({{.}}) },
+{{end}}                    }
 
 `))
 
@@ -36,9 +37,9 @@ var RRToType = template.Must(template.New("RRToType").Parse(`
 // RRToType is the reverse of TypeToRR.
 func RRToType(rr RR) uint16 {
     switch rr.(type) {
-{{range .}}{{if ne . "RFC3597"}}  case *{{.}}:
+{{range .}}  case *{{.}}:
 	return Type{{.}}
-{{end}}{{end}} }
+{{end}} }
 	if x, ok := rr.(Typer); ok {
 		return x.Type()
 	}
@@ -50,7 +51,7 @@ func RRToType(rr RR) uint16 {
 var TypeToString = template.Must(template.New("typeToString").Parse(`
 // TypeToString is a map of strings for each RR type.
 var TypeToString = map[uint16]string{
-{{range .}}{{if and (ne . "NSAPPTR") (ne . "RFC3597")}}  Type{{.}}: "{{.}}",
+{{range .}}{{if (ne . "NSAPPTR")}}  Type{{.}}: "{{.}}",
 {{end}}{{end}}                    TypeNSAPPTR:    "NSAP-PTR",
 }
 
@@ -76,6 +77,9 @@ func main() {
 	if err := headerFunc.Execute(source, types); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
+
+	types = slices.DeleteFunc(types, func(s string) bool { return s == "RFC3597" })
+
 	if err := TypeToRR.Execute(source, types); err != nil {
 		log.Fatalf("Failed to generate %s: %v", out, err)
 	}
