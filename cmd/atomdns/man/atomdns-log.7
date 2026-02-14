@@ -62,7 +62,7 @@ A typical example looks like this:
 .RS
 
 .nf
-2025/10/06 07:25:52 INFO example.org. remote=::1 port=40689 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
+2025/10/06 07:25:52 INFO example.org. network=udp remote=::1 port=40689 id=23343 type=MX class=IN name=example.org. size=52 bufsize=1232 opcode=QUERY
 
 .fi
 .RE
@@ -73,13 +73,13 @@ Which says:
 .IP \(bu 4
 Zone getting the request: \fB\fCexample.org.\fR.
 .IP \(bu 4
+Network: \fB\fCudp\fR. Other options are \fB\fCtcp\fR or \fB\fCunix\fR.
+.IP \(bu 4
 Remote address and port: \fB\fC::1 40689\fR.
 .IP \(bu 4
 Query ID \fB\fC23343\fR.
 .IP \(bu 4
-Question type, question class, incoming question name: \fB\fCMX IN example.ORG.\fR.
-.IP \(bu 4
-Network: \fB\fCudp\fR.
+Question type, question class, incoming question name: \fB\fCMX IN example.org.\fR.
 .IP \(bu 4
 Size in bytes: \fB\fC52\fR.
 .IP \(bu 4
@@ -95,7 +95,7 @@ Optionally we can also see:
 .RS
 
 .nf
-2025/10/06 07:25:52 INFO example.org. id.id=5FOXMDAG6YAHD6R7QOZ4UTX7VQ remote=::1 port=40689 ecs.addr=198.51.100.0 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
+2025/10/06 07:25:52 INFO example.org. id.id=5FOXMDAG6YAHD6R7QOZ4UTX7VQ network=udp remote=::1 port=40689 ecs.addr=198.51.100.0 id=23343 type=MX class=IN name=example.org. size=52 bufsize=1232 opcode=QUERY
 
 .fi
 .RE
