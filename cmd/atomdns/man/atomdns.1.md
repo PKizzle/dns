@@ -42,7 +42,7 @@ __________________________________\o/_______
 ```
 
 There is optional positional argument, the **CONFFILE** to configure atomdns. If not given atomdns will use
-a built-in Conffile:
+a builtin Conffile:
 
 ```confffile
 {
@@ -82,13 +82,16 @@ The following handlers are available:
 - _dbhosts_ - serve data from `/etc/hosts`. See atomdns-dbhost(7).
 - _dbsqilte_ - serve zone data from a SQLite database. See atomdns-dbsqlite(7).
 - _drunk_ - test client behavior. See atomdns-drunk(7).
+- _ecs_ - add EDNS client subnet to the context. See atomdns-ecs(7).
 - _geoip_ - add geographical location data. See atomdns-geoip(7).
 - _global_ - hold global server properties. See atomdns-global(7).
+- _id_ - add unique ID to the context. See atomdns-id(7).
 - _import_ - includes files or references snippets from a Conffile. See atomdns-import(7).
+- _kill_ - stop atomdns after a duration. See atomdns-kill(7).
 - _log_ - log queries. See atomdns-log(7).
 - _metrics_ - enable [prometheus](https://prometheus.io/) metrics. See atomdns-metrics(7).
 - _nsid_ - adds an identifier of this server to each reply. See atomdns-nsid(7).
-- _reload_ - reload after SIGHUP. See atomdns-reload(7).
+- _refuse_ - refuse queries. See atomdns-refuse(7).
 - _sign_ - add DNSSEC records to zone files. See atomdns-sign(7).
 - _template_ - use Go templates to reply. See atomdns-template(7).
 - _url_ - serve zone data from an URL. See atomdns-url(7).

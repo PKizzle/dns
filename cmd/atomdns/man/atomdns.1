@@ -59,7 +59,7 @@ succesful you are greeted with a banner (unless \fB\fCquiet\fR is true see atomd
 
 .PP
 There is optional positional argument, the \fBCONFFILE\fP to configure atomdns. If not given atomdns will use
-a built\-in Conffile:
+a builtin Conffile:
 
 .PP
 .RS
@@ -117,11 +117,17 @@ The following handlers are available:
 .IP \(bu 4
 \fIdrunk\fP \- test client behavior. See atomdns\-drunk(7).
 .IP \(bu 4
+\fIecs\fP \- add EDNS client subnet to the context. See atomdns\-ecs(7).
+.IP \(bu 4
 \fIgeoip\fP \- add geographical location data. See atomdns\-geoip(7).
 .IP \(bu 4
 \fIglobal\fP \- hold global server properties. See atomdns\-global(7).
 .IP \(bu 4
+\fIid\fP \- add unique ID to the context. See atomdns\-id(7).
+.IP \(bu 4
 \fIimport\fP \- includes files or references snippets from a Conffile. See atomdns\-import(7).
+.IP \(bu 4
+\fIkill\fP \- stop atomdns after a duration. See atomdns\-kill(7).
 .IP \(bu 4
 \fIlog\fP \- log queries. See atomdns\-log(7).
 .IP \(bu 4
@@ -130,7 +136,7 @@ The following handlers are available:
 .IP \(bu 4
 \fInsid\fP \- adds an identifier of this server to each reply. See atomdns\-nsid(7).
 .IP \(bu 4
-\fIreload\fP \- reload after SIGHUP. See atomdns\-reload(7).
+\fIrefuse\fP \- refuse queries. See atomdns\-refuse(7).
 .IP \(bu 4
 \fIsign\fP \- add DNSSEC records to zone files. See atomdns\-sign(7).
 .IP \(bu 4
