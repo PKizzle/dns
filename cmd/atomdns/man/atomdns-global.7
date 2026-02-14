@@ -47,6 +47,12 @@ global section, see the configuration examples below.
             inflight EXPR
         }
     }
+    dou {
+        addr SOCKET
+        limits {
+            run EXPR
+        }
+    }
     tls ISSUER {
         cert CERT KEY
         ca URL
@@ -145,7 +151,7 @@ This requires a \fB\fCtls\fR setup too.
 
 .SH ""\fB\fCdoh\fR
 .PP
-With \fB\fCdoh\fR you set http server options, defined are.
+With \fB\fCdoh\fR you set HTTP server options, defined are.
 
 .IP \(bu 4
 \fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:443\fR.
@@ -172,8 +178,23 @@ port.
 .PP
 This requires a \fB\fCtls\fR setup too.
 
+.SH ""\fB\fCdou\fR
 .PP
-Further servers like \fB\fCdoq\fR (DNS over QUIC) will probably be added in the future.
+With \fB\fCdou\fR you configure an Unix socket to listen on, defined are:
+
+.IP \(bu 4
+\fB\fCaddr\fR \fBSOCKET\fP: listen on this Unix socket. Note there are OS limits on the length of the socket's file name.
+If this is a relative name the path from \fB\fCroot\fR will be prepended.
+.IP \(bu 4
+\fB\fClimits\fR set further limits:
+
+.RS
+.IP \(en 4
+\fB\fCrun\fR \fBEXPR\fP, run this many servers the default is \fB\fCNumCPU()*1\fR, this can be a bare number,
+like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole number. \fB\fCNumCPU()*\fR may be spelled in lowercase.
+
+.RE
+
 
 .SH ""\fB\fCtls\fR
 .PP
