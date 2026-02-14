@@ -205,14 +205,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					if len(files) != 1 {
 						return d.PropErr(fmt.Errorf("need single socket"))
 					}
-					g.UnixAddr = files[0]
+					g.UnixAddr = conffile.Tilde(files[0])
 					if !filepath.IsAbs(g.UnixAddr) {
 						g.UnixAddr = filepath.Join(g.Root, g.UnixAddr)
 					}
 				default:
 					return d.ArgErr()
 				}
-
 			}
 			g.OnStartup(func() error {
 				log.Info("Startup", "dou", g.UnixAddr, "tcp", "-1", "run", g.UnixLimits.Servers)

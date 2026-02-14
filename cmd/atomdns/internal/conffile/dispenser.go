@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -366,4 +368,16 @@ func (d *Dispenser) RemainingDurations() ([]time.Duration, error) {
 		durs = append(durs, x)
 	}
 	return durs, nil
+}
+
+// Tilde will replace "~" as the first path element with the home directory of the user running us.
+func Tilde(s string) string {
+	if !strings.HasPrefix(s, "~") {
+		return s
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return s
+	}
+	return filepath.Join(home, strings.TrimPrefix(s, "~"))
 }

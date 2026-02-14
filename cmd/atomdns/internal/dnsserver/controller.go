@@ -29,10 +29,12 @@ func NewTestController(input string) *Controller {
 }
 
 func (c *Controller) Path() string {
-	if filepath.IsAbs(c.Val()) {
-		return c.Val()
+	p := c.Val()
+	p = conffile.Tilde(p)
+	if filepath.IsAbs(p) {
+		return p
 	}
-	return filepath.Join(c.Global.Root, c.Val())
+	return filepath.Join(c.Global.Root, p)
 }
 
 func (c *Controller) RemainingPaths() []string {
@@ -40,14 +42,15 @@ func (c *Controller) RemainingPaths() []string {
 	if len(args) == 0 {
 		return nil
 	}
-	paths := make([]string, len(args))
 
+	paths := make([]string, len(args))
 	for i, arg := range args {
-		if filepath.IsAbs(arg) {
-			paths[i] = arg
+		paths[i] = conffile.Tilde(arg)
+
+		if filepath.IsAbs(paths[i]) {
 			continue
 		}
-		paths[i] = filepath.Join(c.Global.Root, arg)
+		paths[i] = filepath.Join(c.Global.Root, paths[i])
 	}
 	return paths
 }
