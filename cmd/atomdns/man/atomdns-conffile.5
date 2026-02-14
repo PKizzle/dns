@@ -51,6 +51,9 @@ Environment variables are supported and either the Unix or Windows form may be u
 \fB\fC{%ENV_VAR_2%}\fR.
 
 .PP
+The \fB\fC~\fR (tilde) character and path names will be expanded to the home directory of the current user.
+
+.PP
 As an way to test things Conffile also supports a shorter way of writing things, but this only works for a
 single handler:
 
@@ -85,7 +88,7 @@ Is a valid configuration and is supported by \fB\fCatomdns\fR.
 .PP
 A Conffile must have a global block, this is a section without a zone and holds various server wide
 options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
-and DOH) you have a section \fB\fCdns\fR, \fB\fCdot\fR and \fB\fCdoh\fR where you can configure the server, most notably the
+and DOH) you have a section \fB\fCdns\fR, \fB\fCdot\fR, \fB\fCdoh\fR and \fB\fCdou\fR where you can configure the server, most notably the
 address and port you want to listen on.
 
 .PP
