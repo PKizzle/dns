@@ -17,6 +17,6 @@ example.org {
 `)
 	if err == nil {
 		cancel()
-		t.Fatalf("expected 'origin already registered error, got not")
+		t.Fatalf("expected 'origin already registered' error, got none")
 	}
 }

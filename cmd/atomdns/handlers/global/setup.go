@@ -226,6 +226,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				log.Info("Startup", "dou", g.UnixAddr, "tcp", "-1", "run", g.UnixLimits.Servers)
 				return nil
 			})
+			g.OnShutdown(func() error {
+				return os.Remove(g.UnixAddr)
+			})
 
 		case "metrics":
 			g.MetricsN = 10

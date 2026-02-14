@@ -262,9 +262,6 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
 	}
-	if len(s.unixservers) > 0 {
-		defer os.Remove(global.UnixAddr)
-	}
 
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
 	if global.TlsCertConfig != nil {
