@@ -35,6 +35,8 @@ started anywhere on a line.
 Environment variables are supported and either the Unix or Windows form may be used: `{$ENV_VAR_1}` or
 `{%ENV_VAR_2%}`.
 
+The `~` (tilde) character and path names will be expanded to the home directory of the current user.
+
 As an way to test things Conffile also supports a shorter way of writing things, but this only works for a
 single handler:
 
@@ -57,7 +59,7 @@ Is a valid configuration and is supported by `atomdns`.
 
 A Conffile must have a global block, this is a section without a zone and holds various server wide
 options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
-and DOH) you have a section `dns`, `dot` and `doh` where you can configure the server, most notably the
+and DOH) you have a section `dns`, `dot`, `doh` and `dou` where you can configure the server, most notably the
 address and port you want to listen on.
 
 ```txt

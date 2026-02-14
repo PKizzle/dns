@@ -37,9 +37,9 @@
             inflight 200 # Allow only 200 in-flight requests to stop the server from being overwhelmed.
         }
     }
-    # dou configures the DNS over Unix domain sockets listener
+    # dou configures the DNS over Unix domain sockets listener.
     dou {
-        addr /tmp/dns.sock
+        addr ~/dns.sock # Here we use ~ to refer to our home directory.
     }
     # tls configures how atomdns configures TLS for doh and dot. In this case it's manual with the
     # certificates being places on the local disk. Note that the `root` directive is applied here, so
