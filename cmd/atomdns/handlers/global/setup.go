@@ -197,6 +197,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 		case "dou":
 			g.UnixLimits.Servers = 1
+			g.UnixLimits.MaxTCPQueries = -1
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
@@ -207,15 +208,6 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					g.UnixAddr = files[0]
 					if !filepath.IsAbs(g.UnixAddr) {
 						g.UnixAddr = filepath.Join(g.Root, g.UnixAddr)
-					}
-				case "limits":
-					l, err := g.SetupLimits(&d)
-					if err != nil {
-						return err
-					}
-					g.UnixLimits.MaxTCPQueries = -1
-					if l.Servers != -1 {
-						g.UnixLimits.Servers = l.Servers
 					}
 				default:
 					return d.ArgErr()

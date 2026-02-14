@@ -38,6 +38,7 @@ func split(val string) (handler, key string) {
 
 func (l *Log) Setup(co *dnsserver.Controller) error {
 	l.Contexts = map[string][]string{}
+	l.UnixAddr = co.Global.UnixAddr
 
 	co.Next() // "log"
 	if co.NextBlock(0) {
