@@ -47,6 +47,9 @@ global section, see the configuration examples below.
             inflight EXPR
         }
     }
+    dou {
+        addr SOCKET
+    }
     tls ISSUER {
         cert CERT KEY
         ca URL
@@ -122,7 +125,7 @@ start 10 server instances. The maximum value is the number of CPUs * 1024.
 
 .SH ""\fB\fCdot\fR
 .PP
-With \fB\fCdot\fR you control DNS TLS server options, defined are:
+With \fB\fCdot\fR you control DNS TLS server options, defined are.
 
 .IP \(bu 4
 \fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:853\fR.
@@ -145,7 +148,7 @@ This requires a \fB\fCtls\fR setup too.
 
 .SH ""\fB\fCdoh\fR
 .PP
-With \fB\fCdoh\fR you set http server options, defined are.
+With \fB\fCdoh\fR you set HTTP server options, defined are.
 
 .IP \(bu 4
 \fB\fCaddr\fR \fBADDRESS\fP: listen on this address, default is \fB\fC[::]:443\fR.
@@ -163,7 +166,7 @@ like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole numb
 
 
 .PP
-To allow the certificate challenge, all DOH web servers will also handle the TLS\-ALPN\-1 challenge,
+To allow the certificate challenge, all DOH HTTP servers will also handle the TLS\-ALPN\-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
 started on that port, \fIjust\fP for the certificate challenge. N.B. This is only done if the port isn't "0",
 because that is usually used in testing scenarios. This requires the atomdns binary to be able to bind to that
@@ -172,8 +175,18 @@ port.
 .PP
 This requires a \fB\fCtls\fR setup too.
 
+.SH ""\fB\fCdou\fR
 .PP
-Further servers like \fB\fCdoq\fR (DNS over QUIC) will probably be added in the future.
+With \fB\fCdou\fR you configure an Unix domain socket to listen on, defined are.
+
+.IP \(bu 4
+\fB\fCaddr\fR \fBSOCKET\fP: listen on this Unix domain socket. Note there are OS limits on the length of the socket's file name.
+If this is a relative name the path from \fB\fCroot\fR will be prepended.
+
+
+.PP
+Querying over a Unix domain socket needs to be done using the TCP packet format, for example:
+\fB\fCkdig +tcp www.example.org @/tmp/dns.sock\fR, if \fBSOCKET\fP is set to \fB\fC/tmp/dns.sock\fR.
 
 .SH ""\fB\fCtls\fR
 .PP

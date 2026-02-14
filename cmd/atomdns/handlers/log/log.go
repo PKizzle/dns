@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"log/slog"
+	"net"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
@@ -11,6 +12,7 @@ import (
 
 type Log struct {
 	Contexts map[string][]string
+	UnixAddr string
 }
 
 func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
@@ -25,16 +27,27 @@ func (l *Log) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 			ecs = slog.Group("ecs", slog.Any("addr", a))
 		}
 
+		_, unix := w.RemoteAddr().(*net.UnixAddr)
 		log := slog.Default().
 			With(dnsctx.Id(ctx)).
-			With("remote", dnsutil.RemoteIP(w)).
+			With("network", func() string {
+				if unix {
+					return "unix"
+				}
+				return dnsutil.Network(w)
+			}()).
+			With("remote", func() string {
+				if unix {
+					return l.UnixAddr
+				}
+				return dnsutil.RemoteIP(w)
+			}()).
 			With("port", dnsutil.RemotePort(w)).
 			With(ecs).
 			With(slog.Int("id", int(r.ID))).
 			With("type", func() string { _, t := dnsutil.Question(r); return dnsutil.TypeToString(t) }()).
 			With("class", dnsutil.ClassToString(r.Question[0].Header().Class)).
 			With("name", func() string { z, _ := dnsutil.Question(r); return z }()).
-			With("network", dnsutil.Network(w)).
 			With(slog.Int("size", len(r.Data))).
 			With(slog.Int("bufsize", func() int {
 				if r.UDPSize < 512 {

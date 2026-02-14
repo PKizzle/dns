@@ -24,10 +24,12 @@ func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening st
 	s.MsgInvalidFunc = func(m *dns.Msg, err error) {
 		log.Printf("Invalid message: %s - %T\n%s", err, err, bin.Dump(m.Data))
 	}
+	cancel = func() { s.Shutdown(context.TODO()) }
 
 	for _, opt := range opts {
 		opt(s)
 	}
+
 	if s.Net == "" {
 		s.Net = "udp"
 	}
@@ -48,7 +50,6 @@ func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening st
 	if s.Listener != nil {
 		listening = s.Listener.Addr().String()
 	}
-	cancel = func() { s.Shutdown(context.TODO()) }
 	return cancel, listening, nil
 }
 

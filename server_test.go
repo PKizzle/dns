@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"os"
 	"testing"
 
 	"codeberg.org/miekg/dns"
@@ -31,19 +32,32 @@ func TestServer(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		network string
+		addr    string
 		run     func(laddr string, opts ...func(*dns.Server)) (func(), string, error)
 	}{
-		{"udp", "udp", dnstest.UDPServer},
-		{"tcp", "tcp", dnstest.TCPServer},
-		{"tcp-tls", "tcp", dnstest.TLSServer},
+		{"udp", "udp", ":0", dnstest.UDPServer},
+		{"tcp", "tcp", ":0", dnstest.TCPServer},
+		{"tcp-tls", "tcp", ":0", dnstest.TLSServer},
+		{"unix", "unix", "/tmp/dns.sock", dnstest.Server},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dns.HandleFunc("miek.nl.", helloHandler)
 			dns.HandleFunc("example.com.", anotherHelloHandler)
 			defer dns.HandleRemove("miek.nl.")
-			defer dns.HandleRemove("example.nl.")
+			defer dns.HandleRemove("example.com.")
 
-			cancel, addr, _ := tc.run(":0")
+			opt := func(s *dns.Server) {}
+			if tc.name == "unix" {
+				opt = func(s *dns.Server) {
+					s.Net = "unix"
+					s.Listener, _ = net.Listen("unix", tc.addr)
+				}
+				defer os.Remove(tc.addr)
+			}
+			cancel, addr, err := tc.run(tc.addr, opt)
+			if err != nil {
+				t.Fatal(err)
+			}
 			defer cancel()
 
 			c := &dns.Client{Transport: dns.NewTransport()}

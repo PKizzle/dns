@@ -39,16 +39,16 @@ Where:
 A typical example looks like this:
 
 ```txt
-2025/10/06 07:25:52 INFO example.org. remote=::1 port=40689 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
+2025/10/06 07:25:52 INFO example.org. network=udp remote=::1 port=40689 id=23343 type=MX class=IN name=example.org. size=52 bufsize=1232 opcode=QUERY
 ```
 
 Which says:
 
 - Zone getting the request: `example.org.`.
+- Network: `udp`. Other options are `tcp` or `unix`.
 - Remote address and port: `::1 40689`.
 - Query ID `23343`.
-- Question type, question class, incoming question name: `MX IN example.ORG.`.
-- Network: `udp`.
+- Question type, question class, incoming question name: `MX IN example.org.`.
 - Size in bytes: `52`.
 - Advertised UDP buffer: `1232`.
 - Opcode: `QUERY`.
@@ -56,7 +56,7 @@ Which says:
 Optionally we can also see:
 
 ```txt
-2025/10/06 07:25:52 INFO example.org. id.id=5FOXMDAG6YAHD6R7QOZ4UTX7VQ remote=::1 port=40689 ecs.addr=198.51.100.0 id=23343 type=MX class=IN name=example.ORG. network=udp size=52 bufsize=1232 opcode=QUERY
+2025/10/06 07:25:52 INFO example.org. id.id=5FOXMDAG6YAHD6R7QOZ4UTX7VQ network=udp remote=::1 port=40689 ecs.addr=198.51.100.0 id=23343 type=MX class=IN name=example.org. size=52 bufsize=1232 opcode=QUERY
 ```
 
 - `ecs.addr=....`, the ecs address if found in the request, via the _ecs_ handler.

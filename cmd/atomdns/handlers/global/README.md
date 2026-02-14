@@ -42,6 +42,9 @@ global section, see the configuration examples below.
             inflight EXPR
         }
     }
+    dou {
+        addr SOCKET
+    }
     tls ISSUER {
         cert CERT KEY
         ca URL
@@ -91,7 +94,7 @@ With `dns` you set DNS (port (usually) 53, TCP and UDP) server options, defined 
 
 ## `dot`
 
-With `dot` you control DNS TLS server options, defined are:
+With `dot` you control DNS TLS server options, defined are.
 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:853`.
 - `limits` set further limits:
@@ -104,7 +107,7 @@ This requires a `tls` setup too.
 
 ## `doh`
 
-With `doh` you set http server options, defined are.
+With `doh` you set HTTP server options, defined are.
 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
 - `limits` set further limits:
@@ -112,7 +115,7 @@ With `doh` you set http server options, defined are.
     like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()*` may be spelled in lowercase.
   - `inflight` **EXPR**, like `run`, how many inflight connection are we allowing, default is 1024, -1 disables.
 
-To allow the certificate challenge, all DOH web servers will also handle the TLS-ALPN-1 challenge,
+To allow the certificate challenge, all DOH HTTP servers will also handle the TLS-ALPN-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
 started on that port, _just_ for the certificate challenge. N.B. This is only done if the port isn't "0",
 because that is usually used in testing scenarios. This requires the atomdns binary to be able to bind to that
@@ -120,7 +123,15 @@ port.
 
 This requires a `tls` setup too.
 
-Further servers like `doq` (DNS over QUIC) will probably be added in the future.
+## `dou`
+
+With `dou` you configure an Unix domain socket to listen on, defined are.
+
+- `addr` **SOCKET**: listen on this Unix domain socket. Note there are OS limits on the length of the socket's file name.
+  If this is a relative name the path from `root` will be prepended.
+
+Querying over a Unix domain socket needs to be done using the TCP packet format, for example:
+`kdig +tcp www.example.org @/tmp/dns.sock`, if **SOCKET** is set to `/tmp/dns.sock`.
 
 ## `tls`
 

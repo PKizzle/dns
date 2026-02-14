@@ -42,6 +42,9 @@ type Server struct {
 
 	httpservers []*atomhttp.Server
 	httpstarted chan error
+
+	unixservers []*dns.Server
+	unixstarted chan error
 }
 
 // Start starts a server.
@@ -50,13 +53,13 @@ func (s *Server) Start() error {
 		return err
 	}
 	for i := range s.servers {
-		go Serve(s.started, s.servers[i], s.global)
+		go Serve(s.started, s.servers[i])
 	}
 	// drain the channel, we either get a nil for success or otherwise an error _for each server_ started
 	for range s.servers {
 		err := <-s.started
 		if err != nil {
-			return err
+			return fmt.Errorf("dns: %s", err)
 		}
 	}
 
@@ -66,12 +69,12 @@ func (s *Server) Start() error {
 				srv.Listener = netutil.LimitListener(srv.Listener, x)
 			}
 		}
-		go Serve(s.tlsstarted, s.tlsservers[i], s.global)
+		go Serve(s.tlsstarted, s.tlsservers[i])
 	}
 	for range s.tlsservers {
 		err := <-s.tlsstarted
 		if err != nil {
-			return err
+			return fmt.Errorf("dot: %s", err)
 		}
 	}
 
@@ -80,7 +83,22 @@ func (s *Server) Start() error {
 	}
 	for range s.httpservers {
 		if err := <-s.httpstarted; err != nil {
+			return fmt.Errorf("doh: %s", err)
+		}
+	}
+
+	for i := range s.unixservers {
+		opt := func(srv *dns.Server) (err error) {
+			srv.Net = "unix"
+			srv.Listener, err = net.Listen("unix", s.global.UnixAddr)
 			return err
+		}
+		go Serve(s.unixstarted, s.unixservers[i], opt)
+	}
+	for range s.unixservers {
+		err := <-s.unixstarted
+		if err != nil {
+			return fmt.Errorf("dou: %s", err)
 		}
 	}
 
@@ -93,6 +111,9 @@ func (s *Server) Start() error {
 			roles = append(roles, "DOT:"+s.TlsAddr()[0])
 		}
 	}
+	if s.global.UnixLimits.Servers > 0 {
+		roles = append(roles, "DOU:"+s.UnixAddr()[0])
+	}
 
 	if bi := builtinfo(); len(bi) == 4 {
 		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
@@ -102,7 +123,13 @@ func (s *Server) Start() error {
 	return nil
 }
 
-func Serve(ch chan error, srv *dns.Server, global *global.Global) {
+func Serve(ch chan error, srv *dns.Server, opts ...func(s *dns.Server) error) {
+	for _, opt := range opts {
+		if err := opt(srv); err != nil {
+			ch <- err
+			return
+		}
+	}
 	if err := srv.ListenAndServe(); err != nil {
 		ch <- err
 		return
@@ -214,6 +241,27 @@ func New(conf string, r io.Reader) (*Server, error) {
 			}
 		})
 	}
+
+	// dou servers
+	s.unixservers = make([]*dns.Server, global.UnixLimits.Servers)
+	s.unixstarted = make(chan error, len(s.unixservers))
+	for j := range s.unixservers {
+		s.unixservers[j] = &dns.Server{
+			Handler: s.mux, Net: "unix", Addr: global.UnixAddr, MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
+		}
+		var i atomic.Uint64
+		N := global.MetricsN
+		s.unixservers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+			if N == 0 {
+				return
+			}
+			if (i.Add(1)-1)%N == 0 {
+				metrics.Dropped.Inc()
+			}
+		}
+		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
+	}
+
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
 	if global.TlsCertConfig != nil {
 		slog.Debug("Startup running extra server for ACME challenge", "port", "443")
@@ -355,6 +403,14 @@ func (s *Server) HttpAddr() []string {
 func (s *Server) TlsAddr() []string {
 	addr := make([]string, len(s.tlsservers))
 	for i, srv := range s.tlsservers {
+		addr[i] = srv.Listener.Addr().String()
+	}
+	return addr
+}
+
+func (s *Server) UnixAddr() []string {
+	addr := make([]string, len(s.unixservers))
+	for i, srv := range s.unixservers {
 		addr[i] = srv.Listener.Addr().String()
 	}
 	return addr
