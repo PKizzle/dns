@@ -44,9 +44,6 @@ global section, see the configuration examples below.
     }
     dou {
         addr SOCKET
-        limits {
-            run EXPR
-        }
     }
     tls ISSUER {
         cert CERT KEY
