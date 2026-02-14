@@ -247,7 +247,6 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.unixstarted = make(chan error, len(s.unixservers))
 	for j := range s.unixservers {
 		s.unixservers[j] = &dns.Server{
-			ReuseAddr: true, ReusePort: true,
 			Handler: s.mux, Net: "unix", Addr: global.UnixAddr, MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
 		}
 		var i atomic.Uint64
