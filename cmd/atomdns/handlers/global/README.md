@@ -42,6 +42,12 @@ global section, see the configuration examples below.
             inflight EXPR
         }
     }
+    dou {
+        addr SOCKET
+        limits {
+            run EXPR
+        }
+    }
     tls ISSUER {
         cert CERT KEY
         ca URL
@@ -104,7 +110,7 @@ This requires a `tls` setup too.
 
 ## `doh`
 
-With `doh` you set http server options, defined are.
+With `doh` you set HTTP server options, defined are.
 
 - `addr` **ADDRESS**: listen on this address, default is `[::]:443`.
 - `limits` set further limits:
@@ -120,7 +126,15 @@ port.
 
 This requires a `tls` setup too.
 
-Further servers like `doq` (DNS over QUIC) will probably be added in the future.
+## `dou`
+
+With `dou` you configure an Unix socket to listen on, defined are:
+
+- `addr` **SOCKET**: listen on this Unix socket. Note there are OS limits on the length of the socket's file name.
+  If this is a relative name the path from `root` will be prepended.
+- `limits` set further limits:
+  - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
+    like 5, or an expression like `NumCPU()*N`, where **N** is a whole number. `NumCPU()*` may be spelled in lowercase.
 
 ## `tls`
 

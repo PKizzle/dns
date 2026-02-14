@@ -34,6 +34,9 @@ type Global struct {
 	// dot
 	TlsAddr   string
 	TlsLimits Limits
+	// dou
+	UnixAddr   string
+	UnixLimits Limits
 	// tls
 	TlsConfig     *tls.Config // manual
 	TlsCertConfig *certmagic.Config

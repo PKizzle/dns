@@ -91,6 +91,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				}
 			}
 		case "dns":
+			g.Limits.Servers = 1
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
@@ -121,6 +122,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 
 		case "dot":
+			g.TlsLimits.Servers = 1
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
@@ -148,18 +150,17 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			if g.TlsLimits.Servers > 0 {
-				inf := slog.Attr{}
-				if g.TlsLimits.MaxInflight > 0 {
-					inf = slog.Int("inflight", g.TlsLimits.MaxInflight)
-				}
-				g.OnStartup(func() error {
-					log.Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
-					return nil
-				})
+			inf := slog.Attr{}
+			if g.TlsLimits.MaxInflight > 0 {
+				inf = slog.Int("inflight", g.TlsLimits.MaxInflight)
 			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
+				return nil
+			})
 
 		case "doh":
+			g.HttpLimits.Servers = 1
 			for d.NextBlock(0) {
 				switch d.Val() {
 				case "addr":
@@ -186,16 +187,46 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			if g.HttpLimits.Servers > 0 {
-				inf := slog.Attr{}
-				if g.HttpLimits.MaxInflight > 0 {
-					inf = slog.Int("inflight", g.HttpLimits.MaxInflight)
-				}
-				g.OnStartup(func() error {
-					log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
-					return nil
-				})
+			inf := slog.Attr{}
+			if g.HttpLimits.MaxInflight > 0 {
+				inf = slog.Int("inflight", g.HttpLimits.MaxInflight)
 			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
+				return nil
+			})
+		case "dou":
+			g.UnixLimits.Servers = 1
+			for d.NextBlock(0) {
+				switch d.Val() {
+				case "addr":
+					files := d.RemainingArgs()
+					if len(files) != 1 {
+						return d.PropErr(fmt.Errorf("need single socket"))
+					}
+					g.UnixAddr = files[0]
+					if !filepath.IsAbs(g.UnixAddr) {
+						g.UnixAddr = filepath.Join(g.Root, g.UnixAddr)
+					}
+				case "limits":
+					l, err := g.SetupLimits(&d)
+					if err != nil {
+						return err
+					}
+					g.UnixLimits.MaxTCPQueries = -1
+					if l.Servers != -1 {
+						g.UnixLimits.Servers = l.Servers
+					}
+				default:
+					return d.ArgErr()
+				}
+
+			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "dou", g.UnixAddr, "tcp", "-1", "run", g.UnixLimits.Servers)
+				return nil
+			})
+
 		case "metrics":
 			g.MetricsN = 10
 			addr := "localhost:9153"
