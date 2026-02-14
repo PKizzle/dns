@@ -128,9 +128,9 @@ This requires a `tls` setup too.
 
 ## `dou`
 
-With `dou` you configure an Unix socket to listen on, defined are:
+With `dou` you configure an Unix domain socket to listen on, defined are:
 
-- `addr` **SOCKET**: listen on this Unix socket. Note there are OS limits on the length of the socket's file name.
+- `addr` **SOCKET**: listen on this Unix domain socket. Note there are OS limits on the length of the socket's file name.
   If this is a relative name the path from `root` will be prepended.
 - `limits` set further limits:
   - `run` **EXPR**, run this many servers the default is `NumCPU()*1`, this can be a bare number,
