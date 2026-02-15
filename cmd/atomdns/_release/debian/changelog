@@ -1,35 +1,5 @@
-atomdns (065) unstable; urgency=medium
+atomdns (066) unstable; urgency=medium
 
   * New upstream release
 
- -- Miek Gieben <miek@miek.nl>  Tue, 20 Jan 2026 13:50:51 +0100
-
-atomdns (064) unstable; urgency=medium
-
-  * New upstream release
-
- -- Miek Gieben <miek@miek.nl>  Mon, 19 Jan 2026 15:52:16 +0100
-
-atomdns (063) unstable; urgency=medium
-
-  * New upstream release
-
- -- Miek Gieben <miek@miek.nl>  Sun, 18 Jan 2026 11:21:59 +0100
-
-atomdns (062) unstable; urgency=medium
-
-  * New upstream release
-
- -- Miek Gieben <miek@miek.nl>  Wed, 14 Jan 2026 21:50:18 +0100
-
-atomdns (061) unstable; urgency=medium
-
-  * New upstream release
-
- -- Miek Gieben <miek@miek.nl>  Tue, 13 Jan 2026 14:29:33 +0100
-
-atomdns (060) unstable; urgency=medium
-
-  * New upstream release
-
- -- Miek Gieben <miek@miek.nl>  Sun, 21 Dec 2025 10:33:27 +0000
+ -- Miek Gieben <miek@miek.nl>  Sun, 15 Feb 2026 07:16:47 +0000
