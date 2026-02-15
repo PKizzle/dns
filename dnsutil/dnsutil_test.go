@@ -2,6 +2,9 @@ package dnsutil
 
 import (
 	"testing"
+
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnstest"
 )
 
 func TestTrim(t *testing.T) {
@@ -56,5 +59,24 @@ func TestRandomize(t *testing.T) {
 		if rand == tc {
 			t.Fatalf("expected randomized string to not be equal to input: %s", tc)
 		}
+	}
+}
+
+func TestRemoteIP(t *testing.T) {
+	testcases := []struct {
+		name string
+		w    dns.ResponseWriter
+		exp  string
+	}{
+		{"ipv4", dnstest.NewTestRecorder(), "198.51.100.1"},
+		{"ipv6", dnstest.NewTestRecorder6(), "2001:db8::1"},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := RemoteIP(tc.w)
+			if got != tc.exp {
+				t.Fatalf("expected %s, got %s", tc.exp, got)
+			}
+		})
 	}
 }

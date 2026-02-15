@@ -29,10 +29,32 @@ func TestLog(t *testing.T) {
 	ctx = dnsctx.WithValue(ctx, "hello/here", "not far")
 	ctx = dnsctx.WithValue(ctx, "hello/there", "far")
 
-	tw := dnstest.NewTestRecorder()
-	l.HandlerFunc(atomtest.Echo).ServeDNS(ctx, tw, m)
-	tw.Msg.Unpack()
-	if !strings.Contains(b.String(), `hello.here="not far" hello.there=far`) {
-		t.Fatal("expected context items to show up, got none")
+	testcases := []struct {
+		name string
+		exp  []string
+	}{
+		{"ipv4",
+			[]string{`hello.here="not far" hello.there=far`, "remote=198.51.100.1"},
+		},
+		{"ipv6",
+			[]string{`hello.here="not far" hello.there=far`, "remote=2001:db8::1"},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			b.Reset()
+			tw := dnstest.NewTestRecorder()
+			if tc.name == "ipv6" {
+				tw = dnstest.NewTestRecorder6()
+			}
+			l.HandlerFunc(atomtest.Echo).ServeDNS(ctx, tw, m)
+			s := b.String()
+			for _, exp := range tc.exp {
+				if !strings.Contains(s, exp) {
+					t.Fatalf("expected %s, got none", exp)
+				}
+			}
+		})
 	}
 }

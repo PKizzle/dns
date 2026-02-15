@@ -12,9 +12,9 @@ import (
 func RemoteIP(w dns.ResponseWriter) string {
 	switch t := w.RemoteAddr().(type) {
 	case *net.UDPAddr:
-		return t.AddrPort().Addr().String()
+		return t.IP.String()
 	case *net.TCPAddr:
-		return t.AddrPort().Addr().String()
+		return t.IP.String()
 	}
 	return ""
 }
@@ -23,9 +23,9 @@ func RemoteIP(w dns.ResponseWriter) string {
 func LocalIP(w dns.ResponseWriter) string {
 	switch t := w.LocalAddr().(type) {
 	case *net.UDPAddr:
-		return t.AddrPort().Addr().String()
+		return t.IP.String()
 	case *net.TCPAddr:
-		return t.AddrPort().Addr().String()
+		return t.IP.String()
 	}
 	return ""
 }
