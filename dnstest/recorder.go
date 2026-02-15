@@ -37,6 +37,9 @@ func NewRecorder(w dns.ResponseWriter) *Recorder { return &Recorder{w: w, Start:
 // rec := dnstest.NewRecorder(&dnstest.ResponseWriter{}) which is useful in tests.
 func NewTestRecorder() *Recorder { return NewRecorder(&ResponseWriter{}) }
 
+// NewTestRecorder6 works like [NewTestRecorder], but for IPv6.
+func NewTestRecorder6() *Recorder { return NewRecorder(&ResponseWriter6{}) }
+
 func (r *Recorder) Write(b []byte) (int, error) {
 	// See [Msg.WriteTo] that defaults to TCP.
 	r.Msg = &dns.Msg{Data: make([]byte, len(b)-2)}

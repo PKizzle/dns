@@ -6,7 +6,7 @@
     log {
         debug # Enable debug logging.
         #json # Enable for JSON log output.
-        disable # Start without logging and wait for SIGUSR1 to enable query logging.
+        #disable # Start without logging and wait for SIGUSR1 to enable query logging.
     }
     health # Enable the health endpoint.
     metrics # Enable prometheus metrics.
