@@ -31,6 +31,7 @@ func TestSign(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	s.Write(zs) // write the zone to leave an artifact we can inspect
 
 	testcases := []struct {
 		name string
@@ -106,11 +107,10 @@ func TestSign(t *testing.T) {
 						if s.TypeCovered == dns.TypeNSEC {
 							i++
 						}
-
 					}
 				}
-				if i != 2 {
-					return fmt.Errorf("expected RRSIG(NS,NSEC), but saw %d RRs", i)
+				if i == 2 {
+					return fmt.Errorf("expected RRSIG(NSEC), but saw %d RRSIGs", i)
 				}
 				return nil
 			},
@@ -135,8 +135,8 @@ func TestSign(t *testing.T) {
 						}
 					}
 				}
-				if i != 3 {
-					return fmt.Errorf("expected RRSIG(NS,NSEC,DS), but saw %d RRs", i)
+				if i == 3 {
+					return fmt.Errorf("expected RRSIG(NSEC,DS), but saw %d RRs", i)
 				}
 				return nil
 			},

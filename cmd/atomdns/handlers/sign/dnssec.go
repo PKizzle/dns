@@ -59,7 +59,11 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 			if t == dns.TypeRRSIG {
 				continue
 			}
-			rrset = []dns.RR{}
+			if t == dns.TypeNS && len(n.Name) > len(z.Origin()) { // delegation NS
+				continue
+			}
+
+			rrset = rrset[:0]
 			for _, rr := range n.RRs {
 				if dns.RRToType(rr) == t {
 					if t == dns.TypeSOA {
@@ -123,9 +127,9 @@ type nsecfn struct {
 func types(n *dnszone.Node, ttl uint32) []uint16 {
 	// while looking at them anyway we set the ttl.
 	types := []uint16{}
-	for _, rr := range n.RRs {
-		types = append(types, dns.RRToType(rr))
-		rr.Header().TTL = ttl
+	for j := range n.RRs {
+		types = append(types, dns.RRToType(n.RRs[j]))
+		n.RRs[j].Header().TTL = ttl
 	}
 	types = append(types, []uint16{dns.TypeRRSIG, dns.TypeNSEC}...)
 
