@@ -56,14 +56,13 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 		}
 		types := types(n, s.ttl)
 		for _, t := range types {
-			println("TYPE", dns.TypeToString[t])
 			if t == dns.TypeRRSIG {
 				continue
 			}
-
 			if t == dns.TypeNS && len(n.Name) > len(z.Origin()) { // delegation NS
 				continue
 			}
+
 			rrset = rrset[:0]
 			for _, rr := range n.RRs {
 				if dns.RRToType(rr) == t {
