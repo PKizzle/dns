@@ -31,7 +31,8 @@ func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 				break
 			}
 			if _, ok := delegated[n.Name[j:]]; ok {
-				// If we have zone cut records, which is NS and DS and soon DELEG, this is authoritative data.
+				// If we have zone cut records, which is NSEC, DS and DELEG, this is authoritative data.
+				// This must be signed, but NOT the NSs in there.
 				auth = false
 				if zonecut(n) {
 					auth = true
@@ -46,7 +47,8 @@ func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 	})
 }
 
-// zonecut returns true if all RR in n are needed for a zone cut.
+// zonecut returns true if all RR in n are needed for a zone cut. That is: is there authoritative data in this
+// zonecut that we still have to sign like DS, NSEC.
 func zonecut(n *dnszone.Node) bool {
 	i := 0
 	for _, rr := range n.RRs {
