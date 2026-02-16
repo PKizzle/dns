@@ -191,7 +191,9 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 			for _, rr := range encloser.RRs {
 				if dns.RRToType(rr) == dns.TypeNSEC {
 					*section = append(*section, rr)
-					break
+				}
+				if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeNSEC {
+					*section = append(*section, rr)
 				}
 			}
 		}
@@ -203,9 +205,6 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 				}
 				if hint == hintDelegation {
 					if s.TypeCovered == dns.TypeDS {
-						*section = append(*section, rr)
-					}
-					if !ds && s.TypeCovered == dns.TypeNSEC {
 						*section = append(*section, rr)
 					}
 				}
