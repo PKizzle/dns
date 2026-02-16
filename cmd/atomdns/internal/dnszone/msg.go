@@ -158,6 +158,7 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 		r.Answer = append(r.Answer, re.Answer...)
 	}
 
+	ds := false // if no DS is added we need an NSEC proofing it is not there.
 	for _, rr := range encloser.RRs {
 		if dns.RRToType(rr) == qtype {
 			*section = append(*section, rr)
@@ -179,13 +180,22 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 					}
 				}
 			}
-			// cehck the target of NS a get the A/AAAA for it
 			if _, ok := rr.(*dns.DS); ok && r.Security {
 				*section = append(*section, rr)
+				ds = true
 			}
 		}
 	}
 	if r.Security {
+		if hint == hintDelegation && !ds {
+			for _, rr := range encloser.RRs {
+				if dns.RRToType(rr) == dns.TypeNSEC {
+					*section = append(*section, rr)
+					break
+				}
+			}
+		}
+
 		for _, rr := range encloser.RRs {
 			if s, ok := rr.(*dns.RRSIG); ok {
 				if s.TypeCovered == qtype {
@@ -193,6 +203,9 @@ func MsgFound(z Interface, r *dns.Msg, encloser *Node, hint Hint, re *Restart) *
 				}
 				if hint == hintDelegation {
 					if s.TypeCovered == dns.TypeDS {
+						*section = append(*section, rr)
+					}
+					if !ds && s.TypeCovered == dns.TypeNSEC {
 						*section = append(*section, rr)
 					}
 				}

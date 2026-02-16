@@ -113,6 +113,20 @@ func TestZone(t *testing.T) {
 			},
 		},
 		{
+			"dnssec:insecuredelegation",
+			func() *dns.Msg { m := dns.NewMsg("a.sub.example.org.", dns.TypeA); m.Security = true; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("a.sub.example.org.", dns.TypeA)
+				m.Ns = []dns.RR{
+					dnstest.New("sub.example.org. IN NS   sub1.example.net."),
+					dnstest.New("sub.example.org. IN NS   sub2.example.net."),
+					dnstest.New("sub.example.org. IN NSEC www.example.org. NS RRSIG NSEC"),
+					dnstest.New("sub.example.org. IN RRSIG NSEC 13 3 14400 20161129153240 20161030153240 49035 example.org. VYjahdV+TTkA3RBdnUI0hwXDm6U5k/weeZZrix1znORpOELbeLBMJW56cnaG+LGwOQfw9qqjbOuULDst84s4+g=="),
+				}
+				return m
+			},
+		},
+		{
 			"dns:nodata",
 			func() *dns.Msg { m := dns.NewMsg("a.example.org.", dns.TypeTXT); return m },
 			func() *dns.Msg {
