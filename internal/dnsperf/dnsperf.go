@@ -44,6 +44,7 @@ func Run(t *testing.T, queries io.Reader, addr, network string, duration time.Du
 	args := []string{
 		"-s", host,
 		"-p", port,
+		"-t", "7", // timeout, see some tcp queries lagging
 		"-d", dir + "/queries.txt",
 		"-l", fmt.Sprintf("%d", int(duration.Seconds())),
 		"-c", strconv.Itoa(runtime.NumCPU() / 2), // clients
