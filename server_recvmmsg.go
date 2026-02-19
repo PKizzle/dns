@@ -31,13 +31,7 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 Read:
 	for {
 		select {
-		case <-srv.shutdown:
-			pc.Close()
-			wg.Wait()
-			srv.once.Do(func() { close(srv.exited) })
-			return
 		default:
-
 			// If we set the read deadline is will timeout every ReadTimeout and reallocate the msgs, we are
 			// also a server, so just wait for incoming messages.
 
@@ -64,6 +58,11 @@ Read:
 
 				bufs[i] = bufs[i][:0]
 			}
+		case <-srv.shutdown:
+			pc.Close()
+			wg.Wait()
+			srv.once.Do(func() { close(srv.exited) })
+			return
 		}
 	}
 }

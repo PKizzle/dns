@@ -5,8 +5,6 @@ import (
 	"io"
 	"net"
 	"net/netip"
-	"strings"
-	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
@@ -72,4 +70,4 @@ func (w *Whoami) HandlerFunc(_ dns.HandlerFunc) dns.HandlerFunc {
 	})
 }
 
-var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
+var builderPool = pool.NewBuilder()

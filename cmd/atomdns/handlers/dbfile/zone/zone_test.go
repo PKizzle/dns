@@ -461,7 +461,6 @@ func TestZoneEdgeCases(t *testing.T) {
 			}
 
 			rmsg := dnszone.Retrieve(z, tc.in(), nil)
-			println(rmsg.String())
 			gotrrs := []dns.RR{}
 			for rr := range rmsg.RRs() {
 				gotrrs = append(gotrrs, rr)
