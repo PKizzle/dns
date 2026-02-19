@@ -34,7 +34,10 @@ var _ dns.ResponseWriter = &Recorder{}
 func NewRecorder(w dns.ResponseWriter) *Recorder { return &Recorder{w: w, Start: time.Now()} }
 
 // NewTestRecorder returns a new Recorder that wraps a [dnstest.ResponseWriter]. This is a shortcut for
-// rec := dnstest.NewRecorder(&dnstest.ResponseWriter{}) which is useful in tests.
+//
+//	rec := dnstest.NewRecorder(&dnstest.ResponseWriter{})
+//
+// which is useful in tests.
 func NewTestRecorder() *Recorder { return NewRecorder(&ResponseWriter{}) }
 
 // NewTestRecorder6 works like [NewTestRecorder], but for IPv6.

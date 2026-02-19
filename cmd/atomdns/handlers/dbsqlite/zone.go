@@ -3,7 +3,6 @@ package dbsqlite
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
@@ -109,7 +108,7 @@ func (z *Zone) Get(name string) (*dnszone.Node, bool) {
 	if err != nil {
 		return nil, false
 	}
-	sb := builderPool.Get().(*strings.Builder)
+	sb := builderPool.Get()
 
 	if len(rrs) > 0 {
 		node := &dnszone.Node{Name: name, RRs: make([]dns.RR, 0, len(rrs))}

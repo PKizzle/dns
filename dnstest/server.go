@@ -13,7 +13,7 @@ import (
 	"codeberg.org/miekg/dns/internal/bin"
 )
 
-// Server returns a new running (UDP) server. The returned cancel function shuts down the server. Any options should
+// Server returns a new running (UDP) [dns.Server]. The returned cancel function shuts down the server. Any options should
 // be set by opts. The returned strings have the actual listening addresses, this is useful in case of listening on the
 // wildcard port. If no network is configured via the opts functions, UDP is assumed.
 func Server(addr string, opts ...func(*dns.Server)) (cancel func(), listening string, err error) {
