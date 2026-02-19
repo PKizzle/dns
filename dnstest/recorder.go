@@ -43,6 +43,24 @@ func NewTestRecorder() *Recorder { return NewRecorder(&ResponseWriter{}) }
 // NewTestRecorder6 works like [NewTestRecorder], but for IPv6.
 func NewTestRecorder6() *Recorder { return NewRecorder(&ResponseWriter6{}) }
 
+// MultiRecorder is a recorder that can record multiple messages written to it. Msg contains the last message
+// written to it. None of the messages are Unpacked.
+type MultiRecorder struct {
+	*Recorder
+	Msgs []*dns.Msg // Msgs contains all messages written to this recorder.
+}
+
+// NewMultiRecorder makes and returns a new MultiRecorder that wraps the given ResponseWriter. See
+// [NewRecorder].
+func NewMultiRecorder(w dns.ResponseWriter) *MultiRecorder {
+	return &MultiRecorder{Recorder: NewRecorder(w)}
+}
+
+func (m *MultiRecorder) Write(b []byte) (int, error) {
+	m.Msgs = append(m.Msgs, &dns.Msg{Data: make([]byte, len(b)-2)})
+	return m.Recorder.Write(b)
+}
+
 func (r *Recorder) Write(b []byte) (int, error) {
 	// See [Msg.WriteTo] that defaults to TCP.
 	r.Msg = &dns.Msg{Data: make([]byte, len(b)-2)}
