@@ -18,12 +18,17 @@ func (srv *Server) listenUDP(pc net.PacketConn) {
 	var wg sync.WaitGroup
 	xpc := ipv4.NewPacketConn(pc) // suspect this somehow works on Linux, but not other OSes.
 
+	slab := make([]byte, BatchSize*srv.UDPSize)
+
 	bufs := make([][]byte, BatchSize)
 	msgs := make([]ipv4.Message, BatchSize)
 
 	for i := range BatchSize {
-		bufs[i] = make([]byte, srv.UDPSize)
+		start := i * srv.UDPSize
+
+		bufs[i] = slab[start : start+srv.UDPSize]
 		msgs[i].Buffers = [][]byte{bufs[i]}
+
 		msgs[i].OOB = make([]byte, oobSize)
 	}
 
