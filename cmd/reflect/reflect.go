@@ -41,11 +41,11 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
+	"sync"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnsutil"
-	"codeberg.org/miekg/dns/pkg/pool"
 	"codeberg.org/miekg/dns/rdata"
 )
 
@@ -57,7 +57,9 @@ var (
 
 const dom = "whoami.miek.nl."
 
-var hdr = dns.Header{Name: dom, Class: dns.ClassINET}
+var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
+
+var textPool = sync.Pool{New: func() any { return make([]byte, 0, 64) }}
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
@@ -79,19 +81,20 @@ func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 
 	var rr dns.RR
 	if ip.Is4() {
-		rr = &dns.A{Hdr: hdr, A: rdata.A{Addr: ip}}
+		rr = &dns.A{Hdr: *hdr, A: rdata.A{Addr: ip}}
 	} else {
-		rr = &dns.AAAA{Hdr: hdr, AAAA: rdata.AAAA{Addr: ip}}
+		rr = &dns.AAAA{Hdr: *hdr, AAAA: rdata.AAAA{Addr: ip}}
 	}
 
-	sb := builderPool.Get()
-	sb.WriteString("Port: ")
-	sb.WriteString(dnsutil.RemotePort(w))
-	sb.WriteString(" (")
-	sb.WriteString(dnsutil.Network(w))
-	sb.WriteString(")")
-	t := &dns.TXT{Hdr: hdr, TXT: rdata.TXT{Txt: []string{sb.String()}}}
-	builderPool.Put(sb)
+	txt := textPool.Get().([]byte)
+	txt = txt[:0]
+	txt = append(txt, "Port: "...)
+	txt = append(txt, dnsutil.RemotePort(w)...)
+	txt = append(txt, " ("...)
+	txt = append(txt, dnsutil.Network(w)...)
+	txt = append(txt, ')')
+	t := &dns.TXT{Hdr: *hdr, TXT: rdata.TXT{Txt: []string{string(txt)}}}
+	textPool.Put(txt)
 
 	switch r.Question[0].(type) {
 	case *dns.TXT:
@@ -147,5 +150,3 @@ func main() {
 	s := <-sig
 	fmt.Printf("Signal (%s) received, stopping", s)
 }
-
-var builderPool = pool.NewBuilder()
