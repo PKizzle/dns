@@ -1,9 +1,7 @@
 [![Go Doc](https://godoc.org/coreberg.org/miekg/dns?status.svg)](https://godoc.org/codeberg.org/miekg/dns)
 [![Build Status](https://codeberg.org/miekg/dns/badges/workflows/build.yaml/badge.svg)](https://codeberg.org/miekg/dns)
 
-# Even more alternative approach to a DNS library (version 2)
-
-# Status
+# Modern, lightweight DNS library
 
 > Less is more.
 
@@ -13,7 +11,9 @@ resolvers with it.
 
 Many convenience functions are included in _dns_, _dnstest_ or otherwise in _dnsutils_. The RR's resource data
 (RDATA) is split off into its own package: _rdata_. This means accessing the RR's header and rdata is much
-simpler now.
+simpler now. [^a]
+
+[^a]: A function is put in _dnsutils_, unless (due to cyclic imports) it is utterly impossible to put it there. Only then it is put in the main _dns_ package.
 
 We try to keep the "main" branch as sane as possible and at the bleeding edge of standards, avoiding breaking
 changes wherever reasonable. But because this version is young, we allow ourselves some more headroom for
@@ -31,11 +31,11 @@ year or two (2028?) when things have stabilized it will be blessed with a v1.0.0
 
 Everything from <https://github.com/miekg/dns> works. See
 [README-v1-to-v2.md](https://codeberg.org/miekg/dns/src/branch/main/_doc/README-v1-to-v2.md)
-for the differences, if you are porting your application.
+for the differences, if you are porting your application, in `cookbook.go` are some common recipes.
 
 ## Performance
 
-dnsv2's performance should be roughly 2x across the board compared to v1 (also see below).
+The performance should be roughly 2x across the board compared to v1 (also see below).
 
 - Serving DNS queries per second is \~2x (maybe more).
 - Parsing zones files in RRs per second is \~1.5x.
@@ -135,7 +135,7 @@ and import codeberg.org/miekg/dns in your Go files.
 
 ## Examples
 
-A short "how to use the API" is at the beginning of doc.go. The cmd/ directory contains a reflect example
+A short "how to use the API" is at the beginning of `doc.go`. The cmd/ directory contains a reflect example
 program that is used for benchmarking, and further has atomdns which is full fledged DNS server that is
 developed in tandem with the library.
 
