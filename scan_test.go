@@ -41,9 +41,9 @@ func TestZoneParser(t *testing.T) {
 			},
 			nil,
 		},
-		{"badaddr1", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A Addr: "::1"`}},
-		{"baddaddr2", "2.bad.example.org. 600 IN A ::FFFF:127.0.0.1", nil, &Error{`bad A Addr:`}},
-		{"badaddr3", "3.bad.example.org. 600 IN AAAA 127.0.0.1", nil, &Error{`bad AAAA Addr:`}},
+		{"badaddr1", "1.bad.example.org. 600 IN A ::1", nil, &Error{err: `bad A Addr: "::1"`}},
+		{"baddaddr2", "2.bad.example.org. 600 IN A ::FFFF:127.0.0.1", nil, &Error{err: `bad A Addr:`}},
+		{"badaddr3", "3.bad.example.org. 600 IN AAAA 127.0.0.1", nil, &Error{err: `bad AAAA Addr:`}},
 		{
 			"unknown-rdata",
 			"example. 3600 tYpe44 \\# 03 75  0100",
@@ -63,12 +63,12 @@ func TestZoneParser(t *testing.T) {
 			&Error{err: "bad RFC3597 Rdata"},
 		},
 		{"openescape", "example.net IN CNAME example.net.", nil, nil},
-		{"bad-openescape", "example.net IN CNAME example.org\\", nil, &Error{"bad owner name:"}},
-		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{"missing TTL with no"}},
-		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{"missing TTL with no"}},
-		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{"missing TTL with no"}},
-		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{"missing TTL with no"}},
-		{"nsid-truncated", " NSID :", nil, &Error{"bad NSID Nsid"}},
+		{"bad-openescape", "example.net IN CNAME example.org\\", nil, &Error{err: "bad owner name:"}},
+		{"badtarget-cname", "bad.example.org. CNAME ; bad cname", nil, &Error{err: "missing TTL with no"}},
+		{"badtarget-http", "bad.example.org. HTTPS 10 ; bad https", nil, &Error{err: "missing TTL with no"}},
+		{"badtarget-mx", "bad.example.org. MX 10 ; bad mx", nil, &Error{err: "missing TTL with no"}},
+		{"badtarget-srv", "bad.example.org. SRV 1 0 80 ; bad srv", nil, &Error{err: "missing TTL with no"}},
+		{"nsid-truncated", " NSID :", nil, &Error{err: "bad NSID Nsid"}},
 		{"overflow-ttl", "example. 4294967296  IN A 127.0.0.1", nil, &Error{err: "not a TTL: "}},
 		{
 			"border-fit-ttl",
@@ -113,14 +113,14 @@ func TestZoneParserRRs(t *testing.T) {
 			nil,
 		},
 		{"empty", "", []RR{}, nil},
-		{"error", "1.bad.example.org. 600 IN A ::1", nil, &Error{`bad A Addr: "::1"`}},
+		{"error", "1.bad.example.org. 600 IN A ::1", nil, &Error{err: `bad A Addr: "::1"`}},
 		{
 			"multiple-error",
 			"1.example.org. 600 IN AAAA ::1\n1.bad.example.org. 600 IN A ::1",
 			[]RR{
 				&AAAA{Hdr: Header{Name: "1.example.org.", Class: ClassINET}, AAAA: rdata.AAAA{Addr: netip.IPv6Loopback()}},
 			},
-			&Error{`bad A Addr: "::1"`},
+			&Error{err: `bad A Addr: "::1"`},
 		},
 	}
 	for _, tc := range testcases {
