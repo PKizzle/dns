@@ -41,8 +41,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
-	"strings"
-	"sync"
 	"syscall"
 
 	"codeberg.org/miekg/dns"
@@ -60,8 +58,6 @@ var (
 const dom = "whoami.miek.nl."
 
 var hdr = dns.Header{Name: dom, Class: dns.ClassINET}
-
-var builderPool = &pool.Builder{Pool: sync.Pool{New: func() any { return strings.Builder{} }}}
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {
@@ -151,3 +147,5 @@ func main() {
 	s := <-sig
 	fmt.Printf("Signal (%s) received, stopping", s)
 }
+
+var builderPool = pool.NewBuilder()

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
 	"codeberg.org/miekg/dns/dnsutil"
+	"codeberg.org/miekg/dns/pkg/pool"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -161,8 +161,4 @@ func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
 	return z.db.Select(rrs, query, args...)
 }
 
-var builderPool = &sync.Pool{
-	New: func() any {
-		return &strings.Builder{}
-	},
-}
+var builderPool = pool.NewBuilder()
