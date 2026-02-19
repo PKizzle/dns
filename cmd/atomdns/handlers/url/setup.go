@@ -24,7 +24,6 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 			return co.ArgErr()
 		}
 		u.Path = co.Path()
-		println(u.Path)
 
 		for co.NextBlock(0) {
 			if !strings.HasPrefix(co.Val(), "http://") && !strings.HasPrefix(co.Val(), "https://") {
