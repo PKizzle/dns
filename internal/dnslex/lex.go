@@ -40,11 +40,11 @@ const (
 
 type Lex struct {
 	Token  string // text of the token
+	As     uint8  // create an RR (asRR), an EDNS0 (asCode) or DSO RR (asStateful)
+	Value  uint8  // value: String, Blank, etc.
 	Line   uint32 // line in the file
 	Column uint16 // column in the file
 	Torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
-	Value  uint8  // value: String, Blank, etc.
-	As     uint8  // create an RR (asRR), an EDNS0 (asCode) or DSO RR (asStateful)
 }
 
 const (
