@@ -1382,6 +1382,7 @@ func (rr *DSYNC) String() string {
 // Meta RRs
 
 // ANY is a wildcard record. See RFC 1035, Section 3.2.3. ANY is named "*" there.
+// ANY is also used for dynamic updates (RFC 2136).
 type ANY struct {
 	Hdr Header
 }
