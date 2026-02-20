@@ -8,14 +8,6 @@ import (
 	"testing"
 )
 
-func newMsgWithTSIG() *Msg {
-	m := NewMsg("miek.nl.", TypeMX)
-	m.ID = 3
-	m.Pseudo = []RR{NewTSIG("example.", HmacSHA256, 0)}
-	m.Pack()
-	return m
-}
-
 var tsigSecret = []byte("blaat")
 
 // ExampleTSIG_notify shows how to create a notify message with a TSIG signature.
@@ -45,27 +37,40 @@ func ExampleTSIG_notify() {
 	}
 }
 
+func msgfn() *Msg {
+	m := NewMsg("miek.nl.", TypeMX)
+	m.ID = 3
+	m.Pseudo = []RR{NewTSIG("example.", HmacSHA256, 0)}
+	return m
+}
+
 func TestTSIG(t *testing.T) {
 	testcases := []struct {
-		name        string
-		transformFn func(m *Msg)
-		err         error
+		name   string
+		preFn  func(m *Msg) // transform before signing
+		postFn func(m *Msg) // transform before verifying
+		err    error
 	}{
-		{"signverify", nil, nil},
-		{"signverify-changed-id", func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
+		{"signverify", nil, nil, nil},
+		{"signverify-changed-id", nil, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := newMsgWithTSIG()
+			m := msgfn()
+
 			option := TSIGOption{}
 			hmac := HmacTSIG{Secret: tsigSecret}
+			if tc.preFn != nil {
+				tc.preFn(m)
+			}
+
 			if err := TSIGSign(m, hmac, &option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
 
-			if tc.transformFn != nil {
-				tc.transformFn(m)
+			if tc.postFn != nil {
+				tc.postFn(m)
 			}
 
 			option.RequestMAC = "" // Negate this from TSIGSign, as TSIGVerify is supposed to be running on a different machine normally.
@@ -79,7 +84,7 @@ func TestTSIG(t *testing.T) {
 }
 
 func TestTSIGSectionExtra(t *testing.T) {
-	m := newMsgWithTSIG()
+	m := msgfn()
 	option := TSIGOption{}
 	hmac := HmacTSIG{Secret: tsigSecret}
 	if err := TSIGSign(m, hmac, &option); err != nil {
