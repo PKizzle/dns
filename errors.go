@@ -18,8 +18,6 @@ func (e *Error) Fmt(format string, a ...any) error {
 	return &e1
 }
 
-// Unwrap returns the sentinel error this error was derived from via Fmt,
-// enabling errors.Is to match Fmt-wrapped errors against their sentinels.
 func (e *Error) Unwrap() error {
 	if e.parent != nil {
 		return e.parent
