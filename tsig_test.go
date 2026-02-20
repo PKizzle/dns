@@ -1,7 +1,10 @@
 package dns
 
 import (
+	"context"
 	"encoding/binary"
+	"log"
+	"net"
 	"testing"
 )
 
@@ -14,6 +17,33 @@ func newMsgWithTSIG() *Msg {
 }
 
 var tsigSecret = []byte("blaat")
+
+// ExampleTSIG_notify shows how to create a notify message with a TSIG signature.
+func ExampleTSIG_notify() {
+	m := NewMsg("example.org.", TypeSOA)
+	m.Authoritative = true
+	m.Opcode = OpcodeNotify
+	m.Pseudo = []RR{NewTSIG("key.example.com.", HmacSHA256, 0)}
+
+	option := &TSIGOption{}
+	hmac := HmacTSIG{Secret: tsigSecret}
+	if err := TSIGSign(m, hmac, option); err != nil {
+		log.Fatalf("Failed to sign: %s", err)
+	}
+
+	c := new(Client)
+	// Use this if the notify must come from a particular source address.
+	c.Transport = NewTransport()
+	c.Dialer.LocalAddr = &net.UDPAddr{IP: net.ParseIP("198.51.100.1")}
+
+	r, _, err := c.Exchange(context.TODO(), m, "udp", "8.8.4.4:53")
+	if err != nil {
+		log.Fatalf("Failed to sent notify: %s", err)
+	}
+	if r.Rcode == RcodeSuccess {
+		log.Fatalf("Failed to sent notify: %s", err)
+	}
+}
 
 func TestTSIG(t *testing.T) {
 	testcases := []struct {

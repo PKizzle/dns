@@ -89,17 +89,6 @@ func (zl *Lexer) SetKey(key uint8)   { zl.keys |= key }
 func (zl *Lexer) ClearKey(key uint8) { zl.keys &^= key }
 func (zl *Lexer) Key(key uint8) bool { return zl.keys&key != 0 }
 
-// flag bit definitions
-const (
-	fQuote uint8 = 1 << iota
-	fSpace
-	fCommT
-	fRRtype
-	fOwner
-	fNextL
-	fEOL
-)
-
 // New returns a pointer to a new Lexer.
 func New(r io.Reader, StringToType, StringToCode, StringToClass map[string]uint16) *Lexer {
 	br, ok := r.(io.ByteReader)
@@ -388,13 +377,13 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 			switch x {
 			case ')':
-				zl.brace--
-
-				if zl.brace < 0 {
+				if zl.brace == 0 {
 					l.Token = "extra closing brace"
 					l.Value = Error
 					return *l, true
 				}
+				zl.brace--
+
 			case '(':
 				zl.brace++
 				if zl.brace > 10 {

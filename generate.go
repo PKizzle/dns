@@ -177,10 +177,11 @@ func (r *generateReader) ReadByte() (byte, error) {
 		// Search for { and }
 		if r.s[si+1] == '{' {
 			// Modifier block
-			sep := uint16(strings.Index(r.s[si+2:], "}"))
-			if sep < 0 {
+			j := strings.Index(r.s[si+2:], "}")
+			if j < 0 {
 				return 0, r.parseError("bad modifier in $GENERATE", uint16(len(r.s)))
 			}
+			sep := uint16(j)
 
 			var errMsg string
 			mod, offset, errMsg = modToPrintf(r.s[si+2 : si+2+sep])

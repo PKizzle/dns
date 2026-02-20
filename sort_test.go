@@ -179,7 +179,7 @@ func ExampleRRset_compact() {
 		func() RR { rr, _ := New("miek.nl. IN NS ns-ext.nlnetlabs.nl."); return rr }(),
 	})
 	sort.Sort(rrs)
-	slices.CompactFunc(rrs, func(a, b RR) bool { return Equal(a, b) })
+	rrs = slices.CompactFunc(rrs, func(a, b RR) bool { return Equal(a, b) })
 	for i := range rrs {
 		fmt.Println(rrs[i])
 	}
