@@ -56,30 +56,50 @@ const (
 // Lexer tokenizes the zone data, so that the grammar implemented in ZoneParser can parse RRs out of an RFC
 // 1035 styled text file.
 type Lexer struct {
-	stringToType  map[string]uint16
-	stringToCode  map[string]uint16
-	stringToClass map[string]uint16
+	line   int
+	column int
+	brace  int
+	keys   uint8 // bit0: kQuote, bit1: kSpace, bit2: kCommt, bit3: kRRtype, bit4: kOwner, bit5: kNextL, bit6: kEol
+	tok    []byte
 
-	br  io.ByteReader
-	tok []byte
+	br io.ByteReader
 
 	readErr error
 
+	// Current or peek token.
 	l       Lex
 	cachedL *Lex // used when finding a token, but delaying it's return.
 
-	line   int
-	column int
-
-	brace  int
-	quote  bool
-	space  bool
-	commt  bool
-	rrtype bool
-	owner  bool
-	nextL  bool
-	eol    bool
+	stringToType  map[string]uint16
+	stringToCode  map[string]uint16
+	stringToClass map[string]uint16
 }
+
+// Key bit definitions.
+const (
+	kQuote uint8 = 1 << iota
+	kSpace
+	kCommt
+	kRRtype
+	kOwner
+	kNextL
+	kEOL
+)
+
+func (zl *Lexer) SetKey(key uint8)   { zl.keys |= key }
+func (zl *Lexer) ClearKey(key uint8) { zl.keys &^= key }
+func (zl *Lexer) Key(key uint8) bool { return zl.keys&key != 0 }
+
+// flag bit definitions
+const (
+	fQuote uint8 = 1 << iota
+	fSpace
+	fCommT
+	fRRtype
+	fOwner
+	fNextL
+	fEOL
+)
 
 // New returns a pointer to a new Lexer.
 func New(r io.Reader, StringToType, StringToCode, StringToClass map[string]uint16) *Lexer {
@@ -88,15 +108,16 @@ func New(r io.Reader, StringToType, StringToCode, StringToClass map[string]uint1
 		br = bufio.NewReaderSize(r, 1024)
 	}
 
-	return &Lexer{
+	zl := &Lexer{
 		br:            br,
 		tok:           make([]byte, 512),
 		line:          1,
-		owner:         true,
 		stringToType:  StringToType,
 		stringToCode:  StringToCode,
 		stringToClass: StringToClass,
 	}
+	zl.SetKey(kOwner)
+	return zl
 }
 
 func (zl *Lexer) Err() error {
@@ -121,14 +142,14 @@ func (zl *Lexer) readByte() (byte, bool) {
 
 	// delay the newline handling until the next token is delivered,
 	// fixes off-by-one errors when reporting a parse error.
-	if zl.eol {
+	if zl.Key(kEOL) {
 		zl.line++
 		zl.column = 0
-		zl.eol = false
+		zl.ClearKey(kEOL)
 	}
 
 	if c == '\n' {
-		zl.eol = true
+		zl.SetKey(kEOL)
 		return c, true
 	}
 
@@ -137,7 +158,7 @@ func (zl *Lexer) readByte() (byte, bool) {
 }
 
 func (zl *Lexer) Peek() Lex {
-	if zl.nextL {
+	if zl.Key(kNextL) {
 		return zl.l
 	}
 
@@ -146,14 +167,14 @@ func (zl *Lexer) Peek() Lex {
 		return l
 	}
 
-	if zl.nextL {
+	if zl.Key(kNextL) {
 		// Cache l. Next returns zl.cachedL then zl.l.
 		zl.cachedL = &l
 		return l
 	}
 
 	// In this case l == zl.l, so we just tell Next to return zl.l.
-	zl.nextL = true
+	zl.SetKey(kNextL)
 	return l
 }
 
@@ -163,8 +184,8 @@ func (zl *Lexer) Next() (Lex, bool) {
 	case zl.cachedL != nil:
 		l, zl.cachedL = zl.cachedL, nil
 		return *l, true
-	case zl.nextL:
-		zl.nextL = false
+	case zl.Key(kNextL):
+		zl.ClearKey(kNextL)
 		return *l, true
 	case l.Value == Error:
 		// Parsing errors should be sticky.
@@ -180,19 +201,19 @@ func (zl *Lexer) Next() (Lex, bool) {
 
 		switch x {
 		case ' ', '\t':
-			if escape || zl.quote {
+			if escape || zl.Key(kQuote) {
 				zl.tok = append(zl.tok, x)
 				escape = false
 				continue
 			}
 
-			if zl.commt {
+			if zl.Key(kCommt) {
 				continue
 			}
 
 			var retL Lex
 			if len(zl.tok) > 0 {
-				if zl.owner {
+				if zl.Key(kOwner) {
 
 					l.Token = string(zl.tok)
 					l.Value = directive(l.Token)
@@ -202,17 +223,17 @@ func (zl *Lexer) Next() (Lex, bool) {
 					l.Value = String
 					l.Token = string(zl.tok)
 
-					if !zl.rrtype {
+					if !zl.Key(kRRtype) {
 						zl.typeOrCodeOrClass(l)
 					}
 					retL = *l
 				}
 			}
 
-			zl.owner = false
+			zl.ClearKey(kOwner)
 
-			if !zl.space {
-				zl.space = true
+			if !zl.Key(kSpace) {
+				zl.SetKey(kSpace)
 
 				l.Value = Blank
 				l.Token = " "
@@ -221,21 +242,21 @@ func (zl *Lexer) Next() (Lex, bool) {
 					return *l, true
 				}
 
-				zl.nextL = true
+				zl.SetKey(kNextL)
 			}
 
 			if retL.Value != EOF { // not empty
 				return retL, true
 			}
 		case ';':
-			if escape || zl.quote {
+			if escape || zl.Key(kQuote) {
 				// Inside quotes or escaped this is legal.
 				zl.tok = append(zl.tok, x)
 				escape = false
 				continue
 			}
 
-			zl.commt = true
+			zl.SetKey(kCommt)
 
 			if len(zl.tok) > 0 {
 				l.Value = String
@@ -245,7 +266,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 		case '\r':
 			escape = false
 
-			if zl.quote {
+			if zl.Key(kQuote) {
 				zl.tok = append(zl.tok, x)
 			}
 
@@ -254,17 +275,17 @@ func (zl *Lexer) Next() (Lex, bool) {
 			escape = false
 
 			// Escaped newline
-			if zl.quote {
+			if zl.Key(kQuote) {
 				zl.tok = append(zl.tok, x)
 				continue
 			}
 
-			if zl.commt {
-				zl.commt = false
-				zl.rrtype = false
+			if zl.Key(kCommt) {
+				zl.ClearKey(kCommt)
+				zl.ClearKey(kRRtype)
 
 				if zl.brace == 0 {
-					zl.owner = true
+					zl.SetKey(kOwner)
 
 					l.Value = Newline
 					l.Token = "\n"
@@ -280,7 +301,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 					l.Value = String
 					l.Token = string(zl.tok)
 
-					if !zl.rrtype {
+					if !zl.Key(kRRtype) {
 						zl.typeOrCodeOrClass(l)
 					}
 
@@ -290,11 +311,11 @@ func (zl *Lexer) Next() (Lex, bool) {
 				l.Value = Newline
 				l.Token = "\n"
 
-				zl.rrtype = false
-				zl.owner = true
+				zl.ClearKey(kRRtype)
+				zl.SetKey(kOwner)
 
 				if retL.Value != EOF { // not empty
-					zl.nextL = true
+					zl.SetKey(kNextL)
 					return retL, true
 				}
 
@@ -302,7 +323,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 		case '\\':
 			// comments do not get escaped chars, everything is copied
-			if zl.commt {
+			if zl.Key(kCommt) {
 				continue
 			}
 
@@ -317,7 +338,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 			zl.tok = append(zl.tok, x)
 			escape = true
 		case '"':
-			if zl.commt {
+			if zl.Key(kCommt) {
 				continue
 			}
 
@@ -327,7 +348,7 @@ func (zl *Lexer) Next() (Lex, bool) {
 				continue
 			}
 
-			zl.space = false
+			zl.ClearKey(kSpace)
 
 			// send previous gathered text and the quote
 			var retL Lex
@@ -342,20 +363,24 @@ func (zl *Lexer) Next() (Lex, bool) {
 			l.Value = Quote
 			l.Token = "\""
 
-			zl.quote = !zl.quote
+			if zl.Key(kQuote) {
+				zl.ClearKey(kQuote)
+			} else {
+				zl.SetKey(kQuote)
+			}
 
 			if retL.Value == String {
-				zl.nextL = true
+				zl.SetKey(kNextL)
 				return retL, true
 			}
 
 			return *l, true
 		case '(', ')':
-			if zl.commt {
+			if zl.Key(kCommt) {
 				continue
 			}
 
-			if escape || zl.quote {
+			if escape || zl.Key(kQuote) {
 				// Inside quotes or escaped this is legal.
 				zl.tok = append(zl.tok, x)
 				escape = false
@@ -376,9 +401,9 @@ func (zl *Lexer) Next() (Lex, bool) {
 			}
 		default:
 			escape = false
-			if !zl.commt {
+			if !zl.Key(kCommt) {
 				zl.tok = append(zl.tok, x)
-				zl.space = false
+				zl.ClearKey(kSpace)
 			}
 		}
 	}
@@ -465,7 +490,7 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 	if t, ok := upperLookup(l.Token, zl.stringToType); ok {
 		l.Value = Rrtype
 		l.Torc = t
-		zl.rrtype = true
+		zl.SetKey(kRRtype)
 		return
 	}
 
@@ -484,7 +509,7 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		}
 		l.Value = Rrtype
 		l.Torc = t
-		zl.rrtype = true
+		zl.SetKey(kRRtype)
 		return
 	}
 
@@ -503,7 +528,7 @@ func (zl *Lexer) typeOrCodeOrClass(l *Lex) {
 		l.As = asCode
 		l.Value = Rrtype
 		l.Torc = t
-		zl.rrtype = true
+		zl.SetKey(kRRtype)
 		return
 	}
 }
