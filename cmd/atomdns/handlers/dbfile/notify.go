@@ -117,13 +117,11 @@ func (t *Transfer) AvailableFrom(origin string, serial uint32) bool {
 			alog.Error("Upstream did not accept our query", Err(err))
 			continue
 		}
-		if err == nil {
-			for _, rr := range m.Answer {
-				if s, ok := rr.(*dns.SOA); ok {
-					if dns.CompareSerial(serial, s.Serial) == -1 {
-						alog.Debug("Upstream serial is higher than ours", "serial", serial, "upstream-serial", s.Serial)
-						return true
-					}
+		for _, rr := range m.Answer {
+			if s, ok := rr.(*dns.SOA); ok {
+				if dns.CompareSerial(serial, s.Serial) == -1 {
+					alog.Debug("Upstream serial is higher than ours", "serial", serial, "upstream-serial", s.Serial)
+					return true
 				}
 			}
 		}
