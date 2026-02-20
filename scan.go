@@ -60,7 +60,7 @@ func (e *ParseError) Error() (s string) {
 		e.err = e.wrappedErr.Error()
 	}
 	s += "dns: " + e.err + ": " + strconv.QuoteToASCII(e.lex.Token) + " at line: " +
-		strconv.Itoa(e.lex.Line) + ":" + strconv.Itoa(e.lex.Column)
+		strconv.Itoa(int(e.lex.Line)) + ":" + strconv.Itoa(int(e.lex.Column))
 	return
 }
 
