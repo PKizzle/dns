@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -41,11 +42,12 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	z, err := os.Open(flag.Arg(0))
+	buf, err := os.ReadFile(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
 	}
 	now := time.Now()
+	z := bytes.NewReader(buf)
 	zp := dns.NewZoneParser(z, ".", flag.Arg(0))
 	i := 0
 	for rr, ok := zp.Next(); ok; rr, ok = zp.Next() {
