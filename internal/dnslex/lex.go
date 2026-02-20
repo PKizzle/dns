@@ -41,8 +41,8 @@ const (
 type Lex struct {
 	Token  string // text of the token
 	Torc   uint16 // type or class as parsed in the lexer, we only need to look this up in the grammar
-	Line   int    // line in the file
-	Column int    // column in the file
+	Line   uint32 // line in the file
+	Column uint16 // column in the file
 	Value  uint8  // value: String, Blank, etc.
 	As     uint8  // create an RR (asRR), an EDNS0 (asCode) or DSO RR (asStateful)
 }
@@ -56,14 +56,13 @@ const (
 // Lexer tokenizes the zone data, so that the grammar implemented in ZoneParser can parse RRs out of an RFC
 // 1035 styled text file.
 type Lexer struct {
-	line   int
-	column int
-	brace  int
+	line   uint32 // yes this overflows for insane zone files...
+	column uint16
+	brace  uint8
 	keys   uint8 // bit0: kQuote, bit1: kSpace, bit2: kCommt, bit3: kRRtype, bit4: kOwner, bit5: kNextL, bit6: kEol
 	tok    []byte
 
-	br io.ByteReader
-
+	br      io.ByteReader
 	readErr error
 
 	// Current or peek token.
@@ -398,6 +397,11 @@ func (zl *Lexer) Next() (Lex, bool) {
 				}
 			case '(':
 				zl.brace++
+				if zl.brace > 10 {
+					l.Token = "excessive opening braces"
+					l.Value = Error
+					return *l, true
+				}
 			}
 		default:
 			escape = false
