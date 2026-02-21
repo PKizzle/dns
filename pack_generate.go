@@ -20,6 +20,8 @@ package dns
 
 import (
 	"fmt"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 `
@@ -40,7 +42,7 @@ func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 `))
 
 var unpackFunc = template.Must(template.New("unpackFunc").Parse(`
-func zunpack(rr RR, data, msgBuf []byte) error {
+func zunpack(rr RR, data cryptobyte.String, msgBuf []byte) error {
 	switch x := rr.(type) {
 {{range .}}  case *{{.}}:
 	return x.unpack(data, msgBuf)
