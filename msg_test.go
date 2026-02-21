@@ -172,7 +172,12 @@ func TestMsg(t *testing.T) {
 	}{
 		{
 			"extendedrcode",
-			func() *dns.Msg { m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3}}; m.Rcode = dns.RcodeBadTime; return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Rcode = dns.RcodeBadTime
+				return m
+			},
 			func(r *dns.Msg) error {
 				if r.Rcode != dns.RcodeBadTime {
 					return fmt.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
@@ -182,7 +187,7 @@ func TestMsg(t *testing.T) {
 		},
 		{
 			"security",
-			func() *dns.Msg { m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3}}; m.Security = true; return m },
+			func() *dns.Msg { m := dns.NewMsg("example.org.", dns.TypeMX); m.ID = 3; m.Security = true; return m },
 			func(r *dns.Msg) error {
 				if !r.Security {
 					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
@@ -190,6 +195,29 @@ func TestMsg(t *testing.T) {
 				arcount := binary.BigEndian.Uint16(r.Data[10:])
 				if arcount != 1 {
 					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
+				}
+				return nil
+			},
+		},
+		{
+			"security+nsd",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Security = true
+				m.Pseudo = []dns.RR{&dns.NSID{}}
+				return m
+			},
+			func(r *dns.Msg) error {
+				if !r.Security {
+					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[10:])
+				if arcount != 1 { // not nsid and DO bit are stored in a single record
+					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
+				}
+				if x := len(r.Pseudo); x != 1 {
+					return fmt.Errorf("expected len(pseudo) to be 1, got %d", x)
 				}
 				return nil
 			},
