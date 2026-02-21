@@ -190,10 +190,11 @@ func (m *Msg) Pack() error {
 		dh.Bits |= _CD
 	}
 
+	isPseudo := m.isPseudo()
 	dh.Qdcount = uint16(len(m.Question))
 	dh.Ancount = uint16(len(m.Answer))
 	dh.Nscount = uint16(len(m.Ns))
-	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
+	dh.Arcount = uint16(len(m.Extra)) + uint16(isPseudo)
 
 	if l := m.Len(); cap(m.Data) < l {
 		m.Data = make([]byte, l)
@@ -237,7 +238,7 @@ func (m *Msg) Pack() error {
 
 	// Add an OPT RR if we see any of these.
 	tsigOrsig0 := false
-	if m.isPseudo() > 0 {
+	if isPseudo > 0 {
 		opt := &OPT{} // hack, empty name, that gets filled if we did something
 		if m.UDPSize > MinMsgSize {
 			opt.Hdr.Name = "."
@@ -334,10 +335,10 @@ func (m *Msg) unpackQuestions(cnt uint16, msg *cryptobyte.String, msgBuf []byte)
 
 func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) {
 	if cnt == 0 {
-		return []RR{}, nil
+		return nil, nil
 	}
 	// See unpackQuestions for why we don't pre-allocate here.
-	dst := make([]RR, 0, min(5, cnt))
+	dst := make([]RR, 0, min(3, cnt))
 	for i := 0; i < int(cnt); i++ {
 		r, err := unpackRR(msg, msgBuf)
 		if err != nil {
@@ -573,7 +574,7 @@ func (m *Msg) String() string {
 
 // isPseudo returns (1) true of we should have a pseudo section in this message, or not (0). It returns an
 // int becuse we need that number of the Extra section sizing.
-func (m *Msg) isPseudo() int {
+func (m *Msg) isPseudo() uint8 {
 	if lp := len(m.Pseudo); lp > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
 		if lp == 0 {
 			return 1 // OPT without options, 1 record
@@ -617,7 +618,9 @@ func (m *Msg) Len() int {
 	// len(name) +1 for all domain names, which is not correct for the root which is just 1.
 	const minHeaderSize = 12
 
-	if m.isPseudo() > 0 {
+	// isPseudo call is basically already done in the above loop where we get the length, only things left
+	// are the extra checks we do here. See [isPseudo] and keep in sync.
+	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
 		l += minHeaderSize
 	}
