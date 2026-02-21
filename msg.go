@@ -620,7 +620,7 @@ func (m *Msg) Len() int {
 
 	// isPseudo call is basically already done in the above loop where we get the length, only things left
 	// are the extra checks we do here. See [isPseudo] and keep in sync.
-	if m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
+	if len(m.Pseudo) > 0 || m.UDPSize > MinMsgSize || m.Security || m.CompactAnswers || m.Delegation || m.Rcode > 0xF {
 		// If we find things in pseudo we get an OPT RR (fix length) plus the length of the option. OPT is always 11, 10 + "." (root label)
 		l += minHeaderSize
 	}
