@@ -130,12 +130,9 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 		return nil, unpack.ErrTruncatedMessage
 	}
 
-	// 2. Create data slice directly from the original buffer
+	// was: msg.ReadBytes(&data, int(rdlength)), but we want to save the buffer we allocated for that.
 	data := (*msg)[:rdlength]
-	// 3. Advance the message pointer to simulate "read"
 	*msg = (*msg)[rdlength:]
-
-	// 4. Restrict the base buffer to the current position (for offset calculations)
 	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
