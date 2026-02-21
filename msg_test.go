@@ -165,6 +165,7 @@ func TestMsgBinary(t *testing.T) {
 }
 
 func TestMsg(t *testing.T) {
+	const msgArcount = 10 // offset in the message where the Arcount is, 2 octets long.
 	testcases := []struct {
 		name   string
 		makeFn func() *dns.Msg
@@ -192,7 +193,7 @@ func TestMsg(t *testing.T) {
 				if !r.Security {
 					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
 				}
-				arcount := binary.BigEndian.Uint16(r.Data[10:])
+				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
 				if arcount != 1 {
 					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
 				}
@@ -212,7 +213,7 @@ func TestMsg(t *testing.T) {
 				if !r.Security {
 					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
 				}
-				arcount := binary.BigEndian.Uint16(r.Data[10:])
+				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
 				if arcount != 1 { // nsid and DO bit are stored in a single record
 					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
 				}

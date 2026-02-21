@@ -259,6 +259,7 @@ func (m *Msg) Pack() error {
 			opt.SetDelegation(true)
 		}
 		for i := range m.Pseudo {
+			opt.Hdr.Name = "."
 			switch x := m.Pseudo[i].(type) {
 			case EDNS0:
 				opt.Options = append(opt.Options, x)
@@ -269,7 +270,7 @@ func (m *Msg) Pack() error {
 		// Only pack opt if something has been put into it, otherwise we may have a TSIG/SIG0.
 		// Pack it here so we don't add it the m.Extra, as the options (only) should be available in pseudo.
 		// Also OPT may be anywhere in m.Extra, here it will be first.
-		if opt.Hdr.Name == "." || len(m.Pseudo) > 0 {
+		if opt.Hdr.Name == "." {
 			if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 				return err
 			}
