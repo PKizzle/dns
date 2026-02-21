@@ -213,11 +213,35 @@ func TestMsg(t *testing.T) {
 					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
 				}
 				arcount := binary.BigEndian.Uint16(r.Data[10:])
-				if arcount != 1 { // not nsid and DO bit are stored in a single record
+				if arcount != 1 { // nsid and DO bit are stored in a single record
 					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
 				}
 				if x := len(r.Pseudo); x != 1 {
 					return fmt.Errorf("expected len(pseudo) to be 1, got %d", x)
+				}
+				return nil
+			},
+		},
+		{
+			"security+tsig-nosign+nsid",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Security = true
+				m.Pseudo = []dns.RR{&dns.NSID{}}
+				m.Pseudo = append(m.Pseudo, dns.NewTSIG("example.", dns.HmacSHA256, 0))
+				return m
+			},
+			func(r *dns.Msg) error {
+				if !r.Security {
+					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[10:])
+				if arcount != 2 { // nsid and DO bit are stored in a single record + tsig
+					return fmt.Errorf("expected arcount to be 2, got %d", arcount)
+				}
+				if x := len(r.Pseudo); x != 2 {
+					return fmt.Errorf("expected len(pseudo) to be 2, got %d", x)
 				}
 				return nil
 			},
