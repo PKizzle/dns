@@ -52,6 +52,7 @@ func TestTSIG(t *testing.T) {
 		err    error
 	}{
 		{"signverify", nil, nil, nil},
+		{"signverify-edns", func(m *Msg) { m.Security = true }, nil, nil},
 		{"signverify-changed-id", nil, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
