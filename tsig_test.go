@@ -52,23 +52,22 @@ func TestTSIG(t *testing.T) {
 		err    error
 	}{
 		{"signverify", nil, nil, nil},
+		{"signverify-edns", func(m *Msg) { m.Security = true }, nil, nil},
 		{"signverify-changed-id", nil, func(m *Msg) { binary.BigEndian.PutUint16(m.Data[0:2], 42) }, nil},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := msgfn()
-
-			option := TSIGOption{}
-			hmac := HmacTSIG{Secret: tsigSecret}
 			if tc.preFn != nil {
 				tc.preFn(m)
 			}
 
+			option := TSIGOption{}
+			hmac := HmacTSIG{Secret: tsigSecret}
 			if err := TSIGSign(m, hmac, &option); err != nil {
 				t.Fatalf("failed to sign: %s", err)
 			}
-
 			if tc.postFn != nil {
 				tc.postFn(m)
 			}

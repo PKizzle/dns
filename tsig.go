@@ -19,7 +19,7 @@ const (
 	HmacMD5 = "hmac-md5.sig-alg.reg.int." // Deprecated: HmacMD5 is no longer supported.
 )
 
-// TSIGSign fills out the TSIG record in m. This should be a "stub" TSIG RR (see [NewTSIG]) with the algorithm, key name
+// TSIGSign fills out the TSIG record in m.Pseudo. This should be a "stub" TSIG RR (see [NewTSIG]) with the algorithm, key name
 // (owner name of the RR), time fudge (defaults to 300 seconds, if zero).
 // When Sign is called for the first time: options.RequestMAC should be empty and options.TimersOnly should be false.
 // When this function returns options.RequestMAC will have the MAC as calculated.

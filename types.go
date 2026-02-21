@@ -1425,7 +1425,8 @@ func (*IXFR) parse(c *dnslex.Lexer, origin string) *ParseError {
 //	tsig := &dns.TSIG{Hdr: dns.Header{Name: "keyname.", Class: dns.ClassANY}, Algorithm: dns.HmacSHA512,
 //			TimeSigned: uint64(time.Now().Unix())}
 //
-// See [NewTSIG] for an easier way of doing this.
+// See [NewTSIG] for an easier way of doing this. The TSIG record MUST be the last record in the pseudo
+// section of a [Msg].
 type TSIG struct {
 	Hdr Header
 	rdata.TSIG

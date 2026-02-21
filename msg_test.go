@@ -2,6 +2,7 @@ package dns_test
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -163,20 +164,105 @@ func TestMsgBinary(t *testing.T) {
 	}
 }
 
-func TestMsgExtendedRcode(t *testing.T) {
-	// set extended rcode, pack the message, unpack it, could should still be there. This tests _a lot_ as and OPT rr is allocated
-	// and packed. Also during unpack the opposite is done.
-	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3}}
-	m.Question = []dns.RR{&dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}}
-	m.Rcode = dns.RcodeBadTime
-
-	m.Pack()
-	r := new(dns.Msg)
-	r.Data = m.Data
-	r.Unpack()
-	if r.Rcode != dns.RcodeBadTime {
-		t.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
+func TestMsg(t *testing.T) {
+	const msgArcount = 10 // offset in the message where the Arcount is, 2 octets long.
+	testcases := []struct {
+		name   string
+		makeFn func() *dns.Msg
+		testFn func(m *dns.Msg) error
+	}{
+		{
+			"extendedrcode",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Rcode = dns.RcodeBadTime
+				return m
+			},
+			func(r *dns.Msg) error {
+				if r.Rcode != dns.RcodeBadTime {
+					return fmt.Errorf("expected %s, got %s", dns.RcodeToString[dns.RcodeBadTime], dns.RcodeToString[r.Rcode])
+				}
+				return nil
+			},
+		},
+		{
+			"security",
+			func() *dns.Msg { m := dns.NewMsg("example.org.", dns.TypeMX); m.ID = 3; m.Security = true; return m },
+			func(r *dns.Msg) error {
+				if !r.Security {
+					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
+				if arcount != 1 {
+					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
+				}
+				return nil
+			},
+		},
+		{
+			"security+nsd",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Security = true
+				m.Pseudo = []dns.RR{&dns.NSID{}}
+				return m
+			},
+			func(r *dns.Msg) error {
+				if !r.Security {
+					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
+				if arcount != 1 { // nsid and DO bit are stored in a single record
+					return fmt.Errorf("expected arcount to be 1, got %d", arcount)
+				}
+				if x := len(r.Pseudo); x != 1 {
+					return fmt.Errorf("expected len(pseudo) to be 1, got %d", x)
+				}
+				return nil
+			},
+		},
+		{
+			"security+tsig-nosign+nsid",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Security = true
+				m.Pseudo = []dns.RR{&dns.NSID{}}
+				m.Pseudo = append(m.Pseudo, dns.NewTSIG("example.", dns.HmacSHA256, 0))
+				return m
+			},
+			func(r *dns.Msg) error {
+				if !r.Security {
+					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[10:])
+				if arcount != 2 { // nsid and DO bit are stored in a single record + tsig
+					return fmt.Errorf("expected arcount to be 2, got %d", arcount)
+				}
+				if x := len(r.Pseudo); x != 2 {
+					return fmt.Errorf("expected len(pseudo) to be 2, got %d", x)
+				}
+				return nil
+			},
+		},
 	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := tc.makeFn()
+			m.Pack()
+
+			r := new(dns.Msg)
+			r.Data = m.Data
+			r.Unpack()
+			if err := tc.testFn(r); err != nil {
+				t.Fatalf("failed testFn: %s", err)
+			}
+		})
+	}
+
 }
 
 func FuzzMsgPack(f *testing.F) {
