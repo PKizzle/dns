@@ -108,13 +108,13 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	}
 
 	rdlength := off1 - headerEnd
-	if int(uint16(rdlength)) != rdlength { // overflow
-		return headerEnd, len(msg), pack.Errorf("inconsistent rdata length")
+	if rdlength <= MaxMsgSize { // overflow
+		// The RDLENGTH field is the last field in the header and we set it here.
+		binary.BigEndian.PutUint16(msg[headerEnd-2:], uint16(rdlength))
+		return headerEnd, off1, nil
 	}
 
-	// The RDLENGTH field is the last field in the header and we set it here.
-	binary.BigEndian.PutUint16(msg[headerEnd-2:], uint16(rdlength))
-	return headerEnd, off1, nil
+	return headerEnd, len(msg), pack.Errorf("inconsistent rdata length")
 }
 
 func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
@@ -193,8 +193,7 @@ func (m *Msg) Pack() error {
 	dh.Nscount = uint16(len(m.Ns))
 	dh.Arcount = uint16(len(m.Extra) + m.isPseudo())
 
-	l := m.Len()
-	if cap(m.Data) < l {
+	if l := m.Len(); cap(m.Data) < l {
 		m.Data = make([]byte, l)
 	} else {
 		m.Data = m.Data[:l]
@@ -208,8 +207,8 @@ func (m *Msg) Pack() error {
 
 	// Is this compressible?
 	var compression map[string]uint16
-	if len(m.Question) > 1 || len(m.Answer) > 0 || len(m.Ns) > 0 || len(m.Extra) > 0 {
-		compression = make(map[string]uint16, len(m.Answer)+len(m.Ns)+len(m.Extra)+3) // 3 is randomly chosen, as that much rdata might be compressable...
+	if l := len(m.Answer) + len(m.Ns) + len(m.Extra); l > 0 {
+		compression = make(map[string]uint16, l+3) // 3 is randomly chosen, as that much rdata might be compressable...
 	}
 
 	for i := range m.Question {
@@ -270,7 +269,7 @@ func (m *Msg) Pack() error {
 		// Only pack opt if something has been put into it, otherwise we may have a TSIG/SIG0.
 		// Pack it here so we don't add it the m.Extra, as the options (only) should be available in pseudo.
 		// Also OPT may be anywhere in m.Extra, here it will be first.
-		if opt.Hdr.Name == "." {
+		if len(opt.Hdr.Name) != 0 {
 			if _, off, err = packRR(opt, m.Data, off, nil); err != nil {
 				return err
 			}
