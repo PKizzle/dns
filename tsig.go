@@ -2,6 +2,7 @@ package dns
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"codeberg.org/miekg/dns/internal/jump"
@@ -33,13 +34,13 @@ func TSIGSign(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	t := hasTSIG(m)
 	if t == nil {
-		return ErrNoTSIG.Fmt(": %s", "sign")
+		return fmt.Errorf("%w: %s", ErrNoTSIG, "sign")
 	}
 
 	last := len(m.Ns) + len(m.Answer) + len(m.Extra) // skip question as 0th, is the first after question
 	off := jump.To(last, m.Data)
 	if off == 0 {
-		return ErrNoTSIG.Fmt(": %s", "sign")
+		return fmt.Errorf("%w: %s", ErrNoTSIG, "sign")
 	}
 
 	m.Data = m.Data[:off]
@@ -88,7 +89,7 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 
 	t := hasTSIG(m)
 	if t == nil {
-		return ErrNoTSIG.Fmt(": %s", "verify")
+		return fmt.Errorf("%w: %s", ErrNoTSIG, "verify")
 	}
 
 	// Sign unless there is a key or MAC validation error (RFC 8945 5.3.2).
@@ -102,7 +103,7 @@ func TSIGVerify(m *Msg, k TSIGSigner, options *TSIGOption) error {
 	last := len(m.Answer) + len(m.Ns) + len(m.Extra)
 	off := jump.To(last, m.Data)
 	if off == 0 {
-		return ErrNoTSIG.Fmt(": %s", "verify")
+		return fmt.Errorf("%w: %s", ErrNoTSIG, "verify")
 	}
 
 	m.Data = m.Data[:off]
