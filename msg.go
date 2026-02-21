@@ -124,13 +124,18 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 		return nil, err
 	}
 
-	var data []byte
-	if !msg.ReadBytes(&data, int(rdlength)) {
-		return h, unpack.ErrTruncatedMessage
+	// Directly use the existing buffer by slicing the cryptobyte.String
+	// 1. Verify sufficient bytes remain
+	if len(*msg) < int(rdlength) {
+		return nil, unpack.ErrTruncatedMessage
 	}
 
-	// Restrict msgBuf to the end of the RR (the current position of msg) so that we compute the correct offset
-	// in unpack.Name.
+	// 2. Create data slice directly from the original buffer
+	data := (*msg)[:rdlength]
+	// 3. Advance the message pointer to simulate "read"
+	*msg = (*msg)[rdlength:]
+
+	// 4. Restrict the base buffer to the current position (for offset calculations)
 	msgBuf = msgBuf[:unpack.Offset(*msg, msgBuf)]
 
 	var rr RR
@@ -141,7 +146,7 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 		rr = &RFC3597{Hdr: *h}
 	}
 
-	if len(data) == 0 {
+	if rdlength == 0 {
 		return rr, nil
 	}
 
