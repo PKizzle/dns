@@ -23,8 +23,9 @@ func SIG0Sign(m *Msg, k SIG0Signer, options *SIG0Option) error {
 	if s == nil {
 		return fmt.Errorf("%w: %s", ErrNoSIG0, "sign")
 	}
+	isPseudo := m.isPseudo() - 1 // should be 1 (only the tsig) or 2 (opt + tsig)
 
-	last := len(m.Ns) + len(m.Answer) + len(m.Extra) // skip question as 0th, is the first after question
+	last := len(m.Ns) + len(m.Answer) + len(m.Extra) + isPseudo // skip question as 0th, is the first after question
 	off := jump.To(last, m.Data)
 	if off == 0 {
 		return fmt.Errorf("%w: %s", ErrNoSIG0, "sign")
@@ -32,7 +33,10 @@ func SIG0Sign(m *Msg, k SIG0Signer, options *SIG0Option) error {
 
 	m.Data = m.Data[:off]
 	arcount := uint16(len(m.Extra))
-	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the TSIG
+	if isPseudo == 1 {
+		arcount++
+	}
+	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the SIG0
 
 	signature, err := k.Sign(s, m.Data, *options)
 	if err != nil {
@@ -64,8 +68,9 @@ func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options *SIG0Option) error {
 	if s == nil {
 		return fmt.Errorf("%w: %s", ErrNoSIG0, "verify")
 	}
+	isPseudo := m.isPseudo() - 1
 
-	last := len(m.Answer) + len(m.Ns) + len(m.Extra)
+	last := len(m.Answer) + len(m.Ns) + len(m.Extra) + isPseudo
 	off := jump.To(last, m.Data)
 	if off == 0 {
 		return fmt.Errorf("%w: %s", ErrNoSIG0, "verify")
@@ -73,6 +78,9 @@ func SIG0Verify(m *Msg, y *KEY, k SIG0Signer, options *SIG0Option) error {
 
 	m.Data = m.Data[:off]
 	arcount := uint16(len(m.Extra))
+	if isPseudo == 1 {
+		arcount++
+	}
 	pack.Uint16(arcount, m.Data, msgArcount) // decrease additional section count, because we removed the TSIG
 
 	err := k.Verify(s, m.Data, *options)
