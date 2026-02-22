@@ -164,10 +164,7 @@ const (
 	ZONEMDHashSHA512 = 2
 )
 
-// header is the wire format for the DNS packet header.
-type header struct {
-	ID                                 uint16
-	Bits                               uint16
+type count struct {
 	Qdcount, Ancount, Nscount, Arcount uint16
 }
 
