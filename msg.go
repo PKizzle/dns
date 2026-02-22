@@ -413,7 +413,7 @@ Rest:
 
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
 	// section. We will only check one OPT, any others will be left in Extra.
-	for i := 0; i < len(m.Extra); i++ {
+	for i := len(m.Extra) - 1; i >= 0; i-- {
 		if opt, ok := m.Extra[i].(*OPT); ok {
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
@@ -424,8 +424,8 @@ Rest:
 			m.UDPSize = max(opt.UDPSize(), MinMsgSize)
 
 			m.Pseudo = make([]RR, len(opt.Options), len(opt.Options)+1) // +1 for tsig/sig zero, avoid 2x in a append
-			for i := range opt.Options {
-				m.Pseudo[i] = RR(opt.Options[i])
+			for j := range opt.Options {
+				m.Pseudo[j] = RR(opt.Options[j])
 			}
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place taken with last rr
 			m.Extra = m.Extra[:len(m.Extra)-1]   // remove the OPT RR
@@ -435,15 +435,15 @@ Rest:
 	}
 
 	// Check for m.Extra TSIG and SIG(0) and move them to pseudo. This MUST be the the last RR in the extra section.
-	for i := 0; i < len(m.Extra); i++ {
-		_, ok1 := m.Extra[i].(*TSIG)
-		_, ok2 := m.Extra[i].(*SIG)
-		if ok1 || ok2 {
+Extra:
+	for i := len(m.Extra) - 1; i >= 0; i-- {
+		switch m.Extra[i].(type) {
+		case *TSIG, *SIG:
 			m.Pseudo = append(m.Pseudo, m.Extra[i])
 			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place taken with last rr
 			m.Extra = m.Extra[:len(m.Extra)-1]   // remove the sig/tsig RR
 
-			break
+			break Extra
 		}
 	}
 
