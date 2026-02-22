@@ -3,8 +3,9 @@
 goos: linux
 goarch: arm64
 pkg: codeberg.org/miekg/dns
-BenchmarkDNSPerfudp-8	424775			2354.2 ns/op
-BenchmarkDNSPerfudp-8	405081			2468.6 ns/op
-BenchmarkDNSPerfudp-8	426724			2343.4 ns/op
-BenchmarkDNSPerfudp-8	420819			2376.3 ns/op
-BenchmarkDNSPerfudp-8	424319			2356.7 ns/op
+BenchmarkDNSPerfudp-8	421107			2374.7 ns/op
+BenchmarkDNSPerfudp-8	425473			2350.3 ns/op
+BenchmarkDNSPerfudp-8	423767			2359.8 ns/op
+BenchmarkDNSPerfudp-8	406920			2457.5 ns/op
+BenchmarkDNSPerfudp-8	406374			2460.8 ns/op
+BenchmarkDNSPerfudp-8	428485			2333.8 ns/op

@@ -161,6 +161,17 @@ func (m *Msg) Reset() {
 }
 
 func (m *Msg) Pack() error {
+	if l := m.Len(); cap(m.Data) < l {
+		m.Data = make([]byte, l)
+	} else {
+		m.Data = m.Data[:l]
+	}
+
+	off, err := pack.Uint16(m.ID, m.Data, 0)
+	if err != nil {
+		return pack.Errorf(": %s", "MsgHeader ID")
+	}
+
 	bits := uint16(m.Opcode)<<11 | uint16(m.Rcode&0xF)
 	if m.Response {
 		bits |= _QR
@@ -187,16 +198,6 @@ func (m *Msg) Pack() error {
 		bits |= _CD
 	}
 
-	if l := m.Len(); cap(m.Data) < l {
-		m.Data = make([]byte, l)
-	} else {
-		m.Data = m.Data[:l]
-	}
-
-	off, err := pack.Uint16(m.ID, m.Data, 0)
-	if err != nil {
-		return pack.Errorf(": %s", "MsgHeader ID")
-	}
 	off, err = pack.Uint16(bits, m.Data, off)
 	if err != nil {
 		return pack.Errorf(": %s", "MsgHeader bits")
@@ -361,7 +362,29 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 	return dst, nil
 }
 
-func (m *Msg) unpack(c count, s *cryptobyte.String, msgBuf []byte) (err error) {
+// Unpack unpacks a binary message that sits in m.Data to a Msg structure.
+func (m *Msg) Unpack() (err error) {
+	s := cryptobyte.String(m.Data)
+	var c count
+	var bits uint16
+	if !(s.ReadUint16(&m.ID) && s.ReadUint16(&bits) && s.ReadUint16(&c.Qdcount) && s.ReadUint16(&c.Ancount) && s.ReadUint16(&c.Nscount) && s.ReadUint16(&c.Arcount)) {
+		return unpack.Errorf("overflow %s", "MsgHeader")
+	}
+	m.Response = bits&_QR != 0
+	m.Opcode = uint8(bits>>11) & 0xF
+	m.Authoritative = bits&_AA != 0
+	m.Truncated = bits&_TC != 0
+	m.RecursionDesired = bits&_RD != 0
+	m.RecursionAvailable = bits&_RA != 0
+	m.Zero = bits&_Z != 0 // _Z covers the zero bit, which should be zero; not sure why we set it to the opposite.
+	m.AuthenticatedData = bits&_AD != 0
+	m.CheckingDisabled = bits&_CD != 0
+	m.Rcode = bits & 0xF
+
+	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
+		return nil
+	}
+
 	if m.offset > MsgHeaderSize {
 		if !s.Skip(int(m.offset - MsgHeaderSize)) {
 			return fmt.Errorf("overflow %s", "MsgHeader")
@@ -369,28 +392,28 @@ func (m *Msg) unpack(c count, s *cryptobyte.String, msgBuf []byte) (err error) {
 		goto Rest
 	}
 
-	if m.Question, err = m.unpackQuestions(c.Qdcount, s, msgBuf); err != nil {
+	if m.Question, err = m.unpackQuestions(c.Qdcount, &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
-		m.offset = uint16(len(msgBuf) - len(*s))
+		m.offset = uint16(len(m.Data) - len(s))
 		return nil
 	}
 
 Rest:
 	m.offset = 0 // reset offset here, as it has done its purpose
-	if m.Answer, err = unpackRRs(c.Ancount, s, msgBuf); err != nil {
+	if m.Answer, err = unpackRRs(c.Ancount, &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
-	if m.Ns, err = unpackRRs(c.Nscount, s, msgBuf); err != nil {
+	if m.Ns, err = unpackRRs(c.Nscount, &s, m.Data); err != nil {
 		return err
 	}
 
-	if m.Extra, err = unpackRRs(c.Arcount, s, msgBuf); err != nil {
+	if m.Extra, err = unpackRRs(c.Arcount, &s, m.Data); err != nil {
 		return err
 	}
 
@@ -431,35 +454,9 @@ Rest:
 	}
 
 	if !s.Empty() {
-		return unpack.Errorf("%d more octets", len(*s))
+		return unpack.Errorf("%d more octets", len(s))
 	}
 	return nil
-}
-
-// Unpack unpacks a binary message that sits in m.Data to a Msg structure.
-func (m *Msg) Unpack() error {
-	s := cryptobyte.String(m.Data)
-	var c count
-	var bits uint16
-	if !(s.ReadUint16(&m.ID) && s.ReadUint16(&bits) && s.ReadUint16(&c.Qdcount) && s.ReadUint16(&c.Ancount) && s.ReadUint16(&c.Nscount) && s.ReadUint16(&c.Arcount)) {
-		return unpack.Errorf("overflow %s", "MsgHeader")
-	}
-	m.Response = bits&_QR != 0
-	m.Opcode = uint8(bits>>11) & 0xF
-	m.Authoritative = bits&_AA != 0
-	m.Truncated = bits&_TC != 0
-	m.RecursionDesired = bits&_RD != 0
-	m.RecursionAvailable = bits&_RA != 0
-	m.Zero = bits&_Z != 0 // _Z covers the zero bit, which should be zero; not sure why we set it to the opposite.
-	m.AuthenticatedData = bits&_AD != 0
-	m.CheckingDisabled = bits&_CD != 0
-	m.Rcode = bits & 0xF
-
-	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
-		return nil
-	}
-
-	return m.unpack(c, &s, m.Data)
 }
 
 // Convert a complete message to a string with dig-like output. String also looks at the [Msg.Options] and
