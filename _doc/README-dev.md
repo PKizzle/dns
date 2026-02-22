@@ -62,6 +62,8 @@ ZONEMDSchemeSimple, for a constant used in the ZONEMD RR.
 Methods on RR types have `rr` as the receiver's name. For EDNS0 "RRs", the receiver is named `o`. For DSO `d`
 is used. Methods on `Msg` use `m`.
 
+Hexadecimal numbers are written in uppercase.
+
 ### RR Types
 
 The naming of types follows the RFCs. EDNS0 types are similarly named, for instance, DHU (DS Hash Understood).

@@ -161,51 +161,57 @@ func (m *Msg) Reset() {
 }
 
 func (m *Msg) Pack() error {
-	// Convert convenient Msg into wire-like Header.
-	var dh header
-	dh.ID = m.ID
-	dh.Bits = uint16(m.Opcode)<<11 | uint16(m.Rcode&0xF)
-	if m.Response {
-		dh.Bits |= _QR
-	}
-	if m.Authoritative {
-		dh.Bits |= _AA
-	}
-	if m.Truncated {
-		dh.Bits |= _TC
-	}
-	if m.RecursionDesired {
-		dh.Bits |= _RD
-	}
-	if m.RecursionAvailable {
-		dh.Bits |= _RA
-	}
-	if m.Zero {
-		dh.Bits |= _Z
-	}
-	if m.AuthenticatedData {
-		dh.Bits |= _AD
-	}
-	if m.CheckingDisabled {
-		dh.Bits |= _CD
-	}
-
-	isPseudo := m.isPseudo()
-	dh.Qdcount = uint16(len(m.Question))
-	dh.Ancount = uint16(len(m.Answer))
-	dh.Nscount = uint16(len(m.Ns))
-	dh.Arcount = uint16(len(m.Extra)) + uint16(isPseudo)
-
 	if l := m.Len(); cap(m.Data) < l {
 		m.Data = make([]byte, l)
 	} else {
 		m.Data = m.Data[:l]
 	}
 
-	off := 0
-	var err error
-	if off, err = dh.pack(m.Data, off); err != nil {
-		return err
+	off, err := pack.Uint16(m.ID, m.Data, 0)
+	if err != nil {
+		return pack.Errorf(": %s", "MsgHeader ID")
+	}
+
+	bits := uint16(m.Opcode)<<11 | uint16(m.Rcode&0xF)
+	if m.Response {
+		bits |= _QR
+	}
+	if m.Authoritative {
+		bits |= _AA
+	}
+	if m.Truncated {
+		bits |= _TC
+	}
+	if m.RecursionDesired {
+		bits |= _RD
+	}
+	if m.RecursionAvailable {
+		bits |= _RA
+	}
+	if m.Zero {
+		bits |= _Z
+	}
+	if m.AuthenticatedData {
+		bits |= _AD
+	}
+	if m.CheckingDisabled {
+		bits |= _CD
+	}
+
+	off, err = pack.Uint16(bits, m.Data, off)
+	if err != nil {
+		return pack.Errorf(": %s", "MsgHeader bits")
+	}
+
+	isPseudo := m.isPseudo()
+	counts := uint64(len(m.Question)<<48) |
+		uint64(len(m.Answer)<<32) |
+		uint64(len(m.Ns)<<16) |
+		uint64(len(m.Extra)+int(isPseudo))
+
+	off, err = pack.Uint64(counts, m.Data, off)
+	if err != nil {
+		return pack.Errorf(": %s", "MsgHeader")
 	}
 
 	// Is this compressible?
@@ -350,7 +356,29 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 	return dst, nil
 }
 
-func (m *Msg) unpack(dh header, s *cryptobyte.String, msgBuf []byte) (err error) {
+// Unpack unpacks a binary message that sits in m.Data to a Msg structure.
+func (m *Msg) Unpack() (err error) {
+	s := cryptobyte.String(m.Data)
+	var counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
+	var bits uint16
+	if !s.ReadUint16(&m.ID) || !s.ReadUint16(&bits) || !s.ReadUint64(&counts) {
+		return unpack.Errorf("overflow %s", "MsgHeader")
+	}
+	m.Response = bits&_QR != 0
+	m.Opcode = uint8(bits>>11) & 0xF
+	m.Authoritative = bits&_AA != 0
+	m.Truncated = bits&_TC != 0
+	m.RecursionDesired = bits&_RD != 0
+	m.RecursionAvailable = bits&_RA != 0
+	m.Zero = bits&_Z != 0 // _Z covers the zero bit, which should be zero; not sure why we set it to the opposite.
+	m.AuthenticatedData = bits&_AD != 0
+	m.CheckingDisabled = bits&_CD != 0
+	m.Rcode = bits & 0xF
+
+	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
+		return nil
+	}
+
 	if m.offset > MsgHeaderSize {
 		if !s.Skip(int(m.offset - MsgHeaderSize)) {
 			return fmt.Errorf("overflow %s", "MsgHeader")
@@ -358,28 +386,28 @@ func (m *Msg) unpack(dh header, s *cryptobyte.String, msgBuf []byte) (err error)
 		goto Rest
 	}
 
-	if m.Question, err = m.unpackQuestions(dh.Qdcount, s, msgBuf); err != nil {
+	if m.Question, err = m.unpackQuestions(uint16((counts>>48)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
-		m.offset = uint16(len(msgBuf) - len(*s))
+		m.offset = uint16(len(m.Data) - len(s))
 		return nil
 	}
 
 Rest:
 	m.offset = 0 // reset offset here, as it has done its purpose
-	if m.Answer, err = unpackRRs(dh.Ancount, s, msgBuf); err != nil {
+	if m.Answer, err = unpackRRs(uint16((counts>>32)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
-	if m.Ns, err = unpackRRs(dh.Nscount, s, msgBuf); err != nil {
+	if m.Ns, err = unpackRRs(uint16((counts>>16)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 
-	if m.Extra, err = unpackRRs(dh.Arcount, s, msgBuf); err != nil {
+	if m.Extra, err = unpackRRs(uint16(counts&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 
@@ -407,7 +435,6 @@ Rest:
 	}
 
 	// Check for m.Extra TSIG and SIG(0) and move them to pseudo. This MUST be the the last RR in the extra section.
-	// But as we may have moved things around, we need to iterate over m.Extra again.
 	for i := 0; i < len(m.Extra); i++ {
 		_, ok1 := m.Extra[i].(*TSIG)
 		_, ok2 := m.Extra[i].(*SIG)
@@ -421,24 +448,9 @@ Rest:
 	}
 
 	if !s.Empty() {
-		return unpack.Errorf("%d more octets", len(*s))
+		return unpack.Errorf("%d more octets", len(s))
 	}
 	return nil
-}
-
-// Unpack unpacks a binary message that sits in m.Data to a Msg structure.
-func (m *Msg) Unpack() error {
-	s := cryptobyte.String(m.Data)
-	var dh header
-	if !dh.unpack(&s) {
-		return unpack.Errorf("overflow %s", "MsgHeader")
-	}
-	m.setMsgHeader(dh)
-	if m.Options > 0 && m.Options <= MsgOptionUnpackHeader {
-		return nil
-	}
-
-	return m.unpack(dh, &s, m.Data)
 }
 
 // Convert a complete message to a string with dig-like output. String also looks at the [Msg.Options] and
@@ -625,63 +637,7 @@ func (m *Msg) Len() int {
 		l += minHeaderSize
 	}
 
-	if l > MaxMsgSize {
-		return MaxMsgSize
-	}
-
-	return l
-}
-
-func (dh *header) pack(msg []byte, off int) (int, error) {
-	off, err := pack.Uint16(dh.ID, msg, off)
-	if err != nil {
-		return off, pack.Errorf(": %s", "header.ID")
-	}
-	off, err = pack.Uint16(dh.Bits, msg, off)
-	if err != nil {
-		return off, pack.Errorf(": %s", "header.Bits")
-	}
-	off, err = pack.Uint16(dh.Qdcount, msg, off)
-	if err != nil {
-		return off, pack.Errorf(": %s", "header.Qdcount")
-	}
-	off, err = pack.Uint16(dh.Ancount, msg, off)
-	if err != nil {
-		return off, pack.Errorf(": %s", "header.Ancount")
-	}
-	off, err = pack.Uint16(dh.Nscount, msg, off)
-	if err != nil {
-		return off, pack.Errorf(": %s", "header.Nscount")
-	}
-	off, err = pack.Uint16(dh.Arcount, msg, off)
-	if err != nil {
-		return off, pack.Errorf(": %s", "header.Arcount")
-	}
-	return off, nil
-}
-
-func (dh *header) unpack(msg *cryptobyte.String) bool {
-	return msg.ReadUint16(&dh.ID) &&
-		msg.ReadUint16(&dh.Bits) &&
-		msg.ReadUint16(&dh.Qdcount) &&
-		msg.ReadUint16(&dh.Ancount) &&
-		msg.ReadUint16(&dh.Nscount) &&
-		msg.ReadUint16(&dh.Arcount)
-}
-
-// setHdr set the header in the dns using the binary data in dh.
-func (m *Msg) setMsgHeader(dh header) {
-	m.ID = dh.ID
-	m.Response = dh.Bits&_QR != 0
-	m.Opcode = uint8(dh.Bits>>11) & 0xF
-	m.Authoritative = dh.Bits&_AA != 0
-	m.Truncated = dh.Bits&_TC != 0
-	m.RecursionDesired = dh.Bits&_RD != 0
-	m.RecursionAvailable = dh.Bits&_RA != 0
-	m.Zero = dh.Bits&_Z != 0 // _Z covers the zero bit, which should be zero; not sure why we set it to the opposite.
-	m.AuthenticatedData = dh.Bits&_AD != 0
-	m.CheckingDisabled = dh.Bits&_CD != 0
-	m.Rcode = dh.Bits & 0xF
+	return min(l, MaxMsgSize)
 }
 
 // Hijack allows user hijacking the allocation in m.Data; this means that when the message is written through

@@ -164,13 +164,6 @@ const (
 	ZONEMDHashSHA512 = 2
 )
 
-// header is the wire format for the DNS packet header.
-type header struct {
-	ID                                 uint16
-	Bits                               uint16
-	Qdcount, Ancount, Nscount, Arcount uint16
-}
-
 const (
 	// Header.Bits
 	_QR = 1 << 15 // query/response (response=1)
