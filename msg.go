@@ -202,22 +202,16 @@ func (m *Msg) Pack() error {
 	if err != nil {
 		return pack.Errorf(": %s", "MsgHeader bits")
 	}
-	off, err = pack.Uint16(uint16(len(m.Question)), m.Data, off)
-	if err != nil {
-		return pack.Errorf(": %s", "MsgHeader qdcount")
-	}
-	off, err = pack.Uint16(uint16(len(m.Answer)), m.Data, off)
-	if err != nil {
-		return pack.Errorf(": %s", "MsgHeader ancount")
-	}
-	off, err = pack.Uint16(uint16(len(m.Ns)), m.Data, off)
-	if err != nil {
-		return pack.Errorf(": %s", "MsgHeader nscount")
-	}
+
 	isPseudo := m.isPseudo()
-	off, err = pack.Uint16(uint16(len(m.Extra))+uint16(isPseudo), m.Data, off)
+	counts := uint64(len(m.Question)<<48) |
+		uint64(len(m.Answer)<<32) |
+		uint64(len(m.Ns)<<16) |
+		uint64(len(m.Extra)+int(isPseudo))
+
+	off, err = pack.Uint64(counts, m.Data, off)
 	if err != nil {
-		return pack.Errorf(": %s", "MsgHeader arcount")
+		return pack.Errorf(": %s", "MsgHeader")
 	}
 
 	// Is this compressible?
@@ -365,9 +359,9 @@ func unpackRRs(cnt uint16, msg *cryptobyte.String, msgBuf []byte) ([]RR, error) 
 // Unpack unpacks a binary message that sits in m.Data to a Msg structure.
 func (m *Msg) Unpack() (err error) {
 	s := cryptobyte.String(m.Data)
-	var c count
+	var counts uint64 // read all counters into 64 bits and slice the 16 bits values out of it
 	var bits uint16
-	if !(s.ReadUint16(&m.ID) && s.ReadUint16(&bits) && s.ReadUint16(&c.Qdcount) && s.ReadUint16(&c.Ancount) && s.ReadUint16(&c.Nscount) && s.ReadUint16(&c.Arcount)) {
+	if !s.ReadUint16(&m.ID) || !s.ReadUint16(&bits) || !s.ReadUint64(&counts) {
 		return unpack.Errorf("overflow %s", "MsgHeader")
 	}
 	m.Response = bits&_QR != 0
@@ -392,7 +386,7 @@ func (m *Msg) Unpack() (err error) {
 		goto Rest
 	}
 
-	if m.Question, err = m.unpackQuestions(c.Qdcount, &s, m.Data); err != nil {
+	if m.Question, err = m.unpackQuestions(uint16((counts>>48)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackQuestion {
@@ -402,18 +396,18 @@ func (m *Msg) Unpack() (err error) {
 
 Rest:
 	m.offset = 0 // reset offset here, as it has done its purpose
-	if m.Answer, err = unpackRRs(c.Ancount, &s, m.Data); err != nil {
+	if m.Answer, err = unpackRRs(uint16((counts>>32)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 	if m.Options > 0 && m.Options <= MsgOptionUnpackAnswer {
 		return nil
 	}
 
-	if m.Ns, err = unpackRRs(c.Nscount, &s, m.Data); err != nil {
+	if m.Ns, err = unpackRRs(uint16((counts>>16)&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 
-	if m.Extra, err = unpackRRs(c.Arcount, &s, m.Data); err != nil {
+	if m.Extra, err = unpackRRs(uint16(counts&0xFFFF), &s, m.Data); err != nil {
 		return err
 	}
 

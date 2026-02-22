@@ -164,10 +164,6 @@ const (
 	ZONEMDHashSHA512 = 2
 )
 
-type count struct {
-	Qdcount, Ancount, Nscount, Arcount uint16
-}
-
 const (
 	// Header.Bits
 	_QR = 1 << 15 // query/response (response=1)
