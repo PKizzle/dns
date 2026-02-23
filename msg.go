@@ -413,8 +413,10 @@ Rest:
 
 	// Check for the OPT RR and remove it entirely, unpack the OPT for option codes and put those in the Pseudo
 	// section. We will only check one OPT, any others will be left in Extra.
+Extra1:
 	for i := len(m.Extra) - 1; i >= 0; i-- {
-		if opt, ok := m.Extra[i].(*OPT); ok {
+		switch opt := m.Extra[i].(type) {
+		case *OPT:
 			m.Security = opt.Security()
 			m.CompactAnswers = opt.CompactAnswers()
 			m.Delegation = opt.Delegation()
@@ -427,23 +429,19 @@ Rest:
 			for j := range opt.Options {
 				m.Pseudo[j] = RR(opt.Options[j])
 			}
-			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place taken with last rr
-			m.Extra = m.Extra[:len(m.Extra)-1]   // remove the OPT RR
-
-			break
+			m.Extra[i] = m.Extra[len(m.Extra)-1] // opt's place switch with last rr
+			m.Extra = m.Extra[:len(m.Extra)-1]   // remove cruft
+			break Extra1
 		}
 	}
-
-	// Check for m.Extra TSIG and SIG(0) and move them to pseudo. This MUST be the the last RR in the extra section.
-Extra:
+Extra2:
 	for i := len(m.Extra) - 1; i >= 0; i-- {
 		switch m.Extra[i].(type) {
 		case *TSIG, *SIG:
 			m.Pseudo = append(m.Pseudo, m.Extra[i])
-			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place taken with last rr
-			m.Extra = m.Extra[:len(m.Extra)-1]   // remove the sig/tsig RR
-
-			break Extra
+			m.Extra[i] = m.Extra[len(m.Extra)-1] // sig/tsig's place switch with last rr
+			m.Extra = m.Extra[:len(m.Extra)-1]   // remove cruft
+			break Extra2
 		}
 	}
 
