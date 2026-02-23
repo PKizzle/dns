@@ -302,7 +302,6 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 	st := zExpectOwnerDir // initial state
 
-Next:
 	for l, ok := zp.c.Next(); ok; l, ok = zp.c.Next() {
 		// zlexer spotted an error already
 		if l.Value == dnslex.Error {
@@ -330,46 +329,31 @@ Next:
 
 				zp.h.Name = name
 
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after owner", l)
 				}
 
 				st = zExpectAny
 			case dnslex.DirTTL:
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after $TTL-directive", l)
 				}
 
 				st = zExpectDirTTL
 			case dnslex.DirOrigin:
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after $ORIGIN-directive", l)
 				}
 
 				st = zExpectDirOrigin
 			case dnslex.DirInclude:
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after $INCLUDE-directive", l)
 				}
 
 				st = zExpectDirInclude
 			case dnslex.DirGenerate:
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after $GENERATE-directive", l)
 				}
 
@@ -381,10 +365,7 @@ Next:
 			case dnslex.Class:
 				zp.h.Class = l.Torc
 
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after class", l)
 				}
 
@@ -396,10 +377,7 @@ Next:
 				if zp.h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after TTL", l)
 				}
 
@@ -411,9 +389,8 @@ Next:
 			if l.Value != dnslex.Blank {
 				return zp.setParseError("no blank before RR type", l)
 			}
-			if l, ok = zp.c.Next(); !ok {
-				break Next
-			}
+
+			l, _ = zp.c.Next()
 			if l.Value != dnslex.Rrtype {
 				return zp.setParseError("unknown RR type", l)
 			}
@@ -619,10 +596,7 @@ Next:
 			case dnslex.Class:
 				zp.h.Class = l.Torc
 
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after class", l)
 				}
 
@@ -631,10 +605,7 @@ Next:
 				if zp.h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
 				}
-				if l, ok = zp.c.Next(); !ok {
-					break Next
-				}
-				if l.Value != dnslex.Blank {
+				if !zp.c.Blank() {
 					return zp.setParseError("no blank after TTL", l)
 				}
 
