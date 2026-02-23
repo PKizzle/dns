@@ -267,9 +267,9 @@ func (m *Msg) Pack() error {
 			opt.SetDelegation(true)
 		}
 		for i := range m.Pseudo {
-			opt.Hdr.Name = "."
 			switch x := m.Pseudo[i].(type) {
 			case EDNS0:
+				opt.Hdr.Name = "."
 				opt.Options = append(opt.Options, x)
 			default:
 				tsigOrsig0 = true
