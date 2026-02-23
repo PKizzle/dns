@@ -59,7 +59,7 @@ const dom = "whoami.miek.nl."
 
 var hdr = &dns.Header{Name: dom, Class: dns.ClassINET}
 
-var textPool = sync.Pool{New: func() any { return make([]byte, 0, 64) }}
+var textPool = sync.Pool{New: func() any { return make([]byte, 0, 16) }}
 
 func reflect(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
 	if err := r.Unpack(); err != nil {

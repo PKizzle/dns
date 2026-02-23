@@ -25,7 +25,7 @@ var EmptyData = []string{
 	"IXFR", "KEY", "NXNAME", "NXT", "OPT", "SIG", "SPF", "RESINFO", "WALLET",
 }
 
-var Popular = []string{"A", "AAAA", "NS", "CNAME", "DNSKEY", "DS", "RRSIG", "DELEG", "MX", "TXT", "NSEC", "NSEC3"}
+var Popular = []string{"A", "AAAA", "NS", "CNAME", "DNSKEY", "DS", "RRSIG", "DELEG", "MX", "TXT", "NSEC", "NSEC3", "OPT", "TSIG"}
 
 // Ast returns the *ast.File of file or an error.
 func Ast(file string) (f *ast.File, t *token.FileSet, err error) {
