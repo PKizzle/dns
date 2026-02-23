@@ -1,4 +1,6 @@
 on: [push, pull_request]
+concurrency:
+  group: deploy-${{ forgejo.ref }}
 
 jobs:
   test:
