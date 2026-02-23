@@ -191,7 +191,7 @@ func TestMsg(t *testing.T) {
 			func() *dns.Msg { m := dns.NewMsg("example.org.", dns.TypeMX); m.ID = 3; m.Security = true; return m },
 			func(r *dns.Msg) error {
 				if !r.Security {
-					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+					return fmt.Errorf("expected %t, got %t", r.Security, !r.Security)
 				}
 				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
 				if arcount != 1 {
@@ -211,7 +211,7 @@ func TestMsg(t *testing.T) {
 			},
 			func(r *dns.Msg) error {
 				if !r.Security {
-					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+					return fmt.Errorf("expected %t, got %t", r.Security, !r.Security)
 				}
 				arcount := binary.BigEndian.Uint16(r.Data[msgArcount:])
 				if arcount != 1 { // nsid and DO bit are stored in a single record
@@ -243,6 +243,31 @@ func TestMsg(t *testing.T) {
 				}
 				if x := len(r.Pseudo); x != 2 {
 					return fmt.Errorf("expected len(pseudo) to be 2, got %d", x)
+				}
+				return nil
+			},
+		},
+		{
+			"tsig",
+			func() *dns.Msg {
+				m := dns.NewMsg("example.org.", dns.TypeMX)
+				m.ID = 3
+				m.Pseudo = []dns.RR{dns.NewTSIG("example.", dns.HmacSHA256, 0)}
+				return m
+			},
+			func(r *dns.Msg) error {
+				if r.Security {
+					return fmt.Errorf("expected %t, got %t", !r.Security, r.Security)
+				}
+				arcount := binary.BigEndian.Uint16(r.Data[10:])
+				if arcount != 1 {
+					return fmt.Errorf("expected arcount to be q, got %d", arcount)
+				}
+				if x := len(r.Pseudo); x != 1 {
+					return fmt.Errorf("expected len(pseudo) to be 1, got %d", x)
+				}
+				if x := len(r.Extra); x != 0 {
+					return fmt.Errorf("expected len(extra) to be 0, got %d", x)
 				}
 				return nil
 			},
