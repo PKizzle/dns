@@ -160,6 +160,10 @@ func readData(r io.Reader, rrtype uint16, origin ...string) (RDATA, error) {
 type ZoneParser struct {
 	h Header // rr header as we parse
 	t uint16 // type as we parse, not stored in the header
+
+	includeDepth       uint8
+	generateDisallowed bool
+
 	r io.Reader
 	c *dnslex.Lexer
 
@@ -192,9 +196,6 @@ type ZoneParser struct {
 	// Next, by calling subNext, forwards the resulting RRs from this
 	// sub parser to the calling code.
 	sub *ZoneParser
-
-	includeDepth       uint8
-	generateDisallowed bool
 }
 
 // NewZoneParser returns an RFC 1035 style zone file parser that reads from r.

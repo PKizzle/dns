@@ -113,15 +113,15 @@ func (s *Sign) Sign(origin string) (*zone.Zone, error) {
 }
 
 type nsecfn struct {
-	origin   string
-	zonemd   bool
 	keypairs []KeyPair
+	bitmap   []uint16
+	nsecs    []*dnszone.Node
+	origin   string
 
-	last   string
-	bitmap []uint16
-	ttl    uint32
+	last string
+	ttl  uint32
 
-	nsecs []*dnszone.Node
+	zonemd bool
 }
 
 func types(n *dnszone.Node, ttl uint32) []uint16 {
