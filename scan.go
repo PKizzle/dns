@@ -298,7 +298,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 	//   4. dnslex.Owner _ dnslex.String _ dnslex.Class  _ dnslex.Rrtype -> ttl/class
 	//   5. dnslex.Owner _ dnslex.Class  _ dnslex.String _ dnslex.Rrtype -> class/ttl (reversed)
 	//
-	// After detecting these, we know the zRrtype so we can jump to functions handling the rdata for each of these types.
+	// After detecting these, we know the RR type so we can jump to functions handling the rdata for each.
 
 	st := zExpectOwnerDir // initial state
 
@@ -310,7 +310,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 		switch st {
 		case zExpectOwnerDir:
-			// We can also expect a directive, like $TTL or $ORIGIN
+			// We can also expect a directive, like $TTL or $ORIGIN.
 			if zp.defttl != nil {
 				zp.h.TTL = zp.defttl.ttl
 			}
@@ -371,8 +371,7 @@ func (zp *ZoneParser) Next() (RR, bool) {
 
 				st = zExpectAnyNoClass
 			case dnslex.Blank:
-				// Discard, can happen when there is nothing on the
-				// line except the RR type
+				// Discard, can happen when there is nothing on the line except the RR type.
 			case dnslex.String:
 				if zp.h.TTL, ok = setTTL(l); !ok {
 					return zp.setParseError("not a TTL", l)
@@ -408,12 +407,9 @@ func (zp *ZoneParser) Next() (RR, bool) {
 					rr = newFn()
 					*rr.Header() = zp.h
 
-					// We may be parsing a known RR type using the RFC3597 format.
-					// If so, we handle that here in a generic way.
-					//
-					// This is also true for PrivateRR types which will have the
-					// RFC3597 parsing done for them and the Unpack method called
-					// to populate the RR instead of simply deferring to Parse.
+					// We may be parsing a known RR type using the RFC3597 format. If so, we handle that here in a generic way.
+					// Custom RRs will need to be registered and will be called with processed []Tokens in
+					// parse.
 					if zp.c.Peek().Token == "\\#" {
 						parseAsRFC3597 = true
 					}
@@ -712,9 +708,8 @@ func stringToTTL(token string) (uint32, bool) {
 	return uint32(s + i), true
 }
 
-// Parse LOC records' <digits>[.<digits>][mM] into a
-// mantissa exponent format. Token should contain the entire
-// string (i.e. no spaces allowed)
+// stringgToCm parses LOC records' <digits>[.<digits>][mM] into a mantissa exponent format. Token should contain the entire
+// string (i.e. no spaces allowed).
 func stringToCm(token string) (e, m uint8, ok bool) {
 	if token[len(token)-1] == 'M' || token[len(token)-1] == 'm' {
 		token = token[0 : len(token)-1]
@@ -727,8 +722,7 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 	mStr, cmStr, hasCM := strings.Cut(token, ".")
 	if hasCM {
 		// There's no point in having more than 2 digits in this part, and would rather make the implementation complicated ('123' should be treated as '12').
-		// So we simply reject it.
-		// We also make sure the first character is a digit to reject '+-' signs.
+		// So we simply reject it. We also make sure the first character is a digit to reject '+-' signs.
 		cmeters, err = strconv.Atoi(cmStr)
 		if err != nil || len(cmStr) > 2 || cmStr[0] < '0' || cmStr[0] > '9' {
 			return
@@ -761,7 +755,7 @@ func stringToCm(token string) (e, m uint8, ok bool) {
 	return e, uint8(val), true
 }
 
-// LOC record helper function
+// LOC record helper function.
 func locCheckNorth(token string, latitude uint32) (uint32, bool) {
 	if latitude > 90*1000*60*60 {
 		return latitude, false
@@ -775,7 +769,7 @@ func locCheckNorth(token string, latitude uint32) (uint32, bool) {
 	return latitude, false
 }
 
-// LOC record helper function
+// LOC record helper function.
 func locCheckEast(token string, longitude uint32) (uint32, bool) {
 	if longitude > 180*1000*60*60 {
 		return longitude, false
