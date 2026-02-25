@@ -4,7 +4,9 @@ _global_ - hold global server properties
 
 # Description
 
-_global_ holds global server properties, like the prometheus metrics port and root directory.
+_global_ holds global server properties, like the prometheus metrics port, root directory, profiling settings
+and more items that effect the entire atomdns process.
+
 It's not a handler and you can not use it as such: you can't use _global_ in the configuration, other than in the
 global section, see the configuration examples below.
 
@@ -21,7 +23,7 @@ global section, see the configuration examples below.
     }
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
-    pprof [ADDRESS]
+    pprof [FILE|ADDRESS]
     dns {
         addr ADDRESS
         limits {
@@ -64,7 +66,7 @@ global section, see the configuration examples below.
   - `json` enables JSON logging.
   - With `quiet` the banner is not shown. Query logging is not affected.
   - And `disable` disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns-log(7).
-- The `metrics` property allows setting the listening **ADDRESS** for the promtheus metrics. This defaults to `localhost:9153`.
+- The `metrics` property allows setting the listening **ADDRESS** for the prometheus metrics. This defaults to `localhost:9153`.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global section.
   The optional **/N** tells the metric handler to monitor 1 in **N** queries. The default is 10. This needs to
@@ -75,7 +77,8 @@ global section, see the configuration examples below.
   delayed for that duration. The default for **ADDRESS** is `:8080`. Every 2 seconds atomdns will query itself
   to get its health so it can export the latency metrics.
 - With `pprof` you can publish runtime profiling data at the endpoint on
-  **ADDRESS** under `/debug/pprof`. The default is localhost:6053.
+  **ADDRESS** under `/debug/pprof`. Alternatively it can be a path where the profiling output is written to.
+  The default is `localhost:6053`.
 
 This is parsed in-order and some settings depend on `root` and/or `debug`, so set those two early in the file.
 
@@ -131,12 +134,12 @@ With `dou` you configure an Unix domain socket to listen on, defined are.
   If this is a relative name the path from `root` will be prepended.
 
 Querying over a Unix domain socket needs to be done using the TCP packet format, for example:
-`kdig +tcp www.example.org @/tmp/dns.sock`, if **SOCKET** is set to `/tmp/dns.sock`.
+`kdig +tcp www.example.org @/tmp/atomdns.sock`, if **SOCKET** is set to `/tmp/atomdns.sock`.
 
 ## `tls`
 
 With `tls` you configure the TLS certificate setup. **ISSUER** can be `manual`, or `lets-encrypt`. The later
-will set up the certicates automatically. If you use relative path in this configuration be sure that `root`
+will set up the certificates automatically. If you use relative path in this configuration be sure that `root`
 is set _above_ this config, so that its value is set.
 
 Depending on **ISSUER**, you have the following further configuration:
@@ -149,7 +152,7 @@ If **ISSUER** is `manual`:
 
 If **ISSUER** is `lets-encrypt`:
 
-- `source`, a list of **IP**s or **IFACE** names for which the IP addresss should be retrieved, and for which
+- `source`, a list of **IP**s or **IFACE** names for which the IP address should be retrieved, and for which
   the TLS certificates should be requested.
 - `contact`, where **EMAIL** is the contact email use when retrieving certificates. This can be set to (one
   of) your SOA's Mbox (RNAME - responsible person) mail address.
@@ -158,7 +161,7 @@ If **ISSUER** is `lets-encrypt`:
 - `ca` lets you select the production or staging ACME CA endpoint, by specifying the URL here. The default for
   the time being is Let's Encrypt staging endpoint: <https://acme-staging-v02.api.letsencrypt.org/directory>.
   The production endpoint for Let's Encrypt is <https://acme-v02.api.letsencrypt.org/directory>.
-  If after the URL the literal text `test` is used, atomdns will not start a seperate web server on port 443,
+  If after the URL the literal text `test` is used, atomdns will not start a separate web server on port 443,
   this is to aid in local testing.
 - `rootca`, can also be used here. This is optional, but can aid in testing.
 
@@ -204,6 +207,17 @@ Or run an health endpoint on http://localhost:8091, with a lame-duck delay of 20
     health localhost:8091 200ms
 }
 ```
+
+Using the profiling tools.
+
+```txt
+{
+    pprof atomdns.prof
+}
+```
+
+Then run atomdns, and use the profiling data: `go tool pprof -http localhost:8080 atomdns atomdns.prof` and
+spot any bottlenecks.
 
 # Metrics
 

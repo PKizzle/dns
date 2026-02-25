@@ -10,6 +10,7 @@ import (
 	pp "net/http/pprof"
 	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,6 +48,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return d.ArgErr()
 			}
 			g.Root = d.Val()
+			g.Root = conffile.Tilde(g.Root)
 			if !filepath.IsAbs(g.Root) {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
@@ -54,6 +56,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			if _, err := os.Stat(g.Root); err != nil {
 				return err
 			}
+			g.OnStartup(func() error {
+				log.Info("Startup", "root", g.Root)
+				return nil
+			})
 		case "tls":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
@@ -312,30 +318,55 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 		case "pprof":
 			addr := "localhost:6053"
+			path := false
 			if d.NextArg() {
 				addr = d.Val()
 			}
-			g.OnStartup(func() error {
-				log.Info("Startup", "/debug/pprof", addr)
-				ln, err := net.Listen("tcp", addr)
-				if err != nil {
-					return err
+			if _, err := net.ResolveTCPAddr("tcp", addr); err != nil { // not an address, thus file
+				addr = conffile.Tilde(addr)
+				if !filepath.IsAbs(addr) {
+					addr = filepath.Join(g.Root, addr)
 				}
-				mux := http.NewServeMux()
-				mux.Handle("/metrics", promhttp.Handler())
-				mux.HandleFunc("/debug/pprof/", pp.Index)
-				mux.HandleFunc("/debug/pprof/cmdline", pp.Cmdline)
-				mux.HandleFunc("/debug/pprof/profile", pp.Profile)
-				mux.HandleFunc("/debug/pprof/symbol", pp.Symbol)
-				mux.HandleFunc("/debug/pprof/trace", pp.Trace)
-				server := &http.Server{Handler: mux, ReadTimeout: 5 * time.Second}
-				go func() { server.Serve(ln) }()
-				g.PprofListener = ln
+				path = true
+			}
+
+			g.OnStartup(func() (err error) {
+				switch path {
+				case false:
+					log.Info("Startup", "/debug/pprof", addr)
+					ln, err := net.Listen("tcp", addr)
+					if err != nil {
+						return err
+					}
+					mux := http.NewServeMux()
+					mux.Handle("/metrics", promhttp.Handler())
+					mux.HandleFunc("/debug/pprof/", pp.Index)
+					mux.HandleFunc("/debug/pprof/cmdline", pp.Cmdline)
+					mux.HandleFunc("/debug/pprof/profile", pp.Profile)
+					mux.HandleFunc("/debug/pprof/symbol", pp.Symbol)
+					mux.HandleFunc("/debug/pprof/trace", pp.Trace)
+					server := &http.Server{Handler: mux, ReadTimeout: 5 * time.Second}
+					go func() { server.Serve(ln) }()
+					g.PprofListener = ln
+				case true:
+					log.Info("Startup", "pprof", filepath.Base(addr))
+					if g.PprofWriter, err = os.Create(addr); err != nil {
+						return err
+					}
+					pprof.StartCPUProfile(g.PprofWriter)
+				}
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown", "/debug/pprof", addr)
-				g.PprofListener.Close()
+				switch path {
+				case false:
+					log.Info("Shutdown", "/debug/pprof", addr)
+					g.PprofListener.Close()
+				case true:
+					log.Info("Shutdown", "pprof", filepath.Base(addr))
+					pprof.StopCPUProfile()
+					g.PprofWriter.Close()
+				}
 				return nil
 			})
 		default:
