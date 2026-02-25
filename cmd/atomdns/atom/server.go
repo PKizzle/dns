@@ -319,12 +319,18 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 	}
 	global.Registered = map[string]struct{}{}
 
+	type teardown struct {
+		name string
+		fn   func(*dnsserver.Controller) error
+	}
+
 	for _, b := range blocks {
 		if b.Keys == nil {
 			continue
 		}
 		// prepend unpack to start the chain
 		hs := []handlers.Handler{new(unpack.Unpack)}
+		teardowns := []teardown{}
 		names := []string{}
 		for _, name := range b.Directives {
 			names = append(names, name)
@@ -344,6 +350,10 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 					return handler.Err(err)
 				}
 			}
+			if t, ok := handler.(handlers.Teardowner); ok {
+				teardowns = append(teardowns, teardown{name, t.Teardown})
+			}
+
 			if fn := handler.HandlerFunc(nil); fn != nil {
 				// Do not add noop handler funcs.
 				hs = append(hs, handler)
@@ -354,6 +364,18 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				}
 			}
 		}
+
+		for _, teardown := range teardowns {
+			co := &dnsserver.Controller{Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil), Global: global}
+			err := teardown.fn(co)
+			if err != nil {
+				newFn, _ := handlers.StringToHandler[teardown.name]
+				handler := newFn()
+				err := fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ","))
+				return handler.Err(err)
+			}
+		}
+
 		hs = append(hs, new(refuse.Refuse)) // add refuse guard
 
 		for _, k := range b.Keys {

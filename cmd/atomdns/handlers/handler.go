@@ -38,6 +38,12 @@ type Setupper interface {
 	Setup(co *dnsserver.Controller) error
 }
 
+// Teardowner holds a method that is called when the handler block is processed and the handler needs to reset
+// some state.
+type Teardowner interface {
+	Teardown(co *dnsserver.Controller) error
+}
+
 // Compile takes the Handlers hs and creates a wrapped handle func.
 func Compile(hs []Handler) dns.HandlerFunc {
 	if len(hs) < 1 {
