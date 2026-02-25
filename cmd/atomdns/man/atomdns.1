@@ -17,9 +17,9 @@ respective manual page.
 
 .PP
 The server atomdns can be reloaded by sending it the HUP signal, this reloads the handlers only, and does
-\fInot\fP restart any of the servers, so changes to server addresses and limits (see atomdns\-global(7)) will not
-be applied through reloads. For those kind of changes the server needs to be restarted. Modifiying origins or
-handlers are picked up.
+\fInot\fP restart any of the (web) servers, so changes to server addresses and limits (see atomdns\-global(7)) will not
+be applied through reloads. I.e. if you modified the health endpoint that change \fIwill not\fP be picked up.
+For those kind of changes the server needs to be restarted. Modifiying origins or handlers \fIare\fP picked up.
 
 .PP
 The \fIglobal\fP handler describes the options that are also used in starting the server, see atomdns\-global(7)
