@@ -7,7 +7,10 @@
 
 .SH "DESCRIPTION"
 .PP
-\fIglobal\fP holds global server properties, like the prometheus metrics port and root directory.
+\fIglobal\fP holds global server properties, like the prometheus metrics port, root directory, profiling settings
+and more items that effect the entire atomdns process.
+
+.PP
 It's not a handler and you can not use it as such: you can't use \fIglobal\fP in the configuration, other than in the
 global section, see the configuration examples below.
 
@@ -26,7 +29,7 @@ global section, see the configuration examples below.
     }
     metrics [/N] [ADDRRES]
     health [ADDRESS [LAMEDUCK]]
-    pprof [ADDRESS]
+    pprof [FILE|ADDRESS]
     dns {
         addr ADDRESS
         limits {
@@ -82,7 +85,7 @@ And \fB\fCdisable\fR disables the logging so that it can be enabled with the SIG
 
 .RE
 .IP \(bu 4
-The \fB\fCmetrics\fR property allows setting the listening \fBADDRESS\fP for the promtheus metrics. This defaults to \fB\fClocalhost:9153\fR.
+The \fB\fCmetrics\fR property allows setting the listening \fBADDRESS\fP for the prometheus metrics. This defaults to \fB\fClocalhost:9153\fR.
 Without \fB\fCmetrics\fR no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
 metrics gathering \fB\fCmetrics\fR must be enabled in the global section.
 The optional \fB/N\fP tells the metric handler to monitor 1 in \fBN\fP queries. The default is 10. This needs to
@@ -95,7 +98,8 @@ delayed for that duration. The default for \fBADDRESS\fP is \fB\fC:8080\fR. Ever
 to get its health so it can export the latency metrics.
 .IP \(bu 4
 With \fB\fCpprof\fR you can publish runtime profiling data at the endpoint on
-\fBADDRESS\fP under \fB\fC/debug/pprof\fR. The default is localhost:6053.
+\fBADDRESS\fP under \fB\fC/debug/pprof\fR. Alternatively it can be a path where the profiling output is written to.
+The default is \fB\fClocalhost:6053\fR.
 
 
 .PP
@@ -186,12 +190,12 @@ If this is a relative name the path from \fB\fCroot\fR will be prepended.
 
 .PP
 Querying over a Unix domain socket needs to be done using the TCP packet format, for example:
-\fB\fCkdig +tcp www.example.org @/tmp/dns.sock\fR, if \fBSOCKET\fP is set to \fB\fC/tmp/dns.sock\fR.
+\fB\fCkdig +tcp www.example.org @/tmp/atomdns.sock\fR, if \fBSOCKET\fP is set to \fB\fC/tmp/atomdns.sock\fR.
 
 .SH ""\fB\fCtls\fR
 .PP
 With \fB\fCtls\fR you configure the TLS certificate setup. \fBISSUER\fP can be \fB\fCmanual\fR, or \fB\fClets-encrypt\fR. The later
-will set up the certicates automatically. If you use relative path in this configuration be sure that \fB\fCroot\fR
+will set up the certificates automatically. If you use relative path in this configuration be sure that \fB\fCroot\fR
 is set \fIabove\fP this config, so that its value is set.
 
 .PP
@@ -211,7 +215,7 @@ If \fBISSUER\fP is \fB\fCmanual\fR:
 If \fBISSUER\fP is \fB\fClets-encrypt\fR:
 
 .IP \(bu 4
-\fB\fCsource\fR, a list of \fBIP\fPs or \fBIFACE\fP names for which the IP addresss should be retrieved, and for which
+\fB\fCsource\fR, a list of \fBIP\fPs or \fBIFACE\fP names for which the IP address should be retrieved, and for which
 the TLS certificates should be requested.
 .IP \(bu 4
 \fB\fCcontact\fR, where \fBEMAIL\fP is the contact email use when retrieving certificates. This can be set to (one
@@ -225,7 +229,7 @@ the time being is Let's Encrypt staging endpoint: https://acme\-staging\-v02.api
 \[la]https://acme-staging-v02.api.letsencrypt.org/directory\[ra].
 The production endpoint for Let's Encrypt is https://acme\-v02.api.letsencrypt.org/directory
 \[la]https://acme-v02.api.letsencrypt.org/directory\[ra].
-If after the URL the literal text \fB\fCtest\fR is used, atomdns will not start a seperate web server on port 443,
+If after the URL the literal text \fB\fCtest\fR is used, atomdns will not start a separate web server on port 443,
 this is to aid in local testing.
 .IP \(bu 4
 \fB\fCrootca\fR, can also be used here. This is optional, but can aid in testing.
@@ -286,6 +290,24 @@ Or run an health endpoint on http://localhost:8091, with a lame\-duck delay of 2
 
 .fi
 .RE
+
+.PP
+Using the profiling tools.
+
+.PP
+.RS
+
+.nf
+{
+    pprof atomdns.prof
+}
+
+.fi
+.RE
+
+.PP
+Then run atomdns, and use the profiling data: \fB\fCgo tool pprof -http localhost:8080 atomdns atomdns.prof\fR and
+spot any bottlenecks.
 
 .SH "METRICS"
 .PP

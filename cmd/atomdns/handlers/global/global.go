@@ -2,6 +2,7 @@ package global
 
 import (
 	"crypto/tls"
+	"io"
 	"log/slog"
 	"net"
 	"sync"
@@ -25,6 +26,7 @@ type Global struct {
 	HealthListener net.Listener
 	// Pprof
 	PprofListener net.Listener
+	PprofWriter   io.WriteCloser
 	// dns
 	Addr   string
 	Limits Limits

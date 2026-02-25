@@ -12,6 +12,9 @@
     metrics # Enable prometheus metrics.
     root handlers # Set the root directory to $PWD/handlers
 
+    # if you want to profile the atomdns instance, enable the next line.
+    pprof atomdns.prof
+
     # dns configures the DNS listener that does plain old DNS.
     dns {
         addr [::]:1053 # Listen on all interfaces and port 1053.
