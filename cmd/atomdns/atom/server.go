@@ -184,16 +184,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 			ReuseAddr: true, ReusePort: true,
 			Handler: s.mux, Net: net, Addr: global.Addr, MaxTCPQueries: global.Limits.MaxTCPQueries,
 		}
-		var i atomic.Uint64
-		N := global.MetricsN
-		s.servers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
-			if N == 0 {
-				return
-			}
-			if (i.Add(1)-1)%N == 0 {
-				metrics.Dropped.Inc()
-			}
-		}
+		msgInvalidFunc(s.servers[j], global.MetricsN)
 		s.servers[j].NotifyStartedFunc = func(_ context.Context) { s.started <- nil }
 	}
 
@@ -213,16 +204,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
 			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
 		}
-		var i atomic.Uint64
-		N := global.MetricsN
-		s.tlsservers[j].MsgInvalidFunc = func(_ *dns.Msg, err error) {
-			if N == 0 {
-				return
-			}
-			if (i.Add(1)-1)%N == 0 {
-				metrics.Dropped.Inc()
-			}
-		}
+		msgInvalidFunc(s.servers[j], global.MetricsN)
 		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
 	}
 
@@ -249,16 +231,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 		s.unixservers[j] = &dns.Server{
 			Handler: s.mux, Net: "unix", Addr: global.UnixAddr, MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
 		}
-		var i atomic.Uint64
-		N := global.MetricsN
-		s.unixservers[j].MsgInvalidFunc = func(_ *dns.Msg, _ error) {
-			if N == 0 {
-				return
-			}
-			if (i.Add(1)-1)%N == 0 {
-				metrics.Dropped.Inc()
-			}
-		}
+		msgInvalidFunc(s.servers[j], global.MetricsN)
 		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
 	}
 
@@ -417,3 +390,16 @@ func (s *Server) UnixAddr() []string {
 }
 
 func builtin(conf string) bool { return strings.HasPrefix(conf, "<") && strings.HasSuffix(conf, ">") }
+
+// msgInvalidFunc sets up the MsgInvalidFunc for a server.
+func msgInvalidFunc(s *dns.Server, N uint64) {
+	var i atomic.Uint64
+	s.MsgInvalidFunc = func(_ *dns.Msg, _ error) {
+		if N == 0 {
+			return
+		}
+		if (i.Add(1)-1)%N == 0 {
+			metrics.Dropped.Inc()
+		}
+	}
+}
