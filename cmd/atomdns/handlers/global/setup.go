@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	goslog "log/slog"
 	"net"
 	"net/http"
 	pp "net/http/pprof"
@@ -29,10 +30,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				switch d.Val() {
 				case "debug":
 					g.Debug = true
-					slog.SetLogLoggerLevel(slog.LevelDebug)
+					goslog.SetLogLoggerLevel(goslog.LevelDebug)
 				case "json":
-					jlog := slog.New(slog.NewJSONHandler(os.Stderr, nil))
-					slog.SetDefault(jlog)
+					jlog := goslog.New(goslog.NewJSONHandler(os.Stderr, nil))
+					goslog.SetDefault(jlog)
 				case "quiet":
 					g.Quiet = true
 				case "disable":
@@ -54,7 +55,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.Root = filepath.Join(pwd, g.Root)
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "root", g.Root)
+				log().Info("Startup", "root", g.Root)
 				_, err := os.Stat(g.Root)
 				return err
 			})
@@ -72,7 +73,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			switch args[0] {
 			case "manual":
 				g.OnStartup(func() error {
-					log.Info("Startup", "tls", args[0])
+					log().Info("Startup", "tls", args[0])
 					return nil
 				})
 			case "lets-encrypt":
@@ -80,7 +81,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					g.TlsCertConfig = certmagic.NewDefault()
 					ctx, cancel := context.WithCancel(context.Background())
 					g.OnStartup(func() error {
-						log.Info("Startup", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
+						log().Info("Startup", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
 						err := certmagic.ManageAsync(ctx, g.TlsIPs)
 						if err != nil {
 							return err
@@ -88,7 +89,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 						return nil
 					})
 					g.OnShutdown(func() error {
-						log.Info("Shutdown", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
+						log().Info("Shutdown", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
 						cancel()
 						return nil
 					})
@@ -121,7 +122,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				}
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "dns", g.Addr, "tcp", g.Limits.MaxTCPQueries, "run", g.Limits.Servers)
+				log().Info("Startup", "dns", g.Addr, "tcp", g.Limits.MaxTCPQueries, "run", g.Limits.Servers)
 				return nil
 			})
 
@@ -154,12 +155,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			inf := slog.Attr{}
+			inf := goslog.Attr{}
 			if g.TlsLimits.MaxInflight > 0 {
-				inf = slog.Int("inflight", g.TlsLimits.MaxInflight)
+				inf = goslog.Int("inflight", g.TlsLimits.MaxInflight)
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
+				log().Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
 				return nil
 			})
 
@@ -191,12 +192,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			inf := slog.Attr{}
+			inf := goslog.Attr{}
 			if g.HttpLimits.MaxInflight > 0 {
-				inf = slog.Int("inflight", g.HttpLimits.MaxInflight)
+				inf = goslog.Int("inflight", g.HttpLimits.MaxInflight)
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
+				log().Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
 				return nil
 			})
 		case "dou":
@@ -218,7 +219,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				}
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "dou", g.UnixAddr, "tcp", "-1", "run", g.UnixLimits.Servers)
+				log().Info("Startup", "dou", g.UnixAddr, "tcp", "-1", "run", g.UnixLimits.Servers)
 				return nil
 			})
 			g.OnShutdown(func() error {
@@ -242,7 +243,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				addr = d.Val()
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "/metrics", addr, slog.Int64("/N", int64(g.MetricsN)))
+				log().Info("Startup", "/metrics", addr, slog.Int64("/N", int64(g.MetricsN)))
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -255,7 +256,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown", "/metrics", addr)
+				log().Info("Shutdown", "/metrics", addr)
 				g.MetricsListener.Close()
 				return nil
 			})
@@ -272,7 +273,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				g.Lameduck = delay
 			}
 			g.OnStartup(func() error {
-				log.Info("Startup", "/health", addr)
+				log().Info("Startup", "/health", addr)
 				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					return err
@@ -290,13 +291,13 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			})
 
 			g.OnShutdown(func() error {
-				log.Info("Shutdown", "/health", addr)
+				log().Info("Shutdown", "/health", addr)
 				g.HealthListener.Close()
 				return nil
 			})
 			if g.Lameduck > 0 {
 				g.OnShutdown(func() error {
-					log.Info("Shutdown", "lameduck", g.Lameduck)
+					log().Info("Shutdown", "lameduck", g.Lameduck)
 					g.HealthListener.Close()
 					time.Sleep(g.Lameduck)
 					return nil
@@ -305,12 +306,12 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			ctx := context.Background()
 			ctx, cancel := context.WithCancel(ctx)
 			g.OnStartup(func() error {
-				log.Info("Startup", "health", "overload check")
+				log().Info("Startup", "health", "overload check")
 				go overload(ctx, addr)
 				return nil
 			})
 			g.OnShutdown(func() error {
-				log.Info("Shutdown", "health", "overload check")
+				log().Info("Shutdown", "health", "overload check")
 				cancel()
 				return nil
 			})
@@ -331,7 +332,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			g.OnStartup(func() (err error) {
 				switch path {
 				case false:
-					log.Info("Startup", "/debug/pprof", addr)
+					log().Info("Startup", "/debug/pprof", addr)
 					ln, err := net.Listen("tcp", addr)
 					if err != nil {
 						return err
@@ -347,7 +348,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					go func() { server.Serve(ln) }()
 					g.PprofListener = ln
 				case true:
-					log.Info("Startup", "pprof", filepath.Base(addr))
+					log().Info("Startup", "pprof", filepath.Base(addr))
 					if g.PprofWriter, err = os.Create(addr); err != nil {
 						return err
 					}
@@ -358,10 +359,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			g.OnShutdown(func() error {
 				switch path {
 				case false:
-					log.Info("Shutdown", "/debug/pprof", addr)
+					log().Info("Shutdown", "/debug/pprof", addr)
 					g.PprofListener.Close()
 				case true:
-					log.Info("Shutdown", "pprof", filepath.Base(addr))
+					log().Info("Shutdown", "pprof", filepath.Base(addr))
 					pprof.StopCPUProfile()
 					g.PprofWriter.Close()
 				}

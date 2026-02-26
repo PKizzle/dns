@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"codeberg.org/miekg/dns"
 	"github.com/caddyserver/certmagic"
 )
 
@@ -56,6 +57,8 @@ type Global struct {
 	Config     string              // path to config file
 	Registered map[string]struct{} // registered zones
 }
+
+func (g *Global) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc { return nil }
 
 func (g *Global) OnStartup(fn func() error)  { g.onStartup = append(g.onStartup, fn) }
 func (g *Global) OnShutdown(fn func() error) { g.onShutdown = append(g.onShutdown, fn) }

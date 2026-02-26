@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-// Handlers returns the handlers, except global and unpack.
+// Handlers returns the handlers.
 func Handlers(path ...string) ([]string, error) {
 	dir := "."
 	if len(path) > 0 {

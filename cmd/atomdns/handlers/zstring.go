@@ -14,6 +14,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/ecs"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/geoip"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/id"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/kill"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
@@ -43,6 +44,7 @@ var StringToHandler = map[string]func() Handler{
 	"drunk":    func() Handler { return new(drunk.Drunk) },
 	"ecs":      func() Handler { return new(ecs.Ecs) },
 	"geoip":    func() Handler { return new(geoip.Geoip) },
+	"global":   func() Handler { return new(global.Global) },
 	"id":       func() Handler { return new(id.Id) },
 	"kill":     func() Handler { return new(kill.Kill) },
 	"log":      func() Handler { return new(log.Log) },

@@ -7,8 +7,10 @@ import (
 	"log/slog"
 )
 
-func (h *Global) Err(err error) error { return fmt.Errorf("handler.global: %s", err.Error()) }
+func (g *Global) Err(err error) error { return fmt.Errorf("%s: %w", g.Key(), err) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 
-var log = slog.Default().With("handler", "global")
+func (g *Global) Key() string { return "global" }
+
+var log = func() *slog.Logger { return slog.Default().With("handler", "global") }
