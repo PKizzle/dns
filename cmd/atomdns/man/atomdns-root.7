@@ -7,8 +7,8 @@
 
 .SH "DESCRIPTION"
 .PP
-Usually the global section has a \fB\fCroot\fR directive. This handler allows you to override it for each handler
-block if desired. It works identical to the atomdns\-global(1) root's configuration.
+This handler allows for overriding the \fB\fCroot\fR directive from the global section in the current handler block.
+It works identical to the atomdns\-global(1) \fB\fCroot\fR's configuration.
 
 .SH "SYNTAX"
 .PP
@@ -28,4 +28,8 @@ directory (cwd) of the atomdns process will be prefixed.
 
 .SH "NOTES"
 .PP
-This handler must be set first in a handler block to effect all handlers in the block.
+This handler must be set first in a handler block to effect all subsequent handlers in the block.
+
+.SH "ALSO SEE"
+.PP
+atomdns\-global(1).

@@ -50,7 +50,7 @@ type Server struct {
 // Start starts a server.
 func (s *Server) Start() error {
 	if err := s.global.Startup(); err != nil {
-		return err
+		return fmt.Errorf("global: %w", err)
 	}
 	for i := range s.servers {
 		go Serve(s.started, s.servers[i])
@@ -328,10 +328,11 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 		if b.Keys == nil {
 			continue
 		}
-		// prepend unpack to start the chain
 		hs := []handlers.Handler{new(unpack.Unpack)}
 		teardowns := []teardown{}
 		names := []string{}
+
+		// prepend unpack to start the chain
 		for _, name := range b.Directives {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
@@ -346,8 +347,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				}
 				err := s.Setup(co)
 				if err != nil {
-					err := fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ","))
-					return handler.Err(err)
+					return handler.Err(fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ",")))
 				}
 			}
 			if t, ok := handler.(handlers.Teardowner); ok {
@@ -371,8 +371,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			if err != nil {
 				newFn, _ := handlers.StringToHandler[teardown.name]
 				handler := newFn()
-				err := fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ","))
-				return handler.Err(err)
+				return handler.Err(fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ",")))
 			}
 		}
 

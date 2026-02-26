@@ -7,7 +7,7 @@ import (
 	"log/slog"
 )
 
-func (g *Geoip) Err(err error) error { return fmt.Errorf("%s: %s", g.Key(), err.Error()) }
+func (g *Geoip) Err(err error) error { return fmt.Errorf("%s: %w", g.Key(), err) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 

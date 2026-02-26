@@ -56,7 +56,7 @@ func (z *Zone) Labels() int    { return z.labels }
 func (z *Zone) Load() error {
 	f, err := os.Open(z.Path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load zone %q with origin %q: %s", z.Path, z.origin, err)
 	}
 	zp := dns.NewZoneParser(f, z.origin, z.Path)
 	soa := 0

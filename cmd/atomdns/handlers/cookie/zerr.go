@@ -7,7 +7,7 @@ import (
 	"log/slog"
 )
 
-func (c *Cookie) Err(err error) error { return fmt.Errorf("%s: %s", c.Key(), err.Error()) }
+func (c *Cookie) Err(err error) error { return fmt.Errorf("%s: %w", c.Key(), err) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 

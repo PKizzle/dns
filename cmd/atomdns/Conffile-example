@@ -70,7 +70,7 @@ example.org {
     }
 }
 
-# Configure to be authoritative for example.org.
+# Configure to be authoritative for miek.nl.
 miek.nl {
     log # Log, as above.
     metrics # Metrics are globally enabled, for this zone they should be actually gathered and exported.

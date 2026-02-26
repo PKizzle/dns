@@ -7,7 +7,7 @@ import (
 	"log/slog"
 )
 
-func (d *Dbsqlite) Err(err error) error { return fmt.Errorf("%s: %s", d.Key(), err.Error()) }
+func (d *Dbsqlite) Err(err error) error { return fmt.Errorf("%s: %w", d.Key(), err) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 
