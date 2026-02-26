@@ -214,7 +214,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 		}
 	}
 	if zp.Err() != nil {
-		return false, fmt.Errorf("failed to parse zone %q with origin %q: %s ", s.Zones[origin].Path, origin, zp.Err())
+		return false, fmt.Errorf("failed to parse zone %s with origin %s: %s ", s.Zones[origin].Path, origin, zp.Err())
 	}
 	return true, fmt.Errorf("no SOA signature found in first 50 records")
 }

@@ -139,7 +139,7 @@ func (p *parser) addresses() error {
 		// Open brace definitely indicates end of addresses
 		if tkn == "{" {
 			if expectingAnother {
-				return p.Errf("expected another address but had %q - check for extra comma", tkn)
+				return p.Errf("expected another address but had %s - check for extra comma", tkn)
 			}
 			break
 		}

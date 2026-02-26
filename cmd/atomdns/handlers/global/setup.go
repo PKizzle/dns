@@ -64,7 +64,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return d.ArgErr()
 			}
 			if args[0] != "manual" && args[0] != "lets-encrypt" {
-				return d.PropErr(fmt.Errorf("expected %q or %q, got: %s", "manual", "lets-encrypt", args[0]))
+				return d.PropErr(fmt.Errorf("expected %s or %s, got: %s", "manual", "lets-encrypt", args[0]))
 			}
 			if err := g.SetupTLS(&d); err != nil {
 				return err
@@ -234,7 +234,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				} else {
 					n, err := strconv.Atoi(d.Val()[1:])
 					if err != nil || n < 0 {
-						return d.PropErr(fmt.Errorf("not a (positive) number: %q", d.Val()[1:]))
+						return d.PropErr(fmt.Errorf("not a (positive) number: %s", d.Val()[1:]))
 					}
 				}
 			}
@@ -267,7 +267,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 			if d.Next() {
 				delay, err := time.ParseDuration(d.Val())
 				if err != nil || delay < 0 {
-					return d.PropErr(fmt.Errorf("not a (positive) number: %q", d.Val()))
+					return d.PropErr(fmt.Errorf("not a (positive) number: %s", d.Val()))
 				}
 				g.Lameduck = delay
 			}

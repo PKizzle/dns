@@ -16,14 +16,14 @@ func CPU(s string) (int, error) {
 	if strings.HasPrefix(strings.ToLower(s), numcpu) {
 		n, err := strconv.Atoi(s[len(numcpu):])
 		if err != nil || n < 0 {
-			return 0, fmt.Errorf("not a (positive) number after %s: %q", numcpu, s)
+			return 0, fmt.Errorf("not a (positive) number after %s: %s", numcpu, s)
 		}
 		return runtime.NumCPU() * n, nil
 	}
 
 	n, err := strconv.Atoi(s)
 	if err != nil || n < -1 {
-		return 0, fmt.Errorf("not a number or less than -1: %q", s)
+		return 0, fmt.Errorf("not a number or less than -1: %s", s)
 	}
 	return n, nil
 

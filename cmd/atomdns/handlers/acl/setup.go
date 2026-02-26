@@ -37,7 +37,7 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			case "drop":
 				p.action = dns.MsgIgnore
 			default:
-				return co.Errf("unexpected token %q, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
+				return co.Errf("unexpected token %s, expected 'allow', 'block', 'filter' or 'drop'", co.Val())
 			}
 
 			args := co.RemainingArgs()
@@ -81,7 +81,7 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 					} else {
 						source, err := netip.ParsePrefix(normalize(arg))
 						if err != nil {
-							return co.Errf("illegal CIDR notation %q", normalize(arg))
+							return co.Errf("illegal CIDR notation %s", normalize(arg))
 						}
 						hasnet = true
 						p.net.filter.Insert(source, nil)

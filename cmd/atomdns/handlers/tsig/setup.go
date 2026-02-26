@@ -18,7 +18,7 @@ func (t *Tsig) Setup(co *dnsserver.Controller) error {
 		name := dnsutil.Canonical(args[0])
 		algo := dnsutil.Canonical(args[1])
 		if !dnsutil.IsName(name) {
-			return co.PropErr(fmt.Errorf("name %q is not a domain name", name))
+			return co.PropErr(fmt.Errorf("name %s is not a domain name", name))
 		}
 		if !dnsutil.IsName(algo) {
 			return co.PropErr(fmt.Errorf("algorithm %s is not a domain name", algo))

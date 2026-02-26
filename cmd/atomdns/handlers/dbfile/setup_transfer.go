@@ -76,7 +76,7 @@ func (t *Transfer) SetupTransferTSIG(co *dnsserver.Controller) error {
 		return co.ArgErr()
 	}
 	if !dnsutil.IsName(args[0]) {
-		return co.PropErr(fmt.Errorf("name %q is not a domain name", args[0]))
+		return co.PropErr(fmt.Errorf("name %s is not a domain name", args[0]))
 	}
 	if !dnsutil.IsName(args[1]) {
 		return co.PropErr(fmt.Errorf("algorithm %s is not a domain name", args[0]))

@@ -30,7 +30,7 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 				}
 				drop, err := strconv.ParseInt(args[0][1:], 10, 32)
 				if err != nil || drop < 0 {
-					return co.PropErr(fmt.Errorf("not a (positive) number: %q", co.Val()[1:]))
+					return co.PropErr(fmt.Errorf("not a (positive) number: %s", co.Val()[1:]))
 				}
 				d.drop = uint64(drop)
 			case "delay":
@@ -50,7 +50,7 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 				}
 				delay, err := strconv.ParseInt(args[0][1:], 10, 32)
 				if err != nil || delay < 0 {
-					return co.PropErr(fmt.Errorf("not a (positive) number: %q", args[0][1:]))
+					return co.PropErr(fmt.Errorf("not a (positive) number: %s", args[0][1:]))
 				}
 				d.delay = uint64(delay)
 
@@ -74,7 +74,7 @@ func (d *Drunk) Setup(co *dnsserver.Controller) error {
 
 				truncate, err := strconv.ParseInt(args[0][1:], 10, 32)
 				if err != nil || truncate < 0 {
-					return co.PropErr(fmt.Errorf("not a (positive) number: %q", co.Val()[1:]))
+					return co.PropErr(fmt.Errorf("not a (positive) number: %s", co.Val()[1:]))
 				}
 				d.truncate = uint64(truncate)
 			default:

@@ -132,7 +132,7 @@ func keypair(base string) (KeyPair, error) {
 		return KeyPair{}, err
 	}
 	if _, ok := rr.(*dns.DNSKEY); !ok {
-		return KeyPair{}, fmt.Errorf("RR in %q is not a DNSKEY: %s", base+".key", dnsutil.TypeToString(dns.RRToType(rr)))
+		return KeyPair{}, fmt.Errorf("RR in %s is not a DNSKEY: %s", base+".key", dnsutil.TypeToString(dns.RRToType(rr)))
 	}
 	dnskey := rr.(*dns.DNSKEY)
 	ksk := dnskey.Flags&(1<<8) == (1<<8) && dnskey.Flags&1 == 1

@@ -16,7 +16,7 @@ import (
 func Watch(ctx context.Context, file string, fn func()) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		return fmt.Errorf("failed to set up watcher for %q: %w", file, err)
+		return fmt.Errorf("failed to set up watcher for %s: %w", file, err)
 	}
 	file = path.Clean(file)
 	timer := time.AfterFunc(math.MaxInt64, fn)
@@ -52,7 +52,7 @@ func Watch(ctx context.Context, file string, fn func()) error {
 	}()
 
 	if err = watcher.Add(filepath.Dir(file)); err != nil {
-		return fmt.Errorf("failed to set up watcher for %q: %w", file, err)
+		return fmt.Errorf("failed to set up watcher for %s: %w", file, err)
 	}
 	return nil
 }
