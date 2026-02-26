@@ -21,14 +21,14 @@ func overload(ctx context.Context, addr string) {
 			if err != nil {
 				HealthDuration.Observe(time.Since(start).Seconds())
 				HealthFailures.Inc()
-				log.Error("Failed health", Err(err))
+				log().Error("Failed health", Err(err))
 				continue
 			}
 			resp.Body.Close()
 			elapsed := time.Since(start)
 			HealthDuration.Observe(elapsed.Seconds())
 			if elapsed > time.Second { // 1s is pretty random, but a *local* scrape taking that long isn't good
-				log.Warn("Slow health", slog.Duration("elapsed", elapsed))
+				log().Warn("Slow health", slog.Duration("elapsed", elapsed))
 			}
 
 		case <-ctx.Done():

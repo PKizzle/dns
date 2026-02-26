@@ -15,6 +15,7 @@ var Handlers = []string{
 	"drunk",
 	"ecs",
 	"geoip",
+	"global",
 	"id",
 	"kill",
 	"log",
