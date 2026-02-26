@@ -59,7 +59,7 @@ global section, see the configuration examples below.
 ```
 
 - with `root` **DIRECTORY** is the directory to use as the root directory for the server. Any relative path names will
-  get this directory prefixed. If **DIRECTORY** itself is also relative the current working directory (cwd) of the atomdns
+  get this directory prefixed. If **DIRECTORY** itself is also relative, the current working directory (cwd) of the atomdns
   process will be prefixed.
 - `log` tells atomdns on how to, globally, log:
   - `debug` sets the global log level to debug.

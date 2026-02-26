@@ -92,6 +92,7 @@ The following handlers are available:
 - _metrics_ - enable [prometheus](https://prometheus.io/) metrics. See atomdns-metrics(7).
 - _nsid_ - adds an identifier of this server to each reply. See atomdns-nsid(7).
 - _refuse_ - refuse queries. See atomdns-refuse(7).
+- _root_ - override the global root. See atomdns-root(7).
 - _sign_ - add DNSSEC records to zone files. See atomdns-sign(7).
 - _template_ - use Go templates to reply. See atomdns-template(7).
 - _url_ - serve zone data from an URL. See atomdns-url(7).

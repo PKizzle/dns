@@ -13,8 +13,8 @@ It works identical to the atomdns-global(1) `root`'s configuration.
 root DIRECTORY
 ```
 
-- with `root` **DIRECTORY** is the directory to use as the root directory for the server. Any relative path
-  names will get this directory prefixed. If **DIRECTORY** itself is also relative the current working
+- with `root` **DIRECTORY** is the directory to use as the root directory in the handler block. Any relative path
+  names will get this directory prefixed. If **DIRECTORY** itself is also relative, the current working
   directory (cwd) of the atomdns process will be prefixed.
 
 # Notes
