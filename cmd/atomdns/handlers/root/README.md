@@ -4,7 +4,7 @@ _root_ - override the global root
 
 # Description
 
-This handler allows for overriding the `root` directive from the global section in the current handler block.
+This handler allows for overriding the `root` directive from the global block in the current handler block.
 It works identical to the atomdns-global(1) `root`'s configuration.
 
 # Syntax
