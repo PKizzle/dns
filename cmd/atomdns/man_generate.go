@@ -37,7 +37,7 @@ func main() {
 		readme := "handlers/" + h + "/README.md"
 		b, err := os.ReadFile(readme)
 		if err != nil {
-			log.Printf("Failed to read %q: %s", readme, err)
+			log.Printf("Failed to read %s: %s", readme, err)
 			continue
 		}
 		header := fmt.Sprintf(format, h)

@@ -13,7 +13,7 @@
     root handlers # Set the root directory to $PWD/handlers
 
     # if you want to profile the atomdns instance, enable the next line.
-    pprof atomdns.prof
+    #pprof atomdns.prof
 
     # dns configures the DNS listener that does plain old DNS.
     dns {
@@ -61,6 +61,7 @@
 
 # Configure to be authoritative for example.org.
 example.org {
+    root /tmp
     id # Add a request ID, see atomdns-id(7).
     log # Log, see atomdns-log(7).
     # kill 50s # Kill the server after 50 seconds, see atomdns-kill(7).
@@ -69,7 +70,7 @@ example.org {
     }
 }
 
-# Configure to be authoritative for example.org.
+# Configure to be authoritative for miek.nl.
 miek.nl {
     log # Log, as above.
     metrics # Metrics are globally enabled, for this zone they should be actually gathered and exported.

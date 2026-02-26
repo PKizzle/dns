@@ -20,6 +20,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/root"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/tsig"
@@ -48,6 +49,7 @@ var StringToHandler = map[string]func() Handler{
 	"metrics":  func() Handler { return new(metrics.Metrics) },
 	"nsid":     func() Handler { return new(nsid.Nsid) },
 	"refuse":   func() Handler { return new(refuse.Refuse) },
+	"root":     func() Handler { return new(root.Root) },
 	"sign":     func() Handler { return new(sign.Sign) },
 	"template": func() Handler { return new(template.Template) },
 	"tsig":     func() Handler { return new(tsig.Tsig) },

@@ -7,7 +7,7 @@ import (
 	"log/slog"
 )
 
-func (k *Kill) Err(err error) error { return fmt.Errorf("%s: %s", k.Key(), err.Error()) }
+func (k *Kill) Err(err error) error { return fmt.Errorf("%s: %w", k.Key(), err) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 

@@ -21,6 +21,7 @@ var Handlers = []string{
 	"metrics",
 	"nsid",
 	"refuse",
+	"root",
 	"sign",
 	"template",
 	"tsig",

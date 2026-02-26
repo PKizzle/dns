@@ -28,7 +28,7 @@ func (t *Template) Setup(co *dnsserver.Controller) (err error) {
 		types := co.RemainingArgs()
 		for _, ty := range types {
 			if j, ok := dns.StringToType[ty]; !ok {
-				return co.PropErr(fmt.Errorf("%q is not a type", ty))
+				return co.PropErr(fmt.Errorf("%s is not a type", ty))
 			} else {
 				t.Types = append(t.Types, j)
 			}

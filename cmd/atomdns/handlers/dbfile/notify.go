@@ -101,7 +101,7 @@ func notify(m *dns.Msg, ip string, sources []string) error {
 		}
 		time.Sleep(time.Second)
 	}
-	return fmt.Errorf("upstream %q did not accept our notify for zone %q", ip, m.Question[0].Header().Name)
+	return fmt.Errorf("upstream %s did not accept our notify for zone %s", ip, m.Question[0].Header().Name)
 }
 
 // AvailableFrom return true if the "other side" has a newer SOA then we have. The first IP that answers

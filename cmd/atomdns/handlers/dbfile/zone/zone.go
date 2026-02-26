@@ -56,7 +56,7 @@ func (z *Zone) Labels() int    { return z.labels }
 func (z *Zone) Load() error {
 	f, err := os.Open(z.Path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load zone %s with origin %s: %s", z.Path, z.origin, err)
 	}
 	zp := dns.NewZoneParser(f, z.origin, z.Path)
 	soa := 0
@@ -70,10 +70,10 @@ func (z *Zone) Load() error {
 		z.Set(&dnszone.Node{Name: rr.Header().Name, RRs: []dns.RR{rr}})
 	}
 	if zp.Err() != nil {
-		return fmt.Errorf("failed to parse zone %q with origin %q: %s ", z.Path, z.origin, zp.Err())
+		return fmt.Errorf("failed to parse zone %s with origin %s: %s ", z.Path, z.origin, zp.Err())
 	}
 	if soa != 1 {
-		return fmt.Errorf("zone %q with origin %q has no SOA or not a single SOA record", z.Path, z.origin)
+		return fmt.Errorf("zone %s with origin %s has no SOA or not a single SOA record", z.Path, z.origin)
 	}
 	z.Lock()
 	z.apex, _ = z.Tree.Get(&dnszone.Node{Name: z.origin})

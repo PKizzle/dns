@@ -7,7 +7,7 @@ import (
 	"log/slog"
 )
 
-func (w *Whoami) Err(err error) error { return fmt.Errorf("%s: %s", w.Key(), err.Error()) }
+func (w *Whoami) Err(err error) error { return fmt.Errorf("%s: %w", w.Key(), err) }
 
 func Err(err error) slog.Attr { return slog.Any("error", err) }
 

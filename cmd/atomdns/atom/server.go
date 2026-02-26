@@ -50,7 +50,7 @@ type Server struct {
 // Start starts a server.
 func (s *Server) Start() error {
 	if err := s.global.Startup(); err != nil {
-		return err
+		return fmt.Errorf("global: %w", err)
 	}
 	for i := range s.servers {
 		go Serve(s.started, s.servers[i])
@@ -292,13 +292,20 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 	}
 	global.Registered = map[string]struct{}{}
 
+	type teardown struct {
+		name string
+		fn   func(*dnsserver.Controller) error
+	}
+
 	for _, b := range blocks {
 		if b.Keys == nil {
 			continue
 		}
-		// prepend unpack to start the chain
 		hs := []handlers.Handler{new(unpack.Unpack)}
+		teardowns := []teardown{}
 		names := []string{}
+
+		// prepend unpack to start the chain
 		for _, name := range b.Directives {
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
@@ -313,10 +320,13 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				}
 				err := s.Setup(co)
 				if err != nil {
-					err := fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ","))
-					return handler.Err(err)
+					return handler.Err(fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ",")))
 				}
 			}
+			if t, ok := handler.(handlers.Teardowner); ok {
+				teardowns = append(teardowns, teardown{name, t.Teardown})
+			}
+
 			if fn := handler.HandlerFunc(nil); fn != nil {
 				// Do not add noop handler funcs.
 				hs = append(hs, handler)
@@ -327,6 +337,17 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				}
 			}
 		}
+
+		for _, teardown := range teardowns {
+			co := &dnsserver.Controller{Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil), Global: global}
+			err := teardown.fn(co)
+			if err != nil {
+				newFn, _ := handlers.StringToHandler[teardown.name]
+				handler := newFn()
+				return handler.Err(fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ",")))
+			}
+		}
+
 		hs = append(hs, new(refuse.Refuse)) // add refuse guard
 
 		for _, k := range b.Keys {
