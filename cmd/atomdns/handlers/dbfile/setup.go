@@ -99,7 +99,6 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 			d.RLock()
 			zones := maps.Values(d.Zones)
 			d.RUnlock()
-			println("hallo")
 			for z := range zones {
 				go func() {
 					N := time.Duration(rand.IntN(20)) + 10

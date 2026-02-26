@@ -53,12 +53,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				pwd, _ := os.Getwd()
 				g.Root = filepath.Join(pwd, g.Root)
 			}
-			if _, err := os.Stat(g.Root); err != nil {
-				return err
-			}
 			g.OnStartup(func() error {
 				log.Info("Startup", "root", g.Root)
-				return nil
+				_, err := os.Stat(g.Root)
+				return err
 			})
 		case "tls":
 			args := d.RemainingArgs()
