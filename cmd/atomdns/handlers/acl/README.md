@@ -98,8 +98,9 @@ follow the _global_'s metric `\N` setup, and as such should be multiplied by `N`
 
 # Also See
 
-See the _ecs_ handler that can added a better source address.
+See atomdns-ecs(7) that can add a better source address.
 
 # Bugs
 
-_acl_ should also check TSIG and other signed messages, see https://codeberg.org/miekg/dns/issues/426.
+_acl_ should also check TSIG and other signed messages, see https://codeberg.org/miekg/dns/issues/426 for the
+remaining work.

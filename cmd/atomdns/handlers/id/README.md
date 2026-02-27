@@ -30,4 +30,4 @@ The _id_ handler adds a single key to the context:
 | :------ | :------- | :------------------------- | :---------- |
 | `id/id` | `string` | 5FOXMDAG6YAHD6R7QOZ4UTX7VQ | The ID.     |
 
-When the _log_ handler is used the ID is automatically logged as `id.id=..`.
+When atomdns-log(7) handler is used the ID is automatically logged as `id.id=..`.

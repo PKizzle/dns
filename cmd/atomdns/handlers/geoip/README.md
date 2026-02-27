@@ -64,4 +64,4 @@ example.org. {
 
 # See Also
 
-See the _ecs_ handler.
+atomdns-ecs(7).

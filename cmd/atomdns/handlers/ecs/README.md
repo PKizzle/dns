@@ -36,4 +36,4 @@ When the _log_ handler is used the address is automatically logged as `ecs.addr=
 
 # See Also
 
-See RFC 7871.
+See RFC 7871, atomdns-log(7), atomdns-geoip(7) and atomdns-acl(7).
