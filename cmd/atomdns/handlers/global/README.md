@@ -52,7 +52,7 @@ global block, see the configuration examples below.
         ca URL
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
-        path PATH
+        directory DIRECTORY
         rootca CA
     }
 }
@@ -156,7 +156,7 @@ If **ISSUER** is `lets-encrypt`:
   the TLS certificates should be requested.
 - `contact`, where **EMAIL** is the contact email use when retrieving certificates. This can be set to (one
   of) your SOA's Mbox (RNAME - responsible person) mail address.
-- `path` has the **PATH** where the certificates are stored. The global's `root` is prepended if this a
+- `directory` has the **DIRECTORY** where the certificates are stored. The global's `root` is prepended if this a
   relative path name.
 - `ca` lets you select the production or staging ACME CA endpoint, by specifying the URL here. The default for
   the time being is Let's Encrypt staging endpoint: <https://acme-staging-v02.api.letsencrypt.org/directory>.

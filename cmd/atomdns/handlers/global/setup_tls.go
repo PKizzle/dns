@@ -82,7 +82,7 @@ func (g *Global) SetupTLS(d *conffile.Dispenser) error {
 			g.TlsContact = args[0]
 			certmagic.DefaultACME.Email = g.TlsContact
 			certmagic.DefaultACME.Agreed = true
-		case "path":
+		case "directory":
 			args := d.RemainingArgs()
 			if len(args) != 1 {
 				return d.ArgErr()
