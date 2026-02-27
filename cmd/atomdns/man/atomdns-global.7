@@ -58,7 +58,7 @@ global block, see the configuration examples below.
         ca URL
         source IP|IFACE [IP|IFACE]...
         contact EMAIL
-        path PATH
+        directory DIRECTORY
         rootca CA
     }
 }
@@ -221,7 +221,7 @@ the TLS certificates should be requested.
 \fB\fCcontact\fR, where \fBEMAIL\fP is the contact email use when retrieving certificates. This can be set to (one
 of) your SOA's Mbox (RNAME \- responsible person) mail address.
 .IP \(bu 4
-\fB\fCpath\fR has the \fBPATH\fP where the certificates are stored. The global's \fB\fCroot\fR is prepended if this a
+\fB\fCdirectory\fR has the \fBDIRECTORY\fP where the certificates are stored. The global's \fB\fCroot\fR is prepended if this a
 relative path name.
 .IP \(bu 4
 \fB\fCca\fR lets you select the production or staging ACME CA endpoint, by specifying the URL here. The default for
