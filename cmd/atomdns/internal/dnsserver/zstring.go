@@ -29,5 +29,4 @@ var Handlers = []string{
 	"unpack",
 	"url",
 	"whoami",
-	"yes",
 }
