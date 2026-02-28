@@ -97,7 +97,6 @@ The following handlers are available:
 - _template_ - use Go templates to reply. See atomdns-template(7).
 - _url_ - serve zone data from an URL. See atomdns-url(7).
 - _whoami_ - return your resolver's local IP address, port and transport. See atomdns-whoami(7).
-- _yes_ - always respond to positively to queries. See atomdns-yes(7).
 
 # Authors
 
