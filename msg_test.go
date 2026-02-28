@@ -1,6 +1,7 @@
 package dns_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"errors"
@@ -13,32 +14,10 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnstest"
 	"codeberg.org/miekg/dns/internal/bin"
 	"codeberg.org/miekg/dns/internal/dnsfuzz"
 )
-
-// ExampleMsg_Question tests the creation of a small Msg with a question section only, and no EDNS0. This
-// checks if we create the correct wire-format.
-func ExampleMsg_Question() {
-	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true}}
-	mx := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}
-	m.Question = []dns.RR{mx}
-
-	m.Pack()
-	fmt.Printf("%v\n", m.Data)
-	// Output: [0 3 1 0 0 1 0 0 0 0 0 0 4 109 105 101 107 2 110 108 0 0 15 0 1]
-}
-
-func ExampleMsg_Pseudo_nsid() {
-	m := &dns.Msg{MsgHeader: dns.MsgHeader{ID: 3, RecursionDesired: true}}
-	m.Question = []dns.RR{&dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET}}}
-	m.Pseudo = []dns.RR{&dns.NSID{}}
-
-	m.Pack()
-	// 41 is OPT after the zeros, 04 -> rdlength, 03 -> code of NSID, 00 -> "rdlength" of NSID
-	fmt.Printf("%v\n", m.Data)
-	// Output: [0 3 1 0 0 1 0 0 0 0 0 1 4 109 105 101 107 2 110 108 0 0 15 0 1 0 0 41 0 0 0 0 0 0 0 4 0 3 0 0]
-}
 
 func ExampleMsg() {
 	m := dns.NewMsg("miek.nl.", dns.TypeMX)
@@ -268,6 +247,56 @@ func TestMsg(t *testing.T) {
 				}
 				if x := len(r.Extra); x != 0 {
 					return fmt.Errorf("expected len(extra) to be 0, got %d", x)
+				}
+				return nil
+			},
+		},
+		{
+			"nsec3",
+			func() *dns.Msg {
+				m := dns.NewMsg("miek.nl.", dns.TypeMX)
+				m.ID = 3
+				nsec3 := dnstest.New("k36vo59bkum4osckkrd8tvibdgr0njbc.nl. 599 IN NSEC3 1 0 0 - K36VONMLM2T8IF3G8P5AV864OHLTB7K7 NS SOA TXT RRSIG DNSKEY NSEC3PARAM")
+				m.Answer = []dns.RR{nsec3}
+				return m
+			},
+			func(r *dns.Msg) error {
+				expect := []byte{0, 3, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 15, 0, 1, 32, 107, 51, 54, 118, 111, 53, 57, 98, 107, 117, 109, 52, 111, 115, 99, 107, 107, 114, 100, 56, 116, 118, 105, 98, 100, 103, 114, 48, 110, 106, 98, 99, 192, 17, 0, 50, 0, 1, 0, 0, 2, 87, 0, 35, 1, 0, 0, 0, 0, 20, 160, 205, 252, 94, 213, 176, 186, 137, 60, 112, 70, 74, 175, 160, 196, 196, 107, 213, 158, 135, 0, 7, 34, 0, 128, 0, 0, 2, 144}
+				if bytes.Compare(r.Data, expect) != 0 {
+					return fmt.Errorf("Msg octets do not match")
+				}
+				return nil
+
+			},
+		},
+		{
+			"pseudo-nsid",
+			func() *dns.Msg {
+				m := dns.NewMsg("miek.nl.", dns.TypeMX)
+				m.ID = 3
+				m.Pseudo = []dns.RR{&dns.NSID{}}
+				return m
+			},
+			func(r *dns.Msg) error {
+				// 41 is OPT after the zeros, 04 -> rdlength, 03 -> code of NSID, 00 -> "rdlength" of NSID
+				expect := []byte{0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 15, 0, 1, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 4, 0, 3, 0, 0}
+				if bytes.Compare(r.Data, expect) != 0 {
+					return fmt.Errorf("Msg octets do not match")
+				}
+				return nil
+			},
+		},
+		{
+			"question-mx",
+			func() *dns.Msg {
+				m := dns.NewMsg("miek.nl.", dns.TypeMX)
+				m.ID = 3
+				return m
+			},
+			func(r *dns.Msg) error {
+				expect := []byte{0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 15, 0, 1}
+				if bytes.Compare(r.Data, expect) != 0 {
+					return fmt.Errorf("Msg octets do not match")
 				}
 				return nil
 			},
