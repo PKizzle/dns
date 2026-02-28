@@ -28,7 +28,6 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/url"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
-	"codeberg.org/miekg/dns/cmd/atomdns/handlers/yes"
 )
 
 // StringToHandler is a map of strings to a handler creation function.
@@ -58,5 +57,4 @@ var StringToHandler = map[string]func() Handler{
 	"unpack":   func() Handler { return new(unpack.Unpack) },
 	"url":      func() Handler { return new(url.Url) },
 	"whoami":   func() Handler { return new(whoami.Whoami) },
-	"yes":      func() Handler { return new(yes.Yes) },
 }
