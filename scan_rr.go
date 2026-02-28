@@ -152,6 +152,7 @@ func remainder(c *dnslex.Lexer, errstr string) (string, error) {
 			builderPool.Put(sb)
 			return s, nil
 		default:
+			builderPool.Put(sb)
 			return "", &ParseError{err: errstr, lex: l}
 		}
 	}
