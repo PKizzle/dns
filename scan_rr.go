@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"strings"
+
 	"codeberg.org/miekg/dns/internal/ddd"
 	"codeberg.org/miekg/dns/internal/dnslex"
 )
@@ -140,7 +142,7 @@ func escapedStringOffset(s string, desiredByteOffset int) (int, bool) {
 // remainder returns a remainder of the rdata with embedded spaces, return the parsed string (sans the spaces)
 // or an error
 func remainder(c *dnslex.Lexer, errstr string) (string, error) {
-	sb := builderPool.Get()
+	sb := &strings.Builder{} // allocate on stack, no pooling
 	for {
 		l, _ := c.Next()
 		switch l.Value {
@@ -148,11 +150,8 @@ func remainder(c *dnslex.Lexer, errstr string) (string, error) {
 			sb.WriteString(l.Token)
 		case dnslex.Blank:
 		case dnslex.Newline, dnslex.EOF:
-			s := sb.String()
-			builderPool.Put(sb)
-			return s, nil
+			return sb.String(), nil
 		default:
-			builderPool.Put(sb)
 			return "", &ParseError{err: errstr, lex: l}
 		}
 	}
