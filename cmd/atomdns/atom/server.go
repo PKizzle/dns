@@ -126,7 +126,7 @@ func (s *Server) Start() error {
 	if bi := builtinfo(); len(bi) == 4 {
 		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
 	}
-	slog.Info("Listening", "roles", strings.Join(roles, ", "))
+	slog.Info("Listening", "total", len(roles), "roles", strings.Join(roles, ", "))
 	slog.Info("Launched", "config", s.global.Config, "PID", os.Getpid(), "version", "v"+s.version, "dns", dns.Version, "zones", len(s.global.Registered))
 	return nil
 }
