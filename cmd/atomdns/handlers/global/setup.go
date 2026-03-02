@@ -223,7 +223,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				return nil
 			})
 			g.OnShutdown(func() error {
-				return os.Remove(g.UnixAddr)
+				log().Info("Shutdown", "dou", g.UnixAddr)
+				os.Remove(g.UnixAddr)
+				return nil
 			})
 
 		case "metrics":
