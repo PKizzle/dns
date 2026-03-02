@@ -20,7 +20,7 @@ chaos [VERSION] {
 ```
 
 - **VERSION** is the version to return. Defaults to "Served by atomdns, https://atomdns.miek.nl" if not set.
-- The `authors` section holds the authors that are returned.
+- The `authors` property holds the authors that are returned.
 
 Note that you have to make sure that this handler will get actual queries for
 the following zone _prefixes_: `version.`, `authors.`, `hostname.` and `id.`,

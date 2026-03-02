@@ -9,7 +9,7 @@ The default address for the metrics server is `localhost:9153`. The metrics path
 See the _global_ handler for details on how to change the address, and other properties.
 
 You must also enable metrics in the handler block, this allows you to specify where in the handler chain the
-metrics are gathered. Usually this is the first handler. If the global section doesn't specify _metrics_ the
+metrics are gathered. Usually this is the first handler. If the global block doesn't specify _metrics_ the
 metrics will not be able to be scraped, but they are still gathered.
 
 Enabling metrics means taking a (severe) performance hit (50 Kqps, seen in [limited] testing), to alleviate
