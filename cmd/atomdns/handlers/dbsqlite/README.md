@@ -18,7 +18,7 @@ the database is completely read-only. The database can be prepared beforehand.
 An RR that fails to be converted into a proper `dns.RR` is silently discarded, unless `debug` is active, see
 atomdns-global(7) for details. The class is `IN` and can't be overridden.
 
-When atomdns startup the _dbsqlite_ handler will log how many zones it found in the database, this is a live
+When atomdns starts up the _dbsqlite_ handler will log how many zones it found in the database, this is a live
 query and may differ with the zones specified in the configuration.
 
 The server will reply with minimal responses by default.
@@ -113,5 +113,5 @@ If you want _everything_ to end up in _dbsqlite_, you might be tempted to:
 }
 ```
 
-But this fails, _unless_ you are actually authoritative for `.` (the root zone), this because the zones are
+But this fails, _unless_ you are actually authoritative for `.` (the root zone), this because the named zones are
 used to find those in the database.

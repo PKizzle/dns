@@ -4,15 +4,15 @@ _sign_ - add DNSSEC records to zone files
 
 # Description
 
-The _sign_ "handler" is used to sign zones. In this process DNSSEC resource records are
+The _sign_ handler is used to sign zones. In this process DNSSEC resource records are
 added. The signatures that sign the resource records sets have an expiration date, this means the
 signing process must be repeated before this expiration data is reached. Otherwise the zone's data
-will go BAD (RFC 4035, Section 5.5). The _sign_ handler takes care of this.
+will go bad (RFC 4035, Section 5.5). The _sign_ handler takes care of all of this.
 
-_sign_ can work in conjunction with the _dbfile_ handler; this handler **signs** the zone's files, and
+_sign_ works in conjunction with the _dbfile_ handler; this handler **signs** the zone's files, and
 _dbfile_ **serves** the zone's _data_.
 
-For this handler to work at least one key is needed. This "Common Signing Key" will be used to sign the entire
+For _sign_ to work at least one key is needed. This "Common Signing Key" will be used to sign the entire
 zone, _sign_ does _not_ support the ZSK/KSK split, nor will it do key or algorithm rollovers - it just signs.
 This is the most authentic way of doing DNSSEC as it mimics the fire-and-forget style of the DNS.
 
@@ -22,7 +22,7 @@ _sign_ will:
 
 - (Re)-sign the zone with the CSK(s) when:
   - The first signature found on the SOA only has 9 days left before expiring.
-  - The source zone file has been written to.
+  - The source zone **FILE** has been written to.
 
 When signing it will:
 
@@ -34,7 +34,7 @@ When signing it will:
 - Add NSEC records for all authoritative names in the zone.
 
 - Add or replace _all_ apex CDS/CDNSKEY records with the ones derived from the given keys. For
-  each key two CDS are created one with SHA1 and another with SHA256.
+  each key two CDS records are created, one with SHA1 and another with SHA256.
 
 - Update the SOA's serial number to the _unix epoch_ of when the signing happens. This will
   overwrite _any_ previous serial number.
@@ -45,10 +45,10 @@ Keys are named (following BIND9): `K<name>+<alg>+<id>.key` and `K<name>+<alg>+<i
 The keys **must not** be included in your zone; they will be added by _sign_. These keys can be
 generated with `ldns-keygen` or BIND9's `dnssec-keygen`. You don't have to adhere to this naming
 scheme, but then you need to name your keys explicitly, see the `keys` directive, and note that
-`.key` and `.private` is always used as a suffix.
+`.key` and `.private` are always used as suffixes.
 
-A generated zone is written out in a file named `<name>.signed` in the directory named by the
-`directory` directive or otherwise the directory where to original file is found.
+A generated zone is written out in a file named `<name>.signed` in the **DIRECTORY** named by the
+`directory` directive or otherwise the directory where to original **FILE** is found.
 
 # Syntax
 
@@ -70,8 +70,7 @@ sign FILE {
   keys files the same rules apply as for **FILE**.
 - **DIRECTORY** specifies where to write the signed zone files. If not specified the directory where **FILE**
   is found is used. If the path is relative, the global _root_ will be prepended.
-- if `zonemd` is specified the zone will be signed and a ZONEMD record will be added afterwards. This requires
-  the entire zone to be sorted and be converted into wire-format.
+- if `zonemd` is specified the zone will be signed and a ZONEMD record will be added afterwards.
 
 # Examples
 
