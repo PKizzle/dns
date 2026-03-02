@@ -15,7 +15,7 @@ It's not a handler and you can not use it as such: you can't use \fIglobal\fP in
 global block, see the configuration examples below.
 
 .PP
-If no servers (see below) are defined atomdns start a DNS server on port 53.
+If no servers (see below) are defined atomdns starts a DNS server on port 53.
 
 .SH "SYNTAX"
 .PP
@@ -176,7 +176,7 @@ like 5, or an expression like \fB\fCNumCPU()*N\fR, where \fBN\fP is a whole numb
 To allow the certificate challenge, all DOH HTTP servers will also handle the TLS\-ALPN\-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
 started on that port, \fIjust\fP for the certificate challenge. N.B. This is only done if the port isn't "0",
-because that is usually used in testing scenarios. This requires the atomdns binary to be able to bind to that
+because that is usually used in testing scenarios. This requires the atomdns process to be able to bind to that
 port.
 
 .PP
@@ -246,6 +246,21 @@ To complete the challenge a web server needs to be running on port 443, if DOH i
 not already running on 443 another server will be started on that port just for the challenge.
 
 .SH "EXAMPLES"
+.PP
+A minimal example without any blocks, starts a DNS server on port 53, as said in the description. It is
+authoritative for \fB\fCexample.org.\fR and has two handlers, \fIlog\fP and \fIwhoami\fP.
+
+.PP
+.RS
+
+.nf
+example.org
+log
+whoami
+
+.fi
+.RE
+
 .PP
 This runs both a DNS and DOH server, the DOH server listens on port 8053.
 

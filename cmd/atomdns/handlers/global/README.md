@@ -10,7 +10,7 @@ and more items that effect the entire atomdns process.
 It's not a handler and you can not use it as such: you can't use _global_ in the configuration, other than in the
 global block, see the configuration examples below.
 
-If no servers (see below) are defined atomdns start a DNS server on port 53.
+If no servers (see below) are defined atomdns starts a DNS server on port 53.
 
 # Syntax
 
@@ -123,7 +123,7 @@ With `doh` you set HTTP server options, defined are.
 To allow the certificate challenge, all DOH HTTP servers will also handle the TLS-ALPN-1 challenge,
 disregarding the port the run on. If the DOH servers are not running on port 443, one extra server will be
 started on that port, _just_ for the certificate challenge. N.B. This is only done if the port isn't "0",
-because that is usually used in testing scenarios. This requires the atomdns binary to be able to bind to that
+because that is usually used in testing scenarios. This requires the atomdns process to be able to bind to that
 port.
 
 This requires a `tls` setup too.
@@ -173,6 +173,15 @@ To complete the challenge a web server needs to be running on port 443, if DOH i
 not already running on 443 another server will be started on that port just for the challenge.
 
 # Examples
+
+A minimal example without any blocks, starts a DNS server on port 53, as said in the description. It is
+authoritative for `example.org.` and has two handlers, _log_ and _whoami_.
+
+```txt
+example.org
+log
+whoami
+```
 
 This runs both a DNS and DOH server, the DOH server listens on port 8053.
 
