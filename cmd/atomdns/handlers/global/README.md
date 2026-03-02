@@ -10,6 +10,8 @@ and more items that effect the entire atomdns process.
 It's not a handler and you can not use it as such: you can't use _global_ in the configuration, other than in the
 global block, see the configuration examples below.
 
+If no servers (see below) are defined atomdns start a DNS server on port 53.
+
 # Syntax
 
 ```txt
