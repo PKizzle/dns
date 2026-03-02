@@ -101,8 +101,11 @@ func (s *Server) Start() error {
 			return fmt.Errorf("dou: %s", err)
 		}
 	}
+	roles := []string{}
+	if addr := s.Addr(); len(addr) > 0 {
+		roles = append(roles, "DNS:"+addr[0])
+	}
 
-	roles := []string{"DNS:" + s.Addr()[0]}
 	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
 		if s.global.HttpLimits.Servers > 0 {
 			roles = append(roles, "DOH:"+s.HttpAddr()[0])
@@ -113,6 +116,11 @@ func (s *Server) Start() error {
 	}
 	if s.global.UnixLimits.Servers > 0 {
 		roles = append(roles, "DOU:"+s.UnixAddr()[0])
+	}
+
+	// bit of a cop out, but if roles is empty, we have nothing to run
+	if len(roles) == 0 {
+		return fmt.Errorf("no servers defined, nothing to do")
 	}
 
 	if bi := builtinfo(); len(bi) == 4 {
