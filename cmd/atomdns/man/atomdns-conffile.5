@@ -22,15 +22,15 @@ ZONE [ZONE]... {
 
 .PP
 Such a section is called a \fIhandler block\fP. Each block defines the handlers this server should run
-when it gets a query for the \fBZONE\fPs.
+when it gets a query for one the \fBZONE\fPs.
 
 .PP
 The \fBZONE\fP defines for which zones this handler should be called, multiple zones are allowed and must be
 \fIwhite space\fP separated.
 
 .PP
-When a query comes in, it is matched again all zones for all handlers locks, the block with the longest match for the
-query name will receive the query.
+When a query comes in, it is matched again all zones of all handlers blocks, the block with the longest match for the
+query name will receive the query and runs it through it's defined handlers.
 
 .PP
 \fBHANDLER\fP defines the handlers(s) we want to load. This is optional as well, but a block with no handlers
@@ -86,9 +86,10 @@ Is a valid configuration and is supported by \fB\fCatomdns\fR.
 
 .SH "GLOBAL"
 .PP
-A Conffile must have a global block, this is a section without a zone and holds various server wide
-options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
-and DOH) you have a section \fB\fCdns\fR, \fB\fCdot\fR, \fB\fCdoh\fR and \fB\fCdou\fR where you can configure the server, most notably the
+A Conffile must have a global block, this is a block without a zone and holds server wide
+options, like how many instances to run, if you want DOH and DOT servers, etc. etc. For each server type
+(DNS \- plain DNS, DOT \- DNS over TLS, DOH \- DNS over HTTP, and DOU \- DNS over Unix sockets)
+you have a section \fB\fCdns\fR, \fB\fCdot\fR, \fB\fCdoh\fR and \fB\fCdou\fR where you can configure the server, most notably the
 address and port you want to listen on.
 
 .PP
@@ -107,7 +108,8 @@ address and port you want to listen on.
 .RE
 
 .PP
-See atomdns\-global(7) for more information.
+Here we say we should only run a DNS server listening on port 1053 on all addresses, set the \fB\fCroot\fR directory
+to "/var/lib/atomdns" and enable metrics. See atomdns\-global(7) for more information.
 
 .SH "IMPORT"
 .PP
@@ -144,7 +146,7 @@ The \fBZONE\fP is root zone \fB\fC.\fR, the \fBhandler\fP is \fIchaos\fP. The \f
 
 .nf
 \&. {
-   chaos atomdns\-001
+    chaos atomdns\-001
 }
 
 .fi
@@ -250,7 +252,7 @@ Doing Let's Encrypt certificates for your DOH servers:
     tls lets\-encrypt {
         source eth0
         contact miek@miek.nl
-        path lets\-encrypt
+        directory lets\-encrypt
     }
 }
 
