@@ -13,13 +13,13 @@ ZONE [ZONE]... {
 ```
 
 Such a section is called a _handler block_. Each block defines the handlers this server should run
-when it gets a query for the **ZONE**s.
+when it gets a query for one the **ZONE**s.
 
 The **ZONE** defines for which zones this handler should be called, multiple zones are allowed and must be
 _white space_ separated.
 
-When a query comes in, it is matched again all zones for all handlers locks, the block with the longest match for the
-query name will receive the query.
+When a query comes in, it is matched again all zones of all handlers blocks, the block with the longest match for the
+query name will receive the query and runs it through it's defined handlers.
 
 **HANDLER** defines the handlers(s) we want to load. This is optional as well, but a block with no handlers
 will just return REFUSED for all queries. Each handler can have a number of properties that can have
@@ -57,9 +57,10 @@ Is a valid configuration and is supported by `atomdns`.
 
 # Global
 
-A Conffile must have a global block, this is a section without a zone and holds various server wide
-options, like how many instances, if you want DOH and DOT servers, etc. etc. For each server type (DNS, DOT
-and DOH) you have a section `dns`, `dot`, `doh` and `dou` where you can configure the server, most notably the
+A Conffile must have a global block, this is a block without a zone and holds server wide
+options, like how many instances to run, if you want DOH and DOT servers, etc. etc. For each server type
+(DNS - plain DNS, DOT - DNS over TLS, DOH - DNS over HTTP, and DOU - DNS over Unix sockets)
+you have a section `dns`, `dot`, `doh` and `dou` where you can configure the server, most notably the
 address and port you want to listen on.
 
 ```txt
@@ -72,7 +73,8 @@ address and port you want to listen on.
 }
 ```
 
-See atomdns-global(7) for more information.
+Here we say we should only run a DNS server listening on port 1053 on all addresses, set the `root` directory
+to "/var/lib/atomdns" and enable metrics. See atomdns-global(7) for more information.
 
 # Import
 
@@ -101,7 +103,7 @@ The **ZONE** is root zone `.`, the **handler** is _chaos_. The _chaos_ handler t
 
 ```conffile
 . {
-   chaos atomdns-001
+    chaos atomdns-001
 }
 ```
 
@@ -171,7 +173,7 @@ Doing Let's Encrypt certificates for your DOH servers:
     tls lets-encrypt {
         source eth0
         contact miek@miek.nl
-        path lets-encrypt
+        directory lets-encrypt
     }
 }
 

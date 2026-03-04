@@ -19,7 +19,7 @@ For those kind of changes the server needs to be restarted. Modifiying origins o
 
 The _global_ handler describes the options that are also used in starting the server, see atomdns-global(7)
 for more information. Normally you need a **CONFFILE** (atomdns-conffile(5)) like this, to listen on all
-interfaces on port 53:
+addresses on port 53:
 
 ```conffile
 {
@@ -29,7 +29,7 @@ interfaces on port 53:
 }
 ```
 
-When atomdns starts it emits a bunch of logs telling what zones are loaded and routines are started, when all
+When atomdns starts it emits logs telling what zones are loaded and which (background) routines are started, when
 succesful you are greeted with a banner (unless `quiet` is true see atomdns-global(7)).
 
 ```
@@ -42,7 +42,7 @@ __________________________________\o/_______
 ```
 
 There is optional positional argument, the **CONFFILE** to configure atomdns. If not given atomdns will use
-a builtin Conffile:
+this builtin Conffile:
 
 ```confffile
 {
@@ -84,7 +84,7 @@ The following handlers are available:
 - _drunk_ - test client behavior. See atomdns-drunk(7).
 - _ecs_ - add EDNS client subnet to the context. See atomdns-ecs(7).
 - _geoip_ - add geographical location data. See atomdns-geoip(7).
-- _global_ - hold global server properties. See atomdns-global(7).
+- _global_ - hold server properties. See atomdns-global(7).
 - _id_ - add unique ID to the context. See atomdns-id(7).
 - _import_ - includes files or references snippets from a Conffile. See atomdns-import(7).
 - _kill_ - stop atomdns after a duration. See atomdns-kill(7).

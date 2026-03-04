@@ -3,19 +3,19 @@
 
 .SH "NAME"
 .PP
-\fIglobal\fP \- hold global server properties
+\fIglobal\fP \- hold server properties
 
 .SH "DESCRIPTION"
 .PP
-\fIglobal\fP holds global server properties, like the prometheus metrics port, root directory, profiling settings
-and more items that effect the entire atomdns process.
+\fIglobal\fP holds the server properties, like the prometheus metrics port, root directory, profiling settings,
+and the server's configuration on how many and what type of servers to run.
 
 .PP
-It's not a handler and you can not use it as such: you can't use \fIglobal\fP in the configuration, other than in the
+It's not a proper handler and you can not use it as such: you can't use \fIglobal\fP in the configuration, other than in the
 global block, see the configuration examples below.
 
 .PP
-If no servers (see below) are defined atomdns starts a DNS server on port 53.
+If no servers (also see below) are defined atomdns starts a (single, but one for TCP and one for UDP) DNS server on port 53.
 
 .SH "SYNTAX"
 .PP
@@ -70,7 +70,7 @@ If no servers (see below) are defined atomdns starts a DNS server on port 53.
 .RE
 
 .IP \(bu 4
-with \fB\fCroot\fR \fBDIRECTORY\fP is the directory to use as the root directory for the server. Any relative path names will
+with \fB\fCroot\fR \fBDIRECTORY\fP that directory to use as the root directory for the server. Any relative path names will
 get this directory prefixed. If \fBDIRECTORY\fP itself is also relative, the current working directory (cwd) of the atomdns
 process will be prefixed.
 .IP \(bu 4

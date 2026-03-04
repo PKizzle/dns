@@ -1,16 +1,16 @@
 # Name
 
-_global_ - hold global server properties
+_global_ - hold server properties
 
 # Description
 
-_global_ holds global server properties, like the prometheus metrics port, root directory, profiling settings
-and more items that effect the entire atomdns process.
+_global_ holds the server properties, like the prometheus metrics port, root directory, profiling settings,
+and the server's configuration on how many and what type of servers to run.
 
-It's not a handler and you can not use it as such: you can't use _global_ in the configuration, other than in the
+It's not a proper handler and you can not use it as such: you can't use _global_ in the configuration, other than in the
 global block, see the configuration examples below.
 
-If no servers (see below) are defined atomdns starts a DNS server on port 53.
+If no servers (also see below) are defined atomdns starts a (single, but one for TCP and one for UDP) DNS server on port 53.
 
 # Syntax
 
@@ -60,7 +60,7 @@ If no servers (see below) are defined atomdns starts a DNS server on port 53.
 }
 ```
 
-- with `root` **DIRECTORY** is the directory to use as the root directory for the server. Any relative path names will
+- with `root` **DIRECTORY** that directory to use as the root directory for the server. Any relative path names will
   get this directory prefixed. If **DIRECTORY** itself is also relative, the current working directory (cwd) of the atomdns
   process will be prefixed.
 - `log` tells atomdns on how to, globally, log:
