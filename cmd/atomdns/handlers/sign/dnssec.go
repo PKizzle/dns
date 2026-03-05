@@ -194,16 +194,16 @@ func (s *Sign) Expired(origin string) (bool, error) {
 		if s, ok := rr.(*dns.RRSIG); ok && s.TypeCovered == dns.TypeSOA {
 			alog := log().With(slog.String("zone", origin), slog.String("path", filepath.Base(f.Name())))
 			if !s.ValidPeriod(now) {
-				alog.Warn("Signature's validity period has passed")
+				alog.Warn("Validity period has passed")
 				return true, nil
 			}
 			expire, _ := time.Parse("20060102150405", dnsutil.TimeToString(s.Expiration))
 			Expire.WithLabelValues(origin).Set(float64(expire.Unix()))
 			days := Expired(now, expire)
 			if days < 15 {
-				alog.Warn("Days left before expiration", slog.Int("days", days))
+				alog.Warn("Left before expiration", slog.Int("days", days))
 			} else {
-				alog.Info("Days left before expiration", slog.Int("days", days))
+				alog.Info("Left before expiration", slog.Int("days", days))
 			}
 			return days < expireDays, nil
 		}
@@ -214,7 +214,7 @@ func (s *Sign) Expired(origin string) (bool, error) {
 		}
 	}
 	if zp.Err() != nil {
-		return false, fmt.Errorf("failed to parse zone %s with origin %s: %s ", s.Zones[origin].Path, origin, zp.Err())
+		return false, fmt.Errorf("failed to parse zone %s with origin %s: %w ", s.Zones[origin].Path, origin, zp.Err())
 	}
 	return true, fmt.Errorf("no SOA signature found in first 50 records")
 }
