@@ -99,6 +99,15 @@ The following handlers are available:
 - _url_ - serve zone data from an URL. See atomdns-url(7).
 - _whoami_ - return your resolver's local IP address, port and transport. See atomdns-whoami(7).
 
+# Difference with CoreDNS
+
+atomdns looks a lot like CoreDNS, the main differences are:
+
+- Uses dnsv2 (this library) which is 2x more efficient _and_ incorperates a lot of ideas from CoreDNS.
+- Allows for dynamic ordering of handlers, handlers in CoreDNS (called plugins) have a static ordering, set at
+  compile time.
+- Ignores unknown handlers, CoreDNS stops with an error in that case.
+
 # Authors
 
 atomdns authors.
