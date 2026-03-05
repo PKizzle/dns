@@ -65,12 +65,15 @@ func (s *Server) Start() error {
 	}
 
 	for i := range s.tlsservers {
-		if x := s.global.TlsLimits.MaxInflight; x > 0 {
-			s.tlsservers[i].ListenFunc = func(srv *dns.Server) {
-				srv.Listener = netutil.LimitListener(srv.Listener, x)
+		opt := func(srv *dns.Server) error {
+			if x := s.global.TlsLimits.MaxInflight; x > 0 {
+				srv.ListenFunc = func(s *dns.Server) {
+					s.Listener = netutil.LimitListener(s.Listener, x)
+				}
 			}
+			return nil
 		}
-		go Serve(s.tlsstarted, s.tlsservers[i])
+		go Serve(s.tlsstarted, s.tlsservers[i], opt)
 	}
 	for range s.tlsservers {
 		err := <-s.tlsstarted
@@ -159,6 +162,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	for _, srv := range s.httpservers {
 		srv.Shutdown(ctx)
 	}
+	for _, srv := range s.unixservers {
+		srv.Shutdown(ctx)
+	}
 	return nil
 }
 
@@ -218,7 +224,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 			Addr:          global.TlsAddr,
 			MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
 		}
-		msgInvalidFunc(s.servers[j], global.MetricsN)
+		msgInvalidFunc(s.tlsservers[j], global.MetricsN)
 		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
 	}
 
@@ -248,7 +254,7 @@ func New(conf string, r io.Reader) (*Server, error) {
 			Addr:          global.UnixAddr,
 			MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
 		}
-		msgInvalidFunc(s.servers[j], global.MetricsN)
+		msgInvalidFunc(s.unixservers[j], global.MetricsN)
 		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
 	}
 
@@ -440,11 +446,7 @@ func (s *Server) UnixAddr() []string {
 	return addr
 }
 
-func builtin(
-	conf string,
-) bool {
-	return strings.HasPrefix(conf, "<") && strings.HasSuffix(conf, ">")
-}
+func builtin(conf string) bool { return strings.HasPrefix(conf, "<") && strings.HasSuffix(conf, ">") }
 
 // msgInvalidFunc sets up the MsgInvalidFunc for a server.
 func msgInvalidFunc(s *dns.Server, N uint64) {
