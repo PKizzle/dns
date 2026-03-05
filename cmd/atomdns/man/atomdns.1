@@ -13,7 +13,7 @@
 .PP
 atomdns is a DNS server that chains handlers. Each handler handles a DNS feature, like serve zone files,
 transfering those to secondaries or just exporting metrics. There are many handlers, each described in their
-respective manual page.
+respective manual page. If an unknown handler is encountered it is skipped, while outputting a warning.
 
 .PP
 The server atomdns can be reloaded by sending it the HUP signal, this reloads the handlers only, and does
@@ -119,6 +119,8 @@ The following handlers are available:
 .IP \(bu 4
 \fIecs\fP \- add EDNS client subnet to the context. See atomdns\-ecs(7).
 .IP \(bu 4
+\fIempty\fP \- consume setup tokens. See atomdns\-empty(7).
+.IP \(bu 4
 \fIgeoip\fP \- add geographical location data. See atomdns\-geoip(7).
 .IP \(bu 4
 \fIglobal\fP \- hold server properties. See atomdns\-global(7).
@@ -147,6 +149,19 @@ The following handlers are available:
 \fIurl\fP \- serve zone data from an URL. See atomdns\-url(7).
 .IP \(bu 4
 \fIwhoami\fP \- return your resolver's local IP address, port and transport. See atomdns\-whoami(7).
+
+
+.SH "DIFFERENCE WITH COREDNS"
+.PP
+atomdns looks a lot like CoreDNS, the main differences are:
+
+.IP \(bu 4
+Uses dnsv2 (this library) which is 2x more efficient \fIand\fP incorperates a lot of ideas from CoreDNS.
+.IP \(bu 4
+Allows for dynamic ordering of handlers, handlers in CoreDNS (called plugins) have a static ordering, set at
+compile time.
+.IP \(bu 4
+Ignores unknown handlers, CoreDNS stops with an error in that case.
 
 
 .SH "AUTHORS"

@@ -14,6 +14,7 @@ var Handlers = []string{
 	"dbsqlite",
 	"drunk",
 	"ecs",
+	"empty",
 	"geoip",
 	"global",
 	"id",

@@ -63,6 +63,10 @@
 example.org {
     id # Add a request ID, see atomdns-id(7).
     log # Log, see atomdns-log(7).
+    # yes is an older handler this since has been removed, the setup skips these automatically.
+    yes {
+        CAA stuff
+    }
     # kill 50s # Kill the server after 50 seconds, see atomdns-kill(7).
     dbfile dbfile/zone/testdata/db.example.org { # Configure a zone from a file on disk, see atomdns-dbfile(7).
         transfer # Allow transfers to everywhere.

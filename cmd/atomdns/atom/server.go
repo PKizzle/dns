@@ -16,6 +16,7 @@ import (
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/atom/atomhttp"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/empty"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
@@ -318,7 +319,8 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			names = append(names, name)
 			newFn, ok := handlers.StringToHandler[name]
 			if !ok {
-				return fmt.Errorf("unknown handler: %s", name)
+				slog.With("handler", name).Warn("Unknown handler, skipping config")
+				newFn = func() handlers.Handler { return new(empty.Empty) }
 			}
 			handler := newFn()
 			if s, ok := handler.(handlers.Setupper); ok {
