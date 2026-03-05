@@ -15,6 +15,15 @@ Useful helper function, but no way to put it in subpackage (cyclic dependencie) 
 Useful helper function, that can help with testing (and other things) -> _dnstest_.
 Helper function(s) -> new package in _internal/..._.
 
+## Struct Tags
+
+The DNS types in `rdata/rdata.go` carry struct tags to specify what kind of string it is so we can pack/unpack
+this correct, among other we have:
+
+- `domain-name`: a plain name.
+- `cdomain-name`: a name that can be used for compression.
+- `mname`: the SOA's mbox name. Can contain `\.`.
+
 ## Go Generate
 
 Al lot of things are generated from the RR struct tags, see `dns.go` for ~12 we currently have. They all reuse

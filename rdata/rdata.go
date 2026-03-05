@@ -121,7 +121,7 @@ type SOA struct {
 	// addresses in a DNS zone. No other (looks-like-a-domain-name) in this package has this feauture, so note
 	// that functions like [codeberg.org/miekg/dnsutil.Next] and [codeberg.org/miekg/dnsutil.Prev] will hit
 	// the \. instead of jumping over it.
-	Mbox    string `dns:"mdomain-name"`
+	Mbox    string `dns:"mname"`
 	Serial  uint32
 	Refresh uint32
 	Retry   uint32

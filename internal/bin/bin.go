@@ -77,7 +77,7 @@ func Dump(p []byte, off ...int) string {
 		for j := range line {
 			c := line[j]
 			sb.WriteByte(' ')
-			if ddd.IsLetter(c) || ddd.IsDigit(c) {
+			if ddd.IsLetter(c) || ddd.IsDigit(c) || c == '.' {
 				fmt.Fprintf(&sb, "%3s", string(c))
 			} else {
 				fmt.Fprintf(&sb, "%03d", c)
