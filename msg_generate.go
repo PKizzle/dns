@@ -119,6 +119,8 @@ func main() {
 					o("off, err = pack.Name(rr.%s, msg, off, compression, true)\n")
 				case tag == `dns:"domain-name"`:
 					o("off, err = pack.Name(rr.%s, msg, off, compression, false)\n")
+				case tag == `dns:"mname"`:
+					o("off, err = pack.MName(rr.%s, msg, off)\n")
 				case tag == `dns:"a"`:
 					o("off, err = pack.A(rr.%s, msg, off)\n")
 				case tag == `dns:"aaaa"`:
@@ -285,6 +287,8 @@ if rr.%s != "-" {
 				case `dns:"-"`: // ignored
 				case `dns:"cdomain-name"`, `dns:"domain-name"`:
 					unpackFieldBuf("unpack.Name")
+				case `dns:"mname"`:
+					unpackFieldBuf("unpack.MName")
 				case `dns:"a"`:
 					unpackField("unpack.A")
 				case `dns:"aaaa"`:

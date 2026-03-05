@@ -391,7 +391,7 @@ func (rr *SOA) pack(msg []byte, off int, compression map[string]uint16) (off1 in
 	if err != nil {
 		return off, err
 	}
-	off, err = pack.Name(rr.Mbox, msg, off, compression, true)
+	off, err = pack.MName(rr.Mbox, msg, off)
 	if err != nil {
 		return off, err
 	}
@@ -423,7 +423,7 @@ func (rr *SOA) unpack(s cryptobyte.String, msgBuf []byte) (err error) {
 	if err != nil {
 		return err
 	}
-	rr.Mbox, err = unpack.Name(&s, msgBuf)
+	rr.Mbox, err = unpack.MName(&s, msgBuf)
 	if err != nil {
 		return err
 	}

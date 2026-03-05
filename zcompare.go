@@ -474,13 +474,6 @@ func (rr *SOA) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = comparename(rr.Mbox, b.(*SOA).Mbox)
-	if x != 0 {
-		if x < 0 {
-			return -1
-		}
-		return 1
-	}
 	x = int(rr.Serial) - int(b.(*SOA).Serial)
 	if x != 0 {
 		if x < 0 {
