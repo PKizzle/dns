@@ -15,6 +15,7 @@ import (
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 )
 
 // Run starts a new atomdns server.
@@ -53,14 +54,14 @@ func Run(version string) {
 		conffile = flag.Args()[0]
 		confdata, err = os.ReadFile(flag.Args()[0])
 		if err != nil {
-			slog.Error("Failed to read configuration", slog.String("path", conffile), slog.Any("error", err))
+			slog.Error("Failed to read configuration", slog.String("path", conffile), dnslog.Error(err))
 			os.Exit(1)
 		}
 	}
 
 	s, err := New(conffile, bytes.NewReader(confdata))
 	if err != nil {
-		slog.Error("Failed to create server", slog.Any("error", err))
+		slog.Error("Failed to create server", dnslog.Error(err))
 		os.Exit(1)
 	}
 	if flagCheck {
@@ -69,7 +70,7 @@ func Run(version string) {
 	s.version = version
 
 	if err := s.Start(); err != nil {
-		slog.Error("Failed to start server", slog.Any("error", err))
+		slog.Error("Failed to start server", dnslog.Error(err))
 		os.Exit(1)
 	}
 
@@ -80,7 +81,7 @@ func Run(version string) {
 		for sig := range sigchan {
 			slog.Info("Received signal, reloading", "signal", sig)
 			if err := s.Reload(); err != nil {
-				slog.Error("Failed to reload server", slog.Any("error", err))
+				slog.Error("Failed to reload server", dnslog.Error(err))
 			}
 			signal.Notify(sigchan, syscall.SIGHUP)
 			if !s.global.Quiet {

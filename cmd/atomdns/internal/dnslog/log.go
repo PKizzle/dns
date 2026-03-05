@@ -20,3 +20,5 @@ func GroupValues(key string, values []string) []slog.Attr {
 	}
 	return attrs
 }
+
+func Error(err error) slog.Attr { return slog.Any("error", err) }

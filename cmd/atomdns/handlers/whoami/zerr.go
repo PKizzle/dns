@@ -5,11 +5,13 @@ package whoami
 import (
 	"fmt"
 	"log/slog"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 )
 
 func (w *Whoami) Err(err error) error { return fmt.Errorf("%s: %w", w.Key(), err) }
 
-func Err(err error) slog.Attr { return slog.Any("error", err) }
+func Err(err error) slog.Attr { return dnslog.Error(err) }
 
 func (w *Whoami) Key() string { return "whoami" }
 

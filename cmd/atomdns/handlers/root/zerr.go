@@ -5,11 +5,13 @@ package root
 import (
 	"fmt"
 	"log/slog"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 )
 
 func (r *Root) Err(err error) error { return fmt.Errorf("%s: %w", r.Key(), err) }
 
-func Err(err error) slog.Attr { return slog.Any("error", err) }
+func Err(err error) slog.Attr { return dnslog.Error(err) }
 
 func (r *Root) Key() string { return "root" }
 

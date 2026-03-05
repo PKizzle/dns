@@ -5,11 +5,13 @@ package geoip
 import (
 	"fmt"
 	"log/slog"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 )
 
 func (g *Geoip) Err(err error) error { return fmt.Errorf("%s: %w", g.Key(), err) }
 
-func Err(err error) slog.Attr { return slog.Any("error", err) }
+func Err(err error) slog.Attr { return dnslog.Error(err) }
 
 func (g *Geoip) Key() string { return "geoip" }
 

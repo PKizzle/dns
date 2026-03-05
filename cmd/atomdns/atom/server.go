@@ -22,6 +22,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/zlog"
 	"codeberg.org/miekg/dns/dnsutil"
@@ -152,7 +153,7 @@ func Serve(ch chan error, srv *dns.Server, opts ...func(s *dns.Server) error) {
 // Shutdown shuts down a server.
 func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.global.Shutdown(); err != nil {
-		slog.Warn("Failed to run shutdown", slog.Any("error", err))
+		slog.Warn("Failed to run shutdown", dnslog.Error(err))
 	}
 	for _, srv := range s.servers {
 		srv.Shutdown(ctx)
