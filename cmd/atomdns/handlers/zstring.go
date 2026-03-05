@@ -13,6 +13,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbsqlite"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/drunk"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/ecs"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/empty"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/geoip"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/global"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/id"
@@ -42,6 +43,7 @@ var StringToHandler = map[string]func() Handler{
 	"dbsqlite": func() Handler { return new(dbsqlite.Dbsqlite) },
 	"drunk":    func() Handler { return new(drunk.Drunk) },
 	"ecs":      func() Handler { return new(ecs.Ecs) },
+	"empty":    func() Handler { return new(empty.Empty) },
 	"geoip":    func() Handler { return new(geoip.Geoip) },
 	"global":   func() Handler { return new(global.Global) },
 	"id":       func() Handler { return new(id.Id) },

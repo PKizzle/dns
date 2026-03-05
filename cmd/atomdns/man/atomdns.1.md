@@ -10,7 +10,7 @@ _atomdns_ **[-C|-H|-V]** [CONFFILE]
 
 atomdns is a DNS server that chains handlers. Each handler handles a DNS feature, like serve zone files,
 transfering those to secondaries or just exporting metrics. There are many handlers, each described in their
-respective manual page.
+respective manual page. If an unknown handler is encountered it is skipped, while outputting a warning.
 
 The server atomdns can be reloaded by sending it the HUP signal, this reloads the handlers only, and does
 _not_ restart any of the (web) servers, so changes to server addresses and limits (see atomdns-global(7)) will not
@@ -83,6 +83,7 @@ The following handlers are available:
 - _dbsqilte_ - serve zone data from a SQLite database. See atomdns-dbsqlite(7).
 - _drunk_ - test client behavior. See atomdns-drunk(7).
 - _ecs_ - add EDNS client subnet to the context. See atomdns-ecs(7).
+- _empty_ - consume setup tokens. See atomdns-empty(7).
 - _geoip_ - add geographical location data. See atomdns-geoip(7).
 - _global_ - hold server properties. See atomdns-global(7).
 - _id_ - add unique ID to the context. See atomdns-id(7).
