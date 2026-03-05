@@ -93,7 +93,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 			}
 
 			if expired, _ := s.Expired(z.Origin()); !expired {
-				alog.Info("Zone has valid signatures")
+				alog.Info("Zone is valid")
 				continue
 			}
 
