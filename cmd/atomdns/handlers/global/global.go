@@ -3,7 +3,6 @@ package global
 import (
 	"crypto/tls"
 	"io"
-	"log/slog"
 	"net"
 	"sync"
 	"time"
@@ -68,9 +67,6 @@ func (g *Global) Startup() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceStartup.Do(func() {
-		if len(g.onStartup) > 0 {
-			slog.Info("Startup functions", slog.Int("total", len(g.onStartup)))
-		}
 		wg.Go(func() {
 			for _, fn := range g.onStartup {
 				if err := fn(); err != nil {
@@ -93,9 +89,6 @@ func (g *Global) Shutdown() error {
 	errs := []error{}
 	wg := sync.WaitGroup{}
 	g.onceShutdown.Do(func() {
-		if len(g.onShutdown) > 0 {
-			slog.Info("Shutdown functions", slog.Int("total", len(g.onShutdown)))
-		}
 		for _, fn := range g.onShutdown {
 			wg.Go(func() {
 				if err := fn(); err != nil {

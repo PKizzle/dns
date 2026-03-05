@@ -59,7 +59,7 @@ func (s *Server) Start() error {
 	for range s.servers {
 		err := <-s.started
 		if err != nil {
-			return fmt.Errorf("dns: %s", err)
+			return fmt.Errorf("dns: %w", err)
 		}
 	}
 
@@ -74,7 +74,7 @@ func (s *Server) Start() error {
 	for range s.tlsservers {
 		err := <-s.tlsstarted
 		if err != nil {
-			return fmt.Errorf("dot: %s", err)
+			return fmt.Errorf("dot: %w", err)
 		}
 	}
 
@@ -83,7 +83,7 @@ func (s *Server) Start() error {
 	}
 	for range s.httpservers {
 		if err := <-s.httpstarted; err != nil {
-			return fmt.Errorf("doh: %s", err)
+			return fmt.Errorf("doh: %w", err)
 		}
 	}
 
@@ -98,7 +98,7 @@ func (s *Server) Start() error {
 	for range s.unixservers {
 		err := <-s.unixstarted
 		if err != nil {
-			return fmt.Errorf("dou: %s", err)
+			return fmt.Errorf("dou: %w", err)
 		}
 	}
 	roles := []string{}
@@ -285,7 +285,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			d := conffile.NewDispenser(conf, nil, b.Tokens[dir], nil)
 			err := global.Setup(d)
 			if err != nil {
-				return fmt.Errorf("could not parse global config: %s", err)
+				return fmt.Errorf("could not parse global config: %w", err)
 			}
 		}
 		global.OnStartup(func() error {
@@ -328,7 +328,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 				}
 				err := s.Setup(co)
 				if err != nil {
-					return handler.Err(fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ",")))
+					return handler.Err(fmt.Errorf("%w for '%s'", err, strings.Join(b.Keys, ",")))
 				}
 			}
 			if t, ok := handler.(handlers.Teardowner); ok {
@@ -352,7 +352,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			if err != nil {
 				newFn, _ := handlers.StringToHandler[teardown.name]
 				handler := newFn()
-				return handler.Err(fmt.Errorf("%s for '%s'", err.Error(), strings.Join(b.Keys, ",")))
+				return handler.Err(fmt.Errorf("%w for '%s'", err, strings.Join(b.Keys, ",")))
 			}
 		}
 
