@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
+
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 )
 
 func (u *Url) Refetch() error {
@@ -20,7 +21,7 @@ func (u *Url) Refetch() error {
 			case <-ticker.C:
 				err := u.Fetch()
 				if err != nil {
-					alog := log().With(slog.String("url", strings.Join(u.URLs, ",")), slog.String("file", filepath.Base(u.Path)))
+					alog := log().With("URLs", dnslog.GroupValues("URL", u.URLs), slog.String("file", filepath.Base(u.Path)))
 					alog.Error("Failed to fetch", Err(err))
 					continue
 				}

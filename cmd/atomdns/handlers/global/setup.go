@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"github.com/caddyserver/certmagic"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -81,7 +82,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					g.TlsCertConfig = certmagic.NewDefault()
 					ctx, cancel := context.WithCancel(context.Background())
 					g.OnStartup(func() error {
-						log().Info("Startup", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
+						log().Info("Startup", "tls", args[0], "IPs", dnslog.GroupValues("IP", g.TlsIPs))
 						err := certmagic.ManageAsync(ctx, g.TlsIPs)
 						if err != nil {
 							return err
@@ -89,7 +90,7 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 						return nil
 					})
 					g.OnShutdown(func() error {
-						log().Info("Shutdown", "tls", args[0], "IPs", strings.Join(g.TlsIPs, ","))
+						log().Info("Shutdown", "tls", args[0], "IPs", dnslog.GroupValues("IP", g.TlsIPs))
 						cancel()
 						return nil
 					})

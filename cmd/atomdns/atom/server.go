@@ -65,12 +65,15 @@ func (s *Server) Start() error {
 	}
 
 	for i := range s.tlsservers {
-		if x := s.global.TlsLimits.MaxInflight; x > 0 {
-			s.tlsservers[i].ListenFunc = func(srv *dns.Server) {
-				srv.Listener = netutil.LimitListener(srv.Listener, x)
+		opt := func(srv *dns.Server) error {
+			if x := s.global.TlsLimits.MaxInflight; x > 0 {
+				srv.ListenFunc = func(s *dns.Server) {
+					s.Listener = netutil.LimitListener(s.Listener, x)
+				}
 			}
+			return nil
 		}
-		go Serve(s.tlsstarted, s.tlsservers[i])
+		go Serve(s.tlsstarted, s.tlsservers[i], opt)
 	}
 	for range s.tlsservers {
 		err := <-s.tlsstarted
@@ -102,21 +105,22 @@ func (s *Server) Start() error {
 			return fmt.Errorf("dou: %w", err)
 		}
 	}
-	roles := []string{}
+	roles := []slog.Attr{}
+	const r = "role"
 	if addr := s.Addr(); len(addr) > 0 {
-		roles = append(roles, "DNS:"+addr[0])
+		roles = append(roles, slog.String(r, "DNS:"+addr[0]))
 	}
 
 	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
 		if s.global.HttpLimits.Servers > 0 {
-			roles = append(roles, "DOH:"+s.HttpAddr()[0])
+			roles = append(roles, slog.String(r, "DOH:"+s.HttpAddr()[0]))
 		}
 		if s.global.TlsLimits.Servers > 0 {
-			roles = append(roles, "DOT:"+s.TlsAddr()[0])
+			roles = append(roles, slog.String(r, "DOT:"+s.TlsAddr()[0]))
 		}
 	}
 	if s.global.UnixLimits.Servers > 0 {
-		roles = append(roles, "DOU:"+s.UnixAddr()[0])
+		roles = append(roles, slog.String(r, "DOU:"+s.UnixAddr()[0]))
 	}
 
 	// bit of a cop out, but if roles is empty, we have nothing to run
@@ -127,7 +131,7 @@ func (s *Server) Start() error {
 	if bi := builtinfo(); len(bi) == 4 {
 		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
 	}
-	slog.Info("Listening", "total", len(roles), "roles", strings.Join(roles, ", "))
+	slog.Info("Listening", "total", len(roles), "roles", slog.GroupValue(roles...))
 	slog.Info("Launched", "config", s.global.Config, "PID", os.Getpid(), "version", "v"+s.version, "dns", dns.Version, "zones", len(s.global.Registered))
 	return nil
 }
@@ -157,6 +161,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		srv.Shutdown(ctx)
 	}
 	for _, srv := range s.httpservers {
+		srv.Shutdown(ctx)
+	}
+	for _, srv := range s.unixservers {
 		srv.Shutdown(ctx)
 	}
 	return nil
@@ -210,10 +217,15 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		tlsConfig.NextProtos = dns.NextProtos
 		s.tlsservers[j] = &dns.Server{
-			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
-			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
+			ReuseAddr:     true,
+			ReusePort:     true,
+			TLSConfig:     tlsConfig,
+			Handler:       s.mux,
+			Net:           "tcp",
+			Addr:          global.TlsAddr,
+			MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
 		}
-		msgInvalidFunc(s.servers[j], global.MetricsN)
+		msgInvalidFunc(s.tlsservers[j], global.MetricsN)
 		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
 	}
 
@@ -238,9 +250,12 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.unixstarted = make(chan error, len(s.unixservers))
 	for j := range s.unixservers {
 		s.unixservers[j] = &dns.Server{
-			Handler: s.mux, Net: "unix", Addr: global.UnixAddr, MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
+			Handler:       s.mux,
+			Net:           "unix",
+			Addr:          global.UnixAddr,
+			MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
 		}
-		msgInvalidFunc(s.servers[j], global.MetricsN)
+		msgInvalidFunc(s.unixservers[j], global.MetricsN)
 		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
 	}
 
@@ -250,7 +265,10 @@ func New(conf string, r io.Reader) (*Server, error) {
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
-			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}))
+			s.httpservers = append(
+				s.httpservers,
+				atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}),
+			)
 			s.httpstarted = make(chan error, len(s.httpservers))
 		}
 	}
@@ -306,11 +324,14 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 		fn   func(*dnsserver.Controller) error
 	}
 
+	const Unpack = 0
 	for _, b := range blocks {
 		if b.Keys == nil {
 			continue
 		}
 		hs := []handlers.Handler{new(unpack.Unpack)}
+		hs[Unpack].(*unpack.Unpack).ClassFunc = unpack.DefaultClassFunc
+
 		teardowns := []teardown{}
 		names := []string{}
 
@@ -346,10 +367,16 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 					return fmt.Errorf("handler: %s, is a noop handler, but has no setup", name)
 				}
 			}
+			if c, ok := handler.(handlers.Classer); ok {
+				hs[Unpack].(*unpack.Unpack).ClassFunc = c.Class
+			}
 		}
 
 		for _, teardown := range teardowns {
-			co := &dnsserver.Controller{Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil), Global: global}
+			co := &dnsserver.Controller{
+				Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil),
+				Global:    global,
+			}
 			err := teardown.fn(co)
 			if err != nil {
 				newFn, _ := handlers.StringToHandler[teardown.name]
@@ -368,7 +395,12 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			}
 
 			if !global.Quiet {
-				slog.Info(k, "handlers", strings.Join(names, ","))
+				attrs := make([]slog.Attr, len(names))
+				for i := range names {
+					attrs[i] = slog.String("handler", names[i])
+				}
+
+				slog.Info(k, "handlers", slog.GroupValue(attrs...))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
 			global.Registered[k] = struct{}{}

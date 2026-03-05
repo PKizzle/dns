@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/dbfile/zone"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -58,12 +59,12 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		return u.Reload()
 	})
 	co.OnStartup(func() error {
-		log().Info("Startup", "url", strings.Join(u.URLs, ","), "file", filepath.Base(u.Path))
+		log().Info("Startup", "URLs", dnslog.GroupValues("URL", u.URLs), "file", filepath.Base(u.Path))
 
 		go func() {
 			err := u.Fetch()
 			if err != nil {
-				alog := log().With(slog.String("url", strings.Join(u.URLs, ",")), slog.String("file", filepath.Base(u.Path)))
+				alog := log().With("URLs", dnslog.GroupValues("URL", u.URLs), slog.String("file", filepath.Base(u.Path)))
 				alog.Error("Failed to fetch", Err(err))
 			}
 		}()
@@ -76,7 +77,7 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 		return nil
 	})
 	co.OnShutdown(func() error {
-		log().Info("Shutdown", "refetch", strings.Join(u.URLs, ","))
+		log().Info("Shutdown", "URLs", dnslog.GroupValues("URL", u.URLs))
 		u.cancel()
 		return nil
 	})

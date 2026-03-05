@@ -7,6 +7,8 @@ _chaos_ - respond to TXT queries in the CH class
 This is useful for retrieving version or author information from the server by querying a TXT record
 for a special domain name in the CH class.
 
+The _chaos_ handler configures the _unpack_ handler to allow CHAOS class queries.
+
 # Syntax
 
 ```

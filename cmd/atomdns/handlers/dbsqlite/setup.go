@@ -2,9 +2,9 @@ package dbsqlite
 
 import (
 	"path/filepath"
-	"strings"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
 	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
@@ -53,7 +53,7 @@ UNIQUE (name, type, data)
 		return err
 	})
 	co.OnStartup(func() error {
-		log().Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", strings.Join(d.Origins(), ","))
+		log().Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", dnslog.GroupValues("zone", d.Origins()))
 		return nil
 	})
 	co.OnShutdown(func() error {
