@@ -2,6 +2,7 @@ package chaos
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"math/rand"
 	"os"
@@ -63,4 +64,17 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		}
 		io.Copy(w, m)
 	})
+}
+
+func (c *Chaos) Class(r *dns.Msg) error {
+	if len(r.Question) == 0 {
+		return nil
+	}
+	if r.Question[0].Header().Class == dns.ClassINET {
+		return nil
+	}
+	if r.Question[0].Header().Class == dns.ClassCHAOS {
+		return nil
+	}
+	return fmt.Errorf("class is not IN or CH")
 }

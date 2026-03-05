@@ -210,8 +210,13 @@ func New(conf string, r io.Reader) (*Server, error) {
 		}
 		tlsConfig.NextProtos = dns.NextProtos
 		s.tlsservers[j] = &dns.Server{
-			ReuseAddr: true, ReusePort: true, TLSConfig: tlsConfig,
-			Handler: s.mux, Net: "tcp", Addr: global.TlsAddr, MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
+			ReuseAddr:     true,
+			ReusePort:     true,
+			TLSConfig:     tlsConfig,
+			Handler:       s.mux,
+			Net:           "tcp",
+			Addr:          global.TlsAddr,
+			MaxTCPQueries: global.TlsLimits.MaxTCPQueries,
 		}
 		msgInvalidFunc(s.servers[j], global.MetricsN)
 		s.tlsservers[j].NotifyStartedFunc = func(_ context.Context) { s.tlsstarted <- nil }
@@ -238,7 +243,10 @@ func New(conf string, r io.Reader) (*Server, error) {
 	s.unixstarted = make(chan error, len(s.unixservers))
 	for j := range s.unixservers {
 		s.unixservers[j] = &dns.Server{
-			Handler: s.mux, Net: "unix", Addr: global.UnixAddr, MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
+			Handler:       s.mux,
+			Net:           "unix",
+			Addr:          global.UnixAddr,
+			MaxTCPQueries: global.UnixLimits.MaxTCPQueries,
 		}
 		msgInvalidFunc(s.servers[j], global.MetricsN)
 		s.unixservers[j].NotifyStartedFunc = func(_ context.Context) { s.unixstarted <- nil }
@@ -250,7 +258,10 @@ func New(conf string, r io.Reader) (*Server, error) {
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
-			s.httpservers = append(s.httpservers, atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}))
+			s.httpservers = append(
+				s.httpservers,
+				atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}),
+			)
 			s.httpstarted = make(chan error, len(s.httpservers))
 		}
 	}
@@ -306,11 +317,14 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 		fn   func(*dnsserver.Controller) error
 	}
 
+	const Unpack = 0
 	for _, b := range blocks {
 		if b.Keys == nil {
 			continue
 		}
 		hs := []handlers.Handler{new(unpack.Unpack)}
+		hs[Unpack].(*unpack.Unpack).ClassFunc = unpack.DefaultClassFunc
+
 		teardowns := []teardown{}
 		names := []string{}
 
@@ -346,10 +360,16 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 					return fmt.Errorf("handler: %s, is a noop handler, but has no setup", name)
 				}
 			}
+			if c, ok := handler.(handlers.Classer); ok {
+				hs[Unpack].(*unpack.Unpack).ClassFunc = c.Class
+			}
 		}
 
 		for _, teardown := range teardowns {
-			co := &dnsserver.Controller{Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil), Global: global}
+			co := &dnsserver.Controller{
+				Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil),
+				Global:    global,
+			}
 			err := teardown.fn(co)
 			if err != nil {
 				newFn, _ := handlers.StringToHandler[teardown.name]
@@ -420,7 +440,11 @@ func (s *Server) UnixAddr() []string {
 	return addr
 }
 
-func builtin(conf string) bool { return strings.HasPrefix(conf, "<") && strings.HasSuffix(conf, ">") }
+func builtin(
+	conf string,
+) bool {
+	return strings.HasPrefix(conf, "<") && strings.HasSuffix(conf, ">")
+}
 
 // msgInvalidFunc sets up the MsgInvalidFunc for a server.
 func msgInvalidFunc(s *dns.Server, N uint64) {

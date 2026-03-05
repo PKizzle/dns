@@ -44,6 +44,13 @@ type Teardowner interface {
 	Teardown(co *dnsserver.Controller) error
 }
 
+// Classer holds a method that if implemented will be used as the [Unpack.ClassFunc] for this handler chain.
+// Used to allow other classes than IN. This is implemented by [chaos.Chaos]. See [unpack.DefaultClassFunc]
+// for an example that only allows the IN class.
+type Classer interface {
+	Class(*dns.Msg) error
+}
+
 // Compile takes the Handlers hs and creates a wrapped handle func.
 func Compile(hs []Handler) dns.HandlerFunc {
 	if len(hs) < 1 {
