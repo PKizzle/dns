@@ -20,8 +20,8 @@ Helper function(s) -> new package in _internal/..._.
 The DNS types in `rdata/rdata.go` carry struct tags to specify what kind of string it is so we can pack/unpack
 this correct, among other we have:
 
-- `domain-name`: a plain name.
-- `cdomain-name`: a name that can be used for compression.
+- `name`: a plain name.
+- `cname`: a name that can be used for compression.
 - `mname`: the SOA's mbox name. Can contain `\.`.
 
 ## Go Generate
