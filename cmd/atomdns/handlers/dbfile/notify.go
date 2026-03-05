@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"net"
 	"slices"
-	"strings"
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnslog"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/localaddr"
 	"codeberg.org/miekg/dns/dnsutil"
 )
@@ -72,7 +72,7 @@ func (t *Transfer) Notify(origin string) error {
 			lasterr = err
 		}
 	}
-	alog := log().With("upstream", strings.Join(t.IPs, ","), "zone", origin)
+	alog := log().With("upstreams", dnslog.GroupValues("upstream", t.IPs), "zone", origin)
 	alog.Debug("Sent notifies")
 	return lasterr
 }

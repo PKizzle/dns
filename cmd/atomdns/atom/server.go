@@ -105,21 +105,22 @@ func (s *Server) Start() error {
 			return fmt.Errorf("dou: %w", err)
 		}
 	}
-	roles := []string{}
+	roles := []slog.Attr{}
+	const r = "role"
 	if addr := s.Addr(); len(addr) > 0 {
-		roles = append(roles, "DNS:"+addr[0])
+		roles = append(roles, slog.String(r, "DNS:"+addr[0]))
 	}
 
 	if s.global.TlsConfig != nil || s.global.TlsCertConfig != nil {
 		if s.global.HttpLimits.Servers > 0 {
-			roles = append(roles, "DOH:"+s.HttpAddr()[0])
+			roles = append(roles, slog.String(r, "DOH:"+s.HttpAddr()[0]))
 		}
 		if s.global.TlsLimits.Servers > 0 {
-			roles = append(roles, "DOT:"+s.TlsAddr()[0])
+			roles = append(roles, slog.String(r, "DOT:"+s.TlsAddr()[0]))
 		}
 	}
 	if s.global.UnixLimits.Servers > 0 {
-		roles = append(roles, "DOU:"+s.UnixAddr()[0])
+		roles = append(roles, slog.String(r, "DOU:"+s.UnixAddr()[0]))
 	}
 
 	// bit of a cop out, but if roles is empty, we have nothing to run
@@ -130,7 +131,7 @@ func (s *Server) Start() error {
 	if bi := builtinfo(); len(bi) == 4 {
 		slog.Info("Build", bi[0], bi[1], bi[2], bi[3])
 	}
-	slog.Info("Listening", "total", len(roles), "roles", strings.Join(roles, ", "))
+	slog.Info("Listening", "total", len(roles), "roles", slog.GroupValue(roles...))
 	slog.Info("Launched", "config", s.global.Config, "PID", os.Getpid(), "version", "v"+s.version, "dns", dns.Version, "zones", len(s.global.Registered))
 	return nil
 }
@@ -394,7 +395,12 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			}
 
 			if !global.Quiet {
-				slog.Info(k, "handlers", strings.Join(names, ","))
+				attrs := make([]slog.Attr, len(names))
+				for i := range names {
+					attrs[i] = slog.String("handler", names[i])
+				}
+
+				slog.Info(k, "handlers", slog.GroupValue(attrs...))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs))
 			global.Registered[k] = struct{}{}
