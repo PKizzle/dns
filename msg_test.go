@@ -52,6 +52,26 @@ func TestMsgBinary(t *testing.T) {
 		fn   func(*dns.Msg) error
 	}{
 		{
+			// m := dns.NewMsg("example.org.", dns.TypeMX)
+			// m.Answer = []dns.RR{dnstest.New("example.org. IN SOA linode.atoom.net. miek\\.miek.nl. 1 3600 3600 3600 3600")}
+			"soa-mbox",
+			[]byte{148, 44, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 7, 101, 120, 97, 109, 112, 108, 101, 3, 111, 114, 103, 0, 0, 15, 0, 1, 192, 12, 0, 6, 0, 1, 0, 0, 14, 16, 0, 52, 6, 108, 105, 110, 111, 100, 101, 5, 97, 116, 111, 111, 109, 3, 110, 101, 116, 0, 9, 109, 105, 101, 107, 46, 109, 105, 101, 107, 2, 110, 108, 0, 0, 0, 0, 1, 0, 0, 14, 16, 0, 0, 14, 16, 0, 0, 14, 16, 0, 0, 14, 16},
+			func(m *dns.Msg) error {
+				if len(m.Answer) != 1 {
+					return errors.New("expected answer section")
+				}
+				s, ok := m.Answer[0].(*dns.SOA)
+				if !ok {
+					return errors.New("expected SOA")
+				}
+				if s.Mbox != `miek\.miek.nl.` {
+					return errors.New("SOA Mbox is not correct")
+				}
+				return nil
+			},
+		},
+
+		{
 			"edns0-subnet",
 			[]byte{149, 112, 0, 16, 0, 1, 0, 0, 0, 0, 0, 1, 1, 97, 4, 109, 105, 69, 75, 2, 78, 76, 0, 0, 1, 0, 1, 0, 0, 41, 5, 120, 0, 0, 128, 0, 0, 11, 0, 8, 0, 7, 0, 1, 24, 0, 14, 128, 63},
 			func(m *dns.Msg) error {
