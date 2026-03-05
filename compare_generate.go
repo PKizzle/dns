@@ -140,7 +140,7 @@ return 1
 				case `dns:"infos"`:
 					o(`x = compareinfo(rr.%s, b.(*%s).%s)`)
 
-				case `dns:"domain-name"`:
+				case `dns:"name"`:
 					o(`j := 0
 						for i := range rr.%[1]s {
 						if i > j || x != 0 {
@@ -157,9 +157,11 @@ return 1
 
 			switch {
 			case tag == `dns:"-"`: // ignored
-			case tag == `dns:"cdomain-name"`:
+			case tag == `dns:"cname"`:
 				fallthrough
-			case tag == `dns:"domain-name"`:
+			case tag == `dns:"mname"`:
+				fallthrough
+			case tag == `dns:"name"`:
 				o("x = comparename(rr.%s, b.(*%s).%s)")
 			case tag == `dns:"a"`:
 				o("x = rr.%s.Compare(b.(*%s).%s)")

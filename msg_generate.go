@@ -103,7 +103,7 @@ func main() {
 						o("off, err = svcb.Pack(rr.%s, msg, off)\n")
 					case `dns:"infos"`:
 						o("off, err = deleg.Pack(rr.%s, msg, off)\n")
-					case `dns:"domain-name"`:
+					case `dns:"name"`:
 						o("off, err = pack.Names(rr.%s, msg, off, compression)\n")
 					default:
 						log.Fatalln(rrname, fieldname, tag)
@@ -115,10 +115,12 @@ func main() {
 
 				switch {
 				case tag == `dns:"-"`: // ignored
-				case tag == `dns:"cdomain-name"`:
+				case tag == `dns:"cname"`:
 					o("off, err = pack.Name(rr.%s, msg, off, compression, true)\n")
-				case tag == `dns:"domain-name"`:
+				case tag == `dns:"name"`:
 					o("off, err = pack.Name(rr.%s, msg, off, compression, false)\n")
+				case tag == `dns:"mname"`:
+					o("off, err = pack.MName(rr.%s, msg, off)\n")
 				case tag == `dns:"a"`:
 					o("off, err = pack.A(rr.%s, msg, off)\n")
 				case tag == `dns:"aaaa"`:
@@ -273,7 +275,7 @@ if rr.%s != "-" {
 						unpackField("svcb.Unpack")
 					case `dns:"infos"`:
 						unpackField("deleg.Unpack")
-					case `dns:"domain-name"`:
+					case `dns:"name"`:
 						unpackFieldBuf("unpack.Names")
 					default:
 						log.Fatalln(rrname, fieldname, tag)
@@ -283,8 +285,10 @@ if rr.%s != "-" {
 
 				switch tag {
 				case `dns:"-"`: // ignored
-				case `dns:"cdomain-name"`, `dns:"domain-name"`:
+				case `dns:"cname"`, `dns:"name"`:
 					unpackFieldBuf("unpack.Name")
+				case `dns:"mname"`:
+					unpackFieldBuf("unpack.MName")
 				case `dns:"a"`:
 					unpackField("unpack.A")
 				case `dns:"aaaa"`:

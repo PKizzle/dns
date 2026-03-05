@@ -80,9 +80,9 @@ func main() {
 				switch tag {
 				case `dns:"-"`:
 					// ignored
-				case `dns:"cdomain-name"`:
+				case `dns:"cname"`:
 					o("for i := range rd.%s { l += len(rd.%[1]s[i])+1 }\n")
-				case `dns:"domain-name"`:
+				case `dns:"name"`:
 					o("for i := range rd.%s { l += len(rd.%[1]s[i])+1 }\n")
 				case `dns:"txt"`:
 					o("for i := range rd.%s { l += len(rd.%[1]s[i]) + 1 }\n")
@@ -99,9 +99,11 @@ func main() {
 			switch {
 			case tag == `dns:"-"`:
 				// ignored
-			case tag == `dns:"cdomain-name"`:
-				o("l += len(rd.%s)+1\n")
-			case tag == `dns:"domain-name"`:
+			case tag == `dns:"cname"`:
+				fallthrough
+			case tag == `dns:"mname"`:
+				fallthrough
+			case tag == `dns:"name"`:
 				o("l += len(rd.%s)+1\n")
 			case strings.HasPrefix(tag, `dns:"size-base64`):
 				fallthrough
