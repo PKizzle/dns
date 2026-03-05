@@ -116,8 +116,12 @@ type RP struct {
 
 // SOA data. See RFC 1035.
 type SOA struct {
-	Ns      string `dns:"cdomain-name"`
-	Mbox    string `dns:"cdomain-name"`
+	Ns string `dns:"cdomain-name"`
+	// MBox is the only name that contain escapes like \. as that is the norm in how to specific email
+	// addresses in a DNS zone. No other (looks-like-a-domain-name) in this package has this feauture, so note
+	// that functions like [codeberg.org/miekg/dnsutil.Next] and [codeberg.org/miekg/dnsutil.Prev] will hit
+	// the \. instead of jumping over it.
+	Mbox    string `dns:"mdomain-name"`
 	Serial  uint32
 	Refresh uint32
 	Retry   uint32
