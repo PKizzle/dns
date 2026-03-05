@@ -45,18 +45,18 @@ type MB struct {
 
 // MG data. See RFC 1035.
 type MG struct {
-	Mg string `dns:"cname"`
+	Mg string `dns:"mname"`
 }
 
 // MINFO data. See RFC 1035.
 type MINFO struct {
-	Rmail string `dns:"cname"`
-	Email string `dns:"cname"`
+	Rmail string `dns:"mname"`
+	Email string `dns:"mname"`
 }
 
 // MR data. See RFC 1035.
 type MR struct {
-	Mr string `dns:"cname"`
+	Mr string `dns:"mname"`
 }
 
 // MF data. See RFC 1035.
@@ -110,7 +110,7 @@ type PTR struct {
 
 // RP data. See RFC 1138, Section 2.2.
 type RP struct {
-	Mbox string `dns:"name"`
+	Mbox string `dns:"mname"`
 	Txt  string `dns:"name"`
 }
 
