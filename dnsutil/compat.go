@@ -48,17 +48,20 @@ func SetReply(m, r *dns.Msg) *dns.Msg {
 
 // IsRRset reports whether a set of RRs is a valid RRset as defined by RFC 2181.
 // This means the RRs need to have the same type, name, and class. Duplicate RRs are not detected.
-// See [dns.RRset] if you need to sort an RRset.
+// See [codeberg.org/miekg/dns.RRset] if you need to sort an RRset.
 func IsRRset(rrset []dns.RR) bool {
 	if len(rrset) == 0 {
 		return false
 	}
-	base := rrset[0].Header()
 	basetype := dns.RRToType(rrset[0])
-	for _, rr := range rrset[1:] {
-		h := rr.Header()
-		htype := dns.RRToType(rr)
-		if htype != basetype || h.Class != base.Class || !dns.EqualName(h.Name, base.Name) {
+	for j, rr := range rrset[1:] {
+		if dns.RRToType(rr) != basetype {
+			return false
+		}
+		if rrset[j+1].Header().Class != rrset[0].Header().Class {
+			return false
+		}
+		if !dns.EqualName(rrset[j+1].Header().Name, rrset[0].Header().Name) {
 			return false
 		}
 	}
