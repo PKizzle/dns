@@ -316,18 +316,15 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 	}
 }
 
-// Verify validates an RRSet with the signature and key. This is only the
-// cryptographic test, the signature validity period must be checked separately.
+// Verify validates an RRSet with the signature and key. This is only the cryptographic test, the signature
+// validity period must be checked separately. The rrset is not checked for actually being an rrset. See
+// [codeberg.org/miekg/dns/dnsutil.IsRRset], and neither is checked if the RRSIG's TypeCovered matches the
+// type in rrset.
+//
 // This function copies the rdata of some RRs (to lowercase domain names) for the validation to work.
 // It also checks that the Zone Key bit (RFC 4034 2.1.1) is set on the DNSKEY
-// and that the Protocol field is set to 3 (RFC 4034 2.1.2). Options can not be nil.
+// and that the Protocol field is set to 3 (RFC 4034 2.1.2). Options can not be nil
 func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
-	if !isRRset(rrset) {
-		return ErrRRset
-	}
-	if RRToType(rrset[0]) != rr.TypeCovered {
-		return ErrRRset
-	}
 	if rr.KeyTag != k.KeyTag() || rr.Hdr.Class != k.Hdr.Class || rr.Algorithm != k.Algorithm {
 		return ErrKey
 	}
@@ -439,21 +436,4 @@ type SignOption struct {
 	// If Pooler is set is will be used for all memory allocations. If nil the default pooler will be used and
 	// the buffers size used will be DefaultMsgSize * 2 (8 KB).
 	pool.Pooler
-}
-
-// IsRRset is duplicated here, as isRRset to avoid a host of cyclic imports.
-func isRRset(rrset []RR) bool {
-	if len(rrset) == 0 {
-		return false
-	}
-	base := rrset[0].Header()
-	basetype := RRToType(rrset[0])
-	for _, rr := range rrset[1:] {
-		h := rr.Header()
-		htype := RRToType(rr)
-		if htype != basetype || h.Class != base.Class || h.Name != base.Name {
-			return false
-		}
-	}
-	return true
 }
