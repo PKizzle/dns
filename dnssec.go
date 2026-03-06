@@ -106,12 +106,13 @@ const (
 	FlagDELEG  = 1 << 14
 )
 
-// KeyTag calculates the keytag (or key-id) of the DNSKEY.
+// KeyTag returns the keytag (or key-id) of the DNSKEY. If k.Tag is not zero, that value is returned instead,
+// otherwise the tag is calculated, set and returned.
 func (k *DNSKEY) KeyTag() uint16 {
-	if k == nil {
-		return 0
+	if k.Tag > 0 {
+		return k.Tag
 	}
-	var keytag int
+	keytag := 0
 	switch k.Algorithm {
 	case RSAMD5:
 		// This algorithm has been deprecated, but keep this key-tag calculation.
@@ -139,7 +140,8 @@ func (k *DNSKEY) KeyTag() uint16 {
 		keytag += keytag >> 16 & 0xFFFF
 		keytag &= 0xFFFF
 	}
-	return uint16(keytag)
+	k.Tag = uint16(keytag)
+	return k.Tag
 }
 
 // ToDS converts a DNSKEY record to a DS record.
