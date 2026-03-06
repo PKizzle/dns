@@ -123,7 +123,7 @@ func (k *DNSKEY) KeyTag() uint16 {
 			keytag = int(x)
 		}
 	default:
-		wire := make([]byte, DefaultMsgSize)
+		wire := make([]byte, defaultBufSize/2)
 		n, err := k.pack(wire, 0, nil)
 		if err != nil {
 			return 0
@@ -155,7 +155,7 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	ds.DigestType = h
 	ds.KeyTag = k.KeyTag()
 
-	wire := make([]byte, DefaultMsgSize)
+	wire := make([]byte, defaultBufSize/2)
 	n, err := k.pack(wire, 0, nil)
 	if err != nil {
 		return nil
@@ -219,7 +219,7 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 		return ErrKey
 	}
 	if options.Pooler == nil {
-		options.Pooler = pool.NewNoop(DefaultMsgSize * 2)
+		options.Pooler = pool.NewNoop(defaultBufSize)
 	}
 
 	h0 := rrset[0].Header()
@@ -340,7 +340,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	}
 
 	if options.Pooler == nil {
-		options.Pooler = pool.NewNoop(DefaultMsgSize * 2)
+		options.Pooler = pool.NewNoop(defaultBufSize)
 	}
 
 	rr.Hdr.Name = rrset[0].Header().Name
@@ -434,6 +434,8 @@ func (rr *RRSIG) ValidPeriod(t time.Time) bool {
 // SignOption are options that are given to the signer and verifier.
 type SignOption struct {
 	// If Pooler is set is will be used for all memory allocations. If nil the default pooler will be used and
-	// the buffers size used will be DefaultMsgSize * 2 (8 KB).
+	// the buffers size used will be defaultBufSize
 	pool.Pooler
 }
+
+const defaultBufSize = 8192
