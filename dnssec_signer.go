@@ -85,15 +85,6 @@ type rrsigWireFmt struct {
 	/* No Signature */
 }
 
-// Used for converting DNSKEY's rdata to wirefmt.
-type dnskeyWireFmt struct {
-	Flags     uint16
-	Protocol  uint8
-	Algorithm uint8
-	PublicKey string `dns:"base64"`
-	/* Nothing is left out */
-}
-
 func (sw *rrsigWireFmt) pack(buf []byte) (int, error) {
 	// copied from zmsg.go RRSIG packing
 	off, err := pack.Uint16(sw.TypeCovered, buf, 0)
@@ -125,23 +116,6 @@ func (sw *rrsigWireFmt) pack(buf []byte) (int, error) {
 		return off, err
 	}
 	return pack.Name(sw.SignerName, buf, off, nil, false)
-}
-
-func (dw *dnskeyWireFmt) pack(buf []byte) (int, error) {
-	// copied from zmsg.go DNSKEY packing
-	off, err := pack.Uint16(dw.Flags, buf, 0)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(dw.Protocol, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(dw.Algorithm, buf, off)
-	if err != nil {
-		return off, err
-	}
-	return pack.StringBase64(dw.PublicKey, buf, off)
 }
 
 // Helper function for packing and unpacking

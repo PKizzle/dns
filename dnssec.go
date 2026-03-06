@@ -123,13 +123,8 @@ func (k *DNSKEY) KeyTag() uint16 {
 			keytag = int(x)
 		}
 	default:
-		keywire := new(dnskeyWireFmt)
-		keywire.Flags = k.Flags
-		keywire.Protocol = k.Protocol
-		keywire.Algorithm = k.Algorithm
-		keywire.PublicKey = k.PublicKey
 		wire := make([]byte, DefaultMsgSize)
-		n, err := keywire.pack(wire)
+		n, err := k.pack(wire, 0, nil)
 		if err != nil {
 			return 0
 		}
@@ -160,13 +155,8 @@ func (k *DNSKEY) ToDS(h uint8) *DS {
 	ds.DigestType = h
 	ds.KeyTag = k.KeyTag()
 
-	keywire := new(dnskeyWireFmt)
-	keywire.Flags = k.Flags
-	keywire.Protocol = k.Protocol
-	keywire.Algorithm = k.Algorithm
-	keywire.PublicKey = k.PublicKey
 	wire := make([]byte, DefaultMsgSize)
-	n, err := keywire.pack(wire)
+	n, err := k.pack(wire, 0, nil)
 	if err != nil {
 		return nil
 	}
