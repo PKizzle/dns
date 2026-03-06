@@ -236,22 +236,13 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	if strings.HasPrefix(h0.Name, "*.") {
 		rr.Labels-- // wildcard, remove from label count
 	}
-
-	sigwire := new(rrsigWireFmt)
-	sigwire.TypeCovered = rr.TypeCovered
-	sigwire.Algorithm = rr.Algorithm
-	sigwire.Labels = rr.Labels
-	sigwire.OrigTTL = rr.OrigTTL
-	sigwire.Expiration = rr.Expiration
-	sigwire.Inception = rr.Inception
-	sigwire.KeyTag = rr.KeyTag
-	sigwire.SignerName = rr.SignerName
+	rr.Signature = ""
 
 	// Create the desired binary blob
 	signdata := options.Get()
 	defer options.Put(signdata)
 
-	n, err := sigwire.pack(signdata)
+	n, err := rr.pack(signdata, 0, nil)
 	if err != nil {
 		return err
 	}
@@ -357,29 +348,24 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 
 	rr.Hdr.Name = rrset[0].Header().Name
 
-	// RFC 4035 5.3.2.  Reconstructing the Signed Data
-	// Copy the sig, except the rrsig data
-	sigwire := new(rrsigWireFmt)
-	sigwire.TypeCovered = rr.TypeCovered
-	sigwire.Algorithm = rr.Algorithm
-	sigwire.Labels = rr.Labels
-	sigwire.OrigTTL = rr.OrigTTL
-	sigwire.Expiration = rr.Expiration
-	sigwire.Inception = rr.Inception
-	sigwire.KeyTag = rr.KeyTag
-	sigwire.SignerName = rr.SignerName
-	// Create the desired binary blob
 	signeddata := options.Get()
 	defer options.Put(signeddata)
 
-	n, err := sigwire.pack(signeddata)
+	// RFC 4035 5.3.2. Reconstructing the Signed Data
+	// Remove signature to get correct wiredata, and then set it again
+	signature := rr.Signature
+	rr.Signature = ""
+	n, err := rr.pack(signeddata, 0, nil)
 	if err != nil {
 		return err
 	}
+
+	rr.Signature = signature
+
 	m := rawSignatureData(signeddata[n:], rrset, rr, *options)
 	signeddata = signeddata[:m+n]
 
-	sigbuf := rr.sigBuf()
+	sigbuf, _ := pack.Base64([]byte(rr.Signature))
 
 	var h hash.Hash
 	hash, ok := AlgorithmToHash[rr.Algorithm]
@@ -446,15 +432,6 @@ func (rr *RRSIG) ValidPeriod(t time.Time) bool {
 	ti := int64(rr.Inception) + modi*MaxSerialIncrement
 	te := int64(rr.Expiration) + mode*MaxSerialIncrement
 	return ti <= utc && utc <= te
-}
-
-// Return the signatures base64 encoding sigdata as a byte slice.
-func (rr *RRSIG) sigBuf() []byte {
-	sigbuf, err := pack.Base64([]byte(rr.Signature))
-	if err != nil {
-		return nil
-	}
-	return sigbuf
 }
 
 // SignOption are options that are given to the signer and verifier.

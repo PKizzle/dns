@@ -72,52 +72,6 @@ func canonicalize(rr RR) {
 	}
 }
 
-// The RRSIG needs to be converted to wireformat with some of the rdata (the signature) missing.
-type rrsigWireFmt struct {
-	TypeCovered uint16
-	Algorithm   uint8
-	Labels      uint8
-	OrigTTL     uint32
-	Expiration  uint32
-	Inception   uint32
-	KeyTag      uint16
-	SignerName  string `dns:"name"`
-	/* No Signature */
-}
-
-func (sw *rrsigWireFmt) pack(buf []byte) (int, error) {
-	// copied from zmsg.go RRSIG packing
-	off, err := pack.Uint16(sw.TypeCovered, buf, 0)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(sw.Algorithm, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint8(sw.Labels, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint32(sw.OrigTTL, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint32(sw.Expiration, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint32(sw.Inception, buf, off)
-	if err != nil {
-		return off, err
-	}
-	off, err = pack.Uint16(sw.KeyTag, buf, off)
-	if err != nil {
-		return off, err
-	}
-	return pack.Name(sw.SignerName, buf, off, nil, false)
-}
-
 // Helper function for packing and unpacking
 func intToBytes(i *big.Int, length int) []byte {
 	buf := i.Bytes()
