@@ -19,7 +19,7 @@ import (
 var skip = []string{"TSIG", "NULL", "TXT", "DELEG", "SVCB", "HIP", "LOC",
 	"CERT", "CSYNC", "RRSIG", "DNSKEY", "NSEC", "NSEC3", "RKEY", "GPOS", "DS", "TA", "RFC3597",
 	"DSYNC", "NSEC3PARAM", "TKEY", "URI", "NINFO", "EUI48", "CAA", "HINFO", "ISDN", "NAPTR",
-	"UINFO",
+	"UINFO", "EUI64", "SOA",
 }
 
 var hdr = `

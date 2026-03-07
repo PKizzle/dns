@@ -23,6 +23,7 @@ import (
 //go:generate go run dnstest_generate.go
 //go:generate go run compare_generate.go
 //go:generate go run clone_generate.go
+//go:generate go run rdata_generate.go
 
 const (
 	// DefaultMsgSize is the standard default for messages larger than 512 bytes. This limit is the
