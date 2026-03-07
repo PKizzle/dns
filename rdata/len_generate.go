@@ -115,6 +115,8 @@ func main() {
 				o("l += len(rd.%s)/2\n")
 			case tag == `dns:"any"`:
 				o("l += len(rd.%s)\n")
+			case tag == `dns:"node"`:
+				o("l += 8 // %s\n")
 			case tag == `dns:"a"`:
 				o("l += net.IPv4len // %s\n")
 			case tag == `dns:"aaaa"`:
