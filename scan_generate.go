@@ -94,7 +94,7 @@ Specs:
 						fmt.Fprintf(b, "var ok bool\n")
 						fmt.Fprintf(b, "rd.%s, ok = upperLookup(l.Token, StringToAlgorithm)\n", fieldname)
 						fmt.Fprintf(b, "if !ok {\n")
-						fmt.Fprintf(b, `return &ParseError{err: "bad TA Algorithm", lex: l}`+"\n")
+						fmt.Fprintf(b, `return &ParseError{err: "bad %s Algorithm", lex: l}`+"\n", rrname)
 						fmt.Fprintf(b, "}\n")
 					}
 				case "uint16":
