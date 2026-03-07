@@ -393,31 +393,9 @@ func parseCSYNC(rd *rdata.CSYNC, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad CSYNC Flags", lex: l}
 	}
 
-	rd.TypeBitMap = make([]uint16, 3)
-	var (
-		k  uint16
-		ok bool
-	)
-	l, _ = c.Next()
-	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
-		switch l.Value {
-		case dnslex.Blank:
-			// Ok
-		case dnslex.String:
-			k, ok = StringToType[l.Token]
-			if !ok {
-				if !strings.HasPrefix(l.Token, "TYPE") {
-					return &ParseError{err: "bad CSYNC TypeBitMap", lex: l}
-				}
-				if k, ok = dnslex.TypeToInt(l.Token); !ok {
-					return &ParseError{err: "bad CSYNC TypeBitMap", lex: l}
-				}
-			}
-			rd.TypeBitMap = append(rd.TypeBitMap, k)
-		default:
-			return &ParseError{err: "bad CSYNC TypeBitMap", lex: l}
-		}
-		l, _ = c.Next()
+	var ok bool
+	if rd.TypeBitMap, ok = typeBitMap(c); !ok {
+		return &ParseError{err: "bad CSYNC TypeBitMap", lex: l}
 	}
 	return nil
 }
@@ -507,31 +485,9 @@ func parseNSEC(rd *rdata.NSEC, c *dnslex.Lexer, o string) error {
 		return &ParseError{err: "bad NSEC NextDomain", lex: l}
 	}
 
-	rd.TypeBitMap = make([]uint16, 0, 2)
-	var (
-		k  uint16
-		ok bool
-	)
-	l, _ = c.Next()
-	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
-		switch l.Value {
-		case dnslex.Blank:
-			// Ok
-		case dnslex.String:
-			k, ok = StringToType[l.Token]
-			if !ok {
-				if !strings.HasPrefix(l.Token, "TYPE") {
-					return &ParseError{err: "bad NSEC TypeBitMap", lex: l}
-				}
-				if k, ok = dnslex.TypeToInt(l.Token); !ok {
-					return &ParseError{err: "bad NSEC TypeBitMap", lex: l}
-				}
-			}
-			rd.TypeBitMap = append(rd.TypeBitMap, k)
-		default:
-			return &ParseError{err: "bad NSEC TypeBitMap", lex: l}
-		}
-		l, _ = c.Next()
+	var ok bool
+	if rd.TypeBitMap, ok = typeBitMap(c); !ok {
+		return &ParseError{err: "bad NSEC TypeBitMap", lex: l}
 	}
 	return nil
 }
@@ -576,31 +532,9 @@ func parseNSEC3(rd *rdata.NSEC3, c *dnslex.Lexer, o string) error {
 	}
 	rd.HashLength = 20 // Fix for NSEC3 (sha1 160 bits)
 
-	rd.TypeBitMap = make([]uint16, 0, 3)
-	var (
-		k  uint16
-		ok bool
-	)
-	l, _ = c.Next()
-	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
-		switch l.Value {
-		case dnslex.Blank:
-			// Ok
-		case dnslex.String:
-			k, ok = StringToType[l.Token]
-			if !ok {
-				if !strings.HasPrefix(l.Token, "TYPE") {
-					return &ParseError{err: "bad NSEC3 TypeBitMap", lex: l}
-				}
-				if k, ok = dnslex.TypeToInt(l.Token); !ok {
-					return &ParseError{err: "bad NSEC3 TypeBitMap", lex: l}
-				}
-			}
-			rd.TypeBitMap = append(rd.TypeBitMap, k)
-		default:
-			return &ParseError{err: "bad NSEC3 TypeBitMap", lex: l}
-		}
-		l, _ = c.Next()
+	var ok bool
+	if rd.TypeBitMap, ok = typeBitMap(c); !ok {
+		return &ParseError{err: "bad NSEC3 TypeBitMap", lex: l}
 	}
 	return nil
 }
@@ -1070,4 +1004,31 @@ func upperLookup(s string, m map[string]uint8) (uint8, bool) {
 	}
 	t, ok := m[strings.ToUpper(s)]
 	return t, ok
+}
+
+func typeBitMap(c *dnslex.Lexer) (bitmap []uint16, ok bool) {
+	bitmap = make([]uint16, 0, 3)
+	var k uint16
+	l, _ := c.Next()
+	for l.Value != dnslex.Newline && l.Value != dnslex.EOF {
+		switch l.Value {
+		case dnslex.Blank:
+			// Ok
+		case dnslex.String:
+			k, ok = StringToType[l.Token]
+			if !ok {
+				if !strings.HasPrefix(l.Token, "TYPE") {
+					return bitmap, false
+				}
+				if k, ok = dnslex.TypeToInt(l.Token); !ok {
+					return bitmap, false
+				}
+			}
+			bitmap = append(bitmap, k)
+		default:
+			return bitmap, false
+		}
+		l, _ = c.Next()
+	}
+	return bitmap, true
 }
