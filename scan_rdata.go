@@ -69,7 +69,7 @@ func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) error {
 }
 
 func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) error {
-	chunks, err := remainderSlice(c, "bad HINFO Fields")
+	chunks, err := remainderSlice(c, "bad HINFO fields")
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, o string) error {
 
 // according to RFC 1183 the parsing is identical to HINFO, so just use that code.
 func parseISDN(rd *rdata.ISDN, c *dnslex.Lexer, o string) error {
-	chunks, err := remainderSlice(c, "bad ISDN Fields")
+	chunks, err := remainderSlice(c, "bad ISDN fields")
 	if err != nil {
 		return err
 	}
