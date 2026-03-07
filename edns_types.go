@@ -406,6 +406,17 @@ func (o *MQQUERY) String() string {
 	return ""
 }
 
+type MQRESPONSE struct {
+	Types []uint16
+}
+
+func (o *MQRESPONSE) Len() int    { return tlv + len(o.Types)*2 }
+func (o *MQRESPONSE) Data() RDATA { return o }
+func (o *MQRESPONSE) String() string {
+	// TODO(miekg)
+	return ""
+}
+
 // ERFC3597 is used to represent unknown EDNS0 options.
 type ERFC3597 struct {
 	EDNS0Code uint16 `dns:"-"`
