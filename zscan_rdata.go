@@ -241,7 +241,7 @@ func parseCERT(rd *rdata.CERT, c *dnslex.Lexer, o string) (err error) {
 		var ok bool
 		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok {
-			return &ParseError{err: "bad TA Algorithm", lex: l}
+			return &ParseError{err: "bad CERT Algorithm", lex: l}
 		}
 		return &ParseError{err: "bad CERT Algorithm", lex: l}
 	}
@@ -319,7 +319,7 @@ func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) (err error) {
 		var ok bool
 		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok {
-			return &ParseError{err: "bad TA Algorithm", lex: l}
+			return &ParseError{err: "bad DS Algorithm", lex: l}
 		}
 		return &ParseError{err: "bad DS Algorithm", lex: l}
 	}
@@ -413,7 +413,7 @@ func parseSSHFP(rd *rdata.SSHFP, c *dnslex.Lexer, o string) (err error) {
 		var ok bool
 		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok {
-			return &ParseError{err: "bad TA Algorithm", lex: l}
+			return &ParseError{err: "bad SSHFP Algorithm", lex: l}
 		}
 		return &ParseError{err: "bad SSHFP Algorithm", lex: l}
 	}
@@ -455,7 +455,7 @@ func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) (err error) {
 		var ok bool
 		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok {
-			return &ParseError{err: "bad TA Algorithm", lex: l}
+			return &ParseError{err: "bad DNSKEY Algorithm", lex: l}
 		}
 		return &ParseError{err: "bad DNSKEY Algorithm", lex: l}
 	}
@@ -489,7 +489,7 @@ func parseRKEY(rd *rdata.RKEY, c *dnslex.Lexer, o string) (err error) {
 		var ok bool
 		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
 		if !ok {
-			return &ParseError{err: "bad TA Algorithm", lex: l}
+			return &ParseError{err: "bad RKEY Algorithm", lex: l}
 		}
 		return &ParseError{err: "bad RKEY Algorithm", lex: l}
 	}
