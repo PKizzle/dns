@@ -378,37 +378,6 @@ func parseHIP(rd *rdata.HIP, c *dnslex.Lexer, o string) error {
 	return nil
 }
 
-func parseCERT(rd *rdata.CERT, c *dnslex.Lexer, o string) error {
-	var err error
-	l, _ := c.Next()
-	if v, ok := StringToCertType[l.Token]; ok {
-		rd.Type = v
-	} else if i, err := strconv.ParseUint(l.Token, 10, 16); err != nil {
-		return &ParseError{err: "bad CERT Type", lex: l}
-	} else {
-		rd.Type = uint16(i)
-	}
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad CERT KeyTag", lex: l}
-	}
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	var ok bool
-	rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
-	if !ok {
-		if rd.Algorithm, err = dnsstring.AtoiUint8(l.Token); err != nil {
-			return &ParseError{err: "bad CERT Algorithm", lex: l}
-		}
-	}
-	rd.Certificate, err = remainder(c, "bad CERT Certificate")
-	return err
-}
-
 func parseCSYNC(rd *rdata.CSYNC, c *dnslex.Lexer, o string) error {
 	var err error
 	l, _ := c.Next()
@@ -741,65 +710,6 @@ func parseGPOS(rd *rdata.GPOS, c *dnslex.Lexer, o string) error {
 	}
 	rd.Altitude = l.Token
 	return toParseError(dnslex.Discard(c))
-}
-
-func parseDS(rd *rdata.DS, c *dnslex.Lexer, o string) error {
-	var err error
-	l, _ := c.Next()
-	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad DS KeyTag", lex: l}
-	}
-
-	c.Next() // dnslex.Blank
-	l, _ = c.Next()
-	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil {
-		var ok bool
-		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
-		if !ok || l.Value == dnslex.Error {
-			return &ParseError{err: "bad DS Algorithm", lex: l}
-		}
-	}
-
-	c.Next() // dnslex.Blank
-	l, _ = c.Next()
-	rd.DigestType, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad DS DigestType", lex: l}
-	}
-	rd.Digest, err = remainder(c, "bad DS Digest")
-	return err
-}
-
-func parseTA(rd *rdata.TA, c *dnslex.Lexer, o string) error {
-	var err error
-	l, _ := c.Next()
-	rd.KeyTag, err = dnsstring.AtoiUint16(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad TA KeyTag", lex: l}
-	}
-
-	c.Next() // dnslex.Blank
-	l, _ = c.Next()
-	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil {
-		var ok bool
-		rd.Algorithm, ok = upperLookup(l.Token, StringToAlgorithm)
-		if !ok || l.Value == dnslex.Error {
-			return &ParseError{err: "bad TA Algorithm", lex: l}
-		}
-	}
-
-	c.Next() // dnslex.Blank
-	l, _ = c.Next()
-	rd.DigestType, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad TA DigestType", lex: l}
-	}
-
-	rd.Digest, err = remainder(c, "bad TA Digest")
-	return err
 }
 
 func parseRFC3597(rd *rdata.RFC3597, c *dnslex.Lexer, o string) error {

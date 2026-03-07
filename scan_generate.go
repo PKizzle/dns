@@ -17,9 +17,8 @@ import (
 )
 
 var skip = []string{"TSIG", "NULL", "TXT", "DELEG", "SVCB", "HIP", "LOC",
-	"CERT", "CSYNC", "RRSIG", "NSEC", "NSEC3", "GPOS", "DS", "TA", "RFC3597",
-	"DSYNC", "NSEC3PARAM", "TKEY", "URI", "NINFO", "EUI48", "CAA", "HINFO", "ISDN", "NAPTR",
-	"UINFO", "EUI64", "SOA",
+	"CSYNC", "RRSIG", "NSEC", "NSEC3", "GPOS", "RFC3597", "DSYNC", "NSEC3PARAM",
+	"TKEY", "URI", "NINFO", "EUI48", "CAA", "HINFO", "ISDN", "NAPTR", "UINFO", "EUI64", "SOA",
 }
 
 var hdr = `
@@ -91,6 +90,13 @@ Specs:
 				case "uint8":
 					fmt.Fprintf(b, "rd.%s, err = dnsstring.AtoiUint8(l.Token)\n", fieldname)
 					fmt.Fprintf(b, "if l.Value == dnslex.Error || err != nil {\n")
+					if fieldname == "Algorithm" {
+						fmt.Fprintf(b, "var ok bool\n")
+						fmt.Fprintf(b, "rd.%s, ok = upperLookup(l.Token, StringToAlgorithm)\n", fieldname)
+						fmt.Fprintf(b, "if !ok {\n")
+						fmt.Fprintf(b, `return &ParseError{err: "bad TA Algorithm", lex: l}`+"\n")
+						fmt.Fprintf(b, "}\n")
+					}
 				case "uint16":
 					fmt.Fprintf(b, "rd.%s, err = dnsstring.AtoiUint16(l.Token)\n", fieldname)
 					fmt.Fprintf(b, "if l.Value == dnslex.Error || err != nil {\n")
