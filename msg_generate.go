@@ -161,6 +161,9 @@ if rr.%s != "-" {
 					}
 				case tag == `dns:"any"`:
 					o("off, err = pack.StringAny(rr.%s, msg, off)\n")
+				case tag == `dns:"node"`:
+					o("off, err = pack.Uint64(rr.%s, msg, off)\n")
+
 				case tag == "":
 					switch fieldtype {
 					case "uint8":
@@ -305,6 +308,8 @@ if rr.%s != "-" {
 					unpackFieldRest("unpack.StringHex")
 				case `dns:"any"`:
 					unpackFieldRest("unpack.StringAny")
+				case `dns:"node"`:
+					readInt("Uint64")
 				case "":
 					switch fieldtype {
 					case "uint8":
