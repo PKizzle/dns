@@ -719,58 +719,6 @@ func parseEUI64(rd *rdata.EUI64, c *dnslex.Lexer, o string) error {
 	return toParseError(dnslex.Discard(c))
 }
 
-func parseDNSKEY(rd *rdata.DNSKEY, c *dnslex.Lexer, o string) error {
-	var err error
-	l, _ := c.Next()
-	rd.Flags, err = dnsstring.AtoiUint16(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad DNSKEY Flags", lex: l}
-	}
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	rd.Protocol, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad DNSKEY Protocol", lex: l}
-	}
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad DNSKEY Algorithm", lex: l}
-	}
-
-	rd.PublicKey, err = remainder(c, "bad DNSKEY PublicKey")
-	return err
-}
-
-func parseRKEY(rd *rdata.RKEY, c *dnslex.Lexer, o string) error {
-	var err error
-	l, _ := c.Next()
-	rd.Flags, err = dnsstring.AtoiUint16(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad RKEY Flags", lex: l}
-	}
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	rd.Protocol, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad RKEY Protocol", lex: l}
-	}
-
-	c.Next()        // dnslex.Blank
-	l, _ = c.Next() // dnslex.String
-	rd.Algorithm, err = dnsstring.AtoiUint8(l.Token)
-	if err != nil || l.Value == dnslex.Error {
-		return &ParseError{err: "bad RKEY Algorithm", lex: l}
-	}
-
-	rd.PublicKey, err = remainder(c, "bad RKEY PublicKey")
-	return err
-}
-
 func parseGPOS(rd *rdata.GPOS, c *dnslex.Lexer, o string) error {
 	var err error
 	l, _ := c.Next()
