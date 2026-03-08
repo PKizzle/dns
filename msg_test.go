@@ -282,7 +282,7 @@ func TestMsg(t *testing.T) {
 			},
 			func(r *dns.Msg) error {
 				expect := []byte{0, 3, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 15, 0, 1, 32, 107, 51, 54, 118, 111, 53, 57, 98, 107, 117, 109, 52, 111, 115, 99, 107, 107, 114, 100, 56, 116, 118, 105, 98, 100, 103, 114, 48, 110, 106, 98, 99, 192, 17, 0, 50, 0, 1, 0, 0, 2, 87, 0, 35, 1, 0, 0, 0, 0, 20, 160, 205, 252, 94, 213, 176, 186, 137, 60, 112, 70, 74, 175, 160, 196, 196, 107, 213, 158, 135, 0, 7, 34, 0, 128, 0, 0, 2, 144}
-				if bytes.Compare(r.Data, expect) != 0 {
+				if !bytes.Equal(r.Data, expect) {
 					return fmt.Errorf("Msg octets do not match")
 				}
 				return nil
@@ -300,7 +300,7 @@ func TestMsg(t *testing.T) {
 			func(r *dns.Msg) error {
 				// 41 is OPT after the zeros, 04 -> rdlength, 03 -> code of NSID, 00 -> "rdlength" of NSID
 				expect := []byte{0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 15, 0, 1, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 4, 0, 3, 0, 0}
-				if bytes.Compare(r.Data, expect) != 0 {
+				if !bytes.Equal(r.Data, expect) {
 					return fmt.Errorf("Msg octets do not match")
 				}
 				return nil
@@ -315,7 +315,7 @@ func TestMsg(t *testing.T) {
 			},
 			func(r *dns.Msg) error {
 				expect := []byte{0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0, 15, 0, 1}
-				if bytes.Compare(r.Data, expect) != 0 {
+				if !bytes.Equal(r.Data, expect) {
 					return fmt.Errorf("Msg octets do not match")
 				}
 				return nil

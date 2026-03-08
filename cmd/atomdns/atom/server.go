@@ -380,7 +380,7 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			}
 			err := teardown.fn(co)
 			if err != nil {
-				newFn, _ := handlers.StringToHandler[teardown.name]
+				newFn := handlers.StringToHandler[teardown.name]
 				handler := newFn()
 				return handler.Err(fmt.Errorf("%w for '%s'", err, strings.Join(b.Keys, ",")))
 			}

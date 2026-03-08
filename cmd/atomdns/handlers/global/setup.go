@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	goslog "log/slog"
 	"net"
 	"net/http"
 	pp "net/http/pprof"
@@ -31,10 +30,10 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 				switch d.Val() {
 				case "debug":
 					g.Debug = true
-					goslog.SetLogLoggerLevel(goslog.LevelDebug)
+					slog.SetLogLoggerLevel(slog.LevelDebug)
 				case "json":
-					jlog := goslog.New(goslog.NewJSONHandler(os.Stderr, nil))
-					goslog.SetDefault(jlog)
+					jlog := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+					slog.SetDefault(jlog)
 				case "quiet":
 					g.Quiet = true
 				case "disable":
@@ -156,9 +155,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			inf := goslog.Attr{}
+			inf := slog.Attr{}
 			if g.TlsLimits.MaxInflight > 0 {
-				inf = goslog.Int("inflight", g.TlsLimits.MaxInflight)
+				inf = slog.Int("inflight", g.TlsLimits.MaxInflight)
 			}
 			g.OnStartup(func() error {
 				log().Info("Startup", "dot", g.TlsAddr, "tcp", g.TlsLimits.MaxTCPQueries, "run", g.TlsLimits.Servers, inf)
@@ -193,9 +192,9 @@ func (g *Global) Setup(d conffile.Dispenser) error {
 					return d.ArgErr()
 				}
 			}
-			inf := goslog.Attr{}
+			inf := slog.Attr{}
 			if g.HttpLimits.MaxInflight > 0 {
-				inf = goslog.Int("inflight", g.HttpLimits.MaxInflight)
+				inf = slog.Int("inflight", g.HttpLimits.MaxInflight)
 			}
 			g.OnStartup(func() error {
 				log().Info("Startup", "doh", g.HttpAddr, "run", g.HttpLimits.Servers, inf, "path", "/dns-query")
