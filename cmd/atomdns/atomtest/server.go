@@ -9,7 +9,8 @@ import (
 
 // New returns a server suitable for testing. Use cancel to shutdown the server
 // Use [server.Addr] to get the listening addresses. NewTest starts 2 servers, one on UDP and another on TCP.
-// The config will be prefixed with:
+// The config will be prefixed with, unless global is set in which case that string is used as the global
+// block.
 //
 //	{
 //		dns {
@@ -19,7 +20,7 @@ import (
 //			}
 //		}
 //	}
-func New(config string) (server *atom.Server, cancel func(), err error) {
+func New(config string, global ...string) (server *atom.Server, cancel func(), err error) {
 	testconfig := `
 {
 	dns {
@@ -30,6 +31,10 @@ func New(config string) (server *atom.Server, cancel func(), err error) {
 	}
 }
 `
+	if len(global) > 0 {
+		testconfig = global[0]
+	}
+
 	config = testconfig + config
 	s, err := atom.New("<test>", strings.NewReader(config))
 	if err != nil {
