@@ -18,5 +18,5 @@ override_dh_auto_install:
 	for i in $(BINARIES); do cp $(SOURCE)/`basename $$i` debian/atomdns/usr/bin; done
 	mkdir -p debian/atomdns/etc/atomdns && cp debian/Conffile debian/atomdns/etc/atomdns
 	cp -r $(SOURCE)man debian
-	mkdir -p debian/usr/share/zsh/vendor-completions
-	echo 'compdef _gnu_generic atomdns' > debian/usr/share/zsh/vendor-completions/_atomdns
+	mkdir -p debian/atomdns/usr/share/zsh/vendor-completions
+	echo 'compdef _gnu_generic atomdns' > debian/atomdns/usr/share/zsh/vendor-completions/_atomdns
