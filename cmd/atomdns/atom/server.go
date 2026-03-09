@@ -54,6 +54,7 @@ func (s *Server) Start() error {
 	if err := s.global.Startup(); err != nil {
 		return fmt.Errorf("global: %w", err)
 	}
+
 	for i := range s.servers {
 		go Serve(s.started, s.servers[i])
 	}
@@ -66,6 +67,9 @@ func (s *Server) Start() error {
 	}
 
 	for i := range s.tlsservers {
+		if !s.global.HasTls() {
+			return fmt.Errorf("dot requires a tls block")
+		}
 		opt := func(srv *dns.Server) error {
 			if x := s.global.TlsLimits.MaxInflight; x > 0 {
 				srv.ListenFunc = func(s *dns.Server) {
@@ -84,6 +88,9 @@ func (s *Server) Start() error {
 	}
 
 	for i := range s.httpservers {
+		if !s.global.HasTls() {
+			return fmt.Errorf("doh requires a tls block")
+		}
 		go atomhttp.Serve(s.httpstarted, s.httpservers[i], s.global)
 	}
 	for range s.httpservers {
@@ -262,10 +269,10 @@ func New(conf string, r io.Reader) (*Server, error) {
 
 	// Check if we need something else running on 443 to do the challenge for TLS certs.
 	if global.TlsCertConfig != nil {
-		slog.Debug("Startup running extra server for ACME challenge", "port", "443")
 		h, p, _ := net.SplitHostPort(global.HttpAddr)
 		if p != "0" && p != "443" {
 			addr := net.JoinHostPort(h, "443")
+			slog.With("handler", "global").Info("Startup", "ACME", "[::]:443", "run", 1)
 			s.httpservers = append(
 				s.httpservers,
 				atomhttp.New(addr, s.mux, func(_ *dns.Msg, _ error) {}),

@@ -111,3 +111,7 @@ func (g *Global) Shutdown() error {
 	g.onceReset = sync.Once{}
 	return nil
 }
+
+func (g *Global) HasTls() bool {
+	return g.TlsCertConfig != nil || g.TlsConfig != nil
+}
