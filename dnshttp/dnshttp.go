@@ -143,6 +143,9 @@ func DefaultMsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
 	if _, ok := dns.OpcodeToString[m.Opcode]; !ok {
 		return dns.MsgRejectNotImplemented
 	}
+	if m.ID != 0 {
+		return dns.MsgReject
+	}
 	if len(m.Question) != 1 {
 		return dns.MsgReject
 	}
