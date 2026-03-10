@@ -769,12 +769,10 @@ func (m *Msg) ReadFrom(r io.Reader) (int64, error) {
 		m.Data = m.Data[:li]
 	}
 	n, err := io.ReadFull(r, m.Data)
-	if err == nil {
-		if n != li {
-			return 0, fmt.Errorf("dns: message size %d does not match prefix %d", li, n)
-		}
-		m.Data = m.Data[:n]
+	if err == nil && n != li {
+		return 0, fmt.Errorf("dns: message size %d does not match prefix %d", li, n)
 	}
+	m.Data = m.Data[:n]
 	return int64(n), err
 }
 
