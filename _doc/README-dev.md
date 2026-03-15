@@ -18,11 +18,16 @@ Helper function(s) -> new package in _internal/..._.
 ## Struct Tags
 
 The DNS types in `rdata/rdata.go` carry struct tags to specify what kind of string it is so we can pack/unpack
-this correct, among other we have:
+this correct, amongs other we have:
 
 - `name`: a plain name.
 - `cname`: a name that can be used for compression.
 - `mname`: the SOA's mbox name. Can contain `\.`.
+- `ttl`: the number can be a duration just like a TTL, 4D, 5W, etc.
+- `base64`: string is encoded as base64.
+- `base32`: string is encoded as base32.
+- `hex`: string is encoded as hex.
+- `size-hex:XxxYY`: string is encoded as hex, and the length is put in field named: XxxYY.
 
 ## Go Generate
 
@@ -92,7 +97,7 @@ be very hesitant to add to the API, `packRR` is a private function again.
 For tests name them after the sub-system and the something more specific. This makes it easy to just run the
 tests for that sub-system. `TestZoneParserXXX`, `TestMsgXXX`, etc.
 
-Most tests are table driven with (optional) subtests, the main tests are usually put in a struct called
+Most tests are table driven with (optional) sub-tests, the main tests are usually put in a struct called
 `testcases` and while ranging over them a test is named `tc`.
 
 Preferably add a new test (case) to an _existing_ test instead of making a completely new one that just tests

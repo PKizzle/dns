@@ -125,6 +125,8 @@ func main() {
 					o("off, err = pack.A(rr.%s, msg, off)\n")
 				case tag == `dns:"aaaa"`:
 					o("off, err = pack.AAAA(rr.%s, msg, off)\n")
+				case tag == `dns:"ttl"`:
+					o("off, err = pack.Uint32(rr.%s, msg, off)\n")
 				case tag == `dns:"uint48"`:
 					o("off, err = pack.Uint48(rr.%s, msg, off)\n")
 				case tag == `dns:"txt"`:
@@ -296,6 +298,8 @@ if rr.%s != "-" {
 					unpackField("unpack.A")
 				case `dns:"aaaa"`:
 					unpackField("unpack.AAAA")
+				case `dns:"ttl"`:
+					readInt("Uint32")
 				case `dns:"uint48"`:
 					readInt("Uint48")
 				case `dns:"txt"`:

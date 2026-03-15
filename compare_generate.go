@@ -167,6 +167,8 @@ return 1
 				o("x = rr.%s.Compare(b.(*%s).%s)")
 			case tag == `dns:"aaaa"`:
 				o("x = rr.%s.Compare(b.(*%s).%s)")
+			case tag == `dns:"ttl"`:
+				o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 			case tag == `dns:"uint48"`:
 				o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32

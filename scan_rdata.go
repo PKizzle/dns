@@ -12,62 +12,6 @@ import (
 	"codeberg.org/miekg/dns/svcb"
 )
 
-func parseSOA(rd *rdata.SOA, c *dnslex.Lexer, o string) error {
-	l, _ := c.Next()
-	rd.Ns = dnsutilAbsolute(l.Token, o)
-	if l.Value == dnslex.Error || rd.Ns == "" {
-		return &ParseError{err: "bad SOA Ns", lex: l}
-	}
-
-	c.Next() // dnslex.Blank
-
-	l, _ = c.Next()
-	rd.Mbox = dnsutilAbsolute(l.Token, o)
-	if l.Value == dnslex.Error || rd.Mbox == "" {
-		return &ParseError{err: "bad SOA Mbox", lex: l}
-	}
-
-	c.Next() // dnslex.Blank
-
-	for i := range 5 {
-		l, _ = c.Next()
-		if l.Value == dnslex.Error {
-			return &ParseError{err: "bad SOA field", lex: l}
-		}
-
-		v, err := dnsstring.AtoiUint32(l.Token)
-		if err != nil {
-			if i == 0 { // Serial must be a number
-				return &ParseError{err: "bad SOA Serial", lex: l}
-			}
-			// We allow other fields to be unitful duration strings
-			var ok bool
-			v, ok = stringToTTL(l.Token)
-			if !ok {
-				return &ParseError{err: "bad SOA field", lex: l}
-			}
-		}
-
-		switch i {
-		case 0:
-			rd.Serial = v
-			c.Next() // dnslex.Blank
-		case 1:
-			rd.Refresh = v
-			c.Next() // dnslex.Blank
-		case 2:
-			rd.Retry = v
-			c.Next() // dnslex.Blank
-		case 3:
-			rd.Expire = v
-			c.Next() // dnslex.Blank
-		case 4:
-			rd.Minttl = v
-		}
-	}
-	return toParseError(dnslex.Discard(c))
-}
-
 func parseHINFO(rd *rdata.HINFO, c *dnslex.Lexer, _ string) error {
 	chunks, err := remainderSlice(c, "bad HINFO fields")
 	if err != nil {
