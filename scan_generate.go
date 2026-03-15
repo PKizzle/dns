@@ -18,7 +18,7 @@ import (
 
 var skip = []string{"TSIG", "NULL", "TXT", "DELEG", "SVCB", "HIP", "LOC",
 	"CSYNC", "RRSIG", "NSEC", "NSEC3", "GPOS", "RFC3597", "DSYNC", "NSEC3PARAM",
-	"TKEY", "URI", "NINFO", "EUI48", "CAA", "HINFO", "ISDN", "NAPTR", "UINFO", "EUI64", "SOA",
+	"TKEY", "URI", "NINFO", "EUI48", "CAA", "HINFO", "ISDN", "NAPTR", "UINFO", "EUI64",
 }
 
 var hdr = `
@@ -107,6 +107,20 @@ Specs:
 					fmt.Fprintf(b, "rd.%s, err = dnsstring.AtoiUint64(l.Token)\n", fieldname)
 					fmt.Fprintf(b, "if l.Value == dnslex.Error || err != nil {\n")
 				}
+
+			case `dns:"ttl"`:
+				fmt.Fprintf(b, "rd.%s, err = dnsstring.AtoiUint32(l.Token)\n", fieldname)
+				fmt.Fprintf(b, "if l.Value == dnslex.Error || err != nil {\n")
+				{
+					fmt.Fprintf(b, "var ok bool\n")
+					fmt.Fprintf(b, "rd.%s, ok = stringToTTL(l.Token)\n", fieldname)
+					fmt.Fprintf(b, "if !ok {\n")
+					fmt.Fprintf(b, `return &ParseError{err: "bad %s %s", lex: l}`+"\n", rrname, fieldname)
+				}
+				fmt.Fprintf(b, "}\n")
+				fmt.Fprintf(b, "}\n")
+
+				continue
 
 			case `dns:"node"`:
 				fmt.Fprintf(b, "rd.%s, err = dnsstring.ToNodeID(l.Token)\n", fieldname)
