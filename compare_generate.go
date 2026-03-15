@@ -22,6 +22,7 @@ package dns
 import (
 	"strings"
 	"slices"
+	"cmp"
 )
 
 `
@@ -170,7 +171,7 @@ return 1
 			case tag == `dns:"ttl"`:
 				o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 			case tag == `dns:"uint48"`:
-				o(`x = int(rr.%s) - int(b.(*%s).%s)`)
+				o(`x = cmp.Compare(rr.%s, b.(*%s).%s)`)
 			case strings.HasPrefix(tag, `dns:"size-base32`): // size-base32 can be packed just like base32
 				fallthrough
 			case tag == `dns:"base32"`:
@@ -206,7 +207,7 @@ return 1
 				case "uint32":
 					fallthrough
 				case "uint64":
-					o(`x = int(rr.%s) - int(b.(*%s).%s)`)
+					o(`x = cmp.Compare(rr.%s, b.(*%s).%s)`)
 				case "string":
 					o("x = len(rr.%s) - len(b.(*%s).%s)")
 					o("x = strings.Compare(rr.%s, b.(*%s).%s)")
