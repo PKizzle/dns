@@ -47,6 +47,7 @@ name  VARCHAR(255),
 type  VARCHAR(10),
 data  VARCHAR(65535),
 ttl   INTEGER,
+date  DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 UNIQUE (name, type, data)
 );
 	`)

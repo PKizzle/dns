@@ -26,6 +26,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/template"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/tsig"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/uncloud"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/unpack"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/url"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/whoami"
@@ -56,6 +57,7 @@ var StringToHandler = map[string]func() Handler{
 	"sign":     func() Handler { return new(sign.Sign) },
 	"template": func() Handler { return new(template.Template) },
 	"tsig":     func() Handler { return new(tsig.Tsig) },
+	"uncloud":  func() Handler { return new(uncloud.Uncloud) },
 	"unpack":   func() Handler { return new(unpack.Unpack) },
 	"url":      func() Handler { return new(url.Url) },
 	"whoami":   func() Handler { return new(whoami.Whoami) },
