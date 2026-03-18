@@ -74,7 +74,7 @@ In it simplest form _dbsqlite_ you can use:
 dbsqlite DATABASE
 ```
 
-- **DATABASE** the file the SQLite database to query. If the path is relative, the path from the global root config will be
+- **DATABASE** the file with the SQLite database to query. If the path is relative, the path from the global root config will be
   prepended to it.
 
 If **DATABASE** does not exists the file is created and the `rrs` table is initialized.
