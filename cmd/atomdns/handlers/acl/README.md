@@ -14,7 +14,7 @@ to the context.
 
 ```
 acl {
-    ACTION [QTYPE]... [NET]...
+    ACTION [QTYPE|OPCODE]... [NET]...
     ACTION CTX VALUE...
 }
 ```
@@ -26,8 +26,8 @@ acl {
   - _filter_ stop the query and returns _noerror_ response with the extended error (EDE) 'filtered'.
   - _drop_ stop the query and don't send any reply.
 
-- **QTYPE** is the query type to match for the requests to be allowed or blocked. If **QTYPE** is omitted it
-  matches _all_ types.
+- **QTYPE|OPCODE** is the query type, or opcode to match for the requests to be allowed or blocked. If
+  **QTYPE|OPCODE** is omitted it matches _all_ types and opcodes.
 
 - **NET** is the source IP address requests to be allowed or blocked. Typical CIDR notation and single IP
   addresses are supported.
@@ -41,7 +41,7 @@ acl {
 
 # Examples
 
-Block everything
+Block everything.
 
 ```conffile
 . {
@@ -51,7 +51,7 @@ Block everything
 }
 ```
 
-Filter all DNS queries with record type A from 192.168.0.0/16：
+Filter all DNS queries with record type A from 192.168.0.0/16.
 
 ```conffile
 . {
@@ -61,7 +61,7 @@ Filter all DNS queries with record type A from 192.168.0.0/16：
 }
 ```
 
-Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24:
+Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24.
 
 ```conffile
 . {
@@ -80,6 +80,17 @@ query. Allow all countries that are in the EU.
     acl {
         block geoip/city Cambridge
         allow geoip/country/eu true
+    }
+}
+```
+
+Drop opcode UPDATE for all but a few IP ranges.
+
+```conffile
+. {
+    acl {
+        allow UPDATE 192.168.1.0/24
+        block UPDATE
     }
 }
 ```

@@ -27,8 +27,9 @@ type policy struct {
 }
 
 type policyNet struct {
-	qtypes []uint16
-	filter *iptrie.Trie
+	qtypes  []uint16
+	opcodes []uint8
+	filter  *iptrie.Trie
 }
 
 type policyCtx struct {
@@ -48,9 +49,15 @@ func match(ctx context.Context, policies []policy, w dns.ResponseWriter, r *dns.
 				ip = x
 			}
 
+			matchAll := len(policy.net.opcodes) == 0
+			match := slices.Contains(policy.net.opcodes, r.Opcode)
+			if !matchAll && !match {
+				continue
+			}
+
 			_, qtype := dnsutil.Question(r)
-			matchAll := len(policy.net.qtypes) == 0
-			match := slices.Contains(policy.net.qtypes, qtype)
+			matchAll = len(policy.net.qtypes) == 0
+			match = slices.Contains(policy.net.qtypes, qtype)
 			if !matchAll && !match {
 				continue
 			}
