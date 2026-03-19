@@ -14,7 +14,7 @@ to the context.
 
 ```
 acl {
-    ACTION [QTYPE]... [NET]...
+    ACTION [QTYPE|OPCODE]... [NET]...
     ACTION CTX VALUE...
 }
 ```
@@ -26,8 +26,8 @@ acl {
   - _filter_ stop the query and returns _noerror_ response with the extended error (EDE) 'filtered'.
   - _drop_ stop the query and don't send any reply.
 
-- **QTYPE** is the query type to match for the requests to be allowed or blocked. If **QTYPE** is omitted it
-  matches _all_ types.
+- **QTYPE|OPCODE** is the query type, or opcode to match for the requests to be allowed or blocked. If
+  **QTYPE|OPCODE** is omitted it matches _all_ types and opcodes.
 
 - **NET** is the source IP address requests to be allowed or blocked. Typical CIDR notation and single IP
   addresses are supported.
