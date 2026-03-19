@@ -106,6 +106,19 @@ var testcases = []struct {
 				allow geoip/country/eu true
 			}`,
 	},
+	{
+		name: "block opcode QUERY",
+		config: `acl {
+			block QUERY
+		}`,
+		rcode: dns.RcodeRefused,
+	},
+	{
+		name: "block opcode UPDATE", // we don't send that, so this is allowed
+		config: `acl {
+			block UPDATE
+		}`,
+	},
 }
 
 func TestAcl(t *testing.T) {

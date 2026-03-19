@@ -56,6 +56,9 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 			if dns.StringToType[args[0]] != 0 {
 				tp = nettype
 			}
+			if _, ok := dns.StringToOpcode[args[0]]; ok {
+				tp = nettype
+			}
 			if _, err := netip.ParsePrefix(normalize(args[0])); err == nil { // == nil
 				tp = nettype
 			}
@@ -78,13 +81,21 @@ func (a *Acl) Setup(co *dnsserver.Controller) error {
 					qtype := dns.StringToType[arg]
 					if qtype != 0 {
 						p.net.qtypes = append(p.net.qtypes, qtype)
+
 					} else {
-						source, err := netip.ParsePrefix(normalize(arg))
-						if err != nil {
-							return co.Errf("illegal CIDR notation %s", normalize(arg))
+						opcode, ok := dns.StringToOpcode[arg]
+
+						if ok {
+							p.net.opcodes = append(p.net.opcodes, opcode)
+
+						} else {
+							source, err := netip.ParsePrefix(normalize(arg))
+							if err != nil {
+								return co.Errf("illegal CIDR notation %s", normalize(arg))
+							}
+							hasnet = true
+							p.net.filter.Insert(source, nil)
 						}
-						hasnet = true
-						p.net.filter.Insert(source, nil)
 					}
 				}
 			}

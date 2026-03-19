@@ -41,7 +41,7 @@ acl {
 
 # Examples
 
-Block everything
+Block everything.
 
 ```conffile
 . {
@@ -51,7 +51,7 @@ Block everything
 }
 ```
 
-Filter all DNS queries with record type A from 192.168.0.0/16：
+Filter all DNS queries with record type A from 192.168.0.0/16.
 
 ```conffile
 . {
@@ -61,7 +61,7 @@ Filter all DNS queries with record type A from 192.168.0.0/16：
 }
 ```
 
-Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24:
+Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24.
 
 ```conffile
 . {
@@ -82,6 +82,18 @@ query. Allow all countries that are in the EU.
         allow geoip/country/eu true
     }
 }
+```
+
+Drop opcode UPDATE for all but a few IP ranges.
+
+```conffile
+. {
+    acl {
+        allow UPDATE 192.168.1.0/24
+        block UPDATE
+    }
+}
+
 ```
 
 # Metrics
