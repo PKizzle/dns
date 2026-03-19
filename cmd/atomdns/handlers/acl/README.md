@@ -93,7 +93,6 @@ Drop opcode UPDATE for all but a few IP ranges.
         block UPDATE
     }
 }
-
 ```
 
 # Metrics
