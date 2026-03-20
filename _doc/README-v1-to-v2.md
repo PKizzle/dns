@@ -355,6 +355,23 @@ OLD                                | NEW
 canon := dns.CanonicalName(name)   | canon := dnsutil.Canonical(name)
 ```
 
+Validating hostnames and counting labels
+```
+OLD                                      | NEW
+                                         |
+labels, ok := dns.IsDomainName(hostname) | ok := dnsutil.IsName(hostname)
+                                         | labels := dnsutil.Labels(hostname)
+```
+
+Is a host a subdomain?
+
+```
+OLD                                      | NEW
+                                         |
+dns.IsSubDomain(domain, hostname)        | dnsutil.IsBelow(domain, hostname)
+```
+
+
 ## Server
 
 Because `Msg` now carries its binary data too there is no need to do TSIG in the server it self, it can now be
