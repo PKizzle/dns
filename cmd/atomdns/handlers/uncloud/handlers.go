@@ -22,6 +22,7 @@ func (u *Uncloud) getDomain(w http.ResponseWriter, r *http.Request) {
 func (u *Uncloud) createDomain(w http.ResponseWriter, r *http.Request) {
 	domain, err := u.CreateDomain()
 	if err != nil {
+		log().Debug("Create failed", Err(err))
 		handleError(w, http.StatusInternalServerError, err)
 		return
 	}

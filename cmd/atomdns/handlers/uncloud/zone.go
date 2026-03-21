@@ -26,17 +26,17 @@ func (u *Uncloud) Domain(name string) bool {
 }
 
 func (u *Uncloud) CreateDomain() (string, error) {
-	slug := rand.Text()[:10]
+	slug := strings.ToLower(rand.Text()[:10])
 	name := dnsutil.Join(slug, u.Name)
 
-	_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?)", name, "TXT", "It's Alive", 0)
+	_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?, date('now'))", name, "TXT", "It's Alive", 0)
 	return name, err
 }
 
 func (u *Uncloud) CreateRecord(owner, domain string, input model.RecordRequest) (model.RecordResponse, error) {
 	fqdn := dnsutil.Join(input.Name, domain)
 	for _, value := range input.Values {
-		_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?)", fqdn, strings.ToUpper(input.Type), value)
+		_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?, date('now'))", fqdn, strings.ToUpper(input.Type), value)
 		if err != nil {
 			return model.RecordResponse{}, err
 		}

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
+	"codeberg.org/miekg/dns/dnsutil"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,6 +16,10 @@ const defaultDuration = 30 * 24 * time.Hour
 func (u *Uncloud) Setup(co *dnsserver.Controller) error {
 	if len(co.Keys()) > 1 {
 		return co.Errf("only a single zone is allowed")
+	}
+
+	if len(co.Keys()) > 0 { // for uncloud_test.go we need to guard this
+		u.Name = dnsutil.Fqdn(co.Keys()[0])
 	}
 
 	addr := ":443"
@@ -44,6 +49,7 @@ func (u *Uncloud) Setup(co *dnsserver.Controller) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	co.OnStartup(func() error {
+
 		ln, err := net.Listen("tcp", addr)
 		if err != nil {
 			return u.Err(err)
