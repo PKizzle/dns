@@ -18,7 +18,7 @@ func (u *Uncloud) Purge(dur time.Duration) error {
 // Domain checks if the domain name is registered by checking if there is an TXT record for it.
 func (u *Uncloud) Domain(name string) bool {
 	ints := []int{}
-	err := u.db.Select(&ints, "SELECT 1 FROM rrs WHERE name LIKE ? AND type = ?", name+".%", "TXT")
+	err := u.db.Select(&ints, "SELECT 1 FROM rrs WHERE name = ? AND type = ?", name, "TXT")
 	if err != nil {
 		return false
 	}
@@ -26,21 +26,26 @@ func (u *Uncloud) Domain(name string) bool {
 }
 
 func (u *Uncloud) CreateDomain() (string, error) {
-	slug := strings.ToLower(rand.Text()[:10])
-	name := dnsutil.Join(slug, u.Name)
+	name := ""
+	for range 10 {
+		slug := strings.ToLower(rand.Text()[:10])
+		name = dnsutil.Join(slug, u.Name)
+		if !u.Domain(name) {
+			break
+		}
+	}
 
-	_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?, date('now'))", name, "TXT", "It's Alive", 0)
+	_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?, date('now'))", name, "TXT", "It's Alive", 60)
 	return name, err
 }
 
 func (u *Uncloud) CreateRecord(owner, domain string, input model.RecordRequest) (model.RecordResponse, error) {
 	fqdn := dnsutil.Join(input.Name, domain)
 	for _, value := range input.Values {
-		_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?, date('now'))", fqdn, strings.ToUpper(input.Type), value)
+		_, err := u.db.Exec("INSERT INTO rrs VALUES (?, ?, ?, ?, date('now'))", fqdn, strings.ToUpper(input.Type), value, 60)
 		if err != nil {
 			return model.RecordResponse{}, err
 		}
 	}
-
 	return model.RecordResponse{RecordRequest: input, FQDN: fqdn}, nil
 }

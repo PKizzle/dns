@@ -37,23 +37,30 @@ func TestUncloud(t *testing.T) {
 	_, port, _ := net.SplitHostPort(u.Listener.Addr().String())
 	endpoint := fmt.Sprintf("http://localhost:%s/v1", port)
 
-	name, token, err := ReserveDomain(endpoint)
+	domain, token, err := ReserveDomain(endpoint)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if token == defaultToken {
+	if token != defaultToken {
 		t.Errorf("expected %s, got %s", defaultToken, token)
 	}
-	println(name)
 
+	records := []model.RecordRequest{
+		{Name: "app", Type: "A", Values: []string{"127.0.0.1"}},
+	}
+	resp, err := CreateRecords(endpoint, domain, token, records)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp[0].FQDN != "app."+domain {
+		t.Fatalf("expected %s, got %s", "app."+domain, resp[0].FQDN)
+	}
 }
 
 // this is the actual implementation in uncloud to register domains and records.
 
 func ReserveDomain(endpoint string) (string, string, error) {
 	url := fmt.Sprintf("%s/%s", endpoint, "domains")
-	println(url)
-
 	req, err := request(http.MethodPost, url, nil, "")
 	if err != nil {
 		return "", "", err
@@ -133,7 +140,7 @@ func do(req *http.Request, responseBody any) error {
 		}
 
 		if authError.Data.NoDomain {
-			return ErrAuthNoDomain
+			return errors.New("the supplied domain failed authentication")
 		}
 
 		return errors.New("authentication failed")
@@ -161,8 +168,6 @@ func jsonBody(payload any) (io.Reader, error) {
 	}
 	return buf, nil
 }
-
-var ErrAuthNoDomain = errors.New("the supplied domain failed authentication")
 
 type AuthErrorResponse struct {
 	Status  int           `json:"status,omitempty"`
