@@ -4,9 +4,7 @@ _uncloud_ - power Uncloud dynamic registrations
 
 # Description
 
-The _uncloud_ handler implements parts the web API of
-[uncloud-dns](https://github.com/psviderski/uncloud-dns). Uncloud only uses this to create names and records, so that
-are the only handlers implemented.
+The _uncloud_ handler implements the web API of [uncloud-dns](https://github.com/psviderski/uncloud-dns).
 
 It uses a SQLite database to persist these records. The database used is compatible with the _dbsqlite_
 handler, and in fact to serve records from the database you must also enable the _dbsqlite_ handler. The

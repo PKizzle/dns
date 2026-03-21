@@ -51,7 +51,10 @@ date  DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 UNIQUE (name, type, data)
 );
 	`)
-		return d.Err(err)
+		if err != nil {
+			return d.Err(err)
+		}
+		return nil
 	})
 	co.OnStartup(func() error {
 		log().Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", dnslog.GroupValues("zone", d.Origins()))
