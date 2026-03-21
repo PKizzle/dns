@@ -20,7 +20,7 @@ to the context.
 
 .nf
 acl {
-    ACTION [QTYPE]... [NET]...
+    ACTION [QTYPE|OPCODE]... [NET]...
     ACTION CTX VALUE...
 }
 
@@ -43,8 +43,8 @@ DNS query not matched by any rules will be allowed to continue. The following ac
 
 .RE
 .IP \(bu 4
-\fBQTYPE\fP is the query type to match for the requests to be allowed or blocked. If \fBQTYPE\fP is omitted it
-matches \fIall\fP types.
+\fBQTYPE|OPCODE\fP is the query type, or opcode to match for the requests to be allowed or blocked. If
+\fBQTYPE|OPCODE\fP is omitted it matches \fIall\fP types and opcodes.
 .IP \(bu 4
 \fBNET\fP is the source IP address requests to be allowed or blocked. Typical CIDR notation and single IP
 addresses are supported.
@@ -59,7 +59,7 @@ can have access control on a city level.
 
 .SH "EXAMPLES"
 .PP
-Block everything
+Block everything.
 
 .PP
 .RS
@@ -75,7 +75,7 @@ Block everything
 .RE
 
 .PP
-Filter all DNS queries with record type A from 192.168.0.0/16：
+Filter all DNS queries with record type A from 192.168.0.0/16.
 
 .PP
 .RS
@@ -91,7 +91,7 @@ Filter all DNS queries with record type A from 192.168.0.0/16：
 .RE
 
 .PP
-Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24:
+Block all DNS queries from 192.168.0.0/16 except for 192.168.1.0/24.
 
 .PP
 .RS
@@ -119,6 +119,23 @@ query. Allow all countries that are in the EU.
     acl {
         block geoip/city Cambridge
         allow geoip/country/eu true
+    }
+}
+
+.fi
+.RE
+
+.PP
+Drop opcode UPDATE for all but a few IP ranges.
+
+.PP
+.RS
+
+.nf
+\&. {
+    acl {
+        allow UPDATE 192.168.1.0/24
+        block UPDATE
     }
 }
 

@@ -3,6 +3,7 @@ package dbsqlite
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnszone"
@@ -25,6 +26,7 @@ type RR struct {
 	Type string
 	Data string
 	TTL  int
+	Date time.Time
 }
 
 func (z *Zone) Load() error              { return nil }
@@ -104,7 +106,7 @@ func (z *Zone) Get(name string) (*dnszone.Node, bool) {
 	// retrieve.
 
 	rrs := []RR{}
-	err := z.Select(&rrs, "SELECT * FROM rrs WHERE name = ?", name)
+	err := z.db.Select(&rrs, "SELECT * FROM rrs WHERE name = ?", name)
 	if err != nil {
 		return nil, false
 	}
@@ -154,10 +156,6 @@ func (z *Zone) Apex() *dnszone.Node {
 		return node
 	}
 	return &dnszone.Node{}
-}
-
-func (z *Zone) Select(rrs *[]RR, query string, args ...any) error {
-	return z.db.Select(rrs, query, args...)
 }
 
 var builderPool = pool.NewBuilder()
