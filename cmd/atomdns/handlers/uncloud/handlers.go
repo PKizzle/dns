@@ -10,6 +10,8 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/uncloud/model"
 )
 
+const defaultToken = "Have fun!"
+
 func (u *Uncloud) root(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, http.StatusOK, "OK")
 }
@@ -27,7 +29,7 @@ func (u *Uncloud) createDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dr := model.DomainResponse{Name: domain, Token: "have fun!"}
+	dr := model.DomainResponse{Name: domain, Token: defaultToken}
 	writeSuccess(w, http.StatusCreated, dr)
 }
 

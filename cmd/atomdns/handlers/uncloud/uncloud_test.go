@@ -38,8 +38,13 @@ func TestUncloud(t *testing.T) {
 	endpoint := fmt.Sprintf("http://localhost:%s/v1", port)
 
 	name, token, err := ReserveDomain(endpoint)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if token == defaultToken {
+		t.Errorf("expected %s, got %s", defaultToken, token)
+	}
 	println(name)
-	println(token)
 
 }
 
