@@ -3,6 +3,7 @@
 package whoami
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (w *Whoami) Err(err error) error { return fmt.Errorf("%s: %w", w.Key(), err) }
+
+func (w *Whoami) Errf(err string) error { return fmt.Errorf("%s: %w", w.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

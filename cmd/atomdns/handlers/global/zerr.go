@@ -3,6 +3,7 @@
 package global
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (g *Global) Err(err error) error { return fmt.Errorf("%s: %w", g.Key(), err) }
+
+func (g *Global) Errf(err string) error { return fmt.Errorf("%s: %w", g.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

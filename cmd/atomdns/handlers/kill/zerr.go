@@ -3,6 +3,7 @@
 package kill
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (k *Kill) Err(err error) error { return fmt.Errorf("%s: %w", k.Key(), err) }
+
+func (k *Kill) Errf(err string) error { return fmt.Errorf("%s: %w", k.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

@@ -3,6 +3,7 @@
 package any
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (a *Any) Err(err error) error { return fmt.Errorf("%s: %w", a.Key(), err) }
+
+func (a *Any) Errf(err string) error { return fmt.Errorf("%s: %w", a.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

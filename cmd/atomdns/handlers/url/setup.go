@@ -53,7 +53,7 @@ func (u *Url) Setup(co *dnsserver.Controller) error {
 				continue
 			}
 			if err := z.Load(); err != nil {
-				return co.Err(err.Error())
+				return u.Err(err)
 			}
 		}
 		return u.Reload()

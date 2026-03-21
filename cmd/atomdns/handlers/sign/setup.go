@@ -89,7 +89,7 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 			_, err := os.Stat(z.Path)
 			if errors.Is(err, os.ErrNotExist) {
 				alog.Error("Zone does not exist")
-				return co.Err(err.Error())
+				return s.Err(err)
 			}
 
 			if expired, _ := s.Expired(z.Origin()); !expired {
@@ -99,10 +99,10 @@ func (s *Sign) Setup(co *dnsserver.Controller) error {
 
 			zs, err := s.Sign(z.Origin())
 			if err != nil {
-				return co.Err(err.Error())
+				return s.Err(err)
 			}
 			if err := s.Write(zs); err != nil {
-				return co.Err(err.Error())
+				return s.Err(err)
 			}
 		}
 		return s.Resign()

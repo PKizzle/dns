@@ -273,15 +273,12 @@ func (d *Dispenser) EOFErr() error {
 }
 
 // Err generates a custom parse-time error with a message of msg.
-func (d *Dispenser) Err(msg string) error {
-	msg = fmt.Sprintf("%s:%d - error parsing or initializing: %s", d.File(), d.Line(), msg)
-	return errors.New(msg)
+func (d *Dispenser) Err(err error) error {
+	return fmt.Errorf("%s:%d - error parsing or initializing: %w", d.File(), d.Line(), err)
 }
 
 // Errf is like Err, but for formatted error messages
-func (d *Dispenser) Errf(format string, args ...any) error {
-	return d.Err(fmt.Sprintf(format, args...))
-}
+func (d *Dispenser) Errf(format string, args ...any) error { return d.Err(fmt.Errorf(format, args...)) }
 
 // numLineBreaks counts how many line breaks are in the token value given by the token index tknIdx. It returns 0 if the
 // token does not exist or there are no line breaks.

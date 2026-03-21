@@ -42,7 +42,7 @@ func (d *Dbhost) Setup(co *dnsserver.Controller) error {
 	co.OnStartup(func() error {
 		log().Info("Startup", "reload", filepath.Base(d.Path))
 		if err := d.Load(); err != nil {
-			return co.Err(err.Error())
+			return d.Err(err)
 		}
 		return d.Reload()
 	})

@@ -3,6 +3,7 @@
 package chaos
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (c *Chaos) Err(err error) error { return fmt.Errorf("%s: %w", c.Key(), err) }
+
+func (c *Chaos) Errf(err string) error { return fmt.Errorf("%s: %w", c.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

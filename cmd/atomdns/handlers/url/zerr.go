@@ -3,6 +3,7 @@
 package url
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (u *Url) Err(err error) error { return fmt.Errorf("%s: %w", u.Key(), err) }
+
+func (u *Url) Errf(err string) error { return fmt.Errorf("%s: %w", u.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

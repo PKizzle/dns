@@ -3,6 +3,7 @@
 package nsid
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (n *Nsid) Err(err error) error { return fmt.Errorf("%s: %w", n.Key(), err) }
+
+func (n *Nsid) Errf(err string) error { return fmt.Errorf("%s: %w", n.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

@@ -3,6 +3,7 @@
 package tsig
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (t *Tsig) Err(err error) error { return fmt.Errorf("%s: %w", t.Key(), err) }
+
+func (t *Tsig) Errf(err string) error { return fmt.Errorf("%s: %w", t.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

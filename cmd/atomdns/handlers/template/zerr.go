@@ -3,6 +3,7 @@
 package template
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (t *Template) Err(err error) error { return fmt.Errorf("%s: %w", t.Key(), err) }
+
+func (t *Template) Errf(err string) error { return fmt.Errorf("%s: %w", t.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

@@ -35,7 +35,7 @@ func (d *Dbsqlite) Setup(co *dnsserver.Controller) error {
 		log().Info("Startup", "initializing", filepath.Base(d.Path))
 		db, err := sqlx.Open("sqlite", d.Path)
 		if err != nil {
-			return err
+			return d.Err(err)
 		}
 		d.db = db
 		for _, z := range co.Keys() {
@@ -50,7 +50,7 @@ ttl   INTEGER,
 UNIQUE (name, type, data)
 );
 	`)
-		return err
+		return d.Err(err)
 	})
 	co.OnStartup(func() error {
 		log().Info("Startup", "path", filepath.Base(d.Path), "records", d.Count(), "zones", dnslog.GroupValues("zone", d.Origins()))

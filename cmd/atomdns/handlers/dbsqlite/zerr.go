@@ -3,6 +3,7 @@
 package dbsqlite
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (d *Dbsqlite) Err(err error) error { return fmt.Errorf("%s: %w", d.Key(), err) }
+
+func (d *Dbsqlite) Errf(err string) error { return fmt.Errorf("%s: %w", d.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

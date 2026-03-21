@@ -3,6 +3,7 @@
 package ecs
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (e *Ecs) Err(err error) error { return fmt.Errorf("%s: %w", e.Key(), err) }
+
+func (e *Ecs) Errf(err string) error { return fmt.Errorf("%s: %w", e.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

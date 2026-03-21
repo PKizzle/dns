@@ -57,7 +57,7 @@ func (d *Dbfile) Setup(co *dnsserver.Controller) error {
 				continue
 			}
 			if err := z.Load(); err != nil {
-				return co.Err(err.Error())
+				return d.Err(err)
 			}
 		}
 		return d.Reload()

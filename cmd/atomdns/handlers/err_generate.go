@@ -21,6 +21,7 @@ const hdr = `
 package %s
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -36,6 +37,8 @@ var funcmap = template.FuncMap{
 
 var ErrFunc = template.Must(template.New("errFunc").Funcs(funcmap).Parse(`
 func ({{r .}} *{{.}}) Err(err error) error { return fmt.Errorf("%s: %w", {{r .}}.Key(), err) }
+
+func ({{r .}} *{{.}}) Errf(err string) error { return fmt.Errorf("%s: %w", {{r .}}.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 `))

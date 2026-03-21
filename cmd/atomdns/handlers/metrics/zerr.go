@@ -3,6 +3,7 @@
 package metrics
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (m *Metrics) Err(err error) error { return fmt.Errorf("%s: %w", m.Key(), err) }
+
+func (m *Metrics) Errf(err string) error { return fmt.Errorf("%s: %w", m.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

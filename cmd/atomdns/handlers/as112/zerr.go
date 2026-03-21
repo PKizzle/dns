@@ -3,6 +3,7 @@
 package as112
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (a *As112) Err(err error) error { return fmt.Errorf("%s: %w", a.Key(), err) }
+
+func (a *As112) Errf(err string) error { return fmt.Errorf("%s: %w", a.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 

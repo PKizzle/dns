@@ -3,6 +3,7 @@
 package sign
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func (s *Sign) Err(err error) error { return fmt.Errorf("%s: %w", s.Key(), err) }
+
+func (s *Sign) Errf(err string) error { return fmt.Errorf("%s: %w", s.Key(), errors.New(err)) }
 
 func Err(err error) slog.Attr { return dnslog.Error(err) }
 
