@@ -242,7 +242,7 @@ func (d *Dispenser) RemainingArgs() []string {
 // a line break or open curly brace was encountered instead of an argument.
 func (d *Dispenser) ArgErr() error {
 	if d.Val() == "{" {
-		return d.Err("unexpected token '{', expecting argument")
+		return d.Errf("unexpected token '{', expecting argument")
 	}
 	return d.Errf("wrong argument count or unexpected line ending after '%s'", d.Val())
 }

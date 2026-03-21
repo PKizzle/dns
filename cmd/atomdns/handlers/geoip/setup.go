@@ -39,7 +39,7 @@ func (g *Geoip) Setup(co *dnsserver.Controller) (err error) {
 		}
 	}
 	if g.City == nil && g.Asn == nil {
-		return co.Err("either city or asn must be configured")
+		return co.Errf("either city or asn must be configured")
 	}
 	return nil
 }

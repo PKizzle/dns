@@ -66,7 +66,7 @@ func (p *parser) parseAll() ([]HandlerBlock, error) {
 		if len(p.block.Keys) == 0 && len(p.block.Tokens) > 0 {
 			for i := range blocks {
 				if len(blocks[i].Keys) == 0 {
-					return nil, p.Err("redeclaration of global block")
+					return nil, p.Errf("redeclaration of global block")
 				}
 			}
 		}
@@ -246,10 +246,10 @@ func (p *parser) doImport() error {
 	}
 	importPattern := replaceEnvVars(p.Val())
 	if importPattern == "" {
-		return p.Err("import requires a non-empty filepath")
+		return p.Errf("import requires a non-empty filepath")
 	}
 	if p.NextArg() {
-		return p.Err("import takes only one argument (glob pattern or file)")
+		return p.Errf("import takes only one argument (glob pattern or file)")
 	}
 	// splice out the import directive and its argument (2 tokens total)
 	tokensBefore := p.tokens[:p.cursor-1]
@@ -368,7 +368,7 @@ func (p *parser) directive() error {
 		} else if p.Val() == "}" && nesting > 0 {
 			nesting--
 		} else if p.Val() == "}" && nesting == 0 {
-			return p.Err("unexpected '}' because no matching opening brace")
+			return p.Errf("unexpected '}' because no matching opening brace")
 		} else if p.Val() == "import" && p.isNewLine() {
 			if err := p.doImport(); err != nil {
 				return err
