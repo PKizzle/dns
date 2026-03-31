@@ -37,15 +37,15 @@ func TestStringToType(t *testing.T) {
 		Type   uint16
 		ErrNil bool
 	}{
-		"A":                     {dns.TypeA, true},
-		"AAAA":                  {dns.TypeAAAA, true},
-		"a":                     {dns.TypeA, true},
-		"banana":                {0, false},
-		"type1":                 {dns.TypeA, true},
-		"typex":                 {0, false},
-		"type100000":            {0, false},
-		TypeToString(dns.TypeA): {dns.TypeA, true},
-		TypeToString(60000):     {60000, true},
+		"A":                      {dns.TypeA, true},
+		"AAAA":                   {dns.TypeAAAA, true},
+		"a":                      {dns.TypeA, true},
+		"banana":                 {0, false},
+		"type1":                  {dns.TypeA, true},
+		"typex":                  {0, false},
+		"type100000":             {0, false},
+		TypeToString(dns.TypeMX): {dns.TypeMX, true},
+		TypeToString(60000):      {60000, true},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
