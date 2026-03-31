@@ -33,100 +33,62 @@ func TestToString(t *testing.T) {
 }
 
 func TestStringToType(t *testing.T) {
-	tests := map[string]struct {
-		Type   uint16
-		ErrNil bool
+	testcases := map[string]struct {
+		Number uint16
+		Fn     func(s string) (uint16, error)
+		Err    bool
 	}{
-		"A":                      {dns.TypeA, true},
-		"AAAA":                   {dns.TypeAAAA, true},
-		"a":                      {dns.TypeA, true},
-		"banana":                 {0, false},
-		"type1":                  {dns.TypeA, true},
-		"typex":                  {0, false},
-		"type100000":             {0, false},
-		TypeToString(dns.TypeMX): {dns.TypeMX, true},
-		TypeToString(60000):      {60000, true},
+		// Type
+		"A":                      {dns.TypeA, StringToType, true},
+		"AAAA":                   {dns.TypeAAAA, StringToType, true},
+		"a":                      {dns.TypeA, StringToType, true},
+		"banana":                 {0, StringToType, false},
+		"type1":                  {dns.TypeA, StringToType, true},
+		"typex":                  {0, StringToType, false},
+		"type100000":             {0, StringToType, false},
+		TypeToString(dns.TypeMX): {dns.TypeMX, StringToType, true},
+		TypeToString(60000):      {60000, StringToType, true},
+		// Code
+		"REFUSED":                         {dns.RcodeRefused, StringToRcode, true},
+		"refused":                         {dns.RcodeRefused, StringToRcode, true},
+		"orange":                          {0, StringToRcode, false},
+		"rcode5":                          {dns.RcodeRefused, StringToRcode, true},
+		"RCODE55":                         {55, StringToRcode, true},
+		"rcodex":                          {0, StringToRcode, false},
+		"rcode100000":                     {0, StringToRcode, false},
+		RcodeToString(dns.RcodeBadCookie): {dns.RcodeBadCookie, StringToRcode, true},
+		RcodeToString(55):                 {55, StringToRcode, true},
+		// Class
+		"IN":                          {dns.ClassINET, StringToClass, true},
+		"in":                          {dns.ClassINET, StringToClass, true},
+		"appel":                       {0, StringToClass, false},
+		"CLass1":                      {dns.ClassINET, StringToClass, true},
+		"classx":                      {0, StringToClass, false},
+		"class100000":                 {0, StringToClass, false},
+		ClassToString(dns.ClassCHAOS): {dns.ClassCHAOS, StringToClass, true},
+		ClassToString(200):            {200, StringToClass, true},
+		// Code
+		"COOKIE":                       {dns.CodeCOOKIE, StringToCode, true},
+		"cookie":                       {dns.CodeCOOKIE, StringToCode, true},
+		"pear":                         {0, StringToCode, false},
+		"code10":                       {dns.CodeCOOKIE, StringToCode, true},
+		"codex":                        {0, StringToCode, false},
+		"code100000":                   {0, StringToCode, false},
+		CodeToString(dns.CodeLOCALEND): {dns.CodeLOCALEND, StringToCode, true},
+		CodeToString(200):              {200, StringToCode, true},
 	}
-	for name, tc := range tests {
+	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			got, err := StringToType(name)
-			if !tc.ErrNil && err == nil {
+			got, err := tc.Fn(name)
+			if !tc.Err && err == nil {
 				t.Errorf("expected error, got nil")
 			}
-			if tc.ErrNil {
+			if tc.Err {
 				if err != nil {
-					t.Errorf("expected no error, got %v", err)
-				} else {
-					if got != tc.Type {
-						t.Errorf("expected %v, got %v", tc.Type, got)
-					}
+					t.Fatalf("expected no error, got %v", err)
 				}
-			}
-		})
-	}
-}
-
-func TestStringToRCode(t *testing.T) {
-	tests := map[string]struct {
-		Rcode  uint16
-		ErrNil bool
-	}{
-		"REFUSED":                         {dns.RcodeRefused, true},
-		"refused":                         {dns.RcodeRefused, true},
-		"banana":                          {0, false},
-		"rcode5":                          {dns.RcodeRefused, true},
-		"RCODE55":                         {55, true},
-		"rcodex":                          {0, false},
-		"rcode100000":                     {0, false},
-		RcodeToString(dns.RcodeBadCookie): {dns.RcodeBadCookie, true},
-		RcodeToString(55):                 {55, true},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := StringToRcode(name)
-			if !tc.ErrNil && err == nil {
-				t.Errorf("expected error, got nil")
-			}
-			if tc.ErrNil {
-				if err != nil {
-					t.Errorf("expected no error, got %v", err)
-				} else {
-					if got != tc.Rcode {
-						t.Errorf("expected %v, got %v", tc.Rcode, got)
-					}
-				}
-			}
-		})
-	}
-}
-
-func TestStringToClass(t *testing.T) {
-	tests := map[string]struct {
-		Class  uint16
-		ErrNil bool
-	}{
-		"IN":                          {dns.ClassINET, true},
-		"in":                          {dns.ClassINET, true},
-		"banana":                      {0, false},
-		"CLass1":                      {dns.ClassINET, true},
-		"classx":                      {0, false},
-		"class100000":                 {0, false},
-		ClassToString(dns.ClassCHAOS): {dns.ClassCHAOS, true},
-		ClassToString(200):            {200, true},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := StringToClass(name)
-			if !tc.ErrNil && err == nil {
-				t.Errorf("expected error, got nil")
-			}
-			if tc.ErrNil {
-				if err != nil {
-					t.Errorf("expected no error, got %v", err)
-				} else {
-					if got != tc.Class {
-						t.Errorf("expected %v, got %v", tc.Class, got)
-					}
+				if got != tc.Number {
+					t.Fatalf("expected %v, got %v", tc.Number, got)
 				}
 			}
 		})
@@ -134,9 +96,9 @@ func TestStringToClass(t *testing.T) {
 }
 
 func TestStringToOpcode(t *testing.T) {
-	tests := map[string]struct {
+	testcases := map[string]struct {
 		Opcode uint8
-		ErrNil bool
+		Err    bool
 	}{
 		"QUERY":                            {dns.OpcodeQuery, true},
 		"status":                           {dns.OpcodeStatus, true},
@@ -147,52 +109,18 @@ func TestStringToOpcode(t *testing.T) {
 		OpcodeToString(dns.OpcodeStateful): {dns.OpcodeStateful, true},
 		OpcodeToString(20):                 {20, true},
 	}
-	for name, tc := range tests {
+	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			got, err := StringToOpcode(name)
-			if !tc.ErrNil && err == nil {
+			if !tc.Err && err == nil {
 				t.Errorf("expected error, got nil")
 			}
-			if tc.ErrNil {
+			if tc.Err {
 				if err != nil {
-					t.Errorf("expected no error, got %v", err)
-				} else {
-					if got != tc.Opcode {
-						t.Errorf("expected %v, got %v", tc.Opcode, got)
-					}
+					t.Fatalf("expected no error, got %v", err)
 				}
-			}
-		})
-	}
-}
-
-func TestStringToCode(t *testing.T) {
-	tests := map[string]struct {
-		Code   uint16
-		ErrNil bool
-	}{
-		"COOKIE":                       {dns.CodeCOOKIE, true},
-		"cookie":                       {dns.CodeCOOKIE, true},
-		"banana":                       {0, false},
-		"code10":                       {dns.CodeCOOKIE, true},
-		"codex":                        {0, false},
-		"code100000":                   {0, false},
-		CodeToString(dns.CodeLOCALEND): {dns.CodeLOCALEND, true},
-		CodeToString(200):              {200, true},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := StringToCode(name)
-			if !tc.ErrNil && err == nil {
-				t.Errorf("expected error, got nil")
-			}
-			if tc.ErrNil {
-				if err != nil {
-					t.Errorf("expected no error, got %v", err)
-				} else {
-					if got != tc.Code {
-						t.Errorf("expected %v, got %v", tc.Code, got)
-					}
+				if got != tc.Opcode {
+					t.Errorf("expected %v, got %v", tc.Opcode, got)
 				}
 			}
 		})

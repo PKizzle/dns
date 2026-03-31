@@ -104,7 +104,7 @@ func StringToClass(s string) (uint16, error) {
 	return uint16(c2), nil
 }
 
-// StringToOpcode converts the text representation or "OPCODE"+value to an opcode
+// StringToOpcode converts the text representation or "OPCODE"+value to an opcode.
 // Inverse of [OpcodeToString].
 func StringToOpcode(s string) (uint8, error) {
 	s = strings.ToUpper(s)
@@ -121,7 +121,7 @@ func StringToOpcode(s string) (uint8, error) {
 	return uint8(o2), nil
 }
 
-// StringToCode converts the text representation or "CODE"+value to an EDNS0 code
+// StringToCode converts the text representation or "CODE"+value to an EDNS0 code.
 // Inverse of [CodeToString].
 func StringToCode(s string) (uint16, error) {
 	s = strings.ToUpper(s)
