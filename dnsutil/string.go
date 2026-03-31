@@ -56,84 +56,84 @@ func CodeToString(c uint16) string {
 // StringToType converts the text presentation or "TYPE"+value to a type.
 // Inverse of [TypeToString].
 func StringToType(s string) (uint16, error) {
-	s2 := strings.ToUpper(s)
-	if t1, ok := dns.StringToType[s2]; ok {
+	s = strings.ToUpper(s)
+	if t1, ok := dns.StringToType[s]; ok {
 		return t1, nil
 	}
-	t2, ok := strings.CutPrefix(s2, "TYPE")
-	if ok {
-		t3, err := strconv.ParseUint(t2, 10, 16)
-		if err == nil {
-			return uint16(t3), nil
-		}
+	if !strings.HasPrefix(s, "TYPE") {
+		return 0, fmt.Errorf("invalid type %q", s)
 	}
-	return uint16(0), fmt.Errorf("invalid type %q", s)
+	t2, err := strconv.ParseUint(s[4:], 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf("invalid type %q", s)
+	}
+	return uint16(t2), nil
 }
 
 // StringToRcode converts the text presentation or "RCODE"+value to a code.
 // Inverse of [RcodeToString].
 func StringToRcode(s string) (uint16, error) {
-	s2 := strings.ToUpper(s)
-	if r1, ok := dns.StringToRcode[s2]; ok {
+	s = strings.ToUpper(s)
+	if r1, ok := dns.StringToRcode[s]; ok {
 		return r1, nil
 	}
-	r2, ok := strings.CutPrefix(s2, "RCODE")
-	if ok {
-		r3, err := strconv.ParseUint(r2, 10, 16)
-		if err == nil {
-			return uint16(r3), nil
-		}
+	if !strings.HasPrefix(s, "RCODE") {
+		return 0, fmt.Errorf("invalid rcode %q", s)
 	}
-	return uint16(0), fmt.Errorf("invalid rcode %q", s)
+	r2, err := strconv.ParseUint(s[5:], 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf("invalid rcode %q", s)
+	}
+	return uint16(r2), nil
 }
 
 // StringToClass converts the text presentation or "CLASS"+value to a class.
 // Inverse of [ClassToString].
 func StringToClass(s string) (uint16, error) {
-	s2 := strings.ToUpper(s)
-	if c1, ok := dns.StringToClass[s2]; ok {
+	s = strings.ToUpper(s)
+	if c1, ok := dns.StringToClass[s]; ok {
 		return c1, nil
 	}
-	c2, ok := strings.CutPrefix(s2, "CLASS")
-	if ok {
-		c3, err := strconv.ParseUint(c2, 10, 16)
-		if err == nil {
-			return uint16(c3), nil
-		}
+	if !strings.HasPrefix(s, "CLASS") {
+		return 0, fmt.Errorf("invalid class %q", s)
 	}
-	return uint16(0), fmt.Errorf("invalid class %q", s)
+	c2, err := strconv.ParseUint(s[5:], 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf("invalid class %q", s)
+	}
+	return uint16(c2), nil
 }
 
 // StringToOpcode converts the text representation or "OPCODE"+value to an opcode
 // Inverse of [OpcodeToString].
 func StringToOpcode(s string) (uint8, error) {
-	s2 := strings.ToUpper(s)
-	if o1, ok := dns.StringToOpcode[s2]; ok {
+	s = strings.ToUpper(s)
+	if o1, ok := dns.StringToOpcode[s]; ok {
 		return o1, nil
 	}
-	o2, ok := strings.CutPrefix(s2, "OPCODE")
-	if ok {
-		o3, err := strconv.ParseUint(o2, 10, 8)
-		if err == nil {
-			return uint8(o3), nil
-		}
+	if !strings.HasPrefix(s, "OPCODE") {
+		return 0, fmt.Errorf("invalid opcode %q", s)
 	}
-	return uint8(0), fmt.Errorf("invalid opcode %q", s)
+	o2, err := strconv.ParseUint(s[6:], 10, 8)
+	if err != nil {
+		return 0, fmt.Errorf("invalid opcode %q", s)
+	}
+	return uint8(o2), nil
 }
 
 // StringToCode converts the text representation or "CODE"+value to an EDNS0 code
 // Inverse of [CodeToString].
 func StringToCode(s string) (uint16, error) {
-	s2 := strings.ToUpper(s)
-	if c1, ok := dns.StringToCode[s2]; ok {
+	s = strings.ToUpper(s)
+	if c1, ok := dns.StringToCode[s]; ok {
 		return c1, nil
 	}
-	c2, ok := strings.CutPrefix(s2, "CODE")
-	if ok {
-		c3, err := strconv.ParseUint(c2, 10, 16)
-		if err == nil {
-			return uint16(c3), nil
-		}
+	if !strings.HasPrefix(s, "CODE") {
+		return 0, fmt.Errorf("invalid code %q", s)
 	}
-	return uint16(0), fmt.Errorf("invalid code %q", s)
+	c2, err := strconv.ParseUint(s[4:], 10, 16)
+	if err != nil {
+		return 0, fmt.Errorf("invalid code %q", s)
+	}
+	return uint16(c2), nil
 }
