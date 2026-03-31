@@ -1,7 +1,9 @@
 package dnsutil
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"codeberg.org/miekg/dns"
 )
@@ -49,4 +51,89 @@ func CodeToString(c uint16) string {
 		return c1
 	}
 	return "CODE" + strconv.Itoa(int(c))
+}
+
+// StringToType converts the text presentation or "TYPE"+value to a type.
+// Inverse of [TypeToString].
+func StringToType(s string) (uint16, error) {
+	s2 := strings.ToUpper(s)
+	if t1, ok := dns.StringToType[s2]; ok {
+		return t1, nil
+	}
+	t2, ok := strings.CutPrefix(s2, "TYPE")
+	if ok {
+		t3, err := strconv.ParseUint(t2, 10, 16)
+		if err == nil {
+			return uint16(t3), nil
+		}
+	}
+	return uint16(0), fmt.Errorf("invalid type %q", s)
+}
+
+// StringToRcode converts the text presentation or "RCODE"+value to a code.
+// Inverse of [RcodeToString].
+func StringToRcode(s string) (uint16, error) {
+	s2 := strings.ToUpper(s)
+	if r1, ok := dns.StringToRcode[s2]; ok {
+		return r1, nil
+	}
+	r2, ok := strings.CutPrefix(s2, "RCODE")
+	if ok {
+		r3, err := strconv.ParseUint(r2, 10, 16)
+		if err == nil {
+			return uint16(r3), nil
+		}
+	}
+	return uint16(0), fmt.Errorf("invalid rcode %q", s)
+}
+
+// StringToClass converts the text presentation or "CLASS"+value to a class.
+// Inverse of [ClassToString].
+func StringToClass(s string) (uint16, error) {
+	s2 := strings.ToUpper(s)
+	if c1, ok := dns.StringToClass[s2]; ok {
+		return c1, nil
+	}
+	c2, ok := strings.CutPrefix(s2, "CLASS")
+	if ok {
+		c3, err := strconv.ParseUint(c2, 10, 16)
+		if err == nil {
+			return uint16(c3), nil
+		}
+	}
+	return uint16(0), fmt.Errorf("invalid class %q", s)
+}
+
+// StringToOpcode converts the text representation or "OPCODE"+value to an opcode
+// Inverse of [OpcodeToString].
+func StringToOpcode(s string) (uint8, error) {
+	s2 := strings.ToUpper(s)
+	if o1, ok := dns.StringToOpcode[s2]; ok {
+		return o1, nil
+	}
+	o2, ok := strings.CutPrefix(s2, "OPCODE")
+	if ok {
+		o3, err := strconv.ParseUint(o2, 10, 8)
+		if err == nil {
+			return uint8(o3), nil
+		}
+	}
+	return uint8(0), fmt.Errorf("invalid opcode %q", s)
+}
+
+// StringToCode converts the text representation or "CODE"+value to an EDNS0 code
+// Inverse of [CodeToString].
+func StringToCode(s string) (uint16, error) {
+	s2 := strings.ToUpper(s)
+	if c1, ok := dns.StringToCode[s2]; ok {
+		return c1, nil
+	}
+	c2, ok := strings.CutPrefix(s2, "CODE")
+	if ok {
+		c3, err := strconv.ParseUint(c2, 10, 16)
+		if err == nil {
+			return uint16(c3), nil
+		}
+	}
+	return uint16(0), fmt.Errorf("invalid code %q", s)
 }
