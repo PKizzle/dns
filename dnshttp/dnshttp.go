@@ -72,9 +72,15 @@ func NewRequest(method, URL string, m *dns.Msg) (*http.Request, error) {
 //		hw := dnshttp.NewResponseWriter(w, r, r.Context().Value(http.LocalAddrContextKey).(net.Addr))
 //		h.mux.ServeDNS(context.Background(), hw, m) // assuming *handler embeds a dns.ServeMux
 //	}
+//
+// The request must have the Content-Type header set to [MimeType].
 func Request(req *http.Request) (*dns.Msg, error) {
 	switch req.Method {
 	case http.MethodGet:
+		if x := req.Header.Get("Content-Type"); x != MimeType {
+			return nil, fmt.Errorf("Content-Type other than %q is not supported", MimeType)
+		}
+
 		values := req.URL.Query()
 		b64, ok := values["dns"]
 		if !ok || len(b64) != 1 {
@@ -98,6 +104,10 @@ func Request(req *http.Request) (*dns.Msg, error) {
 		return m, nil
 
 	case http.MethodPost:
+		if x := req.Header.Get("Content-Type"); x != MimeType {
+			return nil, fmt.Errorf("Content-Type other than %q is not supported", MimeType)
+		}
+
 		defer req.Body.Close()
 		m, err := msg(req.Body)
 		if err != nil {
