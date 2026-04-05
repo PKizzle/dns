@@ -1,5 +1,5 @@
-// Package dnsconf is used to get the DNS system configuration, typically stored in /etc/resolv.conf on unix
-// systems.
+// Package dnsconf is used to get the DNS system configuration, typically stored in /etc/resolv.conf on Unix
+// systems. There are many possible options, only a few are supported.
 package dnsconf
 
 import (
@@ -21,6 +21,8 @@ type Config struct {
 	Ndots    int      // Number of dots in name to trigger absolute lookup.
 	Timeout  int      // Seconds before giving up on packet.
 	Attempts int      // Lost packets before giving up on server.
+	Rotate   bool     // Rotate between servers.
+	Network  string   // Set to "tcp" when "use-vc" is set.
 }
 
 // FromFile parses a resolv.conf(5) like file and returns a [*Config].
@@ -35,19 +37,17 @@ func FromFile(resolvconf string) (*Config, error) {
 
 // FromReader works like [FromFile] but takes an io.Reader as argument.
 func FromReader(resolvconf io.Reader) (*Config, error) {
-	c := new(Config)
-	scanner := bufio.NewScanner(resolvconf)
+	c := &Config{
+		Port:     "53",
+		Ndots:    1,
+		Timeout:  5,
+		Attempts: 2,
+	}
 	c.Servers = make([]string, 0)
 	c.Search = make([]string, 0)
-	c.Port = "53"
-	c.Ndots = 1
-	c.Timeout = 5
-	c.Attempts = 2
 
+	scanner := bufio.NewScanner(resolvconf)
 	for scanner.Scan() {
-		if err := scanner.Err(); err != nil {
-			return nil, err
-		}
 		line := scanner.Text()
 		f := strings.Fields(line)
 		if len(f) < 1 {
@@ -56,8 +56,7 @@ func FromReader(resolvconf io.Reader) (*Config, error) {
 		switch f[0] {
 		case "nameserver": // add one name server
 			if len(f) > 1 {
-				// One more check: make sure server name is
-				// just an IP address.  Otherwise we need DNS
+				// One more check: make sure server name is just an IP address.  Otherwise we need DNS
 				// to look it up.
 				name := f[1]
 				c.Servers = append(c.Servers, name)
@@ -98,10 +97,15 @@ func FromReader(resolvconf io.Reader) (*Config, error) {
 					}
 					c.Attempts = n
 				case s == "rotate":
-					/* not imp */
+					c.Rotate = true
+				case s == "use-vc":
+					c.Network = "tcp"
 				}
 			}
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 	return c, nil
 }
