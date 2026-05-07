@@ -8,6 +8,10 @@ import (
 // ignored. No other syntax checks are performed, each label should be a valid, relative name (i.e. not end in
 // a dot), see [IsName].
 func Join(ls ...string) string {
+	if len(ls) == 0 {
+		return ""
+	}
+
 	if ls[len(ls)-1] == "." {
 		return Fqdn(strings.Join(ls[:len(ls)-1], "."))
 	}
