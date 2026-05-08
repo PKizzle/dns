@@ -93,7 +93,7 @@ func (z *Zone) AuthoritativeWalk(fn func(*dnszone.Node, bool) bool) {
 func (z *Zone) Previous(name string) *dnszone.Node {
 	prevs := []string{}
 	err := z.db.Select(&prevs, "SELECT name FROM rrs WHERE name < ? COLLATE canonical ORDER BY name COLLATE canonical DESC LIMIT 1", name)
-	if err != nil {
+	if err != nil || len(prevs) == 0 {
 		return nil
 	}
 	node, _ := z.Get(prevs[0])
