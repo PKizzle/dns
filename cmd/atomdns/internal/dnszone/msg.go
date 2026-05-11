@@ -23,7 +23,7 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 	if len(sosynthesis.RRs) > 0 {
 		qtype := dns.RRToType(r.Question[0])
 		for _, rr := range sosynthesis.RRs {
-			if dns.RRToType(rr) == qtype {
+			if rrtype := dns.RRToType(rr); rrtype == qtype || rrtype == dns.TypeCNAME {
 				rr1 := rr.Clone()
 				rr1.Header().Name = r.Question[0].Header().Name // replace owner names with the qname
 				r.Answer = append(r.Answer, rr1)
@@ -33,7 +33,7 @@ func Synthesize(z Interface, r *dns.Msg, sosynthesis, encloser *Node, re *Restar
 					r.Ns = append(r.Ns, rr) // SoS' NSEC
 				}
 				if s, ok := rr.(*dns.RRSIG); ok {
-					if s.TypeCovered == qtype {
+					if s.TypeCovered == qtype || s.TypeCovered == dns.TypeCNAME {
 						rr1 := rr.Clone()
 						rr1.Header().Name = r.Question[0].Header().Name
 						r.Answer = append(r.Answer, rr1)

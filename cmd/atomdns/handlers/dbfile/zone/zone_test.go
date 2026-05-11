@@ -389,6 +389,17 @@ func TestZoneWildcard(t *testing.T) {
 				return m
 			},
 		},
+		{
+			"dns:cnamewildcard",
+			func() *dns.Msg { m := dns.NewMsg("bla.ctrl.example.", dns.TypeA); return m },
+			func() *dns.Msg {
+				m := dns.NewMsg("bla.ctrl.example.", dns.TypeA)
+				m.Answer = []dns.RR{
+					dnstest.New(`bla.ctrl.example. IN CNAME target.example.com.`),
+				}
+				return m
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

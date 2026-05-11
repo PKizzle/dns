@@ -18,7 +18,7 @@
 ;
 $ORIGIN example.
 @                        1H   IN   SOA        miek miek (
-                                                 3            ; serial  
+                                                 3            ; serial
                                                  2            ; refresh
                                                  3            ; retry
                                                  4            ; expire
@@ -189,3 +189,4 @@ subdel                   1H   IN   NS         ns.example.com.
                                                  Z/AgWeeN/+ujbI59LQMgA4YYCZnyyYvE6FXFbTkBnC/8/pdZL8eAC+Q
                                                  ODAH5jjZHs1ndJBk2jmfQv0csiezelKhaHObivFQgA
                                                  )
+*.ctrl                        IN   CNAME      target.example.com.
