@@ -68,6 +68,7 @@ If no servers (also see below) are defined atomdns starts a (single, but one for
   - `json` enables JSON logging.
   - With `quiet` the banner is not shown. Query logging is not affected.
   - And `disable` disables the logging so that it can be enabled with the SIGUSR1 signal, see atomdns-log(7).
+    To enable logging for specific zone you need to enable the _log_ handler in that handler block.
 - The `metrics` property allows setting the listening **ADDRESS** for the prometheus metrics. This defaults to `localhost:9153`.
   Without `metrics` no metrics can be scraped as the prometheus server isn't running, i.e. to allow for
   metrics gathering `metrics` must be enabled in the global block.
