@@ -27,7 +27,6 @@ var Handlers = []string{
 	"sign",
 	"template",
 	"tsig",
-	"uncloud",
 	"unpack",
 	"url",
 	"whoami",
