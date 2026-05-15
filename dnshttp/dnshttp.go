@@ -45,7 +45,6 @@ func NewRequest(method, URL string, m *dns.Msg) (*http.Request, error) {
 		if err != nil {
 			return req, err
 		}
-		req.Header.Set("Content-Type", MimeType)
 		req.Header.Set("Accept", MimeType)
 		return req, nil
 	case http.MethodPost:
@@ -77,10 +76,6 @@ func NewRequest(method, URL string, m *dns.Msg) (*http.Request, error) {
 func Request(req *http.Request) (*dns.Msg, error) {
 	switch req.Method {
 	case http.MethodGet:
-		if x := req.Header.Get("Content-Type"); x != MimeType {
-			return nil, fmt.Errorf("Content-Type other than %q is not supported", MimeType)
-		}
-
 		values := req.URL.Query()
 		b64, ok := values["dns"]
 		if !ok || len(b64) != 1 {
