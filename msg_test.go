@@ -321,6 +321,29 @@ func TestMsg(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			"ede",
+			func() *dns.Msg {
+				m := dns.NewMsg("miek.nl.", dns.TypeMX)
+				m.ID = 3
+				m.Pseudo = []dns.RR{&dns.EDE{
+					InfoCode: dns.ExtendedErrorDNSSECIndeterminate,
+					ExtraText: "Some extra text",
+				}}
+				return m
+			},
+			func(r *dns.Msg) error {
+				expect := []byte{
+					0, 3, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 4, 109, 105, 101, 107, 2, 110, 108, 0, 0,
+					15, 0, 1, 0, 0, 41, 0, 0, 0, 0, 0, 0, 0, 21, 0, 15, 0, 17, 0, 5, 83, 111, 109,
+					101, 32, 101, 120, 116, 114, 97, 32, 116, 101, 120, 116,
+				}
+				if !bytes.Equal(r.Data, expect) {
+					return fmt.Errorf("Msg octets do not match")
+				}
+				return nil
+			},
+		},
 	}
 
 	for _, tc := range testcases {
