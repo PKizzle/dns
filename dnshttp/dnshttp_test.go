@@ -32,6 +32,13 @@ func TestDOH(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failure to make request: %s", err)
 			}
+			ct := req.Header.Get("Content-Type")
+			if ct != "" && req.Method == http.MethodGet {
+				t.Errorf("GET request should not have a Content-Type header")
+			}
+			if ct == "" && req.Method == http.MethodPost {
+				t.Errorf("POST request should have a Content-Type header")
+			}
 
 			m1, err := Request(req)
 			if err != nil {
