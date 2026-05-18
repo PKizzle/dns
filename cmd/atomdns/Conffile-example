@@ -82,6 +82,8 @@ miek.nl {
         key sign/testdata/Kmiek.nl.+013+59725
         zonemd
     }
+    # randomize address in the message.
+    random
     # ... will pick up the signed zone file and serve it.
     dbfile sign/testdata/db.miek.nl.signed
 }
