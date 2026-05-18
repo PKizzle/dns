@@ -21,6 +21,7 @@ import (
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/log"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/metrics"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/nsid"
+	"codeberg.org/miekg/dns/cmd/atomdns/handlers/random"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/refuse"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/root"
 	"codeberg.org/miekg/dns/cmd/atomdns/handlers/sign"
@@ -51,6 +52,7 @@ var StringToHandler = map[string]func() Handler{
 	"log":      func() Handler { return new(log.Log) },
 	"metrics":  func() Handler { return new(metrics.Metrics) },
 	"nsid":     func() Handler { return new(nsid.Nsid) },
+	"random":   func() Handler { return new(random.Random) },
 	"refuse":   func() Handler { return new(refuse.Refuse) },
 	"root":     func() Handler { return new(root.Root) },
 	"sign":     func() Handler { return new(sign.Sign) },
