@@ -14,6 +14,7 @@ $ORIGIN miek.nl.
                          IN   AAAA       2a01:7e00::f03c:91ff:fe79:234c
 
 a                        IN   AAAA       2a01:7e00::f03c:91ff:fe79:234c
+                         IN   AAAA       2a10:7e00:2dc2:3::53
 
 www                      IN   CNAME      a
 
@@ -29,7 +30,4 @@ ns2.bla                  IN   A          127.0.0.1
 toolong           4W5D   IN   TXT        "overly long TTL, should be truncated"
 
 secure                   IN   NS         ns1.bla.com.
-                         IN   DS         33694 8 2 (
-                                            2C235500B09FA87BBC0981674FC31AF87D2FA4DCFE666A64BA2646F
-                                            29651DB83    
-                                            )
+                         IN   DS         33694 8 2 2C235500B09FA87BBC0981674FC31AF87D2FA4DCFE666A64BA2646F29651DB83
