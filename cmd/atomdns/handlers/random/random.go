@@ -2,6 +2,7 @@ package random
 
 import (
 	"context"
+	"math/rand/v2"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsctx"
@@ -52,21 +53,9 @@ func random(in []dns.RR) []dns.RR {
 		}
 	}
 
-	switch l := len(address); l {
-	case 0, 1:
-	case 2:
-		if dns.ID()%2 == 0 {
-			address[0], address[1] = address[1], address[0]
-		}
-	default:
-		for j := range l {
-			p := j + (int(dns.ID()) % (l - j))
-			if j == p {
-				continue
-			}
-			address[j], address[p] = address[p], address[j]
-		}
-	}
+	rand.Shuffle(len(address), func(i, j int) {
+		address[i], address[j] = address[j], address[i]
+	})
 
 	out := append(cname, rest...)
 	out = append(out, address...)
