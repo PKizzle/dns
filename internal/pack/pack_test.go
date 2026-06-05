@@ -30,6 +30,7 @@ func TestName(t *testing.T) {
 		{`.org`, false, nil},
 		{`www..example.org.`, false, nil},
 		{`www.example.org..`, false, nil},
+		{``, true, newmap()},
 	}
 	buf := make([]byte, 256)
 	for i, tc := range testcases {

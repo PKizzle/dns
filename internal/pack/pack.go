@@ -197,7 +197,7 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 	if ls > 1 && s[0] == '.' { // leading dots are not legal except for the root zone
 		return len(msg), &Error{"leading dot in name"}
 	}
-	if s[ls-1] != '.' {
+	if ls > 0 && s[ls-1] != '.' {
 		return len(msg), &Error{"name must be fully qualified"}
 	}
 
