@@ -115,6 +115,7 @@ func TestIsName(t *testing.T) {
 		"www.example.com.":  true,
 		"mi\\k.nl.":         true,
 		"mi\\k.nl":          true,
+		"":                  true,
 	}
 	for tc, ok := range testcases {
 		ok1 := IsName(tc)
