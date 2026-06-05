@@ -194,9 +194,6 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 		msg[off] = 0
 		return off + 1, nil
 	}
-	if ls > 1 && s[0] == '.' { // leading dots are not legal except for the root zone
-		return len(msg), &Error{"leading dot in name"}
-	}
 	if ls > 0 && s[ls-1] != '.' {
 		return len(msg), &Error{"name must be fully qualified"}
 	}
@@ -228,14 +225,15 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 			return lenmsg, &Error{"overflow name"}
 		}
 
-		if compress && labelLen > 1 { // don't try to compress '.'
+		if compress && labelLen > 1 { // don't try to compress single characters
 			if p, ok := compression[s[begin:]]; ok {
 				binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
 				return off + 2, nil
 			}
-		}
-		if compression != nil && off < maxCompressionOffset {
-			compression[s[begin:]] = uint16(off)
+
+			if off < maxCompressionOffset {
+				compression[s[begin:]] = uint16(off)
+			}
 		}
 
 		// the following is covered by the length check above

@@ -109,10 +109,6 @@ func IsName(s string) bool {
 		return true
 	}
 
-	if ls > 1 && s[0] == '.' {
-		return false
-	}
-
 	var (
 		off   int
 		begin int
