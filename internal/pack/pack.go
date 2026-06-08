@@ -230,10 +230,9 @@ func Name(s string, msg []byte, off int, compression map[string]uint16, compress
 				binary.BigEndian.PutUint16(msg[off:], 0xC000|p)
 				return off + 2, nil
 			}
-
-			if off < maxCompressionOffset {
-				compression[s[begin:]] = uint16(off)
-			}
+		}
+		if compression != nil && off < maxCompressionOffset {
+			compression[s[begin:]] = uint16(off)
 		}
 
 		// the following is covered by the length check above
