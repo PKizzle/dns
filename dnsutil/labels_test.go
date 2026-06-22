@@ -1,6 +1,7 @@
 package dnsutil
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -41,32 +42,67 @@ func TestNext(t *testing.T) {
 	}
 }
 
+func TestForward(t *testing.T) {
+	testcases := []struct {
+		in  string
+		out []string
+	}{
+		{".", []string{"."}},
+		{"nl.", []string{"nl"}},
+		{"www.miek.nl.", []string{"www", "miek", "nl"}},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.in, func(t *testing.T) {
+			out := []string{}
+			for x := range Forward(tc.in) {
+				out = append(out, x)
+			}
+			if slices.Compare(tc.out, out) != 0 {
+				t.Fatalf("labels should be %v, got %v", tc.out, out)
+			}
+		})
+	}
+}
+
 func TestPrev(t *testing.T) {
 	type prev struct {
 		string
 		int
 	}
 	testcases := map[prev]int{
-		{"", 1}:             0,
-		{"www.miek.nl.", 0}: 12,
-		{"www.miek.nl.", 1}: 9,
-		{"www.miek.nl.", 2}: 4,
-
-		{"www.miek.nl", 0}: 11,
-		{"www.miek.nl", 1}: 9,
-		{"www.miek.nl", 2}: 4,
-
-		{"www.miek.nl.", 5}: 0,
-		{"www.miek.nl", 5}:  0,
-
-		{"www.miek.nl.", 3}: 0,
-		{"www.miek.nl", 3}:  0,
+		{"", 1}:              0,
+		{".", 1}:             0,
+		{"www.miek.nl.", 12}: 9,
+		{"www.miek.nl.", 9}:  4,
+		{"www.miek.nl.", 4}:  0,
 	}
-	for s, i := range testcases {
-		x, ok := Prev(s.string, s.int)
+	for tc, i := range testcases {
+		x, ok := Prev(tc.string, tc.int)
 		if i != x {
-			t.Errorf("label should be %d, got %d, %t: previous %d, %s", i, x, ok, s.int, s.string)
+			t.Errorf("label should be %d, got %d, %t: prev2 %d, %s", i, x, ok, tc.int, tc.string)
 		}
+	}
+}
+
+func TestBackward(t *testing.T) {
+	testcases := []struct {
+		in  string
+		out []string
+	}{
+		{".", []string{"."}},
+		{"nl.", []string{"nl"}},
+		{"www.miek.nl.", []string{"nl", "miek", "www"}},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.in, func(t *testing.T) {
+			out := []string{}
+			for x := range Backward(tc.in) {
+				out = append(out, x)
+			}
+			if slices.Compare(tc.out, out) != 0 {
+				t.Fatalf("labels should be %v, got %v", tc.out, out)
+			}
+		})
 	}
 }
 

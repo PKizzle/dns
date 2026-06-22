@@ -123,6 +123,8 @@ func main() {
 				o("l += net.IPv6len // %s\n")
 			case tag == `dns:"uint48"`:
 				o("l += 6 // %s\n")
+			case tag == `dns:"ttl"`:
+				o("l +=4 // %s\n")
 			case tag == "":
 				switch fieldtype {
 				case "uint8":
