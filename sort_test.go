@@ -52,7 +52,7 @@ func TestSort(t *testing.T) {
 			sort.Sort(tc.unsorted)
 			for i := range len(tc.unsorted) {
 				if tc.unsorted[i] != tc.sorted[i] {
-					t.Fatalf("expected %s, got %s", tc.sorted[i], tc.unsorted[i])
+					t.Fatalf("expected %v, got %v", tc.sorted, tc.unsorted)
 				}
 			}
 		})

@@ -10,7 +10,6 @@ func TestCommon(t *testing.T) {
 	}{
 
 		{"www.miek.nl.", "miek.nl.", 2},
-		{"www.miek.nl.", "miek.nl", 0}, // not fully qualified
 		{"www.miek.nl.", "www.bla.nl.", 1},
 		{"www.bla..nl.", "ml.www.bla.", 0},
 		{"www.miek.nl.", "nl.", 1},

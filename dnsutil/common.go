@@ -10,27 +10,23 @@ package dnsutil
 // a and b must be syntactically valid domain names, see [IsName] and [IsFqdn].
 func Common(a, b string) (n int) {
 	// copy-ish of CompareName
-
-	if a == "." || b == "." { // shortcut root, as we would return 1.
+	if a == "." || b == "." { // shortcut root, as we would return 1
 		return 0
 	}
 
-	labels := 1
-
-	lasta, _ := Prev(a, 0)
-	lastb, _ := Prev(b, 0)
-
+	lasta := len(a)
+	lastb := len(b)
 	for {
-		cura, overshota := Prev(a, labels)
-		curb, overshotb := Prev(b, labels)
-		if overshota || overshotb {
-			return labels - 1
-		}
-		x := compareLabel(a[cura:lasta], b[curb:lastb])
+		cura, overshota := Prev(a, lasta)
+		curb, overshotb := Prev(b, lastb)
+		x := compareLabel(a[cura:lasta-1], b[curb:lastb-1])
 		if x != 0 {
-			return labels - 1
+			return n
 		}
-		labels++
+		n++
+		if overshota || overshotb {
+			return n
+		}
 		lasta = cura
 		lastb = curb
 	}

@@ -26,28 +26,33 @@ func Retrieve(z Interface, m *dns.Msg, re *Restart) *dns.Msg {
 	dnsutil.SetReply(r, m)
 	r.Authoritative = true
 
-	labels := z.Labels()
-	sosynthesis := &Node{} // source of synthesize
-
 	// We have 2 loops, the Search loop and then a "found" loop. The search loop lookups up the correct
 	// record set from the zone. The second loop (in z.Msg) then creates a message with the correct RRs in the sections.
 	// This might involve even more zone lookups for cname and glue records. The returned message can be written to the client.
 	qname := r.Question[0].Header().Name
 
 	// Doing apex queries separate simplifies the loop below as we can not have delegation, wildcards, etc.
-	if labels == dnsutil.Labels(qname) {
+	if z.Labels() == dnsutil.Labels(qname) {
 		return MsgFound(z, r, z.Apex(), hintAnswer, re)
 	}
 
-	labels++
+	sosynthesis := &Node{} // source of synthesize
 	hint := hintAnswer
 	encloser := z.Apex()
+
+	// Go back in the qname to where it gets interesting for this zone, skip z.Labels() from the right.
+	var i, start = len(qname), false
+	for range z.Labels() {
+		i, start = dnsutil.Prev(qname, i)
+	}
+
+	// Even if start is true (reached begining of the name), we still have to check that name, hence the latter
+	// cehck for start.
 Search:
-	for i, start := dnsutil.Prev(qname, labels); !start; i, start = dnsutil.Prev(qname, labels) {
+	for i, start = dnsutil.Prev(qname, i); ; i, start = dnsutil.Prev(qname, i) {
 		node, ok := z.Get(qname[i:])
 		if ok {
 			encloser = node
-
 			// Check for delegation, thus NS and (later) DELEG records. If this set contain NS records we have a delegation.
 			for _, rr := range node.RRs {
 				if _, ok := rr.(*dns.NS); ok {
@@ -57,7 +62,6 @@ Search:
 			}
 
 		} else {
-
 			// Skip a label to the right again and replace with '*', this should work by definition. If we
 			// find a wildcard label here we keep track of what we found, but we need to search below to see
 			// if there is a more specific match.
@@ -66,10 +70,13 @@ Search:
 			if ok {
 				sosynthesis = node
 				hint = hintWildcard
+				break Search
 			}
 		}
 
-		labels++
+		if start {
+			break
+		}
 	}
 
 	if hint == hintWildcard {
