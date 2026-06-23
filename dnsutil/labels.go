@@ -5,9 +5,7 @@ import (
 	"strings"
 )
 
-// Join joins the labels in s to form a fully qualified domain name. If the last label is the root label it is
-// ignored. No other syntax checks are performed, each label should be a valid, relative name (i.e. not end in
-// a dot), see [IsName].
+// Join joins the labels in s to form a fully qualified domain name.
 func Join(ls ...string) string {
 	if len(ls) == 0 {
 		return ""
@@ -17,6 +15,18 @@ func Join(ls ...string) string {
 		return Fqdn(strings.Join(ls[:len(ls)-1], "."))
 	}
 	return Fqdn(strings.Join(ls, "."))
+}
+
+// Split splits the name s in its labels. See [Forward] and [Next] for allocationless alternatives.
+func Split(s string) []string {
+	if s == "." {
+		return []string{"."}
+	}
+
+	if IsFqdn(s) {
+		return strings.Split(s[:len(s)-1], ".")
+	}
+	return strings.Split(s, ".")
 }
 
 // Forward allows ranging over an name s on a per label basis. The empty string returns nothing a single root
