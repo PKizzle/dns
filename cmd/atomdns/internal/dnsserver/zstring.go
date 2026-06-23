@@ -22,6 +22,7 @@ var Handlers = []string{
 	"log",
 	"metrics",
 	"nsid",
+	"random",
 	"refuse",
 	"root",
 	"sign",
