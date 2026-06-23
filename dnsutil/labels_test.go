@@ -23,6 +23,24 @@ func TestJoin(t *testing.T) {
 	}
 }
 
+func TestSplit(t *testing.T) {
+	testcases := []struct {
+		in  string
+		out []string
+	}{
+		{"bla.bliep.example.org.", []string{"bla", "bliep", "example", "org"}},
+		{"example.org", []string{"example", "org"}},
+		{".", []string{"."}},
+		{"", []string{""}},
+	}
+
+	for i, tc := range testcases {
+		if x := Split(tc.in); slices.Compare(x, tc.out) != 0 {
+			t.Errorf("test %d, expected %v, got %v", i, tc.out, x)
+		}
+	}
+}
+
 func TestNext(t *testing.T) {
 	type next struct {
 		string
