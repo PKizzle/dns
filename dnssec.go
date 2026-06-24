@@ -208,6 +208,11 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 	if rr.KeyTag == 0 || len(rr.SignerName) == 0 || rr.Algorithm == 0 {
 		return ErrKey
 	}
+
+	if rr.Algorithm == RSAMD5 || rr.Algorithm == DSA || rr.Algorithm == DSANSEC3SHA1 {
+		return ErrAlg
+	}
+
 	if options.Pooler == nil {
 		options.Pooler = pool.NewNoop(defaultBufSize)
 	}
@@ -245,16 +250,9 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 
 	var h hash.Hash
 	hash, ok := AlgorithmToHash[rr.Algorithm]
-	if !ok && rr.Algorithm != ED25519 {
-		return ErrAlg
-	}
-
-	switch rr.Algorithm {
-	case RSAMD5, DSA, DSANSEC3SHA1:
-		// See RFC 6944.
-		return ErrAlg
-
-	case ED25519:
+	// Some newer algorithms do their own hashing, i.e. ED25519 (maybe all elliptic curve ones do), so no hash
+	// is OK.
+	if !ok {
 		signature, err := sign(k, signdata, hash, rr.Algorithm)
 		if err != nil {
 			return err
@@ -262,19 +260,19 @@ func (rr *RRSIG) Sign(k crypto.Signer, rrset []RR, options *SignOption) error {
 
 		rr.Signature = unpack.Base64(signature)
 		return nil
-
-	default:
-		h = hash.New()
-		h.Write(signdata)
-
-		signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
-		if err != nil {
-			return err
-		}
-
-		rr.Signature = unpack.Base64(signature)
-		return nil
 	}
+
+	// older algorithms with explicit hashing
+	h = hash.New()
+	h.Write(signdata)
+
+	signature, err := sign(k, h.Sum(nil), hash, rr.Algorithm)
+	if err != nil {
+		return err
+	}
+
+	rr.Signature = unpack.Base64(signature)
+	return nil
 }
 
 func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, error) {
@@ -284,8 +282,6 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 	}
 
 	switch alg {
-	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512, ED25519:
-		return signature, nil
 	case ECDSAP256SHA256, ECDSAP384SHA384:
 		ecdsaSignature := &struct {
 			R, S *big.Int
@@ -305,8 +301,9 @@ func sign(k crypto.Signer, hashed []byte, hash crypto.Hash, alg uint8) ([]byte, 
 		signature := intToBytes(ecdsaSignature.R, intlen)
 		signature = append(signature, intToBytes(ecdsaSignature.S, intlen)...)
 		return signature, nil
+
 	default:
-		return nil, ErrAlg
+		return signature, nil
 	}
 }
 
