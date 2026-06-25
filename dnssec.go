@@ -440,7 +440,12 @@ type SignOption struct {
 
 	// If VerifyFunc is non-nil it will be used to verify a signture in [RRSIG.Verify]. This is useful when
 	// you are using a external (to this package) cryptographic algorithm. For this you also need add your
-	// algorithm to [AlgorithmToString].
+	// algorithm to [AlgorithmToString]. In the case of ed448 this could like:
+	//
+	//   func(k *dns.DNSKEY, message, sig []byte) bool {
+	//      pub, _ := base64.StdEncoding.DecodeString(k.PublicKey)
+	//      return ed448.Verify(ed448.PublicKey(pub), message, sig, "")
+	//   }
 	VerifyFunc func(k *DNSKEY, message, sig []byte) bool
 }
 
