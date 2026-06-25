@@ -405,6 +405,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 			return nil
 		}
 		return ErrSig
+
 	default:
 		if options.VerifyFunc != nil {
 			if options.VerifyFunc(k, signeddata, sigbuf) {
@@ -412,7 +413,6 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 			}
 			return ErrSig
 		}
-
 		return ErrAlg
 	}
 }
