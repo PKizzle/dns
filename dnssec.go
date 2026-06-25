@@ -362,7 +362,7 @@ func (rr *RRSIG) Verify(k *DNSKEY, rrset []RR, options *SignOption) error {
 	sigbuf, _ := pack.Base64([]byte(rr.Signature))
 
 	var h hash.Hash
-	hash, _ := AlgorithmToHash[rr.Algorithm] // newer alg do their own hashing, ignore if there...
+	hash, _ := AlgorithmToHash[rr.Algorithm] // newer alg do their own hashing, ignore...
 
 	switch rr.Algorithm {
 	case RSASHA1, RSASHA1NSEC3SHA1, RSASHA256, RSASHA512:
