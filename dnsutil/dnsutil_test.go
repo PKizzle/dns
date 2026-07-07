@@ -13,11 +13,11 @@ func TestTrim(t *testing.T) {
 		zone     string
 		expected string
 	}{
-		{"a.example.org", "example.org", "a"},
-		{"a.b.example.org", "example.org", "a.b"},
+		{"a.example.org.", "example.org.", "a"},
+		{"a.b.example.org.", "example.org.", "a.b"},
 		{"b.", ".", "b"},
-		{"example.org", "example.org", ""},
-		{"org", "example.org", ""},
+		{"example.org.", "example.org.", "example.org."},
+		{"org.", "example.org.", "org."},
 	}
 
 	for i, tc := range testcases {
