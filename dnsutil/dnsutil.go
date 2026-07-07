@@ -3,15 +3,15 @@ package dnsutil
 
 import "crypto/rand"
 
-// Trim removes the zone component from s. It returns the trimmed name or the empty string if z is longer than s.
-// The trimmed name will be returned without a trailing dot.
-// s and z must be syntactically valid domain names, see [IsName] and [IsFqdn].
+// Trim removes the zone component from s. It returns the trimmed name or the original string if z is longer
+// than s. The trimmed name will be returned without a trailing dot. s and z must be syntactically valid
+// domain names, see [IsName] and [IsFqdn]. And also see [Prev] and [Next] to iterate over a domain name.
 func Trim(s, z string) string {
 	offset, start := len(s), false
 	for range Labels(z) {
 		offset, start = Prev(s, offset)
 		if start {
-			return ""
+			return s
 		}
 	}
 	return s[:offset-1]
