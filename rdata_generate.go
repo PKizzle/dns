@@ -114,8 +114,19 @@ return rd, nil
 
 `)
 	}
-	b.WriteString("}\n")
-	b.WriteString(`rd := rdata.RFC3597{}
+	b.WriteString(`}
+
+if newFn, ok := TypeToRR[rrtype]; ok {
+	rr := newFn()
+	if _, ok := rr.(Parser); ok {
+		if err := parse(rr, c, o); err != nil {
+			return rr.Data(), err
+		}
+		return rr.Data(), nil
+	}
+}
+
+rd := rdata.RFC3597{}
 	pe := parseRFC3597(&rd, c, o)
 	if pe != nil {
 		return rd, pe
