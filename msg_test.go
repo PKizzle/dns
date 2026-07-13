@@ -327,7 +327,7 @@ func TestMsg(t *testing.T) {
 				m := dns.NewMsg("miek.nl.", dns.TypeMX)
 				m.ID = 3
 				m.Pseudo = []dns.RR{&dns.EDE{
-					InfoCode: dns.ExtendedErrorDNSSECIndeterminate,
+					InfoCode:  dns.ExtendedErrorDNSSECIndeterminate,
 					ExtraText: "Some extra text",
 				}}
 				return m
@@ -341,6 +341,27 @@ func TestMsg(t *testing.T) {
 				if !bytes.Equal(r.Data, expect) {
 					return fmt.Errorf("Msg octets do not match")
 				}
+				return nil
+			},
+		},
+		{
+			"malformed-a",
+			func() *dns.Msg {
+				// name=. type=A class=IN ttl=0 rdlength={0, 0} -> and no rdata
+				return &dns.Msg{Data: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0}}
+			},
+			func(r *dns.Msg) error {
+				return nil
+			},
+		},
+		{
+			"malformed-aaaa",
+			func() *dns.Msg {
+				// name=. type=AAAA class=IN ttl=0 rdlength={0,1} -> and then 2 as malformed address
+				return &dns.Msg{Data: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 28, 0, 0, 0, 0, 0, 1, 2}}
+			},
+			func(r *dns.Msg) error {
+				fmt.Printf("%v\n", r)
 				return nil
 			},
 		},
