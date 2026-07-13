@@ -361,7 +361,6 @@ func TestMsg(t *testing.T) {
 				return &dns.Msg{Data: []byte{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 28, 0, 0, 0, 0, 0, 1, 2}}
 			},
 			func(r *dns.Msg) error {
-				fmt.Printf("%v\n", r)
 				return nil
 			},
 		},
