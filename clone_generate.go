@@ -86,12 +86,12 @@ func main() {
 
 		fmt.Fprintf(b, "return &%s{\n", rrname)
 		if i < lspecs { // edns0 types dont' even have Hdr.
-			fmt.Fprintf(b, "\trr.Hdr,\n")
+			fmt.Fprintf(b, "\tHdr: rr.Hdr,\n")
 		}
 
 		if i < lspecs {
 			if !slices.Contains(generate.EmptyData, rrname) {
-				fmt.Fprintf(b, "rdata.%s{\n", rrname)
+				fmt.Fprintf(b, "%s: rdata.%s{\n", rrname, rrname)
 			}
 		}
 
@@ -119,7 +119,7 @@ func main() {
 				tag = strings.Trim(field.Tag.Value, "`")
 			}
 
-			o := func(s string) { fmt.Fprintf(b, s, fieldname) }
+			o := func(s string) { fmt.Fprintf(b, s, fieldname, fieldname) }
 
 			if fieldtype == "slice" {
 				switch tag {
@@ -129,7 +129,7 @@ func main() {
 					// some fiddling here, to inject this name here, will keeping using o(...)
 					// this should also work for DELEG in the future
 					pkg := strings.ToLower(rrname)
-					fn := `func() []` + pkg + `.Pair {
+					fn := `%s: func() []` + pkg + `.Pair {
 						pairs := make([]` + pkg + `.Pair, len(rr.%[1]s))
 						for i, p := range rr.%[1]s {
 							pairs[i] = p.Clone()
@@ -140,7 +140,7 @@ func main() {
 					continue
 				case `dns:"infos"`:
 					pkg := strings.ToLower(rrname)
-					fn := `func() []` + pkg + `.Info {
+					fn := `%s: func() []` + pkg + `.Info {
 						infos := make([]` + pkg + `.Info, len(rr.%[1]s))
 						for i, p := range rr.%[1]s {
 							infos[i] = p.Clone()
@@ -151,16 +151,16 @@ func main() {
 					continue
 				}
 
-				o("slices.Clone(rr.%s),\n")
+				o("%s: slices.Clone(rr.%s),\n")
 				continue
 			}
 
 			if fieldname == "Data" { // only the case for RFC3597 RR
-				o("rr.RFC3597.%s,\n")
+				o("%s: rr.RFC3597.%s,\n")
 				continue
 			}
 
-			o("rr.%s,\n")
+			o("%s: rr.%s,\n")
 		}
 		if i < lspecs {
 			if !slices.Contains(generate.EmptyData, rrname) {
