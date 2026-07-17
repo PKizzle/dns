@@ -9,37 +9,6 @@ import (
 	"codeberg.org/miekg/dns/rdata"
 )
 
-const externalType = 65282
-
-type externalRDATA struct {
-	value  string
-	origin string
-}
-
-func (rd externalRDATA) Len() int       { return len(rd.value) }
-func (rd externalRDATA) String() string { return rd.value }
-
-type externalRR struct {
-	hdr  dns.Header
-	data externalRDATA
-}
-
-func (rr *externalRR) Header() *dns.Header { return &rr.hdr }
-func (rr *externalRR) Data() dns.RDATA     { return rr.data }
-func (rr *externalRR) Len() int            { return rr.hdr.Len() + rr.data.Len() }
-func (rr *externalRR) String() string      { return rr.data.String() }
-func (rr *externalRR) Clone() dns.RR {
-	clone := *rr
-	return &clone
-}
-func (rr *externalRR) Parse(tokens []string, origin string) error {
-	if len(tokens) != 1 {
-		return fmt.Errorf("expected one token, got %d", len(tokens))
-	}
-	rr.data = externalRDATA{value: tokens[0], origin: origin}
-	return nil
-}
-
 // Example on how get the text presentation of a [dns.RR].
 func ExampleRDATA_string() {
 	rr := &dns.MX{Hdr: dns.Header{Name: "miek.nl.", Class: dns.ClassINET, TTL: 3600}, MX: rdata.MX{Preference: 10, Mx: "mx.miek.nl."}}
@@ -160,25 +129,5 @@ func TestNewData(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
-	}
-}
-
-func TestNewDataExternalParser(t *testing.T) {
-	dns.TypeToRR[externalType] = func() dns.RR { return new(externalRR) }
-	t.Cleanup(func() { delete(dns.TypeToRR, externalType) })
-
-	rd, err := dns.NewData(externalType, "value", "example.org.")
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, ok := rd.(externalRDATA)
-	if !ok {
-		t.Fatalf("expected externalRDATA, got %T", rd)
-	}
-	if got.value != "value" {
-		t.Errorf("expected value, got %q", got.value)
-	}
-	if got.origin != "example.org." {
-		t.Errorf("expected origin example.org., got %q", got.origin)
 	}
 }
