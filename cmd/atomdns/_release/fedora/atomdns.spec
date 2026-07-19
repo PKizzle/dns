@@ -15,26 +15,35 @@ https://atomdns.miek.nl
 
 %define services atomdns.service
 %define _topdir %(echo $PWD)/
+%define _srcdir %{_topdir}/../../
 
 %prep
 
 %build
-cd %{_topdir}/../..
+cd %{_srcdir}
 CGO_ENABLED=0 go build
 
 %install
 cp %{_topdir}%{name}.service %{buildroot}/../%{name}.service
 cp %{_topdir}%{name}.conf    %{buildroot}/../%{name}.conf
-cp %{_topdir}/../../%{name}  %{buildroot}/../%{name}
+cp %{_srcdir}/%{name}        %{buildroot}/../%{name}
+cp %{_topdir}Conffile        %{buildroot}/../Conffile
 
-install -D -m 0755 %{name}         %{buildroot}/%{_bindir}/%{name}
-install -D -m 0640 %{name}.conf    %{buildroot}/usr/lib/sysusers.d/%{name}.conf
-install -D -m 0644 %{name}.service %{buildroot}/%{_unitdir}/%{name}.service
+install -D -m 0755 %{name}            %{buildroot}/%{_bindir}/%{name}
+install -D -m 0640 %{name}.conf       %{buildroot}/usr/lib/sysusers.d/%{name}.conf
+install -D -m 0644 %{name}.service    %{buildroot}/%{_unitdir}/%{name}.service
+install -D -m 0644 Conffile           %{buildroot}%{_sysconfdir}/%{name}/Conffile
+
+install -d -m 0755 %{buildroot}%{_mandir}/man{1,7}
+install -D -m 0644 %{_srcdir}man/*.1  %{buildroot}%{_mandir}/man1
+install -D -m 0644 %{_srcdir}man/*.7  %{buildroot}%{_mandir}/man7
 
 %files
 %{_bindir}/%{name}
 %{_unitdir}/%{name}.service
 /usr/lib/sysusers.d/%{name}.conf
+%{_mandir}/man{1,7}/*
+%config(noreplace) %{_sysconfdir}/%{name}/Conffile
 
 %post
 %systemd_post atomdns.service
