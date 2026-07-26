@@ -171,6 +171,15 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
 			}, 2009032802, false, 1,
 		},
+		{
+			// clientSerial (4200000000) is numerically > serverSerial (2009032802) but the
+			// difference exceeds 2^31, so per RFC 1982 the client is behind and must receive
+			// the full incremental transfer, not just the SOA.
+			"rfc1982-behind", [][]dns.RR{
+				testTransferDataIncrementalData[:len(testTransferDataIncrementalData)/2],
+				testTransferDataIncrementalData[len(testTransferDataIncrementalData)/2:],
+			}, 4200000000, false, 8,
+		},
 	}
 
 	var answers [][]dns.RR

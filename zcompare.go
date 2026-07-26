@@ -482,7 +482,7 @@ func (rr *SOA) compare(b RR) (x int) {
 		}
 		return 1
 	}
-	x = cmp.Compare(rr.Serial, b.(*SOA).Serial)
+	x = CompareSerial(rr.Serial, b.(*SOA).Serial)
 	if x != 0 {
 		if x < 0 {
 			return -1
