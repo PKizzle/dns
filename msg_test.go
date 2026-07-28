@@ -149,8 +149,9 @@ func TestMsgBinary(t *testing.T) {
 		},
 		{
 			"fuzzing-find-#932",
-			[]byte("0000\x00\x02\x00\x02\x00\x00\x00\x00\x000000\x000000\x00\x00\t000000\x00\x00\xc0 00000000\x00\x100000000000000000"),
+			[]byte{48, 48, 48, 48, 0, 2, 0, 2, 0, 0, 0, 0, 0, 48, 48, 48, 48, 0, 48, 48, 48, 48, 0, 0, 9, 48, 48, 48, 48, 48, 48, 0, 0, 192, 32, 48, 48, 48, 48, 48, 48, 48, 48, 0, 16, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48},
 			func(m *dns.Msg) error {
+				println(m.String())
 				// the message is a bit fubar, but we did crash on it. When packing again.
 				m.Pack()
 				return nil
