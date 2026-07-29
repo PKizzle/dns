@@ -223,6 +223,7 @@ _all of them_ and _then some_
 - 9606 - DNS Resolver Information
 - 9660 - Zone version
 - 9715 - IP Fragmentation Avoidance in DNS over UDP
+- 9824 - Compact Denial of Existence in DNSSEC
 - 9859 - DSYNC RR
 - draft-ietf-compact-denial - CO bit
 - draft-ietf-deleg - DELEG RR
