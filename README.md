@@ -61,7 +61,7 @@ For developers please read the
   - Pacakge _deleg_ holds details for the DELEG record.
   - Many helper/debug functions are moved into _internal_ packages, making the top-level much, much cleaner.
 - Fast.
-  - recvmmsg(2) and TCP pipe=lining support.
+  - recvmmsg(2) and TCP pipe-lining support.
   - The `cmd/reflect` server does ~420K/340K qps UDP/TCP respectively on the right hardware.
     - Since a46996c I can get ~400K (UDP) qps on my laptop (M2/Asahi Linux), also see 1766e44, 86b53fe and 06e5e0f.
     - On my Dell XPS 17 (Intel) it is similar-ish (~310K/250K qps UDP/TCP).
