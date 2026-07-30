@@ -168,8 +168,6 @@ return 1
 				o("x = rr.%s.Compare(b.(*%s).%s)")
 			case tag == `dns:"aaaa"`:
 				o("x = rr.%s.Compare(b.(*%s).%s)")
-			case tag == `dns:"serial"`:
-				o(`x = CompareSerial(rr.%s, b.(*%s).%s)`)
 			case tag == `dns:"ttl"`:
 				o(`x = int(rr.%s) - int(b.(*%s).%s)`)
 			case tag == `dns:"uint48"`:
