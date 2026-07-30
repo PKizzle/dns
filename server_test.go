@@ -74,9 +74,11 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal("failed to exchange miek.nl.", err)
 			}
+
+			const Hello = "Hello world"
 			str := r.Extra[0].(*dns.TXT).Txt[0]
-			if str != "Hello world" {
-				t.Errorf("expected %s, got %s", "Hello world", str)
+			if str != Hello {
+				t.Errorf("expected %s, got %s", Hello, str)
 			}
 
 			dnsutil.SetQuestion(m, "example.com.", dns.TypeTXT)
@@ -86,9 +88,11 @@ func TestServer(t *testing.T) {
 			if err != nil {
 				t.Fatal("failed to exchange example.com.", err)
 			}
+
+			const Example = "Hello example"
 			str = r.Extra[0].(*dns.TXT).Txt[0]
-			if str != "Hello example" {
-				t.Errorf("expected %s, got %s", "Hello example", str)
+			if str != Example {
+				t.Errorf("expected %s, got %s", Example, str)
 			}
 
 			// Test Mixes cased as noticed by Ask.
@@ -100,8 +104,8 @@ func TestServer(t *testing.T) {
 				t.Error("failed to exchange eXaMplE.cOm.", err)
 			}
 			str = r.Extra[0].(*dns.TXT).Txt[0]
-			if str != "Hello example" {
-				t.Errorf("expected %s, got %s", "Hello example", str)
+			if str != Example {
+				t.Errorf("expected %s, got %s", Example, str)
 			}
 		})
 	}
