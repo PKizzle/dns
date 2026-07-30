@@ -112,6 +112,31 @@ func TestSortRRset(t *testing.T) {
 	}
 }
 
+func TestCompareSerial(t *testing.T) {
+	testcases := []struct {
+		name string
+		a, b uint32
+		want int
+	}{
+		{"equal", 100, 100, 0},
+		{"a-less", 100, 200, -1},
+		{"a-greater", 200, 100, 1},
+		// 4200000000 is numerically > 2009032802 but diff (2190967198) > 2^31: a is behind.
+		{"rfc1982-a-behind", 4200000000, 2009032802, -1},
+		// inverse: 2009032802 has wrapped past 4200000000, so it is ahead.
+		{"rfc1982-a-ahead", 2009032802, 4200000000, 1},
+		// diff exactly 2^31-1 = MaxSerialIncrement: a < b (old code incorrectly returned 1).
+		{"boundary-a-less", 1000000000, 1000000000 + MaxSerialIncrement, -1},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := CompareSerial(tc.a, tc.b); got != tc.want {
+				t.Fatalf("expected serial %d, got %d", tc.want, got)
+			}
+		})
+	}
+}
+
 func TestCompare(t *testing.T) {
 	testcases := []struct {
 		name string
