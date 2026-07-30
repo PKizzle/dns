@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
 
 	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/dnstest"
@@ -75,7 +76,7 @@ func TestServer(t *testing.T) {
 			}
 			str := r.Extra[0].(*dns.TXT).Txt[0]
 			if str != "Hello world" {
-				t.Error("unexpected result for miek.nl.", str, "!= Hello world")
+				t.Errorf("expected %s, got %s", "Hello world", str)
 			}
 
 			dnsutil.SetQuestion(m, "example.com.", dns.TypeTXT)
@@ -87,7 +88,7 @@ func TestServer(t *testing.T) {
 			}
 			str = r.Extra[0].(*dns.TXT).Txt[0]
 			if str != "Hello example" {
-				t.Error("unexpected result for example.com.", str, "!= Hello example")
+				t.Errorf("expected %s, got %s", "Hello example", str)
 			}
 
 			// Test Mixes cased as noticed by Ask.
@@ -100,7 +101,7 @@ func TestServer(t *testing.T) {
 			}
 			str = r.Extra[0].(*dns.TXT).Txt[0]
 			if str != "Hello example" {
-				t.Error("unexpected result for example.com.", str, "!= Hello example")
+				t.Errorf("expected %s, got %s", "Hello example", str)
 			}
 		})
 	}
@@ -147,6 +148,7 @@ func TestServerMsgInvalidFunc(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cannot connect to test server: %v", err)
 	}
+	defer c.Close()
 
 	write := func(m []byte) {
 		l := make([]byte, 2)
@@ -170,4 +172,29 @@ func TestServerMsgInvalidFunc(t *testing.T) {
 
 	write(badMessage)
 	<-invalidErrors // Expect an error to be reported.
+}
+
+func TestServerTimeout(t *testing.T) {
+	cancel, addr, _ := dnstest.TCPServer(":0", func(srv *dns.Server) {
+		srv.ReadTimeout = 50 * time.Millisecond
+	})
+	defer cancel()
+
+	c, err := net.Dial("tcp", addr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+
+	if err := c.SetReadDeadline(time.Now().Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+
+	b := make([]byte, 1)
+	if _, err = c.Read(b); err == nil {
+		t.Fatal("expected the server to close the connection")
+	}
+	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+		t.Fatalf("server did not close the connection after ReadTimeout: %v", err)
+	}
 }
