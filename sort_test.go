@@ -95,6 +95,20 @@ func TestSortRRset(t *testing.T) {
 				&NS{Hdr: Header{Name: "zw.", Class: ClassINET, TTL: 172800}, NS: rdata.NS{Ns: "ns2zim.telone.co.zw."}},
 			}),
 		},
+		{
+			// 4200000000 is numerically > 2009032802 but their difference (2190967198) exceeds
+			// 2^31, so per RFC 1982 serial arithmetic 4200000000 < 2009032802. The sort must
+			// place 4200000000 first.
+			"soa-rfc1982-serial",
+			RRset([]RR{
+				&SOA{Hdr: Header{Name: "example.", Class: ClassINET}, SOA: rdata.SOA{Ns: "ns1.example.", Mbox: "admin.example.", Serial: 2009032802}},
+				&SOA{Hdr: Header{Name: "example.", Class: ClassINET}, SOA: rdata.SOA{Ns: "ns1.example.", Mbox: "admin.example.", Serial: 4200000000}},
+			}),
+			RRset([]RR{
+				&SOA{Hdr: Header{Name: "example.", Class: ClassINET}, SOA: rdata.SOA{Ns: "ns1.example.", Mbox: "admin.example.", Serial: 4200000000}},
+				&SOA{Hdr: Header{Name: "example.", Class: ClassINET}, SOA: rdata.SOA{Ns: "ns1.example.", Mbox: "admin.example.", Serial: 2009032802}},
+			}),
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -106,7 +120,38 @@ func TestSortRRset(t *testing.T) {
 					if tc.unsorted[i].(*NS).Ns != tc.sorted[i].(*NS).Ns {
 						t.Fatalf("expected %s, got %s", tc.sorted[i].(*NS).Ns, tc.unsorted[i].(*NS).Ns)
 					}
+				case *SOA:
+					gotSerial := tc.unsorted[i].(*SOA).Serial
+					wantSerial := tc.sorted[i].(*SOA).Serial
+					if gotSerial != wantSerial {
+						t.Fatalf("expected serial %d, got %d", wantSerial, gotSerial)
+					}
 				}
+			}
+		})
+	}
+}
+
+func TestCompareSerial(t *testing.T) {
+	tests := []struct {
+		name string
+		a, b uint32
+		want int
+	}{
+		{"equal", 100, 100, 0},
+		{"a-less", 100, 200, -1},
+		{"a-greater", 200, 100, 1},
+		// 4200000000 is numerically > 2009032802 but diff (2190967198) > 2^31: a is behind.
+		{"rfc1982-a-behind", 4200000000, 2009032802, -1},
+		// inverse: 2009032802 has wrapped past 4200000000, so it is ahead.
+		{"rfc1982-a-ahead", 2009032802, 4200000000, 1},
+		// diff exactly 2^31-1 = MaxSerialIncrement: a < b (old code incorrectly returned 1).
+		{"boundary-a-less", 1000000000, 1000000000 + MaxSerialIncrement, -1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CompareSerial(tt.a, tt.b); got != tt.want {
+				t.Fatalf("CompareSerial(%d, %d) = %d, want %d", tt.a, tt.b, got, tt.want)
 			}
 		})
 	}

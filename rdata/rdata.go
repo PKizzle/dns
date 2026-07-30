@@ -122,7 +122,7 @@ type SOA struct {
 	// that functions like [codeberg.org/miekg/dnsutil.Next] and [codeberg.org/miekg/dnsutil.Prev] will hit
 	// the \. instead of jumping over it.
 	Mbox    string `dns:"mname"`
-	Serial  uint32
+	Serial  uint32 `dns:"serial"`
 	Refresh uint32 `dns:"ttl"`
 	Retry   uint32 `dns:"ttl"`
 	Expire  uint32 `dns:"ttl"`
