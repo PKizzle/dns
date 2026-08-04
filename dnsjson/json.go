@@ -11,8 +11,8 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// Marshal returns the JSON (RFC 8427) representation of [dns.RR]s as defined in [RR]. If more than one RR is given it is assumed this represents
-// a [RRset].
+// Marshal returns the JSON (RFC 8427) representation of [dns.RR] as defined in [RR]. If more than one
+// [dns.RR] is given it is assumed this represents a [RRset].
 func Marshal(rrs ...dns.RR) ([]byte, error) {
 	if len(rrs) == 0 {
 		return nil, nil
@@ -50,7 +50,7 @@ func Marshal(rrs ...dns.RR) ([]byte, error) {
 	return json.Marshal(jrr)
 }
 
-// Unmarshal returns the [dns.RR](s) from the JSON (RFC 8427) object.
+// Unmarshal returns the [dns.RR] from the JSON (RFC 8427) object.
 func Unmarshal(data []byte) ([]dns.RR, error) {
 	jrr := &RR{}
 	err := json.Unmarshal(data, jrr)

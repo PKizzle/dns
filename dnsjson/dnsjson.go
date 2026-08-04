@@ -1,3 +1,4 @@
+// Package dnsjson implements the RR and RRset as defined in RFC 8427. The message type is not implemented.
 package dnsjson
 
 // RR represents a DNS RR as specified in RFC 8427.
