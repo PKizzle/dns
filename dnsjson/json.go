@@ -1,29 +1,30 @@
-package dns
+package dnsjson
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
-	"codeberg.org/miekg/dns/dnsjson"
+	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/dnsutil"
 	"codeberg.org/miekg/dns/pkg/pool"
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// MarshalJSON returns the JSON (RFC 8427) representation of rrs as defined in [dnsjson.RR]. If more than one RR is given it is assumed this represents
-// a [dnsjson.RRset].
-func MarshalJSON(rrs ...RR) ([]byte, error) {
+// Marshal returns the JSON (RFC 8427) representation of [dns.RR]s as defined in [RR]. If more than one RR is given it is assumed this represents
+// a [RRset].
+func Marshal(rrs ...dns.RR) ([]byte, error) {
 	if len(rrs) == 0 {
 		return nil, nil
 	}
 	buf := jsonPool.Get()
 	defer jsonPool.Put(buf)
 
-	jrr := &dnsjson.RR{
+	jrr := &RR{
 		Name:      rrs[0].Header().Name,
 		TTL:       rrs[0].Header().TTL,
-		TypeName:  typeToString(RRToType(rrs[0])),
-		ClassName: classToString(rrs[0].Header().Class),
+		TypeName:  dnsutil.TypeToString(dns.RRToType(rrs[0])),
+		ClassName: dnsutil.ClassToString(rrs[0].Header().Class),
 	}
 
 	switch len(rrs) {
@@ -32,16 +33,16 @@ func MarshalJSON(rrs ...RR) ([]byte, error) {
 			buf = make([]byte, l)
 		}
 
-		off, _ := zpack(rrs[0], buf, 0, nil)
+		off, _ := dns.Zpack(rrs[0], buf, 0, nil)
 		jrr.RdataHex = hex.EncodeToString(buf[:off])
 	default:
-		jrr.RRset = make([]dnsjson.RRset, len(rrs))
+		jrr.RRset = make([]RRset, len(rrs))
 		for i, rr := range rrs {
 			if l := rr.Len(); cap(buf) < l {
 				buf = make([]byte, l)
 			}
 
-			off, _ := zpack(rr, buf, 0, nil)
+			off, _ := dns.Zpack(rr, buf, 0, nil)
 			jrr.RRset[i].RdataHex = hex.EncodeToString(buf[:off])
 		}
 	}
@@ -49,24 +50,24 @@ func MarshalJSON(rrs ...RR) ([]byte, error) {
 	return json.Marshal(jrr)
 }
 
-// UnmarshalJSON returns the RR(s) from the JSON (RFC 8427) object.
-func UnmarshalJSON(data []byte) ([]RR, error) {
-	jrr := &dnsjson.RR{}
+// Unmarshal returns the [dns.RR](s) from the JSON (RFC 8427) object.
+func Unmarshal(data []byte) ([]dns.RR, error) {
+	jrr := &RR{}
 	err := json.Unmarshal(data, jrr)
 	if err != nil {
 		return nil, err
 	}
-	rrs := []RR{}
+	rrs := []dns.RR{}
 	if len(jrr.RRset) > 0 {
-		rrs = make([]RR, len(jrr.RRset))
+		rrs = make([]dns.RR, len(jrr.RRset))
 	}
 
-	newfn := func() RR { return nil }
+	newfn := func() dns.RR { return nil }
 	switch {
 	case jrr.Type > 0:
-		newfn = TypeToRR[jrr.Type]
+		newfn = dns.TypeToRR[jrr.Type]
 	case jrr.TypeName != "":
-		newfn = TypeToRR[StringToType[jrr.TypeName]]
+		newfn = dns.TypeToRR[dns.StringToType[jrr.TypeName]]
 	default:
 		return nil, fmt.Errorf("bad RR type")
 	}
@@ -76,7 +77,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 	case jrr.Class > 0:
 		class = jrr.Class
 	case jrr.ClassName != "":
-		class, _ = StringToClass[jrr.ClassName]
+		class, _ = dns.StringToClass[jrr.ClassName]
 	default:
 		return nil, fmt.Errorf("bad RR class")
 	}
@@ -93,7 +94,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := zunpack(rrs[0], cryptobyte.String(data), nil); err != nil {
+		if err := dns.Zunpack(rrs[0], cryptobyte.String(data), nil); err != nil {
 			return nil, err
 		}
 	default:
@@ -108,7 +109,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 			if err != nil {
 				return nil, err
 			}
-			if err := zunpack(rrs[i], cryptobyte.String(data), nil); err != nil {
+			if err := dns.Zunpack(rrs[i], cryptobyte.String(data), nil); err != nil {
 				return nil, err
 			}
 		}
@@ -118,4 +119,4 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 }
 
 // jsonPool pools allocations to encode/decode to wire format.
-var jsonPool = pool.New(DefaultMsgSize)
+var jsonPool = pool.New(dns.DefaultMsgSize)

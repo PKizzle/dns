@@ -1,4 +1,4 @@
-package dns_test
+package dnsjson
 
 import (
 	"testing"
@@ -7,14 +7,14 @@ import (
 	"codeberg.org/miekg/dns/dnstest"
 )
 
-func TestMarshalJSON(t *testing.T) {
+func TestMarshal(t *testing.T) {
 	// tojson
 	rr0 := dnstest.New("www.example.org. IN A 127.0.0.1")
 	rr1 := dnstest.New("www.example.org. IN A 127.0.0.2")
-	jsonb, _ := dns.MarshalJSON(rr0, rr1)
+	jsonb, _ := Marshal(rr0, rr1)
 
 	// fromjson
-	rrs, err := dns.UnmarshalJSON(jsonb)
+	rrs, err := Unmarshal(jsonb)
 	if err != nil {
 		t.Fatal(err)
 	}

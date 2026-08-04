@@ -102,7 +102,7 @@ func packRR(rr RR, msg []byte, off int, compression map[string]uint16) (headerEn
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
-	off1, err = zpack(rr, msg, headerEnd, compression)
+	off1, err = Zpack(rr, msg, headerEnd, compression)
 	if err != nil {
 		return headerEnd, len(msg), err
 	}
@@ -147,7 +147,7 @@ func unpackRR(msg *cryptobyte.String, msgBuf []byte) (RR, error) {
 		return rr, nil
 	}
 
-	if err := zunpack(rr, cryptobyte.String(data), msgBuf); err != nil {
+	if err := Zunpack(rr, cryptobyte.String(data), msgBuf); err != nil {
 		return rr, err
 	}
 
