@@ -18,6 +18,7 @@ func TestMarshal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	println(string(jsonb))
 
 	if !dns.Equal(rrs[0], rr0) {
 		t.Fatalf("expected %s and %s to be equal", rrs[0], rr0)

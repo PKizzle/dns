@@ -50,7 +50,8 @@ func Marshal(rrs ...dns.RR) ([]byte, error) {
 	return json.Marshal(jrr)
 }
 
-// Unmarshal returns the [dns.RR] from the JSON (RFC 8427) object.
+// Unmarshal returns the [dns.RR] from the JSON (RFC 8427) object. If class is not set, [dns.ClassINET] is
+// assumed.
 func Unmarshal(data []byte) ([]dns.RR, error) {
 	jrr := &RR{}
 	err := json.Unmarshal(data, jrr)
@@ -79,7 +80,7 @@ func Unmarshal(data []byte) ([]dns.RR, error) {
 	case jrr.ClassName != "":
 		class, _ = dns.StringToClass[jrr.ClassName]
 	default:
-		return nil, fmt.Errorf("bad RR class")
+		class = dns.ClassINET
 	}
 
 	switch len(rrs) {
