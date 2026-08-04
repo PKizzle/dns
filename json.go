@@ -10,9 +10,9 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-// Marshal returns the JSON (RFC 8427) representation of [RR] as defined in [dnsjson.RR]. If more than one
+// MarshalJSON returns the JSON (RFC 8427) representation of [RR] as defined in [dnsjson.RR]. If more than one
 // [RR] is given it is assumed this represents a [dnsjson.RRset].
-func MarshaJSONl(rrs ...RR) ([]byte, error) {
+func MarshalJSONl(rrs ...RR) ([]byte, error) {
 	if len(rrs) == 0 {
 		return nil, nil
 	}
