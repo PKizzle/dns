@@ -27,9 +27,8 @@ import (
 `
 
 var packFunc = template.Must(template.New("packFunc").Parse(`
-// Zpack calls the pack methods for each RR. This method is exported for internal sub-package use.
-// The API is not guaranteed.
-func Zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
+// zpack calls the pack methods for each RR.
+func zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, error) {
 	switch x := rr.(type) {
 {{range .}}  case *{{.}}:
 	return x.pack(msg, off, compression)
@@ -44,9 +43,8 @@ func Zpack(rr RR, msg []byte, off int, compression map[string]uint16) (int, erro
 `))
 
 var unpackFunc = template.Must(template.New("unpackFunc").Parse(`
-// Zunpack calls the unpack methods for each RR. This method is exported for internal sub-package use.
-// The API is not guaranteed.
-func Zunpack(rr RR, data cryptobyte.String, msgBuf []byte) error {
+// zunpack calls the unpack methods for each RR.
+func zunpack(rr RR, data cryptobyte.String, msgBuf []byte) error {
 	switch x := rr.(type) {
 {{range .}}  case *{{.}}:
 	return x.unpack(data, msgBuf)

@@ -352,7 +352,7 @@ func (rr *RFC3597) fromRFC3597(r RR) error {
 	if len(msg) == 0 { // no rdata
 		return nil
 	}
-	return Zunpack(r, msg, msg)
+	return zunpack(r, msg, msg)
 }
 
 const msgArcount = 10 // offset in the message where the Arcount is, 2 octets long.
