@@ -19,10 +19,13 @@ We try to keep the "main" branch as sane as possible and at the bleeding edge of
 changes wherever reasonable. But because this version is young, we allow ourselves some more headroom for
 making backwards incompatible changes.
 
-Example programs are included _and_ benchmarked in `cmd`.
+Example programs are included _and_ benchmarked in
+[`cmd`](https://codeberg.org/miekg/dns/src/branch/main/cmd). And
 [`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/README.md) is a full blown
 production ready name server. Because of these we are depending on a lot more external packages - at some
 point these servers will be split off.
+
+Also [see the Go documentation](https://pkg.go.dev/codeberg.org/miekg/dns).
 
 This new version will not soon see a v1.0.0 release because I want to be able to still make changes. In a
 year or two (2028?) when things have stabilized it will be blessed with a v1.0.0.
@@ -53,7 +56,7 @@ For developers please read the
 
 - KISS.
 - Everything is a resource record, EDNS0 pseudo RRs included.
-  - Easy way to access RR's header and resource data (rdata).
+  - Easy way to access RR's header and resource data (_rdata_ package).
 - Small API.
   - Package _dnsutil_ contains functions that help programmers, but are not necessarily in scope the _dns_ package.
   - Package _dnstest_ contains functions and types that help you test, similar to the _httptest_ package.
