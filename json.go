@@ -6,18 +6,14 @@ import (
 	"fmt"
 
 	"codeberg.org/miekg/dns/dnsjson"
-	"codeberg.org/miekg/dns/pkg/pool"
 	"golang.org/x/crypto/cryptobyte"
 )
 
 // MarshalJSON returns the JSON (RFC 8427) representation of [RR] as defined in [dnsjson.RR]. If more than one
 // [RR] is given it is assumed this represents a [dnsjson.RRset].
 func MarshalJSON(rrs ...RR) ([]byte, error) {
-	if len(rrs) == 0 {
-		return nil, nil
-	}
-	buf := jsonPool.Get()
-	defer jsonPool.Put(buf)
+	buf := dnsjson.Pool.Get()
+	defer dnsjson.Pool.Put(buf)
 
 	jrr := &dnsjson.RR{
 		Name:      rrs[0].Header().Name,
@@ -32,7 +28,10 @@ func MarshalJSON(rrs ...RR) ([]byte, error) {
 			buf = make([]byte, l)
 		}
 
-		off, _ := zpack(rrs[0], buf, 0, nil)
+		off, err := zpack(rrs[0], buf, 0, nil)
+		if err != nil {
+			return nil, err
+		}
 		jrr.RdataHex = hex.EncodeToString(buf[:off])
 	default:
 		jrr.RRset = make([]dnsjson.RRset, len(rrs))
@@ -41,7 +40,10 @@ func MarshalJSON(rrs ...RR) ([]byte, error) {
 				buf = make([]byte, l)
 			}
 
-			off, _ := zpack(rr, buf, 0, nil)
+			off, err := zpack(rr, buf, 0, nil)
+			if err != nil {
+				return nil, err
+			}
 			jrr.RRset[i].RdataHex = hex.EncodeToString(buf[:off])
 		}
 	}
@@ -49,11 +51,10 @@ func MarshalJSON(rrs ...RR) ([]byte, error) {
 	return json.Marshal(jrr)
 }
 
-// UnmarshalJSON returns the [RR] from the JSON (RFC 8427) object. If class is not set, [ClassINET] is assumed.
+// UnmarshalJSON returns the [RR] from the JSON (RFC 8427) object. If class (CLASS, or CLASSname) is not set, [ClassINET] is assumed.
 func UnmarshalJSON(data []byte) ([]RR, error) {
 	jrr := &dnsjson.RR{}
-	err := json.Unmarshal(data, jrr)
-	if err != nil {
+	if err := json.Unmarshal(data, jrr); err != nil {
 		return nil, err
 	}
 	rrs := []RR{}
@@ -81,6 +82,9 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 		class = ClassINET
 	}
 
+	buf := dnsjson.Pool.Get()
+	defer dnsjson.Pool.Put(buf)
+
 	switch len(rrs) {
 	case 1:
 		rrs[0] = newfn()
@@ -89,11 +93,15 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 		rrs[0].Header().TTL = jrr.TTL
 		rrs[0].Header().Class = class
 
-		data, err := hex.DecodeString(jrr.RdataHex)
+		if l := hex.DecodedLen(len(jrr.RdataHex)); cap(buf) < l {
+			buf = make([]byte, l)
+		}
+
+		n, err := hex.Decode(buf, []byte(jrr.RdataHex))
 		if err != nil {
 			return nil, err
 		}
-		if err := zunpack(rrs[0], cryptobyte.String(data), nil); err != nil {
+		if err := zunpack(rrs[0], cryptobyte.String(buf[:n]), nil); err != nil {
 			return nil, err
 		}
 	default:
@@ -104,11 +112,15 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 			rrs[i].Header().TTL = jrr.TTL
 			rrs[i].Header().Class = class
 
-			data, err := hex.DecodeString(jrr.RRset[i].RdataHex)
+			if l := hex.DecodedLen(len(jrr.RdataHex)); cap(buf) < l {
+				buf = make([]byte, l)
+			}
+
+			n, err := hex.Decode(buf, []byte(jrr.RRset[i].RdataHex))
 			if err != nil {
 				return nil, err
 			}
-			if err := zunpack(rrs[i], cryptobyte.String(data), nil); err != nil {
+			if err := zunpack(rrs[i], cryptobyte.String(buf[:n]), nil); err != nil {
 				return nil, err
 			}
 		}
@@ -116,6 +128,3 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 
 	return rrs, nil
 }
-
-// jsonPool pools allocations to encode/decode to wire format.
-var jsonPool = pool.New(DefaultMsgSize)
