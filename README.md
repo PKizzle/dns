@@ -79,7 +79,7 @@ For developers please read the
 
 A not-so-up-to-date-list-that-may-be-actually-current:
 
-- atomdns - included in cmd/atomdns - a high performance DNS server, based on the principles of CoreDNS, but
+- atomdns - included in [`cmd/atomdns`](https://codeberg.org/miekg/dns/src/branch/main/cmd/atomdns/) - a high performance DNS server, based on the principles of CoreDNS, but
   faster and simpler.
 - [dnscrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy) - a flexible DNS proxy, with support for
   encrypted DNS protocols such as DNSCrypt v2, DOH, Anonymized DNSCrypt and
@@ -120,7 +120,6 @@ What users say:
 - DNS over HTTP (DOH), see the _dnshttp_ package.
 - Improved naming by embracing sub-packages.
 - Improved RRs, by having the rdata specified in an _rdata_ package.
-- Examples included the cmd/ directory.
 - Escapes (\DDD and \x) in domain names is not supported (anymore) - the overhead (50-100%) was too high.
 - Easy way for custom RRs and EDNS0 pseudo RRs.
 
@@ -153,8 +152,8 @@ developed in tandem with the library.
 
 _all of them_ and _then some_
 
-- 103{4,5} - DNS standard
-- 1348 - NSAP record (removed the record)
+- 103{3,4,5} - DNS standard
+- <s>1348 - NSAP record</s>
 - 1982 - Serial Arithmetic
 - 1876 - LOC record
 - 1995 - IXFR
