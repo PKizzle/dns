@@ -35,9 +35,11 @@ const (
 	MsgIgnore                                      // Ignore the message and send nothing back.
 )
 
-// MsgAcceptFunc is used early in the server code to accept or reject a message with RcodeFormatError.
+// MsgAcceptFunc is used early in the server code to accept or reject a message with RcodeFormatError or
+// other response code.
 // It returns a MsgAcceptAction to indicate what should happen with the message. Only the header of the
-// message is unpacked when this function is called.
+// message is unpacked when this function is called. Note that this function must at least check if there
+// is a single question in the question section of the message.
 type MsgAcceptFunc func(m *Msg) MsgAcceptAction
 
 // DefaultMsgAcceptFunc checks the request and will reject if:
@@ -103,7 +105,8 @@ type Server struct {
 	MaxTCPQueries int
 
 	// AcceptMsgFunc will check the incoming message and will reject it early in the process. Defaults to
-	// [DefaultMsgAcceptFunc].
+	// [DefaultMsgAcceptFunc]. If you use a custom MsgAcceptFunc it should at minimum check if there a single
+	// question in the question section.
 	MsgAcceptFunc MsgAcceptFunc
 	// MsgInvalidFunc is optional, it will be called if a message is received but cannot be parsed.
 	MsgInvalidFunc InvalidMsgFunc

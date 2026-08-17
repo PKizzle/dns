@@ -154,6 +154,9 @@ func DefaultMsgAcceptFunc(m *dns.Msg) dns.MsgAcceptAction {
 	if len(m.Question) != 1 {
 		return dns.MsgReject
 	}
+	if _, ok := m.Question[0].(*dns.RRSIG); ok {
+		return dns.MsgRejectRefused
+	}
 	for _, o := range m.Pseudo {
 		if _, ok := o.(*dns.TCPKEEPALIVE); ok {
 			return dns.MsgReject
