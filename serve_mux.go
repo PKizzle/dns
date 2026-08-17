@@ -162,6 +162,8 @@ func refuse(w ResponseWriter, r *Msg) {
 	m.Question = r.Question
 	m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
 
-	m.Pack()
+	if err := m.Pack(); err != nil {
+		return
+	}
 	io.Copy(w, m)
 }
