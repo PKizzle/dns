@@ -29,8 +29,9 @@ type MsgAcceptAction int
 // Allowed returned values from a MsgAcceptFunc.
 const (
 	MsgAccept               MsgAcceptAction = iota // Accept the message.
-	MsgReject                                      // Reject the message with a RcodeFormatError.
-	MsgRejectNotImplemented                        // Reject the message with a RcodeNotImplemented.
+	MsgReject                                      // Reject the message with a [RcodeFormatError].
+	MsgRejectNotImplemented                        // Reject the message with a [RcodeNotImplemented].
+	MsgRejectRefused                               // Reject the message with a [RcodeRefused].
 	MsgIgnore                                      // Ignore the message and send nothing back.
 )
 
@@ -43,7 +44,8 @@ type MsgAcceptFunc func(m *Msg) MsgAcceptAction
 //
 //   - Isn't a request, returns [MsgIgnore].
 //   - Has an opcode that isn't recognized, returns [MsgIgnore].
-//   - Has more than a single "RR" in the question section, return [MsgReject].
+//   - Has more than a single "RR" in the question section, returns [MsgReject].
+//   - Is a query for RRSIGs, returns [MsgRejectRefused].
 func DefaultMsgAcceptFunc(m *Msg) MsgAcceptAction {
 	// see dnshttp.DefaultMsgAcceptFunc where this code is duplicated.
 	if m.Response {
@@ -54,6 +56,9 @@ func DefaultMsgAcceptFunc(m *Msg) MsgAcceptAction {
 	}
 	if len(m.Question) != 1 {
 		return MsgReject
+	}
+	if _, ok := m.Question[0].(*RRSIG); ok {
+		return MsgRejectRefused
 	}
 	return MsgAccept
 }
@@ -326,10 +331,13 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 	case MsgIgnore:
 		return
 
-	case MsgReject, MsgRejectNotImplemented:
+	case MsgReject, MsgRejectNotImplemented, MsgRejectRefused:
 		r.Rcode = RcodeFormatError
 		if action == MsgRejectNotImplemented {
 			r.Rcode = RcodeNotImplemented
+		}
+		if action == MsgRejectRefused {
+			r.Rcode = RcodeRefused
 		}
 		r.Authoritative = false
 		r.Response = true
