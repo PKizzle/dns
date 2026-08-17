@@ -346,7 +346,9 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 		r.Response = true
 		r.Zero = false
 		r.Reset()
-		r.Pack()
+		if err := r.Pack(); err != nil { // the message is such garbage that we should not reply
+			return
+		}
 
 		io.Copy(w, r)
 		return
