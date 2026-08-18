@@ -207,7 +207,7 @@ func (m *Msg) Pack() error {
 	}
 
 	isPseudo := m.isPseudo()
-	counts := uint64(len(m.Question))<<48 |
+	counts := uint64(1)<<48 |
 		uint64(len(m.Answer))<<32 |
 		uint64(len(m.Ns))<<16 |
 		uint64(len(m.Extra)+isPseudo)
