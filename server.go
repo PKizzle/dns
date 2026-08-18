@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -94,7 +95,8 @@ type Server struct {
 	PacketConn net.PacketConn
 	// Handler to invoke, dns.DefaultServeMux if nil.
 	Handler Handler
-	// Default buffer size to use to read incoming UDP messages. If not set it defaults to MinMsgSize (512 B).
+	// Default buffer size to use to read incoming UDP messages. If not set it defaults to DefaultMsgSize
+	// (1400 B).
 	UDPSize int
 	// The read timeout vaule for new connections, defaults to 2 * time.Second.
 	ReadTimeout time.Duration
@@ -117,7 +119,8 @@ type Server struct {
 	// this function to return before stopping the server.
 	NotifyShutdownFunc func(context.Context)
 
-	// MsgPool is the default [Pooler] used for allocations.
+	// MsgPool is the default [Pooler] used for allocations. When creating a non-default pool it must be at
+	// least as large as the configured UDPSize.
 	MsgPool pool.Pooler
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
@@ -179,6 +182,13 @@ func (srv *Server) ListenAndServe() error {
 		addr = ":domain"
 	}
 	srv.init()
+
+	// some sanity checks
+	buf := srv.MsgPool.Get()
+	if len(buf) < srv.UDPSize {
+		return &Error{err: fmt.Sprintf("MsgPool size (%d) should be larger or equal to UDPSize (%d)", len(buf), srv.UDPSize)}
+	}
+	srv.MsgPool.Put(buf)
 
 	if srv.Listener != nil {
 		srv.listenTCP(srv.Listener)

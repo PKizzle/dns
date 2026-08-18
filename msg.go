@@ -829,8 +829,8 @@ func (m *Msg) Copy() *Msg {
 }
 
 // NewMsg returns a new message with the question section sets to z (z is made fully qualified) and the type t. If the type isn't know nil
-// is returned, the recursion desired bit is set.
-func NewMsg(z string, t uint16) *Msg {
+// is returned, the recursion desired bit is set. If c is given it is used as the class.
+func NewMsg(z string, t uint16, c ...uint16) *Msg {
 	var rr RR
 	newFn, ok := TypeToRR[t]
 	if !ok {
@@ -842,6 +842,9 @@ func NewMsg(z string, t uint16) *Msg {
 	rr = newFn()
 	rr.Header().Name = dnsutilFqdn(z)
 	rr.Header().Class = ClassINET
+	if len(c) > 0 {
+		rr.Header().Class = c[0]
+	}
 	m.Question = []RR{rr}
 	return m
 }
