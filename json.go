@@ -57,7 +57,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 	if err := json.Unmarshal(data, jrr); err != nil {
 		return nil, err
 	}
-	rrs := []RR{}
+	rrs := make([]RR, 1)
 	if len(jrr.RRset) > 0 {
 		rrs = make([]RR, len(jrr.RRset))
 	}
@@ -114,7 +114,7 @@ func UnmarshalJSON(data []byte) ([]RR, error) {
 			rrs[i].Header().TTL = jrr.TTL
 			rrs[i].Header().Class = class
 
-			if l := hex.DecodedLen(len(jrr.RdataHex)); cap(buf) < l {
+			if l := hex.DecodedLen(len(jrr.RRset[i].RdataHex)); cap(buf) < l {
 				buf = make([]byte, l)
 			}
 
