@@ -453,8 +453,7 @@ Extra2:
 
 // Convert a complete message to a string with dig-like output. String also looks at the [Msg.Options] and
 // only prints up to that point, i.e. options set to [MsgOptionUnpackHeader] means String will only return the
-// header. The string format isn't fixed and can change in future released, [dnsutil.StringToMsg] is
-// guaranteed to work.
+// header. The string format isn't fixed and can change in future releases.
 func (m *Msg) String() string {
 	if m == nil {
 		return "<nil> Msg"
