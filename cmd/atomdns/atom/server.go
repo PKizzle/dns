@@ -303,29 +303,29 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 	return global, s.Setup(conf, global, blocks)
 }
 
-func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerBlock) error {
+func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.HandlerBlock) error {
 	for _, b := range blocks {
 		if b.Keys != nil {
 			continue
 		}
 		for _, dir := range b.Directives {
 			d := conffile.NewDispenser(conf, nil, b.Tokens[dir], nil)
-			err := g.Setup(d)
+			err := global.Setup(d)
 			if err != nil {
 				return fmt.Errorf("could not parse global config: %w", err)
 			}
 		}
-		g.OnStartup(func() error {
+		global.OnStartup(func() error {
 			slog.With("handler", "global").Info("Startup", "signal", "HUP")
 			return nil
 		})
 		break
 	}
 	// reset for reload, s.mux is lock guarded, global.Registered is used in a non-concurrent way
-	for zc := range g.Registered {
+	for zc := range global.Registered {
 		s.mux.HandleRemove(zc.Zone, zc.Class)
 	}
-	g.Registered = map[conffile.ZoneClass]struct{}{}
+	global.Registered = map[conffile.ZoneClass]struct{}{}
 
 	type teardown struct {
 		name string
@@ -354,7 +354,7 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 			if s, ok := handler.(handlers.Setupper); ok {
 				co := &dnsserver.Controller{
 					Dispenser: conffile.NewDispenser(conf, b.Keys, b.Tokens[name], names),
-					Global:    g,
+					Global:    global,
 				}
 				err := s.Setup(co)
 				if err != nil {
@@ -379,7 +379,7 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 		for _, teardown := range teardowns {
 			co := &dnsserver.Controller{
 				Dispenser: conffile.NewDispenser(conf, b.Keys, nil, nil),
-				Global:    g,
+				Global:    global,
 			}
 			err := teardown.fn(co)
 			if err != nil {
@@ -402,11 +402,11 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 			}
 
 			k = dnsutil.Canonical(k)
-			if _, ok := g.Registered[conffile.ZoneClass{Zone: k, Class: class}]; ok {
+			if _, ok := global.Registered[conffile.ZoneClass{Zone: k, Class: class}]; ok {
 				return fmt.Errorf("origin already registered: %s", k)
 			}
 
-			if !g.Quiet {
+			if !global.Quiet {
 				attrs := make([]slog.Attr, len(names))
 				for i := range names {
 					attrs[i] = slog.String("handler", names[i])
@@ -419,7 +419,7 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 				slog.Info(k+chaos, "handlers", slog.GroupValue(attrs...))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs), class)
-			g.Registered[conffile.ZoneClass{Zone: k, Class: class}] = struct{}{}
+			global.Registered[conffile.ZoneClass{Zone: k, Class: class}] = struct{}{}
 		}
 	}
 	return nil
