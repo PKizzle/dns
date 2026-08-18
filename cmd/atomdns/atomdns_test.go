@@ -67,9 +67,12 @@ func TestAtomdns(t *testing.T) {
 	testcases := []struct {
 		qname     string
 		qtype     uint16
+		qclass    uint16
 		answerlen int
 	}{
-		{"www.example.org.", dns.TypeA, 2},
+		{"www.example.org.", dns.TypeA, dns.ClassINET, 2},
+		{"version.server.", dns.TypeTXT, dns.ClassCHAOS, 1},
+		{"version.server.", dns.TypeTXT, dns.ClassINET, 0}, // should be refused
 	}
 	s, cancel, err := atomtest.New(`
 10.0.0.0/24 {
@@ -83,6 +86,11 @@ example.org {
         transfer
     }
 }
+
+version.server/CH {
+	log
+	chaos
+}
 `)
 	defer cancel()
 	if err != nil {
@@ -92,7 +100,9 @@ example.org {
 	c := new(dns.Client)
 	for _, tc := range testcases {
 		t.Run(tc.qname+"/"+dns.TypeToString[tc.qtype], func(t *testing.T) {
-			m := dns.NewMsg(tc.qname, dns.TypeA)
+			m := dns.NewMsg(tc.qname, tc.qtype)
+			m.Question[0].Header().Class = tc.qclass
+
 			r, _, err := c.Exchange(context.TODO(), m, "udp", s.Addr()[0])
 			if err != nil {
 				t.Fatal(err)
@@ -109,7 +119,9 @@ example.org {
 
 	for _, tc := range testcases {
 		t.Run("reload/"+tc.qname+"/"+dns.TypeToString[tc.qtype], func(t *testing.T) {
-			m := dns.NewMsg(tc.qname, dns.TypeA)
+			m := dns.NewMsg(tc.qname, tc.qtype)
+			m.Question[0].Header().Class = tc.qclass
+
 			r, _, err := c.Exchange(context.TODO(), m, "udp", s.Addr()[0])
 			if err != nil {
 				t.Fatal(err)
