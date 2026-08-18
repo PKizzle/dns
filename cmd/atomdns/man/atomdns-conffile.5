@@ -13,7 +13,7 @@ A \fIconffile\fP specifies the handlers atomdns should chain. The syntax is as f
 .RS
 
 .nf
-ZONE [ZONE]... {
+ZONE[/CLASS] [ZONE[/CLASS]]... {
     [HANDLER]...
 }
 
@@ -26,7 +26,8 @@ when it gets a query for one the \fBZONE\fPs.
 
 .PP
 The \fBZONE\fP defines for which zones this handler should be called, multiple zones are allowed and must be
-\fIwhite space\fP separated.
+\fIwhite space\fP separated. If \fB/CLASS\fP is not speficied in IN class is assumed, for CH class zones use
+\fB/CH\fP, IN and CH are the only supported classes at this point.
 
 .PP
 When a query comes in, it is matched again all zones of all handlers blocks, the block with the longest match for the
@@ -61,7 +62,7 @@ single handler:
 .RS
 
 .nf
-ZONE [ZONE]...
+ZONE[/CLASS] [ZONE[/CLASS]]...
 [HANDLER]...
 
 .fi
@@ -75,6 +76,20 @@ I.e.
 
 .nf
 example.org
+log
+whoami
+
+.fi
+.RE
+
+.PP
+Or
+
+.PP
+.RS
+
+.nf
+example.org/IN
 log
 whoami
 
@@ -139,13 +154,14 @@ example.org {
 .SH "EXAMPLES"
 .PP
 The \fBZONE\fP is root zone \fB\fC.\fR, the \fBhandler\fP is \fIchaos\fP. The \fIchaos\fP handler takes an (optional) argument:
-\fB\fCatomdns-001\fR. This text is returned on a CH class query: \fB\fCdig CH TXT version.bind @localhost\fR.
+\fB\fCatomdns-001\fR. This text is returned on a CH class query: \fB\fCdig CH TXT version.bind @localhost\fR. To only have
+this zone match the CH class, use \fB/CH\fP.
 
 .PP
 .RS
 
 .nf
-\&. {
+\&./CH {
     chaos atomdns\-001
 }
 

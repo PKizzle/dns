@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"codeberg.org/miekg/dns"
+	"codeberg.org/miekg/dns/cmd/atomdns/internal/conffile"
 	"github.com/caddyserver/certmagic"
 )
 
@@ -53,14 +54,8 @@ type Global struct {
 	onShutdown   []func() error // Function to execute on shutdown
 	onReset      []func()       // Function to execute after shutdown has been called
 
-	Config     string                 // path to config file
-	Registered map[ZoneClass]struct{} // registered zones and classes
-}
-
-// ZoneClass holds the zone and the class, if a class is not set dns.ClassINET is assumed.
-type ZoneClass struct {
-	Zone  string
-	Class uint16
+	Config     string                          // path to config file
+	Registered map[conffile.ZoneClass]struct{} // registered zones and classes
 }
 
 func (g *Global) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc { return nil }

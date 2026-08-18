@@ -292,7 +292,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 
 	certmagic.Default.Logger = zlog.New(false)
 	global := &global.Global{
-		Registered: make(map[global.ZoneClass]struct{}),
+		Registered: make(map[conffile.ZoneClass]struct{}),
 		Config:     conf,
 		Root:       func() string { wd, _ := os.Getwd(); return wd }(),
 		Addr:       "[::]:53",
@@ -325,7 +325,7 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 	for zc := range g.Registered {
 		s.mux.HandleRemove(zc.Zone, zc.Class)
 	}
-	g.Registered = map[global.ZoneClass]struct{}{}
+	g.Registered = map[conffile.ZoneClass]struct{}{}
 
 	type teardown struct {
 		name string
@@ -402,7 +402,7 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 			}
 
 			k = dnsutil.Canonical(k)
-			if _, ok := g.Registered[global.ZoneClass{Zone: k, Class: class}]; ok {
+			if _, ok := g.Registered[conffile.ZoneClass{Zone: k, Class: class}]; ok {
 				return fmt.Errorf("origin already registered: %s", k)
 			}
 
@@ -419,7 +419,7 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 				slog.Info(k+chaos, "handlers", slog.GroupValue(attrs...))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs), class)
-			g.Registered[global.ZoneClass{Zone: k, Class: class}] = struct{}{}
+			g.Registered[conffile.ZoneClass{Zone: k, Class: class}] = struct{}{}
 		}
 	}
 	return nil
