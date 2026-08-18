@@ -109,17 +109,20 @@ func (mux *ServeMux) Handle(pattern string, handler Handler, class ...uint16) {
 	if mux.z == nil {
 		mux.z = make(map[uint16]map[string]Handler)
 	}
+	c := uint16(ClassINET)
 	if len(class) > 0 {
-		mux.z[class[0]][pattern] = handler
-	} else {
-		mux.z[ClassINET][pattern] = handler
+		c = class[0]
 	}
+	if mux.z[c] == nil {
+		mux.z[c] = make(map[string]Handler)
+	}
+	mux.z[c][pattern] = handler
 	mux.Unlock()
 }
 
 // HandleFunc adds a handler function to the ServeMux for pattern.
-func (mux *ServeMux) HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg)) {
-	mux.Handle(pattern, HandlerFunc(handler))
+func (mux *ServeMux) HandleFunc(pattern string, handler func(context.Context, ResponseWriter, *Msg), class ...uint16) {
+	mux.Handle(pattern, HandlerFunc(handler), class...)
 }
 
 // HandleRemove deregisters the handler specific for pattern from the ServeMux. Optionally a class can be
@@ -144,7 +147,7 @@ func (mux *ServeMux) HandleRemove(pattern string, class ...uint16) {
 //
 // If no handler is found a standard REFUSED message is returned. No checks are made on the request message.
 func (mux *ServeMux) ServeDNS(ctx context.Context, w ResponseWriter, req *Msg) {
-	h, zone := mux.match(req.Question[0].Header().Name, req.qtype)
+	h, zone := mux.match(req.Question[0].Header().Name, req.qtype, req.qclass)
 	if h != nil {
 		ctx = context.WithValue(ctx, contextKeyZone, zone)
 		h.ServeDNS(ctx, w, req)

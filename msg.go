@@ -311,6 +311,7 @@ func (m *Msg) unpackQuestion(msg *cryptobyte.String, msgBuf []byte) (RR, error) 
 	if !msg.Empty() && !msg.ReadUint16(&qclass) {
 		return nil, unpack.Errorf("overflow %s", "Question class")
 	}
+	m.qclass = qclass
 
 	var rr RR
 	if newFn, ok := TypeToRR[qtype]; ok {
