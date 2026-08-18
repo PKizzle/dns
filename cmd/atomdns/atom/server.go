@@ -398,10 +398,10 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 		for _, k := range b.Keys {
 			class := uint16(dns.ClassINET)
 			switch {
-			case strings.HasSuffix(k, "/IN"):
-				k = strings.TrimSuffix(k, "/IN")
-			case strings.HasSuffix(k, "/CH"):
-				k = strings.TrimSuffix(k, "/CH")
+			case strings.HasSuffix(k, IN):
+				k = strings.TrimSuffix(k, IN)
+			case strings.HasSuffix(k, CH):
+				k = strings.TrimSuffix(k, CH)
 				class = dns.ClassCHAOS
 			}
 
@@ -416,7 +416,11 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 					attrs[i] = slog.String("handler", names[i])
 				}
 
-				slog.Info(k, "handlers", slog.GroupValue(attrs...))
+				chaos := ""
+				if class == dns.ClassCHAOS {
+					chaos = CH
+				}
+				slog.Info(k+chaos, "handlers", slog.GroupValue(attrs...))
 			}
 			s.mux.HandleFunc(k, handlers.Compile(hs), class)
 			g.Registered[global.ZoneClass{Zone: k, Class: class}] = struct{}{}
@@ -482,3 +486,8 @@ func msgInvalidFunc(s *dns.Server, N uint64) {
 		}
 	}
 }
+
+const (
+	IN = "/IN"
+	CH = "/CH"
+)
