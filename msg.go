@@ -814,7 +814,8 @@ func (m *Msg) RRs() iter.Seq[RR] {
 // Copy returns a shallow copy of the message, specifically the RR contained in the message are copied by
 // reference, not via a deep copy. If m was hijacked via [Msg.Hijack] the returned Msg will not be hijacked.
 // The msgPool of m will be copied, meaning the new message when traversing a default [dns.ResponseWriter]
-// will have it's buffer returned to the servers msg pool.
+// will have it's buffer returned to the server's msg pool. Note that as the msgPool is copied only one of the
+// messages should be written to the client, not both.
 func (m *Msg) Copy() *Msg {
 	return &Msg{
 		MsgHeader: m.MsgHeader,
