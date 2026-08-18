@@ -7,7 +7,7 @@ _conffile_ - configuration file for atomdns
 A _conffile_ specifies the handlers atomdns should chain. The syntax is as follows:
 
 ```txt
-ZONE [ZONE]... {
+ZONE[/CLASS] [ZONE[/CLASS]]... {
     [HANDLER]...
 }
 ```
@@ -16,7 +16,8 @@ Such a section is called a _handler block_. Each block defines the handlers this
 when it gets a query for one the **ZONE**s.
 
 The **ZONE** defines for which zones this handler should be called, multiple zones are allowed and must be
-_white space_ separated.
+_white space_ separated. If **/CLASS** is not speficied in IN class is assumed, for CH class zones use
+**/CH**, IN and CH are the only supported classes at this point.
 
 When a query comes in, it is matched again all zones of all handlers blocks, the block with the longest match for the
 query name will receive the query and runs it through it's defined handlers.
@@ -41,7 +42,7 @@ As an way to test things Conffile also supports a shorter way of writing things,
 single handler:
 
 ```conffile
-ZONE [ZONE]...
+ZONE[/CLASS] [ZONE[/CLASS]]...
 [HANDLER]...
 ```
 
@@ -49,6 +50,14 @@ I.e.
 
 ```txt
 example.org
+log
+whoami
+```
+
+Or
+
+```txt
+example.org/IN
 log
 whoami
 ```
@@ -99,10 +108,11 @@ example.org {
 # Examples
 
 The **ZONE** is root zone `.`, the **handler** is _chaos_. The _chaos_ handler takes an (optional) argument:
-`atomdns-001`. This text is returned on a CH class query: `dig CH TXT version.bind @localhost`.
+`atomdns-001`. This text is returned on a CH class query: `dig CH TXT version.bind @localhost`. To only have
+this zone match the CH class, use **/CH**.
 
 ```conffile
-. {
+./CH {
     chaos atomdns-001
 }
 ```

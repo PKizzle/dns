@@ -34,7 +34,7 @@ i.e. having `version.example.org` will suffice to get queries for the
 Specify all the zones:
 
 ```conffile
-version.bind version.server authors.bind hostname.bind id.server authors.server {
+version.bind/CH version.server/CH authors.bind/CH hostname.bind/CH id.server/CH authors.server/CH {
     chaos atomdns-001 {
         authors {
             info@example.org

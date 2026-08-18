@@ -292,7 +292,7 @@ func (s *Server) parse(conf string, r io.Reader) (*global.Global, error) {
 
 	certmagic.Default.Logger = zlog.New(false)
 	global := &global.Global{
-		Registered: make(map[string]struct{}),
+		Registered: make(map[conffile.ZoneClass]struct{}),
 		Config:     conf,
 		Root:       func() string { wd, _ := os.Getwd(); return wd }(),
 		Addr:       "[::]:53",
@@ -322,10 +322,10 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 		break
 	}
 	// reset for reload, s.mux is lock guarded, global.Registered is used in a non-concurrent way
-	for k := range global.Registered {
-		s.mux.HandleRemove(k)
+	for zc := range global.Registered {
+		s.mux.HandleRemove(zc.Zone, zc.Class)
 	}
-	global.Registered = map[string]struct{}{}
+	global.Registered = map[conffile.ZoneClass]struct{}{}
 
 	type teardown struct {
 		name string
@@ -338,7 +338,6 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 			continue
 		}
 		hs := []handlers.Handler{new(unpack.Unpack)}
-		hs[Unpack].(*unpack.Unpack).ClassFunc = unpack.DefaultClassFunc
 
 		teardowns := []teardown{}
 		names := []string{}
@@ -375,9 +374,6 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 					return fmt.Errorf("handler: %s, is a noop handler, but has no setup", name)
 				}
 			}
-			if c, ok := handler.(handlers.Classer); ok {
-				hs[Unpack].(*unpack.Unpack).ClassFunc = c.Class
-			}
 		}
 
 		for _, teardown := range teardowns {
@@ -396,9 +392,17 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 		hs = append(hs, new(refuse.Refuse)) // add refuse guard
 
 		for _, k := range b.Keys {
-			k = dnsutil.Canonical(k)
+			class := uint16(dns.ClassINET)
+			switch {
+			case strings.HasSuffix(k, IN):
+				k = strings.TrimSuffix(k, IN)
+			case strings.HasSuffix(k, CH):
+				k = strings.TrimSuffix(k, CH)
+				class = dns.ClassCHAOS
+			}
 
-			if _, ok := global.Registered[k]; ok {
+			k = dnsutil.Canonical(k)
+			if _, ok := global.Registered[conffile.ZoneClass{Zone: k, Class: class}]; ok {
 				return fmt.Errorf("origin already registered: %s", k)
 			}
 
@@ -408,10 +412,14 @@ func (s *Server) Setup(conf string, global *global.Global, blocks []conffile.Han
 					attrs[i] = slog.String("handler", names[i])
 				}
 
-				slog.Info(k, "handlers", slog.GroupValue(attrs...))
+				chaos := ""
+				if class == dns.ClassCHAOS {
+					chaos = CH
+				}
+				slog.Info(k+chaos, "handlers", slog.GroupValue(attrs...))
 			}
-			s.mux.HandleFunc(k, handlers.Compile(hs))
-			global.Registered[k] = struct{}{}
+			s.mux.HandleFunc(k, handlers.Compile(hs), class)
+			global.Registered[conffile.ZoneClass{Zone: k, Class: class}] = struct{}{}
 		}
 	}
 	return nil
@@ -474,3 +482,8 @@ func msgInvalidFunc(s *dns.Server, N uint64) {
 		}
 	}
 }
+
+const (
+	IN = "/IN"
+	CH = "/CH"
+)

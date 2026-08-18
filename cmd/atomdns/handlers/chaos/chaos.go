@@ -25,11 +25,6 @@ type Chaos struct {
 
 func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 	return dns.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) {
-		qclass := r.Question[0].Header().Class
-		if qclass != dns.ClassCHAOS {
-			next.ServeDNS(ctx, w, r)
-			return
-		}
 		if _, ok := r.Question[0].(*dns.TXT); !ok {
 			next.ServeDNS(ctx, w, r)
 			return
@@ -38,7 +33,7 @@ func (c *Chaos) HandlerFunc(next dns.HandlerFunc) dns.HandlerFunc {
 		qname := dnsutil.Canonical(r.Question[0].Header().Name)
 		m := r.Copy()
 		dnsutil.SetReply(m, r)
-		hdr := dns.Header{Name: qname, Class: dns.ClassCHAOS}
+		hdr := dns.Header{Name: qname, Class: r.Question[0].Header().Class}
 
 		switch {
 		case strings.HasPrefix(qname, "authors."):

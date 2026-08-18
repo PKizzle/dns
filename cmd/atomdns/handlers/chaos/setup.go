@@ -1,7 +1,6 @@
 package chaos
 
 import (
-	"log/slog"
 	"strings"
 
 	"codeberg.org/miekg/dns/cmd/atomdns/internal/dnsserver"
@@ -40,9 +39,5 @@ func (c *Chaos) Setup(co *dnsserver.Controller) error {
 			c.Authors = authors
 		}
 	}
-	co.OnStartup(func() error {
-		log().Info("Startup", "allowed", slog.GroupValue(slog.String("class", "IN"), slog.String("class", "CH")))
-		return nil
-	})
 	return nil
 }

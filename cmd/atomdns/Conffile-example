@@ -89,7 +89,7 @@ miek.nl {
 }
 
 # Configure zones for CH class queries, so the server returns some information about its own identity.
-version.server authors.server id.server {
+version.server/CH authors.server/CH id.server/CH {
     log
     chaos { # Chaos, see atomdns-chaos(7)
         authors {

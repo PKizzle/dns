@@ -28,6 +28,25 @@ example.org {
 			fmt.Errorf("origin already registered"),
 		},
 		{
+			"duplicate-origin-but-classes",
+			"",
+			`
+{
+	dns {
+		addr [::]:0
+	}
+}
+
+example.org/IN {
+	log
+}
+example.org/CH {
+	log
+}
+		`,
+			nil,
+		},
+		{
 			"tls-required",
 			`
 {
