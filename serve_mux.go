@@ -153,7 +153,7 @@ func refuse(w ResponseWriter, r *Msg) {
 	m := new(Msg)
 	m.Data = r.Data
 
-	// dnsutil.SetReply as used here, but led to all kinds of cyclic imports, just use that very static code here.
+	// dnsutil.SetReply was used here, but led to all kinds of cyclic imports, just use that very static code here.
 	m.ID, m.Rcode = r.ID, RcodeRefused
 	m.Response, m.Opcode = true, r.Opcode
 	m.RecursionDesired = r.RecursionDesired
@@ -162,6 +162,9 @@ func refuse(w ResponseWriter, r *Msg) {
 	m.Question = r.Question
 	m.Answer, m.Ns, m.Extra, m.Pseudo = nil, nil, nil, nil
 
-	m.Pack()
+	if err := m.Pack(); err != nil {
+		msgPut(m)
+		return
+	}
 	io.Copy(w, m)
 }

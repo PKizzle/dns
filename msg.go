@@ -704,18 +704,12 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 		if sess != nil {
 			oob := sourceFromOOB(sess.OOB)
 			n, _, err := sock.WriteMsgUDP(m.Data, oob, sess.Addr)
-			if m.msgPool != nil && !m.hijacked.Load() {
-				m.msgPool.Put(m.Data)
-				m.Data, m.msgPool = nil, nil
-			}
+			msgPut(m)
 			return int64(n), err
 		}
 
 		n, err := r.Conn().Write(m.Data)
-		if m.msgPool != nil && !m.hijacked.Load() {
-			m.msgPool.Put(m.Data)
-			m.Data, m.msgPool = nil, nil
-		}
+		msgPut(m)
 		return int64(n), err
 	}
 
@@ -723,11 +717,20 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 	binary.BigEndian.PutUint16(l, uint16(len(m.Data)))
 	l = append(l, m.Data...)
 	n, err := r.Write(l)
-	if m.msgPool != nil && !m.hijacked.Load() {
-		m.msgPool.Put(m.Data)
-		m.Data, m.msgPool = nil, nil
-	}
+	msgPut(m)
 	return int64(n), err
+}
+
+// msgPut puts the message's buffer back in the pool, if desired.
+func msgPut(m *Msg) {
+	if m.msgPool == nil {
+		return
+	}
+	if m.hijacked.Load() {
+		return
+	}
+	m.msgPool.Put(m.Data)
+	m.Data, m.msgPool = nil, nil
 }
 
 // ReadFrom reads from r. When r is a *net.TCPConn, first 2 bytes of length are read, then m.Data is *resized*
