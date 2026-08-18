@@ -46,7 +46,7 @@ func ExampleMsg_dNSSEC() {
 }
 
 func TestMsgBinary(t *testing.T) {
-	tcs := []struct {
+	testcases := []struct {
 		name string
 		buf  []byte
 		fn   func(*dns.Msg) error
@@ -157,7 +157,7 @@ func TestMsgBinary(t *testing.T) {
 			},
 		},
 	}
-	for _, tc := range tcs {
+	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := &dns.Msg{Data: tc.buf}
 			if err := m.Unpack(); err != nil {

@@ -4,22 +4,40 @@ import (
 	"testing"
 )
 
-func TestMarshal(t *testing.T) {
-	// tojson
-	rr0 := dnstestNew("www.example.org. IN A 127.0.0.1")
-	rr1 := dnstestNew("www.example.org. IN A 127.0.0.2")
-	jsonb, _ := MarshalJSON(rr0, rr1)
-
-	// fromjson
-	rrs, err := UnmarshalJSON(jsonb)
-	if err != nil {
-		t.Fatal(err)
+func TestMarshalJSON(t *testing.T) {
+	testcases := []struct {
+		name string
+		rrs  []RR
+	}{
+		{
+			name: "single",
+			rrs: []RR{
+				dnstestNew("www.example.org. IN A 127.0.0.1"),
+			},
+		},
+		{
+			name: "multiple",
+			rrs: []RR{
+				dnstestNew("www.example.org. IN A 127.0.0.1"),
+				dnstestNew("www.example.org. IN A 127.0.0.2"),
+			},
+		},
 	}
-
-	if !Equal(rrs[0], rr0) {
-		t.Fatalf("expected %s and %s to be equal", rrs[0], rr0)
-	}
-	if !Equal(rrs[1], rr1) {
-		t.Fatalf("expected %s and %s to be equal", rrs[1], rr1)
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			jsonb, err := MarshalJSON(tc.rrs...)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rrs, err := UnmarshalJSON(jsonb)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for i, rr := range tc.rrs {
+				if !Equal(rr, rrs[i]) {
+					t.Fatalf("expected %s and %s to be equal", rr, rrs[i])
+				}
+			}
+		})
 	}
 }

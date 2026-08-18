@@ -155,7 +155,7 @@ func TestTransfer(t *testing.T) {
 }
 
 func TestTransferIncrementalEdgeCases(t *testing.T) {
-	tests := []struct {
+	testcases := []struct {
 		name    string
 		answers [][]dns.RR
 		serial  uint32
@@ -203,15 +203,15 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 	})
 	defer dns.HandleRemove(testTransferZone)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			answers = tt.answers
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			answers = tc.answers
 			cancel, addr, _ := dnstest.TCPServer(":0")
 			defer cancel()
 
 			c := new(dns.Client)
 			m := dns.NewMsg(testTransferZone, dns.TypeIXFR)
-			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: tt.serial}}}
+			m.Ns = []dns.RR{&dns.SOA{Hdr: *m.Question[0].Header(), SOA: rdata.SOA{Ns: ".", Mbox: ".", Serial: tc.serial}}}
 
 			env, err := c.TransferIn(context.TODO(), m, "tcp", addr)
 			if err != nil {
@@ -229,14 +229,14 @@ func TestTransferIncrementalEdgeCases(t *testing.T) {
 				i += len(e.Answer)
 			}
 
-			if gotErr == nil && tt.wantErr {
+			if gotErr == nil && tc.wantErr {
 				t.Fatal("expected error, got none")
 			}
-			if gotErr != nil && !tt.wantErr {
+			if gotErr != nil && !tc.wantErr {
 				t.Fatalf("unexpected error: %s", gotErr)
 			}
-			if i != tt.want {
-				t.Fatalf("bad ixfr: expected %d, got %d", tt.want, i)
+			if i != tc.want {
+				t.Fatalf("bad ixfr: expected %d, got %d", tc.want, i)
 			}
 		})
 	}

@@ -145,7 +145,7 @@ func NewServer() *Server {
 
 func (srv *Server) init() {
 	if srv.UDPSize == 0 {
-		srv.UDPSize = MinMsgSize
+		srv.UDPSize = DefaultMsgSize
 	}
 	if srv.MsgInvalidFunc == nil {
 		srv.MsgInvalidFunc = DefaultMsgInvalidFunc
