@@ -117,7 +117,7 @@ type Server struct {
 	// this function to return before stopping the server.
 	NotifyShutdownFunc func(context.Context)
 
-	// MsgPool is the default [Pooler] used for allocation.
+	// MsgPool is the default [Pooler] used for allocations.
 	MsgPool pool.Pooler
 
 	ctx      context.Context // server wide context to signal shutdown to running handlers
@@ -327,11 +327,13 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 
 	if err := r.Unpack(); err != nil {
 		srv.MsgInvalidFunc(r, err)
+		msgPut(r)
 		return
 	}
 
 	switch action := srv.MsgAcceptFunc(r); action {
 	case MsgIgnore:
+		msgPut(r)
 		return
 
 	case MsgReject, MsgRejectNotImplemented, MsgRejectRefused:
@@ -347,6 +349,7 @@ func (srv *Server) serveDNS(w *response, r *Msg) {
 		r.Zero = false
 		r.Reset()
 		if err := r.Pack(); err != nil { // the message is such garbage that we should not reply
+			msgPut(r)
 			return
 		}
 
