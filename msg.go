@@ -9,7 +9,6 @@ import (
 	"net"
 	"strconv"
 
-	"codeberg.org/miekg/dns"
 	"codeberg.org/miekg/dns/internal/pack"
 	"codeberg.org/miekg/dns/internal/unpack"
 	"codeberg.org/miekg/dns/rdata"
@@ -723,7 +722,7 @@ func (m *Msg) WriteTo(w io.Writer) (int64, error) {
 }
 
 // msgPut puts the message's buffer back in the pool, if desired.
-func msgPut(m *dns.Msg) {
+func msgPut(m *Msg) {
 	if m.msgPool == nil {
 		return
 	}
