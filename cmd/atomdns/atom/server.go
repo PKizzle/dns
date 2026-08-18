@@ -338,7 +338,6 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 			continue
 		}
 		hs := []handlers.Handler{new(unpack.Unpack)}
-		hs[Unpack].(*unpack.Unpack).ClassFunc = unpack.DefaultClassFunc
 
 		teardowns := []teardown{}
 		names := []string{}
@@ -374,9 +373,6 @@ func (s *Server) Setup(conf string, g *global.Global, blocks []conffile.HandlerB
 				if _, ok := handler.(handlers.Setupper); !ok {
 					return fmt.Errorf("handler: %s, is a noop handler, but has no setup", name)
 				}
-			}
-			if c, ok := handler.(handlers.Classer); ok {
-				hs[Unpack].(*unpack.Unpack).ClassFunc = c.Class
 			}
 		}
 
